@@ -3,27 +3,26 @@ from typing import List, Union
 from ._get_mongo_client import _get_mongo_client
 from ._remove_id_field import _remove_id_field
 from ..core.protocaas_types import ProtocaasProject, ProtocaasFile, ProtocaasJob, ProtocaasComputeResource, ComputeResourceSpec
-from ..core._get_project_role import _get_project_role
+from ..core._get_project_role import _project_has_user
 from ..core._hide_secret_params_in_job import _hide_secret_params_in_job
 
 
 async def fetch_projects_for_user(user_id: Union[str, None]) -> List[ProtocaasProject]:
     client = _get_mongo_client()
-    projects_collection = client['protocaas']['projects']
+    projects_collection = client['protocaas3']['projects']
     projects = await projects_collection.find({}).to_list(length=None)
     for project in projects:
         _remove_id_field(project)
     projects = [ProtocaasProject(**project) for project in projects] # validate projects
     projects2: List[ProtocaasProject] = []
     for project in projects:
-        role = _get_project_role(project, user_id)
-        if role != 'none':
+        if _project_has_user(project, user_id):
             projects2.append(project)
     return projects2
 
 async def fetch_projects_with_tag(tag: str) -> List[ProtocaasProject]:
     client = _get_mongo_client()
-    projects_collection = client['protocaas']['projects']
+    projects_collection = client['protocaas3']['projects']
     projects = await projects_collection.find({
         # When you use a query like { "tags": tag } against an array field in MongoDB, it checks if any element of the array matches the value.
         'tags': tag
@@ -35,7 +34,7 @@ async def fetch_projects_with_tag(tag: str) -> List[ProtocaasProject]:
 
 async def fetch_project(project_id: str) -> ProtocaasProject:
     client = _get_mongo_client()
-    projects_collection = client['protocaas']['projects']
+    projects_collection = client['protocaas3']['projects']
     project = await projects_collection.find_one({'projectId': project_id})
     # here I'd like to validate project
     _remove_id_field(project)
@@ -45,7 +44,7 @@ async def fetch_project(project_id: str) -> ProtocaasProject:
 
 async def fetch_project_files(project_id: str) -> List[ProtocaasFile]:
     client = _get_mongo_client()
-    files_collection = client['protocaas']['files']
+    files_collection = client['protocaas3']['files']
     files = await files_collection.find({'projectId': project_id}).to_list(length=None)
     for file in files:
         _remove_id_field(file)
@@ -54,7 +53,7 @@ async def fetch_project_files(project_id: str) -> List[ProtocaasFile]:
 
 async def fetch_project_jobs(project_id: str, include_private_keys=False) -> List[ProtocaasJob]:
     client = _get_mongo_client()
-    jobs_collection = client['protocaas']['jobs']
+    jobs_collection = client['protocaas3']['jobs']
     jobs = await jobs_collection.find({'projectId': project_id}).to_list(length=None)
     for job in jobs:
         _remove_id_field(job)
@@ -69,7 +68,7 @@ async def fetch_project_jobs(project_id: str, include_private_keys=False) -> Lis
 
 async def update_project(project_id: str, update: dict):
     client = _get_mongo_client()
-    projects_collection = client['protocaas']['projects']
+    projects_collection = client['protocaas3']['projects']
     await projects_collection.update_one({
         'projectId': project_id
     }, {
@@ -78,33 +77,33 @@ async def update_project(project_id: str, update: dict):
 
 async def delete_project(project_id: str):
     client = _get_mongo_client()
-    projects_collection = client['protocaas']['projects']
+    projects_collection = client['protocaas3']['projects']
     await projects_collection.delete_one({
         'projectId': project_id
     })
 
 async def delete_all_files_in_project(project_id: str):
     client = _get_mongo_client()
-    files_collection = client['protocaas']['files']
+    files_collection = client['protocaas3']['files']
     await files_collection.delete_many({
         'projectId': project_id
     })
 
 async def delete_all_jobs_in_project(project_id: str):
     client = _get_mongo_client()
-    jobs_collection = client['protocaas']['jobs']
+    jobs_collection = client['protocaas3']['jobs']
     await jobs_collection.delete_many({
         'projectId': project_id
     })
 
 async def insert_project(project: ProtocaasProject):
     client = _get_mongo_client()
-    projects_collection = client['protocaas']['projects']
+    projects_collection = client['protocaas3']['projects']
     await projects_collection.insert_one(project.dict(exclude_none=True))
 
 async def fetch_compute_resource(compute_resource_id: str):
     client = _get_mongo_client()
-    compute_resources_collection = client['protocaas']['computeResources']
+    compute_resources_collection = client['protocaas3']['computeResources']
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
     if compute_resource is None:
         return None
@@ -114,7 +113,7 @@ async def fetch_compute_resource(compute_resource_id: str):
 
 async def fetch_compute_resources_for_user(user_id: str):
     client = _get_mongo_client()
-    compute_resources_collection = client['protocaas']['computeResources']
+    compute_resources_collection = client['protocaas3']['computeResources']
     compute_resources = await compute_resources_collection.find({'ownerId': user_id}).to_list(length=None)
     for compute_resource in compute_resources:
         _remove_id_field(compute_resource)
@@ -123,7 +122,7 @@ async def fetch_compute_resources_for_user(user_id: str):
 
 async def update_compute_resource(compute_resource_id: str, update: dict):
     client = _get_mongo_client()
-    compute_resources_collection = client['protocaas']['computeResources']
+    compute_resources_collection = client['protocaas3']['computeResources']
     await compute_resources_collection.update_one({
         'computeResourceId': compute_resource_id
     }, {
@@ -132,14 +131,14 @@ async def update_compute_resource(compute_resource_id: str, update: dict):
 
 async def delete_compute_resource(compute_resource_id: str):
     client = _get_mongo_client()
-    compute_resources_collection = client['protocaas']['computeResources']
+    compute_resources_collection = client['protocaas3']['computeResources']
     await compute_resources_collection.delete_one({
         'computeResourceId': compute_resource_id
     })
 
 async def register_compute_resource(compute_resource_id: str, name: str, user_id: str):
     client = _get_mongo_client()
-    compute_resources_collection = client['protocaas']['computeResources']
+    compute_resources_collection = client['protocaas3']['computeResources']
 
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
     if compute_resource is not None:
@@ -162,7 +161,7 @@ async def register_compute_resource(compute_resource_id: str, name: str, user_id
 
 async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[List[str], None], include_private_keys: bool) -> List[ProtocaasJob]:
     client = _get_mongo_client()
-    jobs_collection = client['protocaas']['jobs']
+    jobs_collection = client['protocaas3']['jobs']
     if statuses is not None:
         jobs = await jobs_collection.find({
             'computeResourceId': compute_resource_id,
@@ -185,7 +184,7 @@ async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[
 
 async def update_compute_resource_node(compute_resource_id: str, compute_resource_node_id: str, compute_resource_node_name: str):
     client = _get_mongo_client()
-    compute_resource_nodes_collection = client['protocaas']['computeResourceNodes']
+    compute_resource_nodes_collection = client['protocaas3']['computeResourceNodes']
     await compute_resource_nodes_collection.update_one({
         'computeResourceId': compute_resource_id,
         'nodeId': compute_resource_node_id
@@ -200,7 +199,7 @@ async def update_compute_resource_node(compute_resource_id: str, compute_resourc
 
 async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResourceSpec):
     client = _get_mongo_client()
-    compute_resources_collection = client['protocaas']['computeResources']
+    compute_resources_collection = client['protocaas3']['computeResources']
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
     if compute_resource is None:
         raise Exception(f"No compute resource with ID {compute_resource_id}")
@@ -212,7 +211,7 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
 
 async def fetch_job(job_id: str, *, include_dandi_api_key: bool=False, include_secret_params: bool=False):
     client = _get_mongo_client()
-    jobs_collection = client['protocaas']['jobs']
+    jobs_collection = client['protocaas3']['jobs']
     job = await jobs_collection.find_one({'jobId': job_id})
     _remove_id_field(job)
     if job is None:
@@ -226,7 +225,7 @@ async def fetch_job(job_id: str, *, include_dandi_api_key: bool=False, include_s
 
 async def update_job(job_id: str, update: dict):
     client = _get_mongo_client()
-    jobs_collection = client['protocaas']['jobs']
+    jobs_collection = client['protocaas3']['jobs']
     await jobs_collection.update_one({
         'jobId': job_id
     }, {
@@ -235,19 +234,19 @@ async def update_job(job_id: str, update: dict):
 
 async def delete_job(job_id: str):
     client = _get_mongo_client()
-    jobs_collection = client['protocaas']['jobs']
+    jobs_collection = client['protocaas3']['jobs']
     await jobs_collection.delete_one({
         'jobId': job_id
     })
 
 async def insert_job(job: ProtocaasJob):
     client = _get_mongo_client()
-    jobs_collection = client['protocaas']['jobs']
+    jobs_collection = client['protocaas3']['jobs']
     await jobs_collection.insert_one(job.dict(exclude_none=True))
 
 async def fetch_file(project_id: str, file_name: str):
     client = _get_mongo_client()
-    files_collection = client['protocaas']['files']
+    files_collection = client['protocaas3']['files']
     file = await files_collection.find_one({
         'projectId': project_id,
         'fileName': file_name
@@ -260,7 +259,7 @@ async def fetch_file(project_id: str, file_name: str):
 
 async def delete_file(project_id: str, file_name: str):
     client = _get_mongo_client()
-    files_collection = client['protocaas']['files']
+    files_collection = client['protocaas3']['files']
     await files_collection.delete_one({
         'projectId': project_id,
         'fileName': file_name
@@ -268,5 +267,5 @@ async def delete_file(project_id: str, file_name: str):
 
 async def insert_file(file: ProtocaasFile):
     client = _get_mongo_client()
-    files_collection = client['protocaas']['files']
+    files_collection = client['protocaas3']['files']
     await files_collection.insert_one(file.dict(exclude_none=True))

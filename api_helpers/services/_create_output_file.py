@@ -16,8 +16,8 @@ async def _create_output_file(*,
     size = await _get_size_for_remote_file(url)
 
     client = _get_mongo_client()
-    projects_collection = client['protocaas']['projects']
-    files_collection = client['protocaas']['files']
+    projects_collection = client['protocaas3']['projects']
+    files_collection = client['protocaas3']['files']
     
     existing_file = await files_collection.find_one({
         'projectId': project_id,

@@ -1,7 +1,7 @@
 import { Search } from "@mui/icons-material"
-import { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useState } from "react"
 import SearchResults from "./SearchResults"
-import { DandisetSearchResultItem, DandisetsResponse } from "./types"
+import { AssetResponse, AssetsResponseItem, DandisetSearchResultItem, DandisetsResponse } from "./types"
 import SmallIconButton from "../../components/SmallIconButton"
 import useRoute from "../../useRoute"
 import Hyperlink from "../../components/Hyperlink"
@@ -9,7 +9,6 @@ import Hyperlink from "../../components/Hyperlink"
 type Props = {
     width: number
     height: number
-    // onNwbFilesSelected: (files: {nwbUrl: string, dandisetId: string, dandisetVersion: string, assetId: string, assetPath: string, useStaging: boolean}[]) => Promise<void>
 }
 
 export const getDandiApiHeaders = (useStaging: boolean): {[key: string]: string} => {
@@ -32,8 +31,6 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
     const {staging, toggleStaging} = useRoute()
     const [searchText, setSearchText] = useState<string>('')
     const [searchResult, setSearchResults] = useState<DandisetSearchResultItem[]>([])
-    // const [useStaging, setUseStaging] = useState<boolean>(false)
-    // const toggleUseStaging = useCallback(() => {setUseStaging(v => (!v))}, [])
     const stagingStr = staging ? '-staging' : ''
     useEffect(() => {
         let canceled = false
@@ -56,31 +53,6 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
         return () => {canceled = true}
     }, [searchText, stagingStr, staging])
 
-    // const handleImportItems = useCallback(async (items: {dandisetId: string, dandisetVersion: string, assetItem: AssetsResponseItem}[]) => {
-    //     const files: {nwbUrl: string, dandisetId: string, dandisetVersion: string, assetId: string, assetPath: string, staging: boolean}[] = []
-    //     for (const item of items) {
-    //         const headers = getDandiApiHeaders(staging)
-    //         const response = await fetch(
-    //             `https://api${stagingStr}.dandiarchive.org/api/dandisets/${item.dandisetId}/versions/${item.dandisetVersion}/assets/${item.assetItem.asset_id}/`,
-    //             {
-    //                 headers
-    //             }
-    //         )
-    //         if (response.status === 200) {
-    //             const json = await response.json()
-    //             const assetResponse: AssetResponse = json
-    //             let nwbUrl: string | undefined
-    //             if (!nwbUrl) nwbUrl = assetResponse.contentUrl.find(url => url.startsWith('https://api.dandiarchive.org/api/'))
-    //             if (!nwbUrl) nwbUrl = assetResponse.contentUrl.find(url => url.startsWith('https://api-staging.dandiarchive.org/api/'))
-    //             if (!nwbUrl) nwbUrl = assetResponse.contentUrl.find(url => url.includes('amazonaws.com'))
-    //             if (!nwbUrl) nwbUrl = assetResponse.contentUrl[0]
-    //             if (!nwbUrl) return
-    //             files.push({nwbUrl, dandisetId: item.dandisetId, dandisetVersion: item.dandisetVersion, assetId: item.assetItem.asset_id, assetPath: item.assetItem.path, useStaging: staging})
-    //         }
-    //     }
-    //     await onNwbFilesSelected(files)
-    // }, [onNwbFilesSelected, stagingStr, staging])
-
     return (
         <div style={{position: 'absolute', width, height, background: 'white'}}>
             <div style={{position: 'absolute', width, height: topBarHeight, top: 0, overflow: 'hidden', background: 'white', display: 'flex', justifyContent: 'right'}}>
@@ -100,7 +72,6 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
                     width={width}
                     height={height - searchBarHeight}
                     searchResults={searchResult}
-                    // onImportItems={handleImportItems}
                     useStaging={staging}
                 />
             </div>
@@ -143,16 +114,16 @@ const SearchBar: FunctionComponent<SearchBarProps> = ({width, height, onSearch})
     )
 }
 
-const Checkbox: FunctionComponent<{checked: boolean, onClick: () => void, label: string}> = ({checked, onClick, label}) => {
-    return (
-        <div style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}} onClick={onClick}>
-            <div style={{width: 20, height: 20, borderRadius: 3, border: '1px solid black', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                {checked && <div style={{width: 10, height: 10, borderRadius: 2, background: 'black'}} />}
-            </div>
-            <div style={{marginLeft: 5}}>{label}</div>
-        </div>
-    )
-}
+// const Checkbox: FunctionComponent<{checked: boolean, onClick: () => void, label: string}> = ({checked, onClick, label}) => {
+//     return (
+//         <div style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}} onClick={onClick}>
+//             <div style={{width: 20, height: 20, borderRadius: 3, border: '1px solid black', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+//                 {checked && <div style={{width: 10, height: 10, borderRadius: 2, background: 'black'}} />}
+//             </div>
+//             <div style={{marginLeft: 5}}>{label}</div>
+//         </div>
+//     )
+// }
 
 type SearchButtonProps = {
     onClick: () => void

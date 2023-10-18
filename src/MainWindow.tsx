@@ -6,6 +6,7 @@ import useRoute from "./useRoute";
 import useWindowDimensions from "./useWindowDimensions";
 import DandiBrowser from "./pages/DandiBrowser/DandiBrowser";
 import ProjectPage from "./pages/ProjectPage/ProjectPage";
+import ComputeResourcesPage from "./pages/ComputeResourcePage/ComputeResourcePage";
 
 type Props = {
     // none
@@ -29,6 +30,12 @@ const MainWindow: FunctionComponent<Props> = () => {
                         <ProjectPage width={width} height={height - applicationBarHeight} />
                     ) : route.page === 'about' ? (
                         <AboutPage width={width} height={height - applicationBarHeight} />
+                    ) : route.page === 'compute-resource' ? (
+                        <ComputeResourcesPage
+                            width={width}
+                            height={height - applicationBarHeight}
+                            computeResourceId={route.computeResourceId}
+                        />
                     ) : (
                         <div>404</div>
                     )

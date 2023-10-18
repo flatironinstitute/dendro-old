@@ -1,0 +1,28 @@
+.Processor {
+}
+
+.Processor:hover {
+    background: #eee;
+}
+
+.ProcessorImage {
+}
+
+.ProcessorTitle {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.ProcessorDescription {
+    font-size: 16px;
+}
+
+.ProcessorParameters {
+    font-size: 14px;
+    color: #444;
+}
+
+.ProcessorTags {
+    font-size: 14px;
+    color: #444;
+}

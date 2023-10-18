@@ -5,8 +5,8 @@ from ..core.protocaas_types import ProtocaasFile, ProtocaasJob
 
 async def _remove_detached_files_and_jobs(project_id: str):
     client = _get_mongo_client()
-    files_collection = client['protocaas']['files']
-    jobs_collection = client['protocaas']['jobs']
+    files_collection = client['protocaas3']['files']
+    jobs_collection = client['protocaas3']['jobs']
 
     files = await files_collection.find({
         'projectId': project_id

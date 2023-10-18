@@ -1,4 +1,4 @@
-import validateObject, { isArrayOf, isBoolean, isEqualTo, isNumber, isOneOf, isString, optional } from "./validateObject"
+import validateObject, { isArrayOf, isBoolean, isEqualTo, isNumber, isOneOf, isString, optional, isNull } from "./validateObject"
 
 export type ProtocaasProjectUser = {
     userId: string
@@ -19,7 +19,7 @@ export type ProtocaasProject = {
     ownerId: string
     users: ProtocaasProjectUser[]
     publiclyReadable: boolean
-    computeResourceId?: string
+    computeResourceId?: string | null
     tags: string[]
     timestampCreated: number
     timestampModified: number
@@ -33,7 +33,7 @@ export const isProtocaasProject = (x: any): x is ProtocaasProject => {
         ownerId: isString,
         users: isArrayOf(isProtocaasProjectUser),
         publiclyReadable: isBoolean,
-        computeResourceId: optional(isString),
+        computeResourceId: optional(isOneOf([isString, isNull])),
         tags: isArrayOf(isString),
         timestampCreated: isNumber,
         timestampModified: isNumber
@@ -239,7 +239,7 @@ export type ProtocaasFile = {
     timestampCreated: number
     content: string
     metadata: any
-    jobId?: string
+    jobId?: string | null
 }
 
 export const isProtocaasFile = (x: any): x is ProtocaasFile => {
@@ -252,7 +252,7 @@ export const isProtocaasFile = (x: any): x is ProtocaasFile => {
         timestampCreated: isNumber,
         content: isString,
         metadata: () => true,
-        jobId: optional(isString)
+        jobId: optional(isOneOf([isString, isNull]))
     })
 }
 
@@ -303,26 +303,6 @@ export const isProtocaasComputeResourceApp = (x: any): x is ProtocaasComputeReso
     })
 }
 
-export type ProtocaasComputeResource = {
-    computeResourceId: string
-    ownerId: string
-    name: string
-    timestampCreated: number
-    apps: ProtocaasComputeResourceApp[]
-    spec?: Record<string, any>
-}
-
-export const isProtocaasComputeResource = (x: any): x is ProtocaasComputeResource => {
-    return validateObject(x, {
-        computeResourceId: isString,
-        ownerId: isString,
-        name: isString,
-        timestampCreated: isNumber,
-        apps: isArrayOf(isProtocaasComputeResourceApp),
-        spec: optional(() => true)
-    })
-}
-
 export type ComputeResourceSpecApp = {
     name: string
     help: string
@@ -344,6 +324,26 @@ export type ComputeResourceSpec = {
 export const isComputeResourceSpec = (x: any): x is ComputeResourceSpec => {
     return validateObject(x, {
         apps: isArrayOf(isComputeResourceSpecApp)
+    })
+}
+
+export type ProtocaasComputeResource = {
+    computeResourceId: string
+    ownerId: string
+    name: string
+    timestampCreated: number
+    apps: ProtocaasComputeResourceApp[]
+    spec?: ComputeResourceSpec
+}
+
+export const isProtocaasComputeResource = (x: any): x is ProtocaasComputeResource => {
+    return validateObject(x, {
+        computeResourceId: isString,
+        ownerId: isString,
+        name: isString,
+        timestampCreated: isNumber,
+        apps: isArrayOf(isProtocaasComputeResourceApp),
+        spec: optional(isComputeResourceSpec)
     })
 }
 

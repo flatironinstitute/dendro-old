@@ -33,7 +33,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
             <AppBar position="static" style={{height: applicationBarHeight - 10, color: 'black', background: applicationBarColor}}>
                 <Toolbar style={{minHeight: applicationBarHeight - 10}}>
                     <img src="/protocaas.png" alt="logo" height={30} style={{paddingBottom: 3, cursor: 'pointer'}} onClick={onHome} />
-                    <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;protocaas (prototype)</div>
+                    <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;protocaas (prototype v3)</div>
                     <span style={{marginLeft: 'auto'}} />
                     <span style={{color: 'yellow'}}>
                         <SmallIconButton

@@ -11,7 +11,6 @@ type SearchResultsProps = {
     width: number
     height: number
     searchResults: DandisetSearchResultItem[]
-    // onImportItems: (items: {dandisetId: string, dandisetVersion: string, assetItem: AssetsResponseItem}[]) => Promise<void>
     useStaging?: boolean
 }
 
@@ -61,8 +60,8 @@ const SearchResults: FunctionComponent<SearchResultsProps> = ({width, height, se
                 width={0}
                 height={0}
                 // onClickAsset={(assetItem: AssetsResponseItem) => {onClickAsset(selectedItem?.identifier || '', selectedItem?.most_recent_published_version?.version || 'draft', assetItem)}}
-                // onImportAssets={handleImportAssets}
                 useStaging={useStaging}
+                onImportItems={undefined}
             />
         </Splitter>
     )

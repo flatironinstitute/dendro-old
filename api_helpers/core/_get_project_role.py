@@ -16,6 +16,16 @@ def _get_project_role(project: ProtocaasProject, user_id: Union[str, None]) -> s
     else:
         return 'none'
 
+def _project_has_user(project: ProtocaasProject, user_id: Union[str, None]) -> bool:
+    if not user_id:
+        return False
+    if project.ownerId == user_id:
+        return True
+    user = next((x for x in project.users if x.userId == user_id), None)
+    if user:
+        return True
+    return False
+
 def _project_is_readable(project: ProtocaasProject, user_id: Union[str, None]) -> bool:
     return _get_project_role(project, user_id) in ['admin', 'editor', 'viewer']
 

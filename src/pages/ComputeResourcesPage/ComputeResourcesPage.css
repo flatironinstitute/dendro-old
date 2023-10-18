@@ -1,0 +1,16 @@
+.compute-resources-page {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: auto;
+}
+
+.compute-resources-page h1, .compute-resources-page h2 {
+    color: #333;
+    text-align: center;
+}
+
+.compute-resources-page p {
+    margin-bottom: 20px;
+    text-align: justify;
+}

@@ -1,23 +1,24 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
-import { AssetsResponse, AssetsResponseItem, DandisetSearchResultItem, DandisetVersionInfo } from "./types"
+import { applicationBarColorDarkened } from "../../ApplicationBar"
+import { useGithubAuth } from "../../GithubAuth/useGithubAuth"
+import Hyperlink from "../../components/Hyperlink"
+import { createProject, setProjectTags } from "../../dbInterface/dbInterface"
+import useRoute from "../../useRoute"
+import { useProject } from "../ProjectPage/ProjectPageContext"
 import { getDandiApiHeaders } from "./DandiBrowser"
 import formatByteCount from "./formatByteCount"
-import { applicationBarColorDarkened } from "../../ApplicationBar"
+import { AssetsResponse, AssetsResponseItem, DandisetSearchResultItem, DandisetVersionInfo } from "./types"
 import useProjectsForTag from "./useProjectsForTag"
-import Hyperlink from "../../components/Hyperlink"
-import useRoute from "../../useRoute"
-import { useGithubAuth } from "../../GithubAuth/useGithubAuth"
-import { GithubAuthData } from "../../GithubAuth/GithubAuthContext"
 
 type DandisetViewProps = {
     dandisetId: string
     width: number
     height: number
     useStaging?: boolean
-    // onImportAssets?: (assetItems: AssetsResponseItem[]) => Promise<void>
+    onImportItems?: (items: {dandisetId: string, dandisetVersion: string, assetItem: AssetsResponseItem}[]) => Promise<void>
 }
 
-const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, height, useStaging}) => {
+const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, height, useStaging, onImportItems}) => {
     const [dandisetResponse, setDandisetResponse] = useState<DandisetSearchResultItem | null>(null)
     const [dandisetVersionInfo, setDandisetVersionInfo] = useState<DandisetVersionInfo | null>(null)
     const [assetsResponses, setAssetsResponses] = useState<AssetsResponse[]>([])
@@ -25,8 +26,8 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
 
     const {setRoute} = useRoute()
 
-    // const {workspaceRole} = useWorkspace()
-    // const canImport = workspaceRole === 'admin' || workspaceRole === 'editor'
+    const {projectRole} = useProject()
+    const canImport = !!onImportItems && (projectRole === 'admin' || projectRole === 'editor')
 
     const stagingStr = useStaging ? '-staging' : ''
     const stagingStr2 = useStaging ? 'gui-staging.' : ''
@@ -128,31 +129,38 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
     const auth = useGithubAuth()
 
     const handleCreateProject = useCallback(async () => {
+        if (!auth.accessToken) {
+            alert('You are not logged in.')
+            return
+        }
         const projectName = prompt('Enter project name')
         if (!projectName) return
-        if (!auth.accessToken) return
 
         const projectId = await createProject(projectName, auth)
         if (!projectId) return
         await setProjectTags(projectId, [`dandiset.${dandisetId}`], auth)
         setRoute({page: 'project', projectId})
-    }, [])
+    }, [auth, dandisetId, setRoute])
 
-    // const [importing, setImporting] = useState(false)
+    const [importing, setImporting] = useState(false)
 
-    // const handleImport = useCallback(async () => {
-    //     if (!onImportAssets) return
-    //     const assetsToImport = allAssets.filter(assetItem => selectedAssets.assetPaths.includes(assetItem.path))
-    //     setImporting(true)
-    //     try {
-    //         await onImportAssets(assetsToImport)
-    //         // deselect all assets
-    //         selectedAssetsDispatch({type: 'set-multiple', assetPaths: selectedAssets.assetPaths, selected: false})
-    //     }
-    //     finally {
-    //         setImporting(false)
-    //     }
-    // }, [onImportAssets, allAssets, selectedAssets])
+    const handleImport = useCallback(async () => {
+        if (!onImportItems) return
+        const assetsToImport = allAssets.filter(assetItem => selectedAssets.assetPaths.includes(assetItem.path))
+        setImporting(true)
+
+        const dandisetVersion = most_recent_published_version?.version || draft_version?.version || ''
+        const items = assetsToImport.map(assetItem => ({dandisetId, dandisetVersion, assetItem}))
+
+        try {
+            await onImportItems(items)
+            // deselect all assets
+            selectedAssetsDispatch({type: 'set-multiple', assetPaths: selectedAssets.assetPaths, selected: false})
+        }
+        finally {
+            setImporting(false)
+        }
+    }, [allAssets, dandisetId, draft_version, most_recent_published_version, onImportItems, selectedAssets])
 
     if (!dandisetResponse) return <div>Loading dandiset...</div>
     if (!dandisetVersionInfo) return <div>Loading dandiset info...</div>
@@ -161,22 +169,25 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
 
     const externalLink = `https://${stagingStr2}dandiarchive.org/dandiset/${dandisetId}/${X.version}`
 
-    const topBarHeight = 30
-    // const buttonColor = selectedAssets.assetPaths.length > 0 ? 'darkgreen' : 'gray'
+    const topBarHeight = canImport ? 30 : 0
+    const buttonColor = selectedAssets.assetPaths.length > 0 ? 'darkgreen' : 'gray'
+    console.log('--- top bar height', topBarHeight, canImport, onImportItems)
     return (
         <div style={{position: 'absolute', width, height, overflowY: 'hidden'}}>
             <div style={{position: 'absolute', top: 0, width, height: topBarHeight, borderBottom: 'solid 1px #ccc'}}>
-                {/* {
-                    canImport ? (
-                        !importing ? (
-                            <button onClick={selectedAssets.assetPaths.length > 0 ? handleImport : undefined} disabled={selectedAssets.assetPaths.length === 0} style={{fontSize: 20, color: buttonColor}}>Import selected assets</button>
+                {
+                    onImportItems && (
+                        canImport ? (
+                            !importing ? (
+                                <button onClick={selectedAssets.assetPaths.length > 0 ? handleImport : undefined} disabled={selectedAssets.assetPaths.length === 0} style={{fontSize: 20, color: buttonColor}}>Import selected assets</button>
+                            ) : (
+                                <span style={{fontSize: 20, color: 'gray'}}>Importing...</span>
+                            )
                         ) : (
-                            <span style={{fontSize: 20, color: 'gray'}}>Importing...</span>
+                            <span style={{color: 'red'}}>You are not authorized to import DANDI assets into this project.</span>
                         )
-                    ) : (
-                        <span style={{color: 'red'}}>You are not authorized to import DANDI assets into this workspace.</span>
                     )
-                } */}
+                }
             </div>
             <div style={{position: 'absolute', top: topBarHeight, width, height: height - topBarHeight, overflowY: 'auto'}}>
                 <div style={{fontSize: 20, fontWeight: 'bold', padding: 5}}>
@@ -216,7 +227,7 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
                         </div>
                     )
                 }
-                <AssetsBrowser assetItems={allAssets} selectedAssets={selectedAssets} selectedAssetsDispatch={selectedAssetsDispatch} />
+                <AssetsBrowser assetItems={allAssets} selectedAssets={selectedAssets} selectedAssetsDispatch={selectedAssetsDispatch} canSelect={!!onImportItems} />
             </div>
         </div>
     )
@@ -289,9 +300,10 @@ type AssetsBrowserProps = {
     assetItems: AssetsResponseItem[]
     selectedAssets: SelectedAssetsState
     selectedAssetsDispatch: (action: SelectedAssetsAction) => void
+    canSelect?: boolean
 }
 
-const AssetsBrowser: FunctionComponent<AssetsBrowserProps> = ({assetItems, selectedAssets, selectedAssetsDispatch}) => {
+const AssetsBrowser: FunctionComponent<AssetsBrowserProps> = ({assetItems, selectedAssets, selectedAssetsDispatch, canSelect}) => {
     const folders: string[] = useMemo(() => {
         const folders = assetItems.filter(a => (a.path.includes('/'))).map(assetItem => assetItem.path.split('/')[0])
         const uniqueFolders = [...new Set(folders)].sort()
@@ -319,6 +331,7 @@ const AssetsBrowser: FunctionComponent<AssetsBrowserProps> = ({assetItems, selec
                                 assetItems={assetItems.filter(assetItem => assetItem.path.startsWith(folder + '/'))}
                                 selectedAssets={selectedAssets}
                                 selectedAssetsDispatch={selectedAssetsDispatch}
+                                canSelect={canSelect}
                             />
                         )}
                         {/* {
@@ -339,9 +352,10 @@ type AssetItemsTableProps = {
     assetItems: AssetsResponseItem[]
     selectedAssets: SelectedAssetsState
     selectedAssetsDispatch: (action: SelectedAssetsAction) => void
+    canSelect?: boolean
 }
 
-const AssetItemsTable: FunctionComponent<AssetItemsTableProps> = ({assetItems, selectedAssets, selectedAssetsDispatch}) => {
+const AssetItemsTable: FunctionComponent<AssetItemsTableProps> = ({assetItems, selectedAssets, selectedAssetsDispatch, canSelect}) => {
     const selectAllCheckedState = useMemo(() => {
         const numSelected = assetItems.filter(assetItem => selectedAssets.assetPaths.includes(assetItem.path)).length
         if (numSelected === 0) return false
@@ -362,11 +376,15 @@ const AssetItemsTable: FunctionComponent<AssetItemsTableProps> = ({assetItems, s
             <thead>
             </thead>
             <tbody>
-                <tr>
-                    <td style={{width: 20}}>
-                        <Checkbox checked={selectAllCheckedState} onClick={handleClickSelectAll} />
-                    </td>
-                </tr>
+                {
+                    canSelect && (
+                        <tr>
+                            <td style={{width: 20}}>
+                                <Checkbox checked={selectAllCheckedState} onClick={handleClickSelectAll} />
+                            </td>
+                        </tr>
+                    )
+                }
                 {
                     assetItems.map(assetItem => (
                         <AssetItemRow
@@ -374,6 +392,7 @@ const AssetItemsTable: FunctionComponent<AssetItemsTableProps> = ({assetItems, s
                             assetItem={assetItem}
                             selected={selectedAssets.assetPaths.includes(assetItem.path)}
                             onToggleSelection={() => selectedAssetsDispatch({type: 'toggle', assetPath: assetItem.path})}
+                            canSelect={canSelect}
                         />
                     ))
                 }
@@ -386,16 +405,21 @@ type AssetItemRowProps = {
     assetItem: AssetsResponseItem
     selected: boolean
     onToggleSelection: () => void
+    canSelect?: boolean
 }
 
-const AssetItemRow: FunctionComponent<AssetItemRowProps> = ({assetItem, selected, onToggleSelection}) => {
+const AssetItemRow: FunctionComponent<AssetItemRowProps> = ({assetItem, selected, onToggleSelection, canSelect}) => {
     const {created, modified, path, size} = assetItem
 
     return (
         <tr>
-            <td style={{width: 20}}>
-                <Checkbox checked={selected} onClick={onToggleSelection} />
-            </td>
+            {
+                canSelect && (
+                    <td style={{width: 20}}>
+                        <Checkbox checked={selected} onClick={onToggleSelection} />
+                    </td>
+                )
+            }
             <td>
                 {path.split('/').slice(1).join('/')}
             </td>
@@ -429,62 +453,6 @@ const formatTime2 = (time: string) => {
     const date = new Date(time)
     // include date only
     return date.toLocaleDateString()
-}
-
-const createProject = async (projectName: string, auth: GithubAuthData) => {
-    if (!auth.accessToken) return undefined
-    const url = `/api/gui/projects`
-    const data = {
-        name: projectName
-    }
-    const headers = {
-        github_access_token: auth.accessToken
-    }
-    const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data)
-    })
-    if (response.status !== 200) {
-        alert('Error creating project')
-        return
-    }
-    const json = await response.json()
-    if (!json.success) {
-        alert('Error creating project (*)')
-        return
-    }
-    const projectId = json.projectId
-    if (!projectId) {
-        alert('Error creating project (**)')
-        return
-    }
-    return projectId
-}
-
-const setProjectTags = async (projectId: string, tags: string[], auth: GithubAuthData) => {
-    if (!auth.accessToken) return undefined
-    const url = `/api/gui/projects/${projectId}/tags`
-    const data = {
-        tags
-    }
-    const headers = {
-        github_access_token: auth.accessToken
-    }
-    const response = await fetch(url, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(data)
-    })
-    if (response.status !== 200) {
-        alert('Error setting project tags')
-        return
-    }
-    const json = await response.json()
-    if (!json.success) {
-        alert('Error setting project tags (*)')
-        return
-    }
 }
 
 export default DandisetView

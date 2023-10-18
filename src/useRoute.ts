@@ -11,6 +11,10 @@ export type Route = {
 } | {
     page: 'project'
     projectId: string
+    tab?: string
+} | {
+    page: 'compute-resource'
+    computeResourceId: string
 } | {
     page: 'about'
 }
@@ -44,7 +48,15 @@ const useRoute = () => {
             const projectId = p.slice('/project/'.length)
             return {
                 page: 'project',
-                projectId
+                projectId,
+                tab: searchParams.get('tab') || undefined
+            }
+        }
+        else if (p.startsWith('/compute-resource/')) {
+            const computeResourceId = p.slice('/compute-resource/'.length)
+            return {
+                page: 'compute-resource',
+                computeResourceId
             }
         }
         else {
@@ -52,42 +64,31 @@ const useRoute = () => {
                 page: 'home'
             }
         }
-    }, [p])
+    }, [p, searchParams])
 
     const setRoute = useCallback((r: Route) => {
+        const queries = []
+        if (staging) queries.push(`staging=1`)
+        if (r.page === 'project') {
+            if (r.tab) queries.push(`tab=${r.tab}`)
+        }
+        const queryString = queries.length > 0 ? `?${queries.join('&')}` : ''
         if (r.page === 'home') {
-            if (staging) {
-                navigate('/?staging=1')
-            }
-            else {
-                navigate('/')
-            }
+            navigate('/' + queryString)
         }
         else if (r.page === 'dandisets') {
-            if (staging) {
-                navigate('/dandisets?staging=1')
-            }
-            else {
-                navigate('/dandisets')
-            }
+            navigate('/dandisets' + queryString)
         }
         else if (r.page === 'dandiset') {
             let p = '/'
             if (r.dandisetId) p = `/dandiset/${r.dandisetId}`
-            if (staging) {
-                navigate(p + '?staging=1')
-            }
-            else {
-                navigate(p)
-            }
+            navigate(p + queryString)
         }
         else if (r.page === 'project') {
-            if (staging) {
-                navigate(`/project/${r.projectId}?staging=1`)
-            }
-            else {
-                navigate(`/project/${r.projectId}`)
-            }
+            navigate(`/project/${r.projectId}` + queryString)
+        }
+        else if (r.page === 'compute-resource') {
+            navigate(`/compute-resource/${r.computeResourceId}` + queryString)
         }
         else if (r.page === 'about') {
             if (staging) {
