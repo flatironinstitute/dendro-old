@@ -24,8 +24,7 @@ export const SetupComputeResources: FunctionComponent<PropsWithChildren<Props>> 
     const [refreshComputeResourcesCode, setRefreshComputeResourcesCode] = useState(0)
     const refreshComputeResources = useCallback(() => setRefreshComputeResourcesCode(rc => rc + 1), [])
 
-    const {accessToken, userId} = useGithubAuth()
-    const auth = useMemo(() => (accessToken ? {githubAccessToken: accessToken, userId} : {}), [accessToken, userId])
+    const auth = useGithubAuth()
 
     useEffect(() => {
         (async () => {

@@ -18,6 +18,7 @@
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.0",
+    "github-markdown-css": "^5.2.0",
     "pubnub": "^7.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -28,14 +29,14 @@
     "rehype-mathjax": "^4.0.2",
     "rehype-raw": "^6.1.1",
     "remark-gfm": "^3.0.1",
-    "remark-math": "^5.1.1",
-    "github-markdown-css": "^5.2.0"
+    "remark-math": "^5.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.6.1",
     "@types/pubnub": "^7.3.4",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
+    "@types/react-syntax-highlighter": "^15.5.9",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "@vitejs/plugin-react": "^4.0.0",

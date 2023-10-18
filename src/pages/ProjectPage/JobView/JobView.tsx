@@ -23,8 +23,7 @@ const useJob = (jobId: string) => {
 
     const [jobConsoleOutput, setJobConsoleOutput] = useState<string | undefined>()
 
-    const {accessToken, userId} = useGithubAuth()
-    const auth = useMemo(() => (accessToken ? {githubAccessToken: accessToken, userId} : {}), [accessToken, userId])
+    const auth = useGithubAuth()
 
     useEffect(() => {
         let canceled = false
@@ -36,10 +35,7 @@ const useJob = (jobId: string) => {
 
             setJob(job)
 
-            if (job?.consoleOutput) {
-                setJobConsoleOutput(job.consoleOutput)
-            }
-            else if (job?.consoleOutputUrl) {
+            if (job?.consoleOutputUrl) {
                 // fetch console output
                 const resp = await fetch(job.consoleOutputUrl)
                 if (resp.ok) {
