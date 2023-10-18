@@ -171,7 +171,6 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
 
     const topBarHeight = canImport ? 30 : 0
     const buttonColor = selectedAssets.assetPaths.length > 0 ? 'darkgreen' : 'gray'
-    console.log('--- top bar height', topBarHeight, canImport, onImportItems)
     return (
         <div style={{position: 'absolute', width, height, overflowY: 'hidden'}}>
             <div style={{position: 'absolute', top: 0, width, height: topBarHeight, borderBottom: 'solid 1px #ccc'}}>

@@ -5,7 +5,7 @@ import HBoxLayout from "../../components/HBoxLayout";
 import ModalWindow from "../../components/ModalWindow/ModalWindow";
 import { setUrlFile } from "../../dbInterface/dbInterface";
 import useRoute from "../../useRoute";
-import ComputeResourcesPage from "../ComputeResourcePage/ComputeResourcePage";
+import ComputeResourcePage from "../ComputeResourcePage/ComputeResourcePage";
 // import ManualNwbSelector from "./ManualNwbSelector/ManualNwbSelector";
 import { SetupComputeResources } from "../ComputeResourcesPage/ComputeResourcesContext";
 import DandiUploadWindow from "./DandiUpload/DandiUploadWindow";
@@ -295,7 +295,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             <div style={{position: 'absolute', width, height, visibility: currentView === 'compute-resource' ? undefined : 'hidden'}}>
                 {
                     computeResourceId && (
-                        <ComputeResourcesPage
+                        <ComputeResourcePage
                             width={width}
                             height={height}
                             computeResourceId={computeResourceId}

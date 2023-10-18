@@ -335,7 +335,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         openTabs: openTabs.openTabs,
         currentTabName: openTabs.currentTabName,
         jobs,
-        computeResourceId: project?.computeResourceId || undefined,
+        computeResourceId: project ? project.computeResourceId || import.meta.env.VITE_DEFAULT_COMPUTE_RESOURCE_ID : undefined,
         computeResource,
         projectRole,
         openTab: (tabName: string) => openTabsDispatch({type: 'openTab', tabName}),
