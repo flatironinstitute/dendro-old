@@ -2,7 +2,7 @@ import os
 import requests
 from ._crypto_keys import _sign_message_str
 
-protocaas_url = os.getenv('PROTOCAAS_URL', 'https://protocaas3.vercel.app')
+protocaas_url = os.getenv('PROTOCAAS_URL', 'https://protocaas.vercel.app')
 
 def _compute_resource_get_api_request(*,
     url_path: str,

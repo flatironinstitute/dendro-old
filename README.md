@@ -6,12 +6,12 @@ Protocaas is a **prototype** web application designed for scientists in research
 
 If you're a lab working with electrophysiology data and looking for a solution to spike sort your data, consider trying this software as a beta tester. You can use it in the cloud *or* with your local resources. Reach out to one of the authors if interested.
 
-* [Access the live site](https://protocaas3.vercel.app) (it's a prototype!)
+* [Access the live site](https://protocaas.vercel.app) (it's a prototype!)
 * [Learn how to host a compute resource](./doc/host_compute_resource.md)
 
 ## System Requirements
 
-To use Protocaas, you only need a web browser. No additional software installation is required. Simply open your preferred web browser and navigate to the [live site](https://protocaas3.vercel.app) to get started.
+To use Protocaas, you only need a web browser. No additional software installation is required. Simply open your preferred web browser and navigate to the [live site](https://protocaas.vercel.app) to get started.
 
 If you want to [host your own compute resource](./doc/host_compute_resource.md) for processing, you will need a Linux machine with optional access to a Slurm cluster or AWS resources.
 

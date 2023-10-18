@@ -83,7 +83,7 @@ def _start_job(*,
         'JOB_ID': job_id,
         'JOB_PRIVATE_KEY': job_private_key,
         'APP_EXECUTABLE': executable_path,
-        'PROTOCAAS_URL': 'https://protocaas3.vercel.app'
+        'PROTOCAAS_URL': 'https://protocaas.vercel.app'
     }
     kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
     if kachery_cloud_client_id is not None:

@@ -65,7 +65,7 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str]=No
     signature = sign_message(msg, COMPUTE_RESOURCE_ID, COMPUTE_RESOURCE_PRIVATE_KEY)
     resource_code = f'{timestamp}-{signature}'
 
-    url = f'https://protocaas3.vercel.app/register-compute-resource/{COMPUTE_RESOURCE_ID}/{resource_code}'
+    url = f'https://protocaas.vercel.app/register-compute-resource/{COMPUTE_RESOURCE_ID}/{resource_code}'
     print('')
     print('Please visit the following URL in your browser to register your compute resource node:')
     print('')
