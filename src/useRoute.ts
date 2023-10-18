@@ -16,6 +16,12 @@ export type Route = {
     page: 'compute-resource'
     computeResourceId: string
 } | {
+    page: 'compute-resources'
+} | {
+    page: 'register-compute-resource'
+    computeResourceId: string
+    resourceCode: string
+} | {
     page: 'about'
 }
 
@@ -59,6 +65,21 @@ const useRoute = () => {
                 computeResourceId
             }
         }
+        else if (p === '/compute-resources') {
+            return {
+                page: 'compute-resources'
+            }
+        }
+        else if (p.startsWith('/register-compute-resource/')) {
+            const a = p.split('/')
+            const computeResourceId = a[2]
+            const resourceCode = a[3]
+            return {
+                page: 'register-compute-resource',
+                computeResourceId,
+                resourceCode
+            }
+        }
         else {
             return {
                 page: 'home'
@@ -89,6 +110,12 @@ const useRoute = () => {
         }
         else if (r.page === 'compute-resource') {
             navigate(`/compute-resource/${r.computeResourceId}` + queryString)
+        }
+        else if (r.page === 'compute-resources') {
+            navigate('/compute-resources')
+        }
+        else if (r.page === 'register-compute-resource') {
+            navigate(`/register-compute-resource/${r.computeResourceId}/${r.resourceCode}`)
         }
         else if (r.page === 'about') {
             if (staging) {
