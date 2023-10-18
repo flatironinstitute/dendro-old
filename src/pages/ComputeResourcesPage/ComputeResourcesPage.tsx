@@ -12,6 +12,9 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height}) => {
     return (
         <SetupComputeResources>
             <div className="compute-resources-page">
+                <h3>Your compute resources</h3>
+                <ComputeResourcesTable />
+                <hr />
                 <p>To register a compute resource, run the following from your computer</p>
                 <code>
                     cd /path/to/compute/resource/directory
@@ -19,8 +22,6 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height}) => {
                 <code>
                     protocaas register-compute-resource
                 </code>
-                <h3>Your compute resources</h3>
-                <ComputeResourcesTable />
             </div>
         </SetupComputeResources>
     )
