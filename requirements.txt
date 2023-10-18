@@ -1,0 +1,5 @@
+# requirements for the api
+fastapi
+motor
+simplejson
+pydantic
