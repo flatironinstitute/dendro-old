@@ -9,6 +9,7 @@ import ProjectPage from "./pages/ProjectPage/ProjectPage";
 import RegisterComputeResourcePage from "./pages/RegisterComputeResourcePage/RegisterComputeResourcePage";
 import ComputeResourcePage from "./pages/ComputeResourcePage/ComputeResourcePage";
 import ComputeResourcesPage from "./pages/ComputeResourcesPage/ComputeResourcesPage";
+import GitHubAuthPage from "./GitHub/GitHubAuthPage";
 
 type Props = {
     // none
@@ -42,6 +43,8 @@ const MainWindow: FunctionComponent<Props> = () => {
                         <ComputeResourcesPage width={width} height={height} />
                     ) : route.page === 'register-compute-resource' ? (
                         <RegisterComputeResourcePage />
+                    ) : route.page === 'github-auth' ? (
+                        <GitHubAuthPage />
                     ) : (
                         <div>404</div>
                     )

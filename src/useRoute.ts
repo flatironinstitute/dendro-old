@@ -22,6 +22,8 @@ export type Route = {
     computeResourceId: string
     resourceCode: string
 } | {
+    page: 'github-auth'
+} | {
     page: 'about'
 }
 
@@ -80,6 +82,11 @@ const useRoute = () => {
                 resourceCode
             }
         }
+        else if (p === '/github/auth') {
+            return {
+                page: 'github-auth'
+            }
+        }
         else {
             return {
                 page: 'home'
@@ -116,6 +123,9 @@ const useRoute = () => {
         }
         else if (r.page === 'register-compute-resource') {
             navigate(`/register-compute-resource/${r.computeResourceId}/${r.resourceCode}`)
+        }
+        else if (r.page === 'github-auth') {
+            navigate('/github/auth')
         }
         else if (r.page === 'about') {
             if (staging) {
