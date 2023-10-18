@@ -151,7 +151,7 @@ async def register_compute_resource(data: RegisterComputeResourceRequest, github
         resource_code = data.resourceCode
         name = data.name
 
-        ok = await _verify_resource_code(compute_resource_id, resource_code)
+        ok = _verify_resource_code(compute_resource_id, resource_code)
         if not ok:
             raise Exception('Invalid resource code')
         

@@ -4,3 +4,4 @@ motor
 simplejson
 pydantic
 aiohttp
+cryptography
