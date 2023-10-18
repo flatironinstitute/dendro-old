@@ -254,7 +254,7 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
         ret.append(app)
     return ret
 
-def start_compute_resource_node(dir: str):
+def start_compute_resource(dir: str):
     config_fname = os.path.join(dir, '.protocaas-compute-resource-node.yaml')
     
     if os.path.exists(config_fname):
