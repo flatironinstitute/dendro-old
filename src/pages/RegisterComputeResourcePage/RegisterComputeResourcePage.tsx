@@ -20,25 +20,37 @@ const RegisterComputeResourcePage: FunctionComponent<Props> = () => {
 
     const handleRegister = useCallback(async () => {
         if (!auth) return
-        await registerComputeResource(computeResourceId, resourceCode, name, auth)
+        try {
+            await registerComputeResource(computeResourceId, resourceCode, name, auth)
+        }
+        catch(e) {
+            alert(`Error registering compute resource: ${e}`)
+            return
+        }
         setRoute({page: 'compute-resources'})
     }, [computeResourceId, resourceCode, name, auth, setRoute])
 
     if (!auth.userId) {
-        <p>To register this compute resource, you must first log in.</p>
+        return <p style={{padding: 30, fontSize: 30}}>To register this compute resource, you must first log in. Click the &quot;Log in&quot; button in the upper right corner.</p>
     }
 
     return (
-        <div>
-            <p>You are registering compute resource {computeResourceId} to user <UserIdComponent userId={auth.userId} /></p>
+        <div style={{fontSize: 20, padding: 20}}>
+            <p>You are registering compute resource {abbreviate(computeResourceId, 12)} to user <UserIdComponent userId={auth.userId} /></p>
             <div>
-                Choose a name for this resource: <input type="text" value={name} onChange={e => setName(e.target.value)} />
+                Choose a name for this resource: <input style={{height: 24}} type="text" value={name} onChange={e => setName(e.target.value)} />
             </div>
+            <br />
             <div>
                 <button disabled={!name} onClick={handleRegister}>Register</button>
             </div>
         </div>
     )
+}
+
+const abbreviate = (s: string, maxLength: number) => {
+    if (s.length <= maxLength) return s
+    return s.slice(0, maxLength - 3) + '...'
 }
 
 export default RegisterComputeResourcePage;
