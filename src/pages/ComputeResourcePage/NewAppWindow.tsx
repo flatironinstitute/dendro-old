@@ -58,44 +58,49 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
             <hr />
             {/* Input field for the app name */}
             <div>
-                <label htmlFor="new-app-name">App name:</label>
-                &nbsp;
-                {
-                    !appBeingEdited ? (
-                        <input type="text" id="new-app-name" value={newAppName} onChange={e => setNewAppName(e.target.value)} />
-                    ) : (
-                        <span>{newAppName}</span>
-                    )
-                }
-                {/* Indicator on whether the app name is valid */}
-                &nbsp;&nbsp;
-                {
-                    isValidAppName(newAppName) ? (
-                        <span style={{color: 'green'}}>
-                            {/* Checkmark character */}
-                            &#10004;
-                        </span>
-                    ) : (
-                        <span style={{color: 'red'}}>
-                            {/* Cross character */}
-                            &#10008;
-                        </span>
-                    )
-                }
-            </div>
-            <br />
-            {/* Input field for the executable path */}
-            <div>
-                <label htmlFor="new-executable-path">Executable path:</label>
-                &nbsp;
-                <input type="text" id="new-executable-path" value={newExecutablePath} onChange={e => setNewExecutablePath(e.target.value)} />
-            </div>
-            <br />
-            {/* Input field for the container */}
-            <div>
-                <label htmlFor="new-container">Container:</label>
-                &nbsp;
-                <input type="text" id="new-container" value={newContainer} onChange={e => setNewContainer(e.target.value)} />
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>App name</td>
+                            <td>
+                                {
+                                    !appBeingEdited ? (
+                                        <input type="text" id="new-app-name" value={newAppName} onChange={e => setNewAppName(e.target.value)} />
+                                    ) : (
+                                        <span>{newAppName}</span>
+                                    )
+                                }          
+                                {/* Indicator on whether the app name is valid */}
+                                &nbsp;&nbsp;
+                                {
+                                    isValidAppName(newAppName) ? (
+                                        <span style={{color: 'green'}}>
+                                            {/* Checkmark character */}
+                                            &#10004;
+                                        </span>
+                                    ) : (
+                                        <span style={{color: 'red'}}>
+                                            {/* Cross character */}
+                                            &#10008;
+                                        </span>
+                                    )
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Executable path</td>
+                            <td>
+                                <input type="text" id="new-executable-path" value={newExecutablePath} onChange={e => setNewExecutablePath(e.target.value)} />                
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Container</td>
+                            <td>
+                                <input type="text" id="new-container" value={newContainer} onChange={e => setNewContainer(e.target.value)} />                
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <br />
             <hr />
@@ -196,16 +201,22 @@ const EditAwsBatchOpts: FunctionComponent<EditAwsBatchOptsProps> = ({value, onCh
             <h4>AWS Batch</h4>
             {/* Input field for the job queue */}
             <div>
-                <label htmlFor="new-aws-batch-job-queue">Job queue:</label>
-                &nbsp;
-                <input type="text" id="new-aws-batch-job-queue" value={internalJobQueue} onChange={e => setInternalJobQueue(e.target.value)} />
-            </div>
-            <br />
-            {/* Input field for the job definition */}
-            <div>
-                <label htmlFor="new-aws-batch-job-definition">Job definition:</label>
-                &nbsp;
-                <input type="text" id="new-aws-batch-job-definition" value={internalJobDefinition} onChange={e => setInternalJobDefinition(e.target.value)} />
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>Job queue</td>
+                            <td>
+                                <input type="text" id="new-aws-batch-job-queue" value={internalJobQueue} onChange={e => setInternalJobQueue(e.target.value)} />                
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Job definition</td>
+                            <td>
+                                <input type="text" id="new-aws-batch-job-definition" value={internalJobDefinition} onChange={e => setInternalJobDefinition(e.target.value)} />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     )
@@ -259,33 +270,34 @@ const EditSlurmOpts: FunctionComponent<EditSlurmOptsProps> = ({value, onChange, 
     return (
         <div>
             <h4>Slurm</h4>
-            {/* Input field for the CPUs per task */}
-            <div>
-                <label htmlFor="new-slurm-cpus-per-task">CPUs per task:</label>
-                &nbsp;
-                <input type="text" id="new-slurm-cpus-per-task" value={internalCpusPerTask} onChange={e => setInternalCpusPerTask(e.target.value)} />
-            </div>
-            <br />
-            {/* Input field for the partition */}
-            <div>
-                <label htmlFor="new-slurm-partition">Partition:</label>
-                &nbsp;
-                <input type="text" id="new-slurm-partition" value={internalPartition} onChange={e => setInternalPartition(e.target.value)} />
-            </div>
-            <br />
-            {/* Input field for the time */}
-            <div>
-                <label htmlFor="new-slurm-time">Time:</label>
-                &nbsp;
-                <input type="text" id="new-slurm-time" value={internalTime} onChange={e => setInternalTime(e.target.value)} />
-            </div>
-            <br />
-            {/* Input field for the other options */}
-            <div>
-                <label htmlFor="new-slurm-other-opts">Other options:</label>
-                &nbsp;
-                <input type="text" id="new-slurm-other-opts" value={internalOtherOpts} onChange={e => setInternalOtherOpts(e.target.value)} />
-            </div>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>CPUs per task</td>
+                        <td>
+                            <input type="text" id="new-slurm-cpus-per-task" value={internalCpusPerTask} onChange={e => setInternalCpusPerTask(e.target.value)} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Partition</td>
+                        <td>
+                            <input type="text" id="new-slurm-partition" value={internalPartition} onChange={e => setInternalPartition(e.target.value)} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Time</td>
+                        <td>
+                            <input type="text" id="new-slurm-time" value={internalTime} onChange={e => setInternalTime(e.target.value)} />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Other options</td>
+                        <td>
+                            <input type="text" id="new-slurm-other-opts" value={internalOtherOpts} onChange={e => setInternalOtherOpts(e.target.value)} />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     )
 }
