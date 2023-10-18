@@ -1,7 +1,7 @@
 import React, { FunctionComponent, PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
 import { deleteFile, deleteJob, deleteProject, fetchFiles, fetchJobsForProject, fetchProject, setProjectName, setProjectDescription, getComputeResource, setProjectComputeResourceId } from '../../dbInterface/dbInterface';
 import { useGithubAuth } from '../../GithubAuth/useGithubAuth';
-import { onPubsubMessage } from '../../pubnub/pubnub';
+import { onPubsubMessage, setPubNubListenChannel } from '../../pubnub/pubnub';
 import { ProtocaasComputeResource, ProtocaasFile, ProtocaasJob, ProtocaasProject } from '../../types/protocaas-types';
 
 type Props = {
@@ -173,6 +173,13 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
     const [openTabs, openTabsDispatch] = React.useReducer(openTabsReducer, {openTabs: [], currentTabName: undefined})
 
     const auth = useGithubAuth()
+
+    useEffect(() => {
+        const computeResourceId = project?.computeResourceId || import.meta.env.VITE_DEFAULT_COMPUTE_RESOURCE_ID
+        if (computeResourceId) {
+            setPubNubListenChannel(computeResourceId)
+        }
+    }, [project?.computeResourceId])
 
     useEffect(() => {
         (async () => {
