@@ -99,7 +99,7 @@ export const setProjectTags = async (projectId: string, tags: string[], auth: Gi
     const data = {
         tags
     }
-    const resp = await postRequest(url, data, auth)
+    const resp = await putRequest(url, data, auth)
     if (!resp.success) throw Error(`Error in setProjectTags: ${resp.error}`)
 }
 
