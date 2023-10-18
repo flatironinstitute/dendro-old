@@ -3,3 +3,4 @@ fastapi
 motor
 simplejson
 pydantic
+aiohttp
