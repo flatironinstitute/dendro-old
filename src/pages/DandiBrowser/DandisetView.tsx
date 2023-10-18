@@ -124,7 +124,7 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
 
     const [selectedAssets, selectedAssetsDispatch] = useReducer(selectedAssetsReducer, {assetPaths: []})
 
-    const projects = useProjectsForTag(dandisetId ? `dandiset.${dandisetId}` : undefined)
+    const projects = useProjectsForTag(dandisetId ? (useStaging ? `dandiset-staging.${dandisetId}` : `dandiset.${dandisetId}`) : undefined)
 
     const auth = useGithubAuth()
 
@@ -138,9 +138,9 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
 
         const projectId = await createProject(projectName, auth)
         if (!projectId) return
-        await setProjectTags(projectId, [`dandiset.${dandisetId}`], auth)
+        await setProjectTags(projectId, [useStaging ? `dandiset-staging.${dandisetId}` : `dandiset.${dandisetId}`], auth)
         setRoute({page: 'project', projectId})
-    }, [auth, dandisetId, setRoute])
+    }, [auth, dandisetId, useStaging, setRoute])
 
     const [importing, setImporting] = useState(false)
 
