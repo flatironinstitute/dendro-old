@@ -1,4 +1,5 @@
 from typing import List
+import traceback
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Header
 from ...services._crypto_keys import _verify_signature_str
@@ -35,6 +36,7 @@ async def compute_resource_get_apps(
         apps = compute_resource.apps
         return GetAppsResponse(apps=apps, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get pubsub subscription
@@ -71,6 +73,7 @@ async def compute_resource_get_pubsub_subscription(
         )
         return GetPubsubSubscriptionResponse(subscription=subscription, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get unfinished jobs
@@ -106,6 +109,7 @@ async def compute_resource_get_unfinished_jobs(
         
         return GetUnfinishedJobsResponse(jobs=jobs, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set spec
@@ -138,6 +142,7 @@ async def compute_resource_set_spec(
 
         return SetSpecResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 def _authenticate_compute_resource_request(

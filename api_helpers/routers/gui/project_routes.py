@@ -1,5 +1,6 @@
 from typing import List, Optional
 import time
+import traceback
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from ...core._create_random_id import _create_random_id
@@ -25,6 +26,7 @@ async def get_project(project_id):
             raise Exception(f"No project with ID {project_id}")
         return GetProjectReponse(project=project, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get projects
@@ -43,6 +45,7 @@ async def get_projects(github_access_token: str=Header(...), tag: Optional[str]=
             projects = await fetch_projects_with_tag(tag)
             return GetProjectsResponse(projects=projects, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # create project
@@ -82,6 +85,7 @@ async def create_project(data: CreateProjectRequest, github_access_token: str=He
 
         return CreateProjectResponse(projectId=project_id, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set project name
@@ -116,6 +120,7 @@ async def set_project_name(project_id, data: SetProjectNameRequest, github_acces
 
         return SetProjectNameResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set project description
@@ -150,6 +155,7 @@ async def set_project_description(project_id, data: SetProjectDescriptionRequest
 
         return SetProjectDescriptionResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set project tags
@@ -184,6 +190,7 @@ async def set_project_tags(project_id, data: SetProjectTagsRequest, github_acces
 
         return SetProjectTagsResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # delete project
@@ -209,6 +216,7 @@ async def delete_project(project_id, github_access_token: str=Header(...)) -> De
         
         return DeleteProjectResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get jobs
@@ -222,6 +230,7 @@ async def get_jobs(project_id):
         jobs = await fetch_project_jobs(project_id, include_private_keys=False)
         return GetJobsResponse(jobs=jobs, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set project publicly readable
@@ -255,6 +264,7 @@ async def set_project_public(project_id, data: SetProjectPubliclyReadableRequest
 
         return SetProjectPubliclyReadableResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -289,6 +299,7 @@ async def set_project_compute_resource_id(project_id, data: SetProjectComputeRes
 
         return SetProjectComputeResourceIdResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set project users
@@ -322,4 +333,5 @@ async def set_project_users(project_id, data: SetProjectUsersRequest, github_acc
 
         return SetProjectUsersResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

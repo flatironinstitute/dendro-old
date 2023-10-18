@@ -1,3 +1,4 @@
+import traceback
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from ...services._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
@@ -22,6 +23,7 @@ async def get_job(job_id) -> GetJobResponse:
             raise Exception(f"No job with ID {job_id}")
         return GetJobResponse(job=job, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # delete job
@@ -52,4 +54,5 @@ async def delete_job(job_id, github_access_token: str=Header(...)) -> DeleteJobR
 
         return DeleteJobResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

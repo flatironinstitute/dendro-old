@@ -1,4 +1,5 @@
 from typing import List
+import traceback
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
 from ...core.protocaas_types import ProtocaasProject, ProtocaasFile, ProtocaasJob
@@ -19,6 +20,7 @@ async def get_project(project_id) -> GetProjectResponse:
             raise Exception(f"No project with ID {project_id}")
         return GetProjectResponse(project=project, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get project files
@@ -32,6 +34,7 @@ async def get_project_files(project_id) -> GetProjectFilesResponse:
         files = await fetch_project_files(project_id)
         return GetProjectFilesResponse(files=files, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get project jobs
@@ -45,4 +48,5 @@ async def get_project_jobs(project_id) -> GetProjectJobsResponse:
         jobs = await fetch_project_jobs(project_id)
         return GetProjectJobsResponse(jobs=jobs, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

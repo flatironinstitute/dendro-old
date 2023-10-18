@@ -1,4 +1,5 @@
 from typing import Union, List
+import traceback
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Header
 from ...services._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
@@ -23,6 +24,7 @@ async def get_file(project_id, file_name):
             raise Exception(f"No file with name {file_name} in project with ID {project_id}")
         return GetFileResponse(file=file, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get files
@@ -36,6 +38,7 @@ async def get_files(project_id):
         files = await fetch_project_files(project_id)
         return GetFilesResponse(files=files, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set file
@@ -74,6 +77,7 @@ async def set_file(project_id, file_name, data: SetFileRequest, github_access_to
 
         return SetFileResponse(fileId=file_id, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # delete file
@@ -102,4 +106,5 @@ async def delete_file(project_id, file_name, github_access_token: str=Header(...
 
         return DeleteFileResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

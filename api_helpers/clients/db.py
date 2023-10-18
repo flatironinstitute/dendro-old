@@ -21,7 +21,6 @@ async def fetch_projects_for_user(user_id: Union[str, None]) -> List[ProtocaasPr
     return projects2
 
 async def fetch_projects_with_tag(tag: str) -> List[ProtocaasProject]:
-    print(f'Fetch projects with tag: {tag}')
     client = _get_mongo_client()
     projects_collection = client['protocaas3']['projects']
     projects = await projects_collection.find({

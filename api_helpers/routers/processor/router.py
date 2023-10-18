@@ -1,4 +1,5 @@
 from typing import Union, List
+import traceback
 import aiohttp
 from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
@@ -56,6 +57,7 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
             parameters=parameters
         )
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 async def _resolve_dandi_url(url: str, *, dandi_api_key: Union[str, None]) -> str:
@@ -90,6 +92,7 @@ async def processor_update_job_status(job_id: str, data: ProcessorUpdateJobStatu
 
         return ProcessorUpdateJobStatusResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get job status
@@ -108,6 +111,7 @@ async def processor_get_job_status(job_id: str, job_private_key: str = Header(..
         
         return ProcessorGetJobStatusResponse(status=job.status, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set job console output
@@ -139,6 +143,7 @@ async def processor_set_job_console_output(job_id: str, data: ProcessorSetJobCon
 
         return ProcessorSetJobConsoleOutputResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get job output upload url
@@ -157,4 +162,5 @@ async def processor_get_upload_url(job_id: str, output_name: str, job_private_ke
         signed_upload_url = await get_upload_url(job=job, output_name=output_name)
         return ProcessorGetJobOutputUploadUrlResponse(uploadUrl=signed_upload_url, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

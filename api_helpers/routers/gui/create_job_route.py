@@ -1,4 +1,5 @@
 from typing import Union, List, Any
+import traceback
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Header
 from ._authenticate_gui_request import _authenticate_gui_request
@@ -70,4 +71,5 @@ async def create_job_handler(data: CreateJobRequest, github_access_token: str=He
             success=True
         )
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

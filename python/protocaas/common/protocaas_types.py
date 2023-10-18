@@ -12,10 +12,10 @@ class ProtocaasProject(BaseModel):
     ownerId: str
     users: List[ProtocaasProjectUser]
     publiclyReadable: bool
-    computeResourceId: Union[str, None]=None
     tags: List[str]
     timestampCreated: float
     timestampModified: float
+    computeResourceId: Union[str, None]=None # it seems this needs to go at the end, otherwise it will be required by pydantic - not sure why
 
 class ProtocaasJobInputFile(BaseModel):
     name: str
@@ -71,7 +71,6 @@ class ProtocaasJob(BaseModel):
     jobPrivateKey: str
     userId: str
     processorName: str
-    batchId: Union[str, None]=None
     inputFiles: List[ProtocaasJobInputFile]
     inputFileIds: List[str]
     inputParameters: List[ProtocaasJobInputParameter]
@@ -79,6 +78,7 @@ class ProtocaasJob(BaseModel):
     timestampCreated: float
     computeResourceId: str
     status: str # 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
+    batchId: Union[str, None]=None
     error: Union[str, None]=None
     processorVersion: Union[str, None]=None
     computeResourceNodeId: Union[str, None]=None

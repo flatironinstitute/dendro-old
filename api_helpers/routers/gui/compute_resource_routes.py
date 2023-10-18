@@ -1,5 +1,5 @@
-from typing import Union, List, Any
-import os
+from typing import List, Any
+import traceback
 import time
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Header
@@ -26,6 +26,7 @@ async def get_compute_resource(compute_resource_id) -> GetComputeResourceRespons
             raise Exception(f"No compute resource with ID {compute_resource_id}")
         return GetComputeResourceResponse(computeResource=compute_resource, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get compute resources
@@ -45,6 +46,7 @@ async def get_compute_resources(github_access_token: str=Header(...)):
         
         return GetComputeResourcesResponse(computeResources=compute_resources, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # set compute resource apps
@@ -79,6 +81,7 @@ async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourc
 
         return SetComputeResourceAppsResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # delete compute resource
@@ -103,6 +106,7 @@ async def delete_compute_resource(compute_resource_id, github_access_token: str=
 
         return DeleteComputeResourceResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get pubsub subscription
@@ -127,6 +131,7 @@ async def get_pubsub_subscription(compute_resource_id):
         )
         return GetPubsubSubscriptionResponse(subscription=subscription, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # register compute resource
@@ -159,6 +164,7 @@ async def register_compute_resource(data: RegisterComputeResourceRequest, github
         
         return RegisterComputeResourceResponse(success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # get jobs for compute resource
@@ -184,6 +190,7 @@ async def get_jobs_for_compute_resource(compute_resource_id, github_access_token
 
         return GetJobsForComputeResourceResponse(jobs=jobs, success=True)
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 def _verify_resource_code(compute_resource_id: str, resource_code: str) -> bool:
