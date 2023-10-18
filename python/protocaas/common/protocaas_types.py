@@ -12,7 +12,7 @@ class ProtocaasProject(BaseModel):
     ownerId: str
     users: List[ProtocaasProjectUser]
     publiclyReadable: bool
-    computeResourceId: Union[str, None]
+    computeResourceId: Union[str, None]=None
     tags: List[str]
     timestampCreated: float
     timestampModified: float
