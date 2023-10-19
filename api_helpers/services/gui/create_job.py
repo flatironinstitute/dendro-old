@@ -38,7 +38,7 @@ async def create_job(
         raise Exception('User does not have permission to create jobs')
     
     compute_resource_id = project.computeResourceId
-    if compute_resource_id is None:
+    if not compute_resource_id:
         compute_resource_id = get_settings().DEFAULT_COMPUTE_RESOURCE_ID
         if compute_resource_id is None:
             raise Exception('Project does not have a compute resource ID, and no default VITE_DEFAULT_COMPUTE_RESOURCE_ID is set in the environment.')
