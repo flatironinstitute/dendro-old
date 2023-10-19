@@ -15,13 +15,11 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height}) => {
                 <h3>Your compute resources</h3>
                 <ComputeResourcesTable />
                 <hr />
-                <p>To register a compute resource, run the following from your computer</p>
-                <code>
-                    cd /path/to/compute/resource/directory
-                </code><br />
-                <code>
-                    protocaas register-compute-resource
-                </code>
+                <p>
+                    <a href="https://github.com/scratchrealm/protocaas/blob/main/doc/host_compute_resource.md" target="_blank" rel="noreferrer">
+                        Add a compute resource
+                    </a>
+                </p>
             </div>
         </SetupComputeResources>
     )

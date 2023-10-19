@@ -3,7 +3,7 @@ import { FunctionComponent, useCallback, useMemo, useState } from "react";
 import useRoute from "./useRoute";
 import SmallIconButton from "./components/SmallIconButton";
 import { useGithubAuth } from "./GithubAuth/useGithubAuth";
-import { Key, Login, Logout } from "@mui/icons-material";
+import { Computer, Help, Key, Login, Logout } from "@mui/icons-material";
 import ModalWindow from "./components/ModalWindow/ModalWindow";
 import GitHubLoginWindow from "./GitHub/GitHubLoginWindow";
 import ApiKeysWindow from "./ApiKeysWindow/ApiKeysWindow";
@@ -28,6 +28,10 @@ const ApplicationBar: FunctionComponent<Props> = () => {
         setRoute({page: 'home'})
     }, [setRoute])
 
+    const onHelp = useCallback(() => {
+        window.open('https://github.com/scratchrealm/protocaas/blob/main/README.md', '_blank')
+    }, [])
+
     return (
         <span>
             <AppBar position="static" style={{height: applicationBarHeight - 10, color: 'black', background: applicationBarColor}}>
@@ -35,6 +39,22 @@ const ApplicationBar: FunctionComponent<Props> = () => {
                     <img src="/protocaas.png" alt="logo" height={30} style={{paddingBottom: 3, cursor: 'pointer'}} onClick={onHome} />
                     <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;protocaas (prototype v3)</div>
                     <span style={{marginLeft: 'auto'}} />
+                    <span>
+                        <SmallIconButton
+                            icon={<Help />}
+                            onClick={onHelp}
+                            title={`View the documentation`}
+                        />
+                    </span>
+                    &nbsp;&nbsp;
+                    <span>
+                        <SmallIconButton
+                            icon={<Computer />}
+                            onClick={() => setRoute({page: 'compute-resources'})}
+                            title={`Configure compute resources`}
+                        />
+                    </span>
+                    &nbsp;&nbsp;
                     <span style={{color: 'yellow'}}>
                         <SmallIconButton
                             icon={<Key />}
