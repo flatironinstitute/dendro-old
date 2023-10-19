@@ -15,28 +15,6 @@ To use Protocaas, you only need a web browser. No additional software installati
 
 If you want to [host your own compute resource](./doc/host_compute_resource.md) for processing, you will need a Linux machine with optional access to a Slurm cluster or AWS resources.
 
-## Projects, Files and Jobs
-
-Protocaas organizes datasets into projects, files and jobs, streamlining your data management process. Each project is associated with an owner and a compute resource and can include optional collaborators. You can choose to make your projects public or private. Each project consists of files and processing jobs.
-
-Project files serve as either pointers to external data sources (e.g., DANDI assets) or as the output of specific processing jobs. These files are typically formatted in NWB (Neurodata Without Borders) format. To get started, you can use the DANDI import tool to seamlessly import data from DANDI repositories. Once imported, you can define processing jobs, such as spike sorting, that take these raw data files as input and generate new project files as output. Project files are immutable.
-
-## Files and Jobs are Tightly Linked
-
-The full provenance history of each file is stored within a Protocaas project. Each generated file is associated with a unique job that generated it, and each job has links to its input and output files. If a file is deleted, then all jobs that link to that job (either as an input or an output) are also deleted. Similarly, if a job is deleted, then the linked files are also deleted. Thus, in a pipeline, deleting a single file can have a cascading effect in deleting files and jobs throughout the project. In this way, Protocaas files always have a full provenance record.
-
-Files and jobs can also be automatically deleted if a new job is queued that would overwrite existing files. Note that existing files (and jobs) are deleted when the new job is *queued* (not *run*).
-
-## Processing Apps
-
-Protocaas processing tools are organized into plugin apps which are containerized executable programs. At this point, there are only [a few processing apps available](https://github.com/scratchrealm/pc-spike-sorting), including:
-
-- Spike sorting using Kilosort 2.5
-- Spike sorting using Kilosort 3
-- Spike sorting using MountainSort 5
-
-As the project matures, we will add more apps to this list. Users can also contribute their own processing apps.
-
 ## Getting started
 
 ### Upload raw ephys data to DANDI
@@ -86,6 +64,28 @@ See [hosting a compute resource](./doc/host_compute_resource.md).
 ### Contribute a custom processing app for spike sorting
 
 More detailed instructions will be forthcoming. For now you can take a look at the [source code for the currently-available processing apps](https://github.com/scratchrealm/pc-spike-sorting).
+
+### Projects, Files and Jobs
+
+Protocaas organizes datasets into projects, files and jobs, streamlining your data management process. Each project is associated a dandiset and a compute resource and comprises files and processing jobs. You can choose to make your projects public or private.
+
+Project files serve as either pointers to external data sources (e.g., DANDI assets) or as the output of specific processing jobs. These files are typically formatted in NWB (Neurodata Without Borders) format. To get started, you can use the DANDI import tool to seamlessly import data from DANDI repositories. Once imported, you can define processing jobs, such as spike sorting, that take these raw data files as input and generate new project files as output. Project files are immutable.
+
+### Files and Jobs are Tightly Linked
+
+The full provenance history of each file is stored within a Protocaas project. Each generated file is associated with a unique job that generated it, and each job has links to its input and output files. If a file is deleted, then all jobs that link to that job (either as an input or an output) are also deleted. Similarly, if a job is deleted, then the linked files are also deleted. Thus, in a pipeline, deleting a single file can have a cascading effect in deleting files and jobs throughout the project. In this way, Protocaas files always have a full provenance record.
+
+Files and jobs can also be automatically deleted if a new job is queued that would overwrite existing files. Note that existing files (and jobs) are deleted when the new job is *queued* (not *run*).
+
+### Processing Apps
+
+Protocaas processing tools are organized into plugin apps which are containerized executable programs. At this point, there are only [a few processing apps available](https://github.com/scratchrealm/pc-spike-sorting), including:
+
+- Spike sorting using Kilosort 2.5
+- Spike sorting using Kilosort 3
+- Spike sorting using MountainSort 5
+
+As the project matures, we will add more apps to this list. Users can also contribute their own processing apps.
 
 ### LICENSE
 
