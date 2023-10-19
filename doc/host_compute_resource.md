@@ -37,19 +37,19 @@ In the web interface, go to settings for your project, and select your compute r
 
 In order to run jobs with your compute resource, you will need to configure apps to use it.
 
-In the web interface, click on the appropriate link to manage your compute resource. You will then be able to add apps to your compute resource by entering the information including the docker image where the app has been installed.
+In the web interface, click on the appropriate link to manage your compute resource. You will then be able to add apps to your compute resource by entering the information (see below for available apps).
 
 :warning: After you make changes to your compute resource on the web interface, you will need to restart your compute resource node in the terminal.
 
 The following are available apps that you can configure
 
-| App name | Executable path | Container |
-| -------- | --------------- | --------- |
-| mountainsort5 | /app/main | magland/pc-mountainsort5 |
-| kilosort3 | /app/main | magland/pc-kilosort3 |
-| kilosort2_5 | /app/main | magland/pc-kilosort2_5 |
-| spike-sorting_utils | /app/main | magland/pc-spike-sorting_utils |
-| dandi-upload | /app/main | magland/pc-dandi-upload |
+| App name | Spec URI |
+| -------- | --------------- |
+| mountainsort5 | https://github.com/scratchrealm/pc-spike-sorting/blob/main/mountainsort5/spec.json |
+| kilosort3 | https://github.com/scratchrealm/pc-spike-sorting/blob/main/kilosort3/spec.json |
+| kilosort2_5 | https://github.com/scratchrealm/pc-spike-sorting/blob/main/kilosort2_5/spec.json |
+| spike-sorting_utils | https://github.com/scratchrealm/pc-spike-sorting/blob/main/spike_sorting_utils/spec.json |
+| dandi-upload | https://github.com/scratchrealm/pc-spike-sorting/blob/main/dandi_upload/spec.json |
 
 ## Configuring apps to use a Slurm cluster
 
