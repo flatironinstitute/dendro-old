@@ -67,6 +67,7 @@ class App:
         spec = {
             'name': self._name,
             'help': self._help,
+            'image': os.getenv('APP_IMAGE', ''),
             'processors': processors
         }
         return spec
