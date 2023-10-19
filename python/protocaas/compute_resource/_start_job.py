@@ -41,7 +41,7 @@ def _start_job(*,
         job_id=job_id,
         job_private_key=job_private_key
     )
-    if not hasattr(app, '_executable_path'):
+    if not getattr(app, '_executable_path'):
         raise Exception(f'App does not have an executable path')
     executable_path: str = app._executable_path
     container: str = app._executable_container

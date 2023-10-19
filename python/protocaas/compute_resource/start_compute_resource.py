@@ -185,6 +185,9 @@ class Daemon:
                 return_shell_command=return_shell_command
             )
         except Exception as e:
+            # do a traceback
+            import traceback
+            traceback.print_exc()
             msg = f'Failed to start job: {str(e)}'
             print(msg)
             _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=msg)
