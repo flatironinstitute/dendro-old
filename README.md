@@ -39,25 +39,53 @@ As the project matures, we will add more apps to this list. Users can also contr
 
 ## Frequently Asked Questions
 
-### How do I import data from DANDI?
+### How can I upload raw ephys data to DANDI?
 
-TODO
+The first step in uploading your raw electrophysiology data to DANDI is to convert it to the NWB format. You can use [NeuroConv](https://neuroconv.readthedocs.io/en/main/user_guide/user_guide.html) and/or [nwb-guide](https://github.com/NeurodataWithoutBorders/nwb-guide).
 
-### How do I run spike sorting?
+Once your data is in NWB format, create a new dandiset on [DANDI Archive](https://dandiarchive.org/) and then [follow these instructions to upload your data](https://www.dandiarchive.org/handbook/13_upload](https://www.dandiarchive.org/handbook/13_upload/). If you are not ready to make your data public, you can choose to create an embargoed (private) dandiset and share it with collaborators. If you are only testing the system, you can also use the [staging site](https://gui-staging.dandiarchive.org/).
 
-TODO
+### How do I create a Protocaas project?
 
-### How do I upload sorting results to DANDI?
+Note: If you are working with an embargoed dandiset, then you will need to first provide your DANDI API key (see below).
 
-TODO
+Each Protocaas project is associated with a dandiset. To create a new project, go to the [protocaas web interface](https://protocaas.vercel.app) and log in using your GitHub account. You can then navigate to the desired dandiset and click "Create a new protocaas project for this dandiset". Provide a project name. You are now ready to import data from the dandiset and start spike sorting.
+
+### How do I import files from DANDI into my Protocaas project?
+
+Once you have created a Protocaas project associated with a dandiset (see above) you can import NWB files (aka DANDI assets) by clicking on the "DANDI import" tab on the left. Use the checkboxes to select the desired files and then click "Import selected assets". The import process can take a minute or two depending on the number of files you are importing. Once the import is complete, you can click on the "Files" tab to see the imported files.
+
+### How do I run spike sorting on my data?
+
+Once you have imported NWB files from DANDI into your Protocaas project, you can begin processing your data. At this point you will need to select a compute resource. By default a very limited default compute resource will be used, which is okay for quick tests. For more serious processing, you will need to [set up your own compute resource](./doc/host_compute_resource.md). You can select the compute resource by clicking the "Settings" button on the "Project home" tab.
+
+Once you have selected the compute resource for your project, you can select files for spike sorting using the checkboxes and then click "Run spike sorting". Choose the desired spike sorter, set the desired sorting parameters, and click "Submit". Note that in order to run spike sorting, your NWB files will need to have the appropriate ElectricalSeries data objects in the acquisition section.
+
+You can then monitor the sorting jobs using the "Jobs" tab, or by viewing the greyed-out files inside the "generated" folder.
+
+Once a job is complete, you can click the NWB output files and view them in Neurosift, which includes a "raster plot" view.
+
+### How do I upload the sorting outputs to DANDI?
+
+For now, you can only upload spike sorting results to the same dandiset from which the raw data was imported. In the future you will also be able to upload them to a new dandiset.
+
+You will first need to provide your DANDI API key (see below).
+
+To upload the sorting results to DANDI, select the generated files and click "Upload to DANDI" and then the "Upload" button. A new processing job will be created that will complete the upload. You can monitor that job using the "Jobs" tab. Once the upload is complete you should be able to see the NWB files in the DANDI web interface.
+
+### How do I specify my DANDI API key in Protocaas?
+
+You can obtain your DANDI API key from [https://dandiarchive.org/](https://dandiarchive.org/) or, for the staging site, [https://gui-staging.dandiarchive.org/](https://gui-staging.dandiarchive.org/). Click the button in the upper-right corner.
+
+Then, in the [Protocaas web interface](https://protocaas.vercel.app/), click the key icon in the upper-right and paste in the API key.
 
 ### How do I host my own compute resource?
 
 See [this document](./doc/host_compute_resource.md).
 
-### How do I contribute my own processing app?
+### How do I contribute my own processing app for spike sorting?
 
-TODO
+More detailed instructions will be forthcoming. For now you can take a look at the [source code for the currently-available processing apps](https://github.com/scratchrealm/pc-spike-sorting).
 
 ### LICENSE
 
