@@ -268,8 +268,9 @@ export const deleteComputeResource = async (computeResourceId: string, auth: Aut
 
 export type App = {
     name: string
-    executablePath: string
-    container?: string
+    specUri?: string
+    executablePath?: string // to be removed
+    container?: string // to be removed
     awsBatch?: ComputeResourceAwsBatchOpts
     slurm?: ComputeResourceSlurmOpts
 }

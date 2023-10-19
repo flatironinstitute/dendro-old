@@ -51,10 +51,10 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
             }) : undefined
     }, [jobs])
 
-    const handleNewApp = useCallback((name: string, executablePath: string, container: string, awsBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => {
+    const handleNewApp = useCallback((name: string, specUri: string, awsBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => {
         if (!computeResource) return
         const oldApps = computeResource.apps
-        const newApps: App[] = [...oldApps.filter(a => (a.name !== name)), {name, executablePath, container, awsBatch, slurm}]
+        const newApps: App[] = [...oldApps.filter(a => (a.name !== name)), {name, specUri, awsBatch, slurm}]
         setComputeResourceApps(computeResource.computeResourceId, newApps, auth).then(() => {
             refreshComputeResource()
         })

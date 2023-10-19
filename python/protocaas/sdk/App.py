@@ -1,7 +1,6 @@
 from typing import List, Any, Union
 import os
 import json
-import subprocess
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -11,8 +10,7 @@ from .AppProcessor import AppProcessor
 from .Job import Job
 from ._run_job import _run_job
 from ..common.protocaas_types import ComputeResourceSlurmOpts
-from ..common.protocaas_types import ProcessorGetJobResponse
-from ..common._api_request import _processor_get_api_request
+from ._load_spec_from_uri import _load_spec_from_uri
 
 
 class App:
@@ -68,6 +66,7 @@ class App:
             'name': self._name,
             'help': self._help,
             'image': os.getenv('APP_IMAGE', ''),
+            'executable': os.getenv('APP_EXECUTABLE', ''),
             'processors': processors
         }
         return spec
@@ -82,55 +81,20 @@ class App:
             app._processors.append(processor)
         return app
     @staticmethod
-    def from_executable(
-        executable_path: str,
-        container: str=None,
+    def from_spec_uri(
+        spec_uri: str,
         aws_batch_job_queue: str=None,
         aws_batch_job_definition: str=None,
         slurm_opts: ComputeResourceSlurmOpts=None
     ):
-        with TemporaryDirectory() as tmpdir:
-            spec_fname = os.path.join(tmpdir, 'spec.json')
-            if not container:
-                # run executable with SPEC_OUTPUT_FILE set to spec_fname
-                env = os.environ.copy()
-                env['SPEC_OUTPUT_FILE'] = spec_fname
-                subprocess.run([executable_path], env=env)
-            else:
-                container_method = os.environ.get('CONTAINER_METHOD', 'docker')
-                if container_method == 'docker':
-                    # run executable in container
-                    cmd = ['docker', 'run', '-it', '-v', f'{tmpdir}:{tmpdir}', '-e', f'SPEC_OUTPUT_FILE={spec_fname}', container, executable_path]
-                    print(f'Running: {" ".join(cmd)}')
-                    subprocess.run(cmd)
-                elif container_method == 'singularity':
-                    # run executable in container
-                    cmd = [
-                        'singularity',
-                        'exec',
-                        '--cleanenv', # this is important to prevent singularity from passing environment variables to the container
-                        '--contain', # we don't want singularity to mount the home or tmp directories of the host
-                        '--env', f'SPEC_OUTPUT_FILE={spec_fname}',
-                        '--bind', f'{tmpdir}:{tmpdir}',
-                        '--nv',
-                        f'docker://{container}',
-                        executable_path
-                    ]
-                    print(f'Running: {" ".join(cmd)}')
-                    subprocess.run(
-                        cmd
-                    )
-                else:
-                    raise Exception(f'Unknown container method: {container_method}')
-            with open(spec_fname, 'r') as f:
-                spec = json.load(f)
-            a = App.from_spec(spec)
-            setattr(a, '_executable_path', executable_path)
-            setattr(a, "_executable_container", container)
-            setattr(a, "_aws_batch_job_queue", aws_batch_job_queue)
-            setattr(a, "_aws_batch_job_definition", aws_batch_job_definition)
-            setattr(a, "_slurm_opts", slurm_opts)
-            return a
+        spec: dict = _load_spec_from_uri(spec_uri)
+        a = App.from_spec(spec)
+        setattr(a, '_executable_path', spec.get('executable', None))
+        setattr(a, "_executable_container", spec.get('image', None))
+        setattr(a, "_aws_batch_job_queue", aws_batch_job_queue)
+        setattr(a, "_aws_batch_job_definition", aws_batch_job_definition)
+        setattr(a, "_slurm_opts", slurm_opts)
+        return a
     def _run_job(self, *, job_id: str, job_private_key: str):
         job: Job = _get_job(job_id=job_id, job_private_key=job_private_key)
         processor_name = job.processor_name

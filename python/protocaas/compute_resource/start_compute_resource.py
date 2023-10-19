@@ -217,10 +217,8 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
         if container is not None:
             s.append(f'container: {container}')
         if aws_batch_opts is not None:
-            if container is None:
-                raise Exception(f'App {a.executablePath} has awsBatch but not container')
             if slurm_opts is not None:
-                raise Exception(f'App {a.executablePath} has awsBatch opts but also has slurm opts')
+                raise Exception(f'App has awsBatch opts but also has slurm opts')
             aws_batch_job_queue = aws_batch_opts.jobQueue
             aws_batch_job_definition = aws_batch_opts.jobDefinition
             s.append(f'awsBatchJobQueue: {aws_batch_job_queue}')
@@ -242,10 +240,9 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
             slurm_partition = None
             slurm_time = None
             slurm_other_opts = None
-        print(f'Loading app {a.executablePath} | {" | ".join(s)}')
-        app = App.from_executable(
-            a.executablePath,
-            container=container,
+        print(f'Loading app {a.specUri} | {" | ".join(s)}')
+        app = App.from_spec_uri(
+            spec_uri=a.specUri,
             aws_batch_job_queue=aws_batch_job_queue,
             aws_batch_job_definition=aws_batch_job_definition,
             slurm_opts=slurm_opts

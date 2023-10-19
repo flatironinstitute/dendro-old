@@ -11,8 +11,8 @@ type Props = {
     width: number
     height: number
     computeResource: ProtocaasComputeResource
-    onNewApp: (name: string, executablePath: string, container: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
-    onEditApp: (name: string, executablePath: string, container: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
+    onNewApp: (name: string, specUri: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
+    onEditApp: (name: string, specUri: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
     onDeleteApps: (appNames: string[]) => void
 }
 
@@ -56,8 +56,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
                         <tr>
                             <th style={{width: colWidth}} />
                             <th>App</th>
-                            <th>Executable path</th>
-                            <th>Container</th>
+                            <th>Spec URI</th>
                             <th>AWS Batch</th>
                             <th>Slurm</th>
                         </tr>
@@ -75,10 +74,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
                                         </Hyperlink>
                                     </td>
                                     <td>
-                                        {app.executablePath}
-                                    </td>
-                                    <td>
-                                        {app.container || ''}
+                                        {app.specUri || ''}
                                     </td>
                                     <td>
                                         {app.awsBatch ? `Job queue: ${app.awsBatch.jobQueue} | Job definition: ${app.awsBatch.jobDefinition}` : ''}
@@ -108,7 +104,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
             >
                 <NewAppWindow
                     computeResource={computeResource}
-                    onNewApp={(name, executablePath, container, awsBatch, slurmOpts) => {closeNewAppWindow(); onNewApp(name, executablePath, container, awsBatch, slurmOpts);}}
+                    onNewApp={(name, specUri, awsBatch, slurmOpts) => {closeNewAppWindow(); onNewApp(name, specUri, awsBatch, slurmOpts);}}
                 />
             </ModalWindow>
             <ModalWindow
@@ -117,7 +113,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
             >
                 <NewAppWindow
                     computeResource={computeResource}
-                    onNewApp={(name, executablePath, container, awsBatch, slurmOpts) => {closeEditAppWindow(); onEditApp(name, executablePath, container, awsBatch, slurmOpts);}}
+                    onNewApp={(name, specUri, awsBatch, slurmOpts) => {closeEditAppWindow(); onEditApp(name, specUri, awsBatch, slurmOpts);}}
                     appBeingEdited={selectedAppForEditing}
                 />
             </ModalWindow>

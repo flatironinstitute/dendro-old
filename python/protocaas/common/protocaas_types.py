@@ -115,8 +115,9 @@ class ComputeResourceSlurmOpts(BaseModel):
 
 class ProtocaasComputeResourceApp(BaseModel):
     name: str
-    executablePath: str
-    container: Union[str, None]=None
+    specUri: Union[str, None]=None
+    executablePath: Union[str, None]=None # to be removed (once database has been cleared)
+    container: Union[str, None]=None # to be removed (once database has been cleared)
     awsBatch: Union[ComputeResourceAwsBatchOpts, None]=None
     slurm: Union[ComputeResourceSlurmOpts, None]=None
 
@@ -124,6 +125,8 @@ class ComputeResourceSpecApp(BaseModel):
     name: str
     help: str
     processors: List[ComputeResourceSpecProcessor]
+    image: Union[str, None]=None
+    executable: Union[str, None]=None
 
 class ComputeResourceSpec(BaseModel):
     apps: List[ComputeResourceSpecApp]

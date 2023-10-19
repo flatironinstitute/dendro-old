@@ -4,14 +4,13 @@ import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ProtocaasCompute
 
 type Props = {
     computeResource: ProtocaasComputeResource
-    onNewApp: (name: string, executablePath: string, container: string, awsBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
+    onNewApp: (name: string, specUri: string, awsBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
     appBeingEdited?: App
 }
 
 const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appBeingEdited}) => {
     const [newAppName, setNewAppName] = useState('')
-    const [newExecutablePath, setNewExecutablePath] = useState('')
-    const [newContainer, setNewContainer] = useState('')
+    const [newSpecUri, setNewSpecUri] = useState('')
     const [newAwsBatchOpts, setNewAwsBatchOpts] = useState<ComputeResourceAwsBatchOpts | undefined>(undefined)
     const [newSlurmOpts, setNewSlurmOpts] = useState<ComputeResourceSlurmOpts | undefined>(undefined)
 
@@ -21,8 +20,7 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
     useEffect(() => {
         if (!appBeingEdited) return
         setNewAppName(appBeingEdited.name)
-        setNewExecutablePath(appBeingEdited.executablePath)
-        setNewContainer(appBeingEdited.container || '')
+        setNewSpecUri(appBeingEdited.specUri || '')
         setNewAwsBatchOpts(appBeingEdited.awsBatch)
         setNewSlurmOpts(appBeingEdited.slurm)
     }, [appBeingEdited])
@@ -37,12 +35,12 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
 
     const isValid = useMemo(() => {
         if (!isValidAppName(newAppName)) return false
-        if (!isValidExecutablePath(newExecutablePath)) return false
+        if (!isValidSpecUri(newSpecUri)) return false
         if (!newAwsBatchOptsValid) return false
         if (!newSlurmOptsValid) return false
         if (newAwsBatchOpts && newSlurmOpts) return false
         return true
-    }, [newAppName, newExecutablePath, newAwsBatchOpts, newSlurmOpts, isValidAppName, newAwsBatchOptsValid, newSlurmOptsValid])
+    }, [newAppName, newSpecUri, newAwsBatchOpts, newSlurmOpts, isValidAppName, newAwsBatchOptsValid, newSlurmOptsValid])
 
     return (
         <div style={{fontSize: 11}}>
@@ -88,15 +86,9 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
                             </td>
                         </tr>
                         <tr>
-                            <td>Executable path</td>
+                            <td>Spec URI</td>
                             <td>
-                                <input type="text" id="new-executable-path" value={newExecutablePath} onChange={e => setNewExecutablePath(e.target.value)} />                
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Container</td>
-                            <td>
-                                <input type="text" id="new-container" value={newContainer} onChange={e => setNewContainer(e.target.value)} />                
+                                <input type="text" id="new-spec-uri" value={newSpecUri} onChange={e => setNewSpecUri(e.target.value)} />                
                             </td>
                         </tr>
                     </tbody>
@@ -138,7 +130,7 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
             </p>
             <div>&nbsp;</div>
             {/* Button to create the app */}
-            <button disabled={!isValid} onClick={() => onNewApp(newAppName, newExecutablePath, newContainer, newAwsBatchOpts, newSlurmOpts)}>
+            <button disabled={!isValid} onClick={() => onNewApp(newAppName, newSpecUri, newAwsBatchOpts, newSlurmOpts)}>
                 {
                     !appBeingEdited ? (
                         <span>Add new app</span>
@@ -151,11 +143,9 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
     )
 }
 
-const isValidExecutablePath = (executablePath: string) => {
-    if (!executablePath) return false
-    // check if it's a valid absolute linux path using a regular expression
-    const absoluteLinuxPathRegex = /^\/([\w-./ ]+)?$/
-    if (!executablePath.match(absoluteLinuxPathRegex)) return false
+const isValidSpecUri = (specUri: string) => {
+    if (!specUri) return false
+    if (!specUri.startsWith('http')) return false
     return true
 }
 

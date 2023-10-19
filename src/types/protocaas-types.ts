@@ -287,8 +287,9 @@ export const isComputeResourceSlurmOpts = (x: any): x is ComputeResourceSlurmOpt
 
 export type ProtocaasComputeResourceApp = {
     name: string
-    executablePath: string
-    container?: string
+    specUri?: string
+    executablePath?: string // to be removed
+    container?: string // to be removed
     awsBatch?: ComputeResourceAwsBatchOpts
     slurm?: ComputeResourceSlurmOpts
 }
@@ -296,8 +297,9 @@ export type ProtocaasComputeResourceApp = {
 export const isProtocaasComputeResourceApp = (x: any): x is ProtocaasComputeResourceApp => {
     return validateObject(x, {
         name: isString,
-        executablePath: isString,
-        container: optional(isString),
+        specUri: optional(isString),
+        executablePath: optional(isString), // to be removed
+        container: optional(isString), // to be removed
         awsBatch: optional(isComputeResourceAwsBatchOpts),
         slurm: optional(isComputeResourceSlurmOpts)
     })
@@ -307,13 +309,17 @@ export type ComputeResourceSpecApp = {
     name: string
     help: string
     processors: ComputeResourceSpecProcessor[]
+    image?: string
+    executable?: string
 }
 
 export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp => {
     return validateObject(x, {
         name: isString,
         help: isString,
-        processors: isArrayOf(isComputeResourceSpecProcessor)
+        processors: isArrayOf(isComputeResourceSpecProcessor),
+        image: isString,
+        executable: isString
     })
 }
 
