@@ -309,8 +309,8 @@ export type ComputeResourceSpecApp = {
     name: string
     help: string
     processors: ComputeResourceSpecProcessor[]
-    image?: string
-    executable?: string
+    appContainer?: string
+    appExecutable?: string
 }
 
 export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp => {
@@ -318,8 +318,8 @@ export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp =>
         name: isString,
         help: isString,
         processors: isArrayOf(isComputeResourceSpecProcessor),
-        image: isString,
-        executable: isString
+        appContainer: isString,
+        appExecutable: isString
     })
 }
 

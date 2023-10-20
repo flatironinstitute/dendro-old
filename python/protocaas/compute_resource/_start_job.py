@@ -41,10 +41,10 @@ def _start_job(*,
         job_id=job_id,
         job_private_key=job_private_key
     )
-    if not getattr(app, '_executable_path'):
+    if not getattr(app, '_app_executable'):
         raise Exception(f'App does not have an executable path')
-    executable_path: str = app._executable_path
-    container: str = app._executable_container
+    app_executable: str = app._app_executable
+    app_container: str = app._app_container
     aws_batch_job_queue: str = app._aws_batch_job_queue
     aws_batch_job_definition: str = app._aws_batch_job_definition
     slurm_opts: ComputeResourceSlurmOpts = app._slurm_opts
@@ -58,7 +58,7 @@ def _start_job(*,
             raise Exception('Cannot return shell command for AWS Batch job')
         if aws_batch_job_definition is None:
             raise Exception(f'aws_batch_job_queue is set but aws_batch_job_definition is not set')
-        if not container:
+        if not app_container:
             raise Exception(f'aws_batch_job_queue is set but container is not set')
         print(f'Running job in AWS Batch: {job_id} {processor_name} {aws_batch_job_queue} {aws_batch_job_definition}')
         try:
@@ -67,8 +67,8 @@ def _start_job(*,
                 job_private_key=job_private_key,
                 aws_batch_job_queue=aws_batch_job_queue,
                 aws_batch_job_definition=aws_batch_job_definition,
-                container=container, # for verifying consistent with job definition
-                command=executable_path # for verifying consistent with job definition
+                container=app_container, # for verifying consistent with job definition
+                command=app_executable # for verifying consistent with job definition
             )
         except Exception as e:
             raise Exception(f'Error running job in AWS Batch: {e}')
@@ -82,7 +82,7 @@ def _start_job(*,
         'PYTHONUNBUFFERED': '1',
         'JOB_ID': job_id,
         'JOB_PRIVATE_KEY': job_private_key,
-        'APP_EXECUTABLE': executable_path,
+        'APP_EXECUTABLE': app_executable,
         'PROTOCAAS_URL': 'https://protocaas.vercel.app'
     }
     kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
@@ -90,11 +90,11 @@ def _start_job(*,
         env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
         env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
-    if not container:
+    if not app_container:
         if run_process:
-            print(f'Running: {executable_path}')
+            print(f'Running: {app_executable}')
             process = subprocess.Popen(
-                [executable_path],
+                [app_executable],
                 cwd=working_dir,
                 start_new_session=True, # This is important so it keeps running even if the compute resource is stopped
                 # Important to set output to devnull so that we don't get a broken pipe error if this parent process is closed
@@ -106,7 +106,7 @@ def _start_job(*,
                 }
             )
         elif return_shell_command:
-            return f'cd {working_dir} && PYTHONUNBUFFERED=1 JOB_ID={job_id} JOB_PRIVATE_KEY={job_private_key} APP_EXECUTABLE={executable_path} {executable_path}'
+            return f'cd {working_dir} && PYTHONUNBUFFERED=1 JOB_ID={job_id} JOB_PRIVATE_KEY={job_private_key} APP_EXECUTABLE={app_executable} {app_executable}'
     else:
         container_method = os.environ.get('CONTAINER_METHOD', 'docker')
         if container_method == 'docker':
@@ -120,8 +120,8 @@ def _start_job(*,
             cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
             for k, v in env_vars.items():
                 cmd2.extend(['-e', f'{k}={v}'])
-            cmd2.extend([container])
-            cmd2.extend([executable_path])
+            cmd2.extend([app_container])
+            cmd2.extend([app_executable])
             if run_process:
                 print(f'Running: {" ".join(cmd2)}')
                 process = subprocess.Popen(
@@ -147,8 +147,8 @@ def _start_job(*,
             cmd2.extend(['--nv'])
             for k, v in env_vars.items():
                 cmd2.extend(['--env', f'{k}={v}'])
-            cmd2.extend([f'docker://{container}'])
-            cmd2.extend([executable_path])
+            cmd2.extend([f'docker://{app_container}'])
+            cmd2.extend([app_executable])
             if run_process:
                 print(f'Running: {" ".join(cmd2)}')
                 process = subprocess.Popen(

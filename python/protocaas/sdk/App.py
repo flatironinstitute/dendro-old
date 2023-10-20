@@ -15,14 +15,12 @@ from ._load_spec_from_uri import _load_spec_from_uri
 
 class App:
     """An app"""
-    def __init__(self, name: str, *, help: str, app_image: str, app_executable: str) -> None:
+    def __init__(self, name: str, *, help: str, app_container: Union[str, None], app_executable: str='/app/main') -> None:
         self._name = name
         self._help = help
-        self._app_image = app_image
+        self._app_container = app_container
         self._app_executable = app_executable
         self._processors: List[AppProcessor] = []
-        self._executable_path: str = None
-        self._executable_container: str = None
         self._aws_batch_job_queue: str = None
         self._aws_batch_job_definition: str = None
         self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
@@ -67,7 +65,8 @@ class App:
         spec = {
             'name': self._name,
             'help': self._help,
-            'image': self._app_image,
+            'appContainer': self._app_container,
+            'appExecutable': self._app_executable,
             'executable': self._app_executable,
             'processors': processors
         }
@@ -93,8 +92,8 @@ class App:
     ):
         spec: dict = _load_spec_from_uri(spec_uri)
         a = App.from_spec(spec)
-        setattr(a, '_executable_path', spec.get('executable', None))
-        setattr(a, "_executable_container", spec.get('image', None))
+        setattr(a, '_app_container', spec.get('appContainer', None))
+        setattr(a, "_app_executable", spec.get('appExecutable', None))
         setattr(a, "_aws_batch_job_queue", aws_batch_job_queue)
         setattr(a, "_aws_batch_job_definition", aws_batch_job_definition)
         setattr(a, "_slurm_opts", slurm_opts)

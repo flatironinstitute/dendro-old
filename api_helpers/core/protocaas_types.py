@@ -125,8 +125,8 @@ class ComputeResourceSpecApp(BaseModel):
     name: str
     help: str
     processors: List[ComputeResourceSpecProcessor]
-    image: Union[str, None]=None
-    executable: Union[str, None]=None
+    appContainer: Union[str, None]=None
+    appExecutable: Union[str, None]=None
 
 class ComputeResourceSpec(BaseModel):
     apps: List[ComputeResourceSpecApp]
