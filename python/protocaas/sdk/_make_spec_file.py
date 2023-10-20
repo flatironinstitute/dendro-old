@@ -1,5 +1,6 @@
 from pathlib import Path
 import importlib.util
+import os 
 
 import protocaas.sdk as pr
 
@@ -22,6 +23,7 @@ def make_app_spec_file_function(app_dir: str, spec_output_file: str = None):
     module_name = app_dir_path.name
 
     # Use importlib to load the module
+    os.environ['PROTOCAAS_GENERATE_SPEC'] = '1'
     spec = importlib.util.spec_from_file_location(module_name, str(main_module_path))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
