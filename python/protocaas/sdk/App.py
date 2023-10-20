@@ -15,30 +15,27 @@ from ._load_spec_from_uri import _load_spec_from_uri
 
 class App:
     """An app"""
-    def __init__(self, name, *, help: str) -> None:
+    def __init__(self, name: str, *, help: str, app_image: str, app_executable: str) -> None:
         self._name = name
         self._help = help
+        self._app_image = app_image
+        self._app_executable = app_executable
         self._processors: List[AppProcessor] = []
         self._executable_path: str = None
         self._executable_container: str = None
         self._aws_batch_job_queue: str = None
         self._aws_batch_job_definition: str = None
         self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
+    
     def add_processor(self, processor_func):
         P = AppProcessor.from_func(processor_func)
         self._processors.append(P)
+
     def run(self):
         JOB_ID = os.environ.get('JOB_ID', None)
         JOB_PRIVATE_KEY = os.environ.get('JOB_PRIVATE_KEY', None)
         JOB_INTERNAL = os.environ.get('JOB_INTERNAL', None)
         APP_EXECUTABLE = os.environ.get('APP_EXECUTABLE', None)
-        SPEC_OUTPUT_FILE = os.environ.get('SPEC_OUTPUT_FILE', None)
-        if SPEC_OUTPUT_FILE is not None:
-            if JOB_ID is not None:
-                raise Exception('Cannot set both JOB_ID and SPEC_OUTPUT_FILE')
-            with open(SPEC_OUTPUT_FILE, 'w') as f:
-                json.dump(self.get_spec(), f, indent=4)
-            return
         if JOB_ID is not None:
             if JOB_PRIVATE_KEY is None:
                 raise Exception('JOB_PRIVATE_KEY is not set')
@@ -55,7 +52,12 @@ class App:
                     job_private_key=JOB_PRIVATE_KEY,
                     app_executable=APP_EXECUTABLE
                 )
-        raise Exception('You must set one of the following environment variables: JOB_ID, SPEC_OUTPUT_FILE')
+        raise Exception('You must set JOB_ID as an environment variable to run a job')
+    
+    def make_spec_file(self, spec_output_file: str = 'spec.json'):
+        with open(spec_output_file, 'w') as f:
+            json.dump(self.get_spec(), f, indent=4)
+
     def get_spec(self):
         processors = []
         for processor in self._processors:
@@ -65,11 +67,12 @@ class App:
         spec = {
             'name': self._name,
             'help': self._help,
-            'image': os.getenv('APP_IMAGE', ''),
-            'executable': os.getenv('APP_EXECUTABLE', ''),
+            'image': self._app_image,
+            'executable': self._app_executable,
             'processors': processors
         }
         return spec
+
     @staticmethod
     def from_spec(spec):
         app = App(
@@ -80,6 +83,7 @@ class App:
             processor = AppProcessor.from_spec(processor_spec)
             app._processors.append(processor)
         return app
+
     @staticmethod
     def from_spec_uri(
         spec_uri: str,
@@ -95,6 +99,7 @@ class App:
         setattr(a, "_aws_batch_job_definition", aws_batch_job_definition)
         setattr(a, "_slurm_opts", slurm_opts)
         return a
+
     def _run_job(self, *, job_id: str, job_private_key: str):
         job: Job = _get_job(job_id=job_id, job_private_key=job_private_key)
         processor_name = job.processor_name
