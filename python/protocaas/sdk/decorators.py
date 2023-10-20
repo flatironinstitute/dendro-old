@@ -3,7 +3,7 @@ from .AppProcessor import _NO_DEFAULT
 
 
 # This decorator is used to define a processor
-def processor(name, help=None):
+def processor(name, help: str=None):
     def decorator(func):
         setattr(func, 'protocaas_processor', {'name': name, 'help': help})
         return func
