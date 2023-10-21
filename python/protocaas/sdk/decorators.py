@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from .AppProcessor import _NO_DEFAULT
 
 
@@ -10,7 +10,7 @@ def processor(name, help: Optional[str]=None):
     return decorator
 
 # This decorator is used to add an attribute to a processor
-def attribute(name: str, value: str):
+def attribute(name: str, value: Any):
     def decorator(func):
         if not hasattr(func, 'protocaas_attributes'):
             setattr(func, 'protocaas_attributes', [])
