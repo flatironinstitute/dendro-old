@@ -16,9 +16,11 @@ from ..common._api_request import _processor_get_api_request, _processor_put_api
 def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     _run_job_timer = time.time()
 
+    # set the job status to running by calling the remote protocaas API
     _debug_log(f'Running job {job_id}')
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
+    # Set the appropriate environment variables and launch the job in a background process
     cmd = app_executable
     env = os.environ.copy()
     env['JOB_ID'] = job_id
@@ -34,6 +36,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
         stderr=subprocess.STDOUT
     )
 
+    # We are going to be monitoring the output of the job in a separate thread, and it will be communicated to this thread via a queue
     def output_reader(proc, outq: queue.Queue):
         while True:
             try:
@@ -53,6 +56,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     console_output_changed = False
     last_check_job_exists_time = time.time()
 
+    # Create a function that will handle uploading the latest console output to the protocaas system
     console_output_upload_url: str = None
     console_output_upload_url_timestamp = 0
     def upload_console_output(output: str):
@@ -60,22 +64,25 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
         nonlocal console_output_upload_url_timestamp
         elapsed = time.time() - console_output_upload_url_timestamp
         if elapsed > 60 * 30:
+            # every 30 minutes, request a new upload url (the old one expires after 1 hour)
             console_output_upload_url_timestamp = time.time()
+            # request a signed upload url for the console output
             console_output_upload_url = _get_console_output_upload_url(job_id=job_id, job_private_key=job_private_key)
         if console_output_upload_url is not None:
             _upload_console_output(console_output_upload_url=console_output_upload_url, output=output)
 
-    num_status_check_failures = 0
-    succeeded = False
+    num_status_check_failures = 0 # keep track of this so we don't do infinite retries
+    succeeded = False # whether we succeeded in running the job without an exception
     try:
         while True:
             try:
                 retcode = proc.wait(1)
                 # don't check this now -- wait until after we had a chance to read the last console output
             except subprocess.TimeoutExpired:
-                retcode = None
+                retcode = None # process is still running
             while True:
                 try:
+                    # get the latest output from the job
                     x = outq.get(block=False)
 
                     if x == b'\n':
@@ -92,7 +99,10 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                 elapsed = time.time() - last_report_console_output_time
                 run_job_elapsed_time = time.time() - _run_job_timer
                 do_report = False
-                if run_job_elapsed_time < 60 * 2:
+                if retcode is not None:
+                    # if the job is finished, report the console output
+                    do_report = True
+                elif run_job_elapsed_time < 60 * 2:
                     # for the first 2 minutes, report every 10 seconds
                     if elapsed > 10:
                         do_report = True
@@ -105,6 +115,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     if elapsed > 60:
                         do_report = True
                 if do_report:
+                    # we are going to report the console output
                     last_report_console_output_time = time.time()
                     console_output_changed = False
                     try:
@@ -116,10 +127,12 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                         print('WARNING: problem setting console output: ' + str(e))
                         pass
             if retcode is not None:
+                # now that we have set the final console output we can raise an exception if the job failed
                 if retcode != 0:
                     raise ValueError(f'Error running job: return code {retcode}')
                 break
 
+            # check whether job was canceled due to it having been deleted from the protocaas system
             elapsed = time.time() - last_check_job_exists_time
             if elapsed > 120:
                 last_check_job_exists_time = time.time()
@@ -127,6 +140,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     job_status = _get_job_status(job_id=job_id, job_private_key=job_private_key)
                     num_status_check_failures = 0
                 except:
+                    # maybe this failed due to a network error. we'll try this a couple or a few times before giving up
                     print('Failed to check job status')
                     num_status_check_failures += 1
                     if num_status_check_failures >= 3:
@@ -136,7 +150,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     raise ValueError('Job does not exist (was probably canceled)')
                 if job_status != 'running':
                     raise ValueError(f'Unexpected job status: {job_status}')
-            time.sleep(5)
+            time.sleep(5) # wait 5 seconds before checking things again
         succeeded = True # No exception
     except Exception as e:
         _debug_log(f'Error running job: {str(e)}')
@@ -163,20 +177,23 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
 
     try:
         if succeeded:
+            # The job has completed successfully - update the status accordingly
             _debug_log('Setting job status to completed')
             print('Job completed')
             _set_job_status(job_id=job_id, job_private_key=job_private_key, status='completed')
         else:
+            # The job has failed - update the status accordingly and set the error message
             _debug_log('Setting job status to failed: ' + error_message)
             print('Job failed: ' + error_message)
             _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=error_message)
     except Exception as e:
+        # This is unfortunate - we completed the job, but somehow failed to update the status in the protocaas system - maybe there was a network error (maybe we should retry?)
         _debug_log('WARNING: problem setting final job status: ' + str(e))
         print('WARNING: problem setting final job status: ' + str(e))
         pass
     
 def _get_job_status(*, job_id: str, job_private_key: str) -> str:
-    """Get a job from the protocaas API"""
+    """Get a job status from the protocaas API"""
     url_path = f'/api/processor/jobs/{job_id}/status'
     headers = {
         'job-private-key': job_private_key
@@ -244,6 +261,7 @@ def _upload_console_output(*, console_output_upload_url: str, output: str):
 
 def _debug_log(msg: str):
     # write to protocaas-job.log
+    # this will be written to the working directory, which should be in the job dir
     timestamp_str = time.strftime('%Y-%m-%d %H:%M:%S')
     with open('protocaas-job.log', 'a') as f:
         f.write(f'{timestamp_str} {msg}\n')
