@@ -1,4 +1,5 @@
 import os
+from typing import Union, Optional
 import threading
 import queue
 import time
@@ -57,7 +58,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     last_check_job_exists_time = time.time()
 
     # Create a function that will handle uploading the latest console output to the protocaas system
-    console_output_upload_url: str = None
+    console_output_upload_url: Union[str, None] = None
     console_output_upload_url_timestamp = 0
     def upload_console_output(output: str):
         nonlocal console_output_upload_url
@@ -73,6 +74,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
 
     num_status_check_failures = 0 # keep track of this so we don't do infinite retries
     succeeded = False # whether we succeeded in running the job without an exception
+    error_message = '' # if we fail, this will be set to the exception message
     try:
         while True:
             try:
@@ -146,6 +148,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     if num_status_check_failures >= 3:
                         print('Failed to check job status 3 times in a row. Assuming job was canceled.')
                         raise
+                    job_status = '<request-failed>'
                 if job_status is None:
                     raise ValueError('Job does not exist (was probably canceled)')
                 if job_status != 'running':
@@ -159,8 +162,10 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     finally:
         _debug_log('Closing subprocess')
         try:
-            proc.stdout.close()
-            proc.stderr.close()
+            if proc.stdout:
+                proc.stdout.close()
+            if proc.stderr:
+                proc.stderr.close()
             proc.terminate()
         except Exception:
             pass
@@ -204,7 +209,7 @@ def _get_job_status(*, job_id: str, job_private_key: str) -> str:
     )
     return res['status']
 
-def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: str = None):
+def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Optional[str] = None):
     """Set the status of a job in the protocaas API"""
     url_path = f'/api/processor/jobs/{job_id}/status'
     headers = {

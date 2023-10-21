@@ -1,11 +1,12 @@
 from pathlib import Path
+from typing import Optional
 import importlib.util
 import os 
 
 import protocaas.sdk as pr
 
 
-def make_app_spec_file_function(app_dir: str, spec_output_file: str = None):
+def make_app_spec_file_function(app_dir: str, spec_output_file: Optional[str] = None):
     # Ensure the directory path is an absolute path
     app_dir_path = Path(app_dir).resolve()
 
@@ -25,7 +26,11 @@ def make_app_spec_file_function(app_dir: str, spec_output_file: str = None):
     # Use importlib to load the module
     os.environ['PROTOCAAS_GENERATE_SPEC'] = '1'
     spec = importlib.util.spec_from_file_location(module_name, str(main_module_path))
+    if spec is None:
+        raise ImportError(f"Unable to get spec for module {module_name} from {main_module_path}")
     module = importlib.util.module_from_spec(spec)
+    if spec.loader is None:
+        raise ImportError(f"Unable to get loader for module {module_name} from {main_module_path}")
     spec.loader.exec_module(module)
 
     # Check if the App class exists in the loaded module

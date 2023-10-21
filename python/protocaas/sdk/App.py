@@ -3,9 +3,7 @@ import os
 import json
 import shutil
 import tempfile
-from dataclasses import dataclass
 from .InputFile import InputFile
-from .OutputFile import OutputFile
 from .AppProcessor import AppProcessor
 from .Job import Job
 from ._run_job import _run_job
@@ -33,8 +31,8 @@ class App:
         self._app_image = app_image
         self._app_executable = app_executable
         self._processors: List[AppProcessor] = []
-        self._aws_batch_job_queue: str = None
-        self._aws_batch_job_definition: str = None
+        self._aws_batch_job_queue: Union[str, None] = None
+        self._aws_batch_job_definition: Union[str, None] = None
         self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
     
     def add_processor(self, processor_func):
@@ -109,9 +107,9 @@ class App:
     @staticmethod
     def from_spec_uri(
         spec_uri: str,
-        aws_batch_job_queue: str=None,
-        aws_batch_job_definition: str=None,
-        slurm_opts: ComputeResourceSlurmOpts=None
+        aws_batch_job_queue: Union[str, None]=None,
+        aws_batch_job_definition: Union[str, None]=None,
+        slurm_opts: Union[ComputeResourceSlurmOpts, None]=None
     ):
         """Define an app from a spec URI (e.g., a gh url to the spec.json blob). This is called internally."""
         spec: dict = _load_spec_from_uri(spec_uri)
@@ -134,6 +132,8 @@ class App:
         # Find the registered processor and the associated processor function
         processor_name = job.processor_name
         processor = next((p for p in self._processors if p._name == processor_name), None)
+        if not processor:
+            raise Exception(f'Processor not found: {processor_name}')
         if not hasattr(processor, '_processor_func'):
             raise Exception(f'Processor does not have a _processor_func attribute: {processor_name}')
         processor_func = processor._processor_func
@@ -193,9 +193,10 @@ class TemporaryDirectory:
         self._dir = tempfile.mkdtemp()
         return self._dir
     def __exit__(self, exc_type, exc_value, traceback):
-        shutil.rmtree(self._dir)
+        if self._dir:
+            shutil.rmtree(self._dir)
 
-def _get_job(*, job_id: str, job_private_key: str) -> str:
+def _get_job(*, job_id: str, job_private_key: str) -> Job:
     """Get a job from the protocaas API"""
     job = Job(
         job_id=job_id,

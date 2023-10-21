@@ -46,9 +46,9 @@ def _start_job(*,
         raise Exception(f'App does not have an executable path')
     app_executable: Union[str, None] = app._app_executable
     app_image: Union[str, None] = app._app_image
-    aws_batch_job_queue: str = app._aws_batch_job_queue
-    aws_batch_job_definition: str = app._aws_batch_job_definition
-    slurm_opts: ComputeResourceSlurmOpts = app._slurm_opts
+    aws_batch_job_queue: Union[str, None] = app._aws_batch_job_queue
+    aws_batch_job_definition: Union[str, None] = app._aws_batch_job_definition
+    slurm_opts: Union[ComputeResourceSlurmOpts, None] = app._slurm_opts
 
     # default for app_executable
     if app_executable is None:
@@ -96,6 +96,8 @@ def _start_job(*,
     kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
     if kachery_cloud_client_id is not None:
         env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
+        if not kachery_cloud_private_key:
+            raise Exception('Unexpected: kachery_cloud_private_key is not set even though kachery_cloud_client_id is set')
         env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     if not app_image:
