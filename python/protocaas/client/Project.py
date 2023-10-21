@@ -27,6 +27,8 @@ class Project:
             if f._file_data.fileName == file_name:
                 return f
         raise Exception(f'File not found: {file_name}')
+    def get_folder(self, path: str) -> 'ProjectFolder':
+        return ProjectFolder(self, path)
 
 class ProjectFile:
     def __init__(self, file_data: ProtocaasFile) -> None:
@@ -44,7 +46,7 @@ class ProjectFolder:
     def get_files(self) -> List[ProjectFile]:
         ret: List[ProjectFile] = []
         for f in self._project._files:
-            a = f._file_name.split('/')
+            a = f._file_data.fileName.split('/')
             ok = False
             if len(a) <= 1:
                 ok = (self._path == '')
@@ -56,18 +58,21 @@ class ProjectFolder:
     def get_folders(self) -> List['ProjectFolder']:
         folder_paths = set()
         for f in self._project._files:
-            a = f._file_name.split('/')
+            a = f._file_data.fileName.split('/')
             if len(a) <= 1:
                 continue
-            parent_path = '/'.join(a[:-1])
+            parent_path = '/'.join(a[:-1]) # the parent path for this file
             b = parent_path.split('/')
-            ok = False
-            if len(b) <= 1:
-                ok = (self._path == '')
-            else:
-                ok = '/'.join(b[:-1]) == self._path
-            if ok:
-                folder_paths.add(parent_path)
+            for i in range(1, len(b)):
+                b2 = b[:i]
+                ok = False
+                if len(b2) == 1:
+                    # if the parent path is only one level deep, then include it if the self._path is empty
+                    ok = (self._path == '')
+                else:
+                    ok = '/'.join(b2[:-1]) == self._path
+                if ok:
+                    folder_paths.add('/'.join(b2))
         sorted_folder_paths = sorted(list(folder_paths))
         return [
             ProjectFolder(self._project, p)
