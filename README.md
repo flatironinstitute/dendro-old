@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/scratchrealm/protocaas/branch/main/graph/badge.svg?token=???)](https://codecov.io/gh/scratchrealm/protocaas)
+[![codecov](https://codecov.io/gh/scratchrealm/protocaas/graph/badge.svg?token=B2DUYR34RZ)](https://codecov.io/gh/scratchrealm/protocaas)
 
 # Protocaas (prototype v3) - Neuroscience Analysis Web App
 
