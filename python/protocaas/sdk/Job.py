@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Union
 import time
 from dataclasses import dataclass
 from .InputFile import InputFile
@@ -21,9 +21,13 @@ class Job:
     ) -> None:
         self._job_id = job_id
         self._job_private_key = job_private_key
-        self._api_request_job_response: ProcessorGetJobResponse = None
-        self._api_request_job_timestamp = 0
-        self._api_request_job_if_needed()
+        resp = self._api_request_job_if_needed()
+        if resp is None:
+            raise Exception('Unable to get job info from protocaas API')
+        self._api_request_job_response: ProcessorGetJobResponse = resp
+        self._api_request_job_timestamp = time.time()
+        if self._api_request_job_response is None:
+            raise Exception('Unexpected: _api_request_job_response is None')
         # important to set these only once here because these objects will be passed into the processor function
         self._inputs = [InputFile(name=i.name, job=self) for i in self._api_request_job_response.inputs]
         self._outputs = [OutputFile(name=o.name, job=self) for o in self._api_request_job_response.outputs]
@@ -103,5 +107,4 @@ class Job:
             headers=headers
         )
         resp = ProcessorGetJobResponse(**resp_dict)
-        self._api_request_job_response = resp
-        self._api_request_job_timestamp = time.time()
+        return resp

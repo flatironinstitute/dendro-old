@@ -53,11 +53,11 @@ def generate_keypair():
         encoding=serialization.Encoding.Raw,
         format=serialization.PrivateFormat.Raw,
         encryption_algorithm=serialization.NoEncryption()
-    ).hex()
+    ).hex() # type: ignore
     public_key_hex = pubk.public_bytes(
         encoding=serialization.Encoding.Raw,
         format=serialization.PublicFormat.Raw
-    ).hex()
+    ).hex() # type: ignore
     test_msg = {'a': 1}
     test_signature = _sign_message(test_msg, public_key_hex, private_key_hex)
     assert _verify_signature(test_msg, public_key_hex, test_signature)

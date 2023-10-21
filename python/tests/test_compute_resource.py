@@ -18,4 +18,5 @@ class TemporaryDirectory:
         self._dir = tempfile.mkdtemp()
         return self._dir
     def __exit__(self, exc_type, exc_value, traceback):
-        shutil.rmtree(self._dir)
+        if self._dir:
+            shutil.rmtree(self._dir)

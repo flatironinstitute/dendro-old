@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional, Union
 import os
 import yaml
 import time
@@ -108,6 +108,10 @@ class Daemon:
             time.sleep(2)
     def _handle_jobs(self):
         url_path = f'/api/compute_resource/compute_resources/{self._compute_resource_id}/unfinished_jobs'
+        if not self._compute_resource_id:
+            return
+        if not self._compute_resource_private_key:
+            return
         resp = _compute_resource_get_api_request(
             url_path=url_path,
             compute_resource_id=self._compute_resource_id,
@@ -142,9 +146,9 @@ class Daemon:
                 raise Exception(f'Unexpected: Could not find slurm job handler for processor {processor_name}')
             self._slurm_job_handlers_by_processor[processor_name].add_job(job)
 
-    def _get_job_resource_type(self, job: ProtocaasJob) -> str:
+    def _get_job_resource_type(self, job: ProtocaasJob) -> Union[str, None]:
         processor_name = job.processorName
-        app: App = self._find_app_with_processor(processor_name)
+        app: Union[App, None] = self._find_app_with_processor(processor_name)
         if app is None:
             return None
         if app._aws_batch_job_queue is not None:
@@ -193,14 +197,14 @@ class Daemon:
             _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=msg)
             return ''
 
-    def _find_app_with_processor(self, processor_name: str) -> App:
+    def _find_app_with_processor(self, processor_name: str) -> Union[App, None]:
         for app in self._apps:
             for p in app._processors:
                 if p._name == processor_name:
                     return app
         return None
 
-def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: str=None, compute_resource_node_id: str=None) -> List[App]:
+def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str]=None, compute_resource_node_id: Optional[str]=None) -> List[App]:
     url_path = f'/api/compute_resource/compute_resources/{compute_resource_id}/apps'
     resp = _compute_resource_get_api_request(
         url_path=url_path,
@@ -269,7 +273,7 @@ def start_compute_resource(dir: str):
     daemon = Daemon(dir=dir)
     daemon.start()
 
-def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: str=None, compute_resource_node_id: str=None):
+def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str]=None, compute_resource_node_id: Optional[str]=None):
     url_path = f'/api/compute_resource/compute_resources/{compute_resource_id}/pubsub_subscription'
     resp = _compute_resource_get_api_request(
         url_path=url_path,
@@ -280,7 +284,7 @@ def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_privat
     )
     return resp['subscription']
 
-def _sort_jobs_by_timestamp_created(jobs: List[ProtocaasJob]) -> List[dict]:
+def _sort_jobs_by_timestamp_created(jobs: List[ProtocaasJob]) -> List[ProtocaasJob]:
     return sorted(jobs, key=lambda job: job.timestampCreated)
 
 def _cleanup_old_job_working_directories(dir: str):
@@ -325,7 +329,7 @@ class SlurmJobHandler:
             for job in jobs_to_start:
                 self._job_ids.remove(job.jobId)
             self._run_slurm_batch(jobs_to_start)
-    def _run_slurm_batch(self, jobs: List[dict]):
+    def _run_slurm_batch(self, jobs: List[ProtocaasJob]):
         if not os.path.exists('slurm_scripts'):
             os.mkdir('slurm_scripts')
         random_str = os.urandom(16).hex()

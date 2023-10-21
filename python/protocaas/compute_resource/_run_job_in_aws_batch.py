@@ -57,6 +57,8 @@ def _run_job_in_aws_batch(
     kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
     if kachery_cloud_client_id is not None:
         env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
+        if not kachery_cloud_private_key:
+            raise Exception('kachery_cloud_private key is not set even though kachery_cloud_client_id is set')
         env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     response = client.submit_job(

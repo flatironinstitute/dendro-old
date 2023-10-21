@@ -89,6 +89,10 @@ Protocaas processing tools are organized into plugin apps which are containerize
 
 As the project matures, we will add more apps to this list. Users can also contribute their own processing apps.
 
+### For developers
+
+See [doc/for_developers.md](./doc/for_developers.md).
+
 ### LICENSE
 
 Apache 2.0

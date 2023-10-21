@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import Any, List, Union, Dict
 from dataclasses import dataclass
 
 
@@ -11,7 +11,7 @@ class AppProcessorInput:
     help: str
     list: str
     def get_spec(self):
-        ret = {
+        ret: Dict[str, Any] = {
             'name': self.name,
             'help': self.help
         }
@@ -53,7 +53,7 @@ class AppProcessorParameter:
     options: Union[List[str], List[int], List[float], None]
     secret: bool = False
     def get_spec(self):
-        ret = {
+        ret: Dict[str, Any] = {
             'name': self.name,
             'help': self.help,
             'type': _type_to_string(self.type)
