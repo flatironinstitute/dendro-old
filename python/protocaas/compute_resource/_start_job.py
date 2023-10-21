@@ -1,5 +1,6 @@
 import os
 import subprocess
+from typing import Union
 from ..sdk.App import App
 from ._run_job_in_aws_batch import _run_job_in_aws_batch
 from ..common._api_request import _processor_put_api_request
@@ -43,11 +44,18 @@ def _start_job(*,
     )
     if not getattr(app, '_app_executable'):
         raise Exception(f'App does not have an executable path')
-    app_executable: str = app._app_executable
-    app_image: str = app._app_image
+    app_executable: Union[str, None] = app._app_executable
+    app_image: Union[str, None] = app._app_image
     aws_batch_job_queue: str = app._aws_batch_job_queue
     aws_batch_job_definition: str = app._aws_batch_job_definition
     slurm_opts: ComputeResourceSlurmOpts = app._slurm_opts
+
+    # default for app_executable
+    if app_executable is None:
+        if app_image:
+            app_executable = '/app/main.py' # the default
+        else:
+            raise Exception('You must set app_executable if app_image is not set')
 
     if slurm_opts is not None:
         if run_process:
@@ -68,7 +76,7 @@ def _start_job(*,
                 aws_batch_job_queue=aws_batch_job_queue,
                 aws_batch_job_definition=aws_batch_job_definition,
                 container=app_image, # for verifying consistent with job definition
-                command=app_executable # for verifying consistent with job definition
+                command=app_executable
             )
         except Exception as e:
             raise Exception(f'Error running job in AWS Batch: {e}')
@@ -147,7 +155,7 @@ def _start_job(*,
             cmd2.extend(['--nv'])
             for k, v in env_vars.items():
                 cmd2.extend(['--env', f'{k}={v}'])
-            cmd2.extend([f'docker://{app_image}'])
+            cmd2.extend([f'docker://{app_image}']) # todo: what if it's not a dockerhub image?
             cmd2.extend([app_executable])
             if run_process:
                 print(f'Running: {" ".join(cmd2)}')

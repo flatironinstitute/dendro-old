@@ -1,6 +1,7 @@
 from typing import List
 import os
 
+
 # You must first setup the AWS credentials
 # You can do this in multiple ways like using the aws configure command
 # or by setting environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, etc.).
@@ -12,7 +13,7 @@ def _run_job_in_aws_batch(
     aws_batch_job_queue: str,
     aws_batch_job_definition: str,
     container: str, # for verifying consistent with job definition
-    command: str # for verifying consistent with job definition
+    command: str
 ):
     import boto3
 
