@@ -44,7 +44,7 @@ def _start_job(*,
     if not getattr(app, '_app_executable'):
         raise Exception(f'App does not have an executable path')
     app_executable: str = app._app_executable
-    app_container: str = app._app_container
+    app_image: str = app._app_image
     aws_batch_job_queue: str = app._aws_batch_job_queue
     aws_batch_job_definition: str = app._aws_batch_job_definition
     slurm_opts: ComputeResourceSlurmOpts = app._slurm_opts
@@ -58,7 +58,7 @@ def _start_job(*,
             raise Exception('Cannot return shell command for AWS Batch job')
         if aws_batch_job_definition is None:
             raise Exception(f'aws_batch_job_queue is set but aws_batch_job_definition is not set')
-        if not app_container:
+        if not app_image:
             raise Exception(f'aws_batch_job_queue is set but container is not set')
         print(f'Running job in AWS Batch: {job_id} {processor_name} {aws_batch_job_queue} {aws_batch_job_definition}')
         try:
@@ -67,7 +67,7 @@ def _start_job(*,
                 job_private_key=job_private_key,
                 aws_batch_job_queue=aws_batch_job_queue,
                 aws_batch_job_definition=aws_batch_job_definition,
-                container=app_container, # for verifying consistent with job definition
+                container=app_image, # for verifying consistent with job definition
                 command=app_executable # for verifying consistent with job definition
             )
         except Exception as e:
@@ -90,7 +90,7 @@ def _start_job(*,
         env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
         env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
-    if not app_container:
+    if not app_image:
         if run_process:
             print(f'Running: {app_executable}')
             process = subprocess.Popen(
@@ -120,7 +120,7 @@ def _start_job(*,
             cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
             for k, v in env_vars.items():
                 cmd2.extend(['-e', f'{k}={v}'])
-            cmd2.extend([app_container])
+            cmd2.extend([app_image])
             cmd2.extend([app_executable])
             if run_process:
                 print(f'Running: {" ".join(cmd2)}')
@@ -147,7 +147,7 @@ def _start_job(*,
             cmd2.extend(['--nv'])
             for k, v in env_vars.items():
                 cmd2.extend(['--env', f'{k}={v}'])
-            cmd2.extend([f'docker://{app_container}'])
+            cmd2.extend([f'docker://{app_image}'])
             cmd2.extend([app_executable])
             if run_process:
                 print(f'Running: {" ".join(cmd2)}')
