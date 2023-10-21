@@ -18,7 +18,7 @@ env_var_keys = [
     'BATCH_AWS_REGION'
 ]
 
-def register_compute_resource(*, dir: str, compute_resource_id: Optional[str]=None, compute_resource_private_key: Optional[str]=None):
+def register_compute_resource(*, dir: str, compute_resource_id: Optional[str]=None, compute_resource_private_key: Optional[str]=None, node_name: Optional[str]=None):
     """Initialize a Protocaas compute resource node.
 
     Args:
@@ -44,8 +44,10 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str]=No
         the_env['NODE_ID'] = _random_string(10)
         the_env['CONTAINER_METHOD'] = os.getenv('CONTAINER_METHOD', '')
         # prompt for user input of the node name with a default of the host name
-        host_name = socket.gethostname()
-        the_env['NODE_NAME'] = input(f'Enter a name for this compute resource node (default: {host_name}): ') or host_name
+        if node_name is None:
+            host_name = socket.gethostname()
+            node_name = input(f'Enter a name for this compute resource node (default: {host_name}): ') or host_name
+        the_env['NODE_NAME'] = node_name
 
         with open(env_fname, 'w') as f:
             yaml.dump(the_env, f)
@@ -65,7 +67,7 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str]=No
     signature = sign_message(msg, COMPUTE_RESOURCE_ID, COMPUTE_RESOURCE_PRIVATE_KEY)
     resource_code = f'{timestamp}-{signature}'
 
-    url = f'https://protocaas.vercel.app/register-compute-resource/{COMPUTE_RESOURCE_ID}/{resource_code}'
+    url = f'https://protocaas.vercel.app/register-compute-resource/{COMPUTE_RESOURCE_ID}/{resource_code}?node_name={the_env["NODE_NAME"]}'
     print('')
     print('Please visit the following URL in your browser to register your compute resource node:')
     print('')

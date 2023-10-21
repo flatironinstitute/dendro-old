@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/scratchrealm/protocaas/branch/main/graph/badge.svg?token=???)](https://codecov.io/gh/scratchrealm/protocaas)
+
 # Protocaas (prototype v3) - Neuroscience Analysis Web App
 
 Protocaas is a **prototype** web application designed for scientists in research labs who want to efficiently manage and conduct neurophysiology data analysis. The current focus is spike sorting of electrophysiology data. Whether you are working with your own data or utilizing public resources from the [DANDI Archive](https://dandiarchive.org/), Protocaas provides a user-friendly platform for organizing, running, and sharing neuroscientific processing jobs.
