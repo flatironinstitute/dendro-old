@@ -24,9 +24,9 @@ def tags(tag_list: List[str]):
     def decorator(func):
         if not hasattr(func, 'protocaas_tags'):
             setattr(func, 'protocaas_tags', [])
-        tags: list = getattr(func, 'protocaas_tags')
+        tags0: list = getattr(func, 'protocaas_tags')
         for tag in tag_list[::-1]:
-            tags.insert(0, tag)
+            tags0.insert(0, tag)
         return func
     return decorator
 

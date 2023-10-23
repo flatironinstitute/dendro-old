@@ -1,4 +1,4 @@
-from typing import List, Any, Union
+from typing import List, Union
 import os
 import json
 import shutil
@@ -34,7 +34,7 @@ class App:
         self._aws_batch_job_queue: Union[str, None] = None
         self._aws_batch_job_definition: Union[str, None] = None
         self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
-    
+
     def add_processor(self, processor_func):
         """Add a processor function to the app
 
@@ -69,10 +69,10 @@ class App:
                     app_executable=APP_EXECUTABLE
                 )
         raise Exception('You must set JOB_ID as an environment variable to run a job')
-    
+
     def make_spec_file(self, spec_output_file: str = 'spec.json'):
         """Create a spec.json file. This is called internally."""
-        with open(spec_output_file, 'w') as f:
+        with open(spec_output_file, 'w', encoding='utf-8') as f:
             json.dump(self.get_spec(), f, indent=4)
 
     def get_spec(self):
@@ -173,7 +173,7 @@ class App:
                 kwargs[parameter.name] = parameter.default
             else:
                 kwargs[parameter.name] = job_parameter.value
-        
+
         # Run the processor function
         processor_func(**kwargs)
 

@@ -28,7 +28,6 @@ def make_app_spec_file(app_dir: str, spec_output_file: str):
     make_app_spec_file_function(app_dir=app_dir, spec_output_file=spec_output_file)
 
 
-# TODO: Implement this
 @click.command(help='Run an app')
 def run_app():
     pass

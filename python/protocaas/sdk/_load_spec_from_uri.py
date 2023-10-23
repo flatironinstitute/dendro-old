@@ -11,7 +11,7 @@ def _load_spec_from_uri(uri: str) -> dict:
         raw_url = uri
 
     # Download the content
-    response = requests.get(raw_url)
+    response = requests.get(raw_url, timeout=60)
     response.raise_for_status()
     content = response.text
 
@@ -21,10 +21,10 @@ def _load_spec_from_uri(uri: str) -> dict:
         temp_file_path = temp_file.name
 
     # Read the JSON content from the file
-    with open(temp_file_path, 'r') as file:
+    with open(temp_file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
 
     # Clean up the temporary file
     os.remove(temp_file_path)
-    
+
     return data

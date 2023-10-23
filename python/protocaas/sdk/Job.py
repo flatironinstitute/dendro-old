@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import Any, List
 import time
 from dataclasses import dataclass
 from .InputFile import InputFile

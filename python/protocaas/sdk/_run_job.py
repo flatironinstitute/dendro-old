@@ -96,7 +96,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     console_output_changed = True
                 except queue.Empty:
                     break
-            
+
             if console_output_changed:
                 elapsed = time.time() - last_report_console_output_time
                 run_job_elapsed_time = time.time() - _run_job_timer
@@ -127,7 +127,6 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     except Exception as e:
                         _debug_log('WARNING: problem setting console output: ' + str(e))
                         print('WARNING: problem setting console output: ' + str(e))
-                        pass
             if retcode is not None:
                 # now that we have set the final console output we can raise an exception if the job failed
                 if retcode != 0:
@@ -196,7 +195,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
         _debug_log('WARNING: problem setting final job status: ' + str(e))
         print('WARNING: problem setting final job status: ' + str(e))
         pass
-    
+
 def _get_job_status(*, job_id: str, job_private_key: str) -> str:
     """Get a job status from the protocaas API"""
     url_path = f'/api/processor/jobs/{job_id}/status'
@@ -242,7 +241,7 @@ def _get_console_output_upload_url(*, job_id: str, job_private_key: str) -> str:
 
 def _upload_console_output(*, console_output_upload_url: str, output: str):
     """Upload the console output of a job to the cloud bucket"""
-    r = requests.put(console_output_upload_url, data=output.encode('utf-8'))
+    r = requests.put(console_output_upload_url, data=output.encode('utf-8'), timeout=60)
     if r.status_code != 200:
         raise Exception(f'Error uploading console output: {r.status_code} {r.text}')
 
@@ -268,5 +267,5 @@ def _debug_log(msg: str):
     # write to protocaas-job.log
     # this will be written to the working directory, which should be in the job dir
     timestamp_str = time.strftime('%Y-%m-%d %H:%M:%S')
-    with open('protocaas-job.log', 'a') as f:
+    with open('protocaas-job.log', 'a', encoding='utf-8') as f:
         f.write(f'{timestamp_str} {msg}\n')

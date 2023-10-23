@@ -26,7 +26,7 @@ def _compute_resource_get_api_request(*,
         headers['compute-resource-node-id'] = compute_resource_node_id
 
     url = f'{protocaas_url}{url_path}'
-    resp = requests.get(url, headers=headers)
+    resp = requests.get(url, headers=headers, timeout=60)
     if resp.status_code != 200:
         raise Exception(f'Error getting {url}: {resp.status_code} {resp.text}')
     return resp.json()
@@ -47,7 +47,7 @@ def _compute_resource_post_api_request(*,
     }
 
     url = f'{protocaas_url}{url_path}'
-    resp = requests.post(url, headers=headers, json=data)
+    resp = requests.post(url, headers=headers, json=data, timeout=60)
     if resp.status_code != 200:
         raise Exception(f'Error posting {url}: {resp.status_code} {resp.text}')
     return resp.json()
@@ -68,7 +68,7 @@ def _compute_resource_put_api_request(*,
     }
 
     url = f'{protocaas_url}{url_path}'
-    resp = requests.put(url, headers=headers, json=data)
+    resp = requests.put(url, headers=headers, json=data, timeout=60)
     if resp.status_code != 200:
         raise Exception(f'Error putting {url}: {resp.status_code} {resp.text}')
     return resp.json()
@@ -78,7 +78,7 @@ def _processor_get_api_request(*,
     headers: dict
 ):
     url = f'{protocaas_url}{url_path}'
-    resp = requests.get(url, headers=headers)
+    resp = requests.get(url, headers=headers, timeout=60)
     if resp.status_code != 200:
         raise Exception(f'Error getting {url}: {resp.status_code} {resp.text}')
     return resp.json()
@@ -89,7 +89,7 @@ def _processor_put_api_request(*,
     data: dict
 ):
     url = f'{protocaas_url}{url_path}'
-    resp = requests.put(url, headers=headers, json=data)
+    resp = requests.put(url, headers=headers, json=data, timeout=60)
     if resp.status_code != 200:
         raise Exception(f'Error putting {url}: {resp.status_code} {resp.text}')
     return resp.json()
@@ -98,7 +98,7 @@ def _client_get_api_request(*,
     url_path: str
 ):
     url = f'{protocaas_url}{url_path}'
-    resp = requests.get(url)
+    resp = requests.get(url, timeout=60)
     if resp.status_code != 200:
         raise Exception(f'Error getting {url}: {resp.status_code} {resp.text}')
     return resp.json()
