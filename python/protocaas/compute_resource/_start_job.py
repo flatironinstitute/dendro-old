@@ -2,9 +2,9 @@ import os
 import subprocess
 from typing import Union
 from ..sdk.App import App
-from ._run_job_in_aws_batch import _run_job_in_aws_batch
 from ..common._api_request import _processor_put_api_request
 from ..common.protocaas_types import ComputeResourceSlurmOpts
+from ._run_job_in_aws_batch import _run_job_in_aws_batch
 
 
 def _set_job_status_to_starting(*,
@@ -173,7 +173,7 @@ def _start_job(*,
                 return f'cd {working_dir} && {" ".join(cmd2)}'
         else:
             raise Exception(f'Unexpected container method: {container_method}')
-    
+
     # This was the method used previously when we wanted to capture the output of the process and display it to the console
     # However, that was problematic, because when this parent closes, we don't want a broken pipe
     # prefix = f'{job_id} {processor_name}: '

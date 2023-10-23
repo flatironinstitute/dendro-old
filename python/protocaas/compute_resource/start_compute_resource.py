@@ -11,8 +11,6 @@ from .register_compute_resource import env_var_keys
 from ..sdk.App import App
 from ..sdk._run_job import _set_job_status
 from .PubsubClient import PubsubClient
-from ..sdk.App import App
-from ._start_job import _start_job
 from ..common.protocaas_types import ProtocaasComputeResourceApp, ComputeResourceSlurmOpts, ProtocaasJob
 
 
@@ -101,7 +99,7 @@ class Daemon:
             if need_to_handle_jobs:
                 timer_handle_jobs = time.time()
                 self._handle_jobs()
-            
+
             for slurm_job_handler in self._slurm_job_handlers_by_processor.values():
                 slurm_job_handler.do_work()
 
@@ -132,12 +130,12 @@ class Daemon:
             local_jobs_to_start = pending_local_jobs[:num_to_start]
             for job in local_jobs_to_start:
                 self._start_job(job)
-        
+
         # AWS Batch jobs
         aws_batch_jobs = [job for job in jobs if self._is_aws_batch_job(job)]
         for job in aws_batch_jobs:
             self._start_job(job)
-        
+
         # SLURM jobs
         slurm_jobs = [job for job in jobs if self._is_slurm_job(job) and self._job_is_pending(job)]
         for job in slurm_jobs:
@@ -153,10 +151,9 @@ class Daemon:
             return None
         if app._aws_batch_job_queue is not None:
             return 'aws_batch'
-        elif app._slurm_opts is not None:
+        if app._slurm_opts is not None:
             return 'slurm'
-        else:
-            return 'local'
+        return 'local'
     def _is_local_job(self, job: ProtocaasJob) -> bool:
         return self._get_job_resource_type(job) == 'local'
     def _is_aws_batch_job(self, job: ProtocaasJob) -> bool:
@@ -180,6 +177,7 @@ class Daemon:
             return ''
         try:
             print(f'Starting job {job_id} {processor_name}')
+            from ._start_job import _start_job
             return _start_job(
                 job_id=job_id,
                 job_private_key=job_private_key,
@@ -260,9 +258,9 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
 
 def start_compute_resource(dir: str):
     config_fname = os.path.join(dir, '.protocaas-compute-resource-node.yaml')
-    
+
     if os.path.exists(config_fname):
-        with open(config_fname, 'r') as f:
+        with open(config_fname, 'r', encoding='utf8') as f:
             the_config = yaml.safe_load(f)
     else:
         the_config = {}
@@ -335,7 +333,7 @@ class SlurmJobHandler:
         random_str = os.urandom(16).hex()
         slurm_script_fname = f'slurm_scripts/slurm_batch_{random_str}.sh'
         script_has_at_least_one_job = False # important to do this so we don't run an empty script
-        with open(slurm_script_fname, 'w') as f:
+        with open(slurm_script_fname, 'w', encoding='utf8') as f:
             f.write('#!/bin/bash\n')
             f.write('\n')
             f.write('set -e\n')

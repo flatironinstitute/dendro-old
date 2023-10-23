@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional
 import importlib.util
-import os 
+import os
 
 import protocaas.sdk as pr
 

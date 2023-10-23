@@ -184,40 +184,34 @@ class AppProcessor:
             func=processor_func
         )
 
-def _type_to_string(type):
-    if type == str:
-        return 'str'
-    if type == int:
-        return 'int'
-    if type == float:
-        return 'float'
-    if type == bool:
-        return 'bool'
-    if type == List[str]:
-        return 'List[str]'
-    if type == List[int]:
-        return 'List[int]'
-    if type == List[float]:
-        return 'List[float]'
-    if type == List[bool]:
-        return 'List[bool]'
-    raise Exception(f'Unexpected type: {type}')
+def _type_to_string(type: Any):
+    type_map = {
+        str: 'str',
+        int: 'int',
+        float: 'float',
+        bool: 'bool',
+        List[str]: 'List[str]',
+        List[int]: 'List[int]',
+        List[float]: 'List[float]',
+        List[bool]: 'List[bool]'
+    }
+    try:
+        return type_map[type]
+    except KeyError as exc:
+        raise ValueError(f'Unexpected type: {type}') from exc
 
-def _type_from_string(type):
-    if type == 'str':
-        return str
-    if type == 'int':
-        return int
-    if type == 'float':
-        return float
-    if type == 'bool':
-        return bool
-    if type == 'List[str]':
-        return List[str]
-    if type == 'List[int]':
-        return List[int]
-    if type == 'List[float]':
-        return List[float]
-    if type == 'List[bool]':
-        return List[bool]
-    raise Exception(f'Unexpected type: {type}')
+def _type_from_string(type: str):
+    type_map = {
+        'str': str,
+        'int': int,
+        'float': float,
+        'bool': bool,
+        'List[str]': List[str],
+        'List[int]': List[int],
+        'List[float]': List[float],
+        'List[bool]': List[bool]
+    }
+    try:
+        return type_map[type]
+    except KeyError as exc:
+        raise ValueError(f'Unexpected type: {type}') from exc

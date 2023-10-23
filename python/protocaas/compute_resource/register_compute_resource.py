@@ -49,14 +49,14 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str]=No
             node_name = input(f'Enter a name for this compute resource node (default: {host_name}): ') or host_name
         the_env['NODE_NAME'] = node_name
 
-        with open(env_fname, 'w') as f:
+        with open(env_fname, 'w', encoding='utf8') as f:
             yaml.dump(the_env, f)
     elif compute_resource_id is not None or compute_resource_private_key is not None:
         raise ValueError('Cannot specify compute_resource_id or compute_resource_private_key if compute resource node is already initialized.')
-    
-    with open(env_fname, 'r') as f:
+
+    with open(env_fname, 'r', encoding='utf8') as f:
         the_env = yaml.safe_load(f)
-    
+
     COMPUTE_RESOURCE_ID = the_env['COMPUTE_RESOURCE_ID']
     COMPUTE_RESOURCE_PRIVATE_KEY = the_env['COMPUTE_RESOURCE_PRIVATE_KEY']
 

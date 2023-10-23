@@ -13,7 +13,7 @@ class InputFile:
         url = self.get_url()
         print(f'Downloading {url} to {dest_file_path}')
         # stream the download
-        r = requests.get(url, stream=True)
+        r = requests.get(url, stream=True, timeout=60 * 60 * 24 * 7)
         if r.status_code != 200:
             raise Exception(f'Problem downloading {url}')
         with open(dest_file_path, 'wb') as f:
