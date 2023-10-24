@@ -1,4 +1,4 @@
-# requirements for the api
+# NOTE: these are the requirements for the api, picked up by vercel
 fastapi
 motor
 simplejson
