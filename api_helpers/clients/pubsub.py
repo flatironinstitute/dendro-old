@@ -1,8 +1,11 @@
-import os
 import json
 import aiohttp
 import urllib.parse
 from ..core.settings import get_settings
+
+
+class PubsubError(Exception):
+    pass
 
 async def publish_pubsub_message(*, channel: str, message: dict):
     settings = get_settings()
@@ -23,5 +26,5 @@ async def publish_pubsub_message(*, channel: str, message: dict):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as resp:
             if resp.status != 200:
-                raise Exception(f"Error publishing to pubsub: {resp.status} {resp.text}")
+                raise PubsubError(f"Error publishing to pubsub: {resp.status} {resp.text}")
             return True

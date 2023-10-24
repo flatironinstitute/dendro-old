@@ -14,6 +14,9 @@ class GetAppsResponse(BaseModel):
     apps: List[ProtocaasComputeResourceApp]
     success: bool
 
+class ComputeResourceNotFoundException(Exception):
+    pass
+
 @router.get("/compute_resources/{compute_resource_id}/apps")
 async def compute_resource_get_apps(
     compute_resource_id: str,
@@ -32,12 +35,12 @@ async def compute_resource_get_apps(
 
         compute_resource = await fetch_compute_resource(compute_resource_id)
         if compute_resource is None:
-            raise Exception(f"No compute resource with ID {compute_resource_id}")
+            raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
         apps = compute_resource.apps
         return GetAppsResponse(apps=apps, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # get pubsub subscription
 class GetPubsubSubscriptionResponse(BaseModel):
@@ -62,10 +65,10 @@ async def compute_resource_get_pubsub_subscription(
 
         compute_resource = await fetch_compute_resource(compute_resource_id)
         if compute_resource is None:
-            raise Exception(f"No compute resource with ID {compute_resource_id}")
+            raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
         VITE_PUBNUB_SUBSCRIBE_KEY = get_settings().PUBNUB_SUBSCRIBE_KEY
         if VITE_PUBNUB_SUBSCRIBE_KEY is None:
-            raise Exception('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY')
+            raise KeyError('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY')
         subscription = PubsubSubscription(
             pubnubSubscribeKey=VITE_PUBNUB_SUBSCRIBE_KEY,
             pubnubChannel=compute_resource_id,
@@ -74,7 +77,7 @@ async def compute_resource_get_pubsub_subscription(
         return GetPubsubSubscriptionResponse(subscription=subscription, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # get unfinished jobs
 class GetUnfinishedJobsResponse(BaseModel):
@@ -110,7 +113,7 @@ async def compute_resource_get_unfinished_jobs(
         return GetUnfinishedJobsResponse(jobs=jobs, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # set spec
 class SetSpecRequest(BaseModel):
@@ -143,7 +146,14 @@ async def compute_resource_set_spec(
         return SetSpecResponse(success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+class UnexpectedException(Exception):
+    pass
+
+class InvalidSignatureException(Exception):
+    pass
+
 
 def _authenticate_compute_resource_request(
     compute_resource_id: str,
@@ -152,6 +162,6 @@ def _authenticate_compute_resource_request(
     expected_payload: str
 ):
     if compute_resource_payload != expected_payload:
-        raise Exception('Unexpected payload')
+        raise UnexpectedException('Unexpected payload')
     if not _verify_signature_str(compute_resource_payload, compute_resource_id, compute_resource_signature):
-        raise Exception('Invalid signature')
+        raise InvalidSignatureException('Invalid signature')

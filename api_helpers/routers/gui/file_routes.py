@@ -20,12 +20,11 @@ class GetFileResponse(BaseModel):
 async def get_file(project_id, file_name):
     try:
         file = await fetch_file(project_id, file_name)
-        if file is None:
-            raise Exception(f"No file with name {file_name} in project with ID {project_id}")
+        assert file is not None, f"No file with name {file_name} in project with ID {project_id}"
         return GetFileResponse(file=file, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # get files
 class GetFilesResponse(BaseModel):
@@ -39,7 +38,7 @@ async def get_files(project_id):
         return GetFilesResponse(files=files, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # set file
 class SetFileRequest(BaseModel):
@@ -52,13 +51,16 @@ class SetFileResponse(BaseModel):
     fileId: str
     success: bool
 
+class AuthException(Exception):
+    pass
+
 @router.put("/projects/{project_id}/files/{file_name:path}")
 async def set_file(project_id, file_name, data: SetFileRequest, github_access_token: str=Header(...)):
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
-            raise Exception('User not authenticated')
+            raise AuthException('User not authenticated')
 
         # parse the request
         content = data.content
@@ -66,19 +68,20 @@ async def set_file(project_id, file_name, data: SetFileRequest, github_access_to
         size = data.size
         metadata = data.metadata
 
+        assert size is not None, "size must be specified"
+
         project = await fetch_project(project_id)
-        if project is None:
-            raise Exception(f"No project with ID {project_id}")
+        assert project is not None, f"No project with ID {project_id}"
 
         if not _project_is_editable(project, user_id):
-            raise Exception('User does not have permission to set file content in this project')
+            raise AuthException('User does not have permission to set file content in this project')
 
         file_id = await service_set_file(project_id=project_id, user_id=user_id, file_name=file_name, content=content, job_id=job_id, size=size, metadata=metadata)
 
         return SetFileResponse(fileId=file_id, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # delete file
 class DeleteFileResponse(BaseModel):
@@ -90,14 +93,13 @@ async def delete_file(project_id, file_name, github_access_token: str=Header(...
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
-            raise Exception('User not authenticated')
+            raise AuthException('User not authenticated')
 
         project = await fetch_project(project_id)
-        if project is None:
-            raise Exception(f"No project with ID {project_id}")
+        assert project is not None, f"No project with ID {project_id}"
 
         if not _project_is_editable(project, user_id):
-            raise Exception('User does not have permission to delete files in this project')
+            raise AuthException('User does not have permission to delete files in this project')
 
         await db_delete_file(project_id, file_name)
 
@@ -107,4 +109,4 @@ async def delete_file(project_id, file_name, github_access_token: str=Header(...
         return DeleteFileResponse(success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

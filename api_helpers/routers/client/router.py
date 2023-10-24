@@ -12,16 +12,19 @@ class GetProjectResponse(BaseModel):
     project: ProtocaasProject
     success: bool
 
+class ProjectError(Exception):
+    pass
+
 @router.get("/projects/{project_id}")
 async def get_project(project_id) -> GetProjectResponse:
     try:
         project = await fetch_project(project_id)
         if project is None:
-            raise Exception(f"No project with ID {project_id}")
+            raise ProjectError(f"No project with ID {project_id}")
         return GetProjectResponse(project=project, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # get project files
 class GetProjectFilesResponse(BaseModel):
@@ -35,7 +38,7 @@ async def get_project_files(project_id) -> GetProjectFilesResponse:
         return GetProjectFilesResponse(files=files, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 # get project jobs
 class GetProjectJobsResponse(BaseModel):
@@ -49,4 +52,4 @@ async def get_project_jobs(project_id) -> GetProjectJobsResponse:
         return GetProjectJobsResponse(jobs=jobs, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

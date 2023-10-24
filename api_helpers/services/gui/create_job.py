@@ -21,6 +21,12 @@ class CreateJobRequestInputParameter(BaseModel):
     name: str
     value: Union[Any, None]
 
+class AuthException(Exception):
+    pass
+
+class CreateJobException(Exception):
+    pass
+
 async def create_job(
     project_id: str,
     processor_name: str,
@@ -33,21 +39,22 @@ async def create_job(
     dandi_api_key: Union[str, None] = None
 ):
     project = await fetch_project(project_id)
+    assert project is not None, f"No project with ID {project_id}"
 
     if not _project_is_editable(project, user_id):
-        raise Exception('User does not have permission to create jobs')
+        raise AuthException('User does not have permission to create jobs')
 
     compute_resource_id = project.computeResourceId
     if not compute_resource_id:
         compute_resource_id = get_settings().DEFAULT_COMPUTE_RESOURCE_ID
         if compute_resource_id is None:
-            raise Exception('Project does not have a compute resource ID, and no default VITE_DEFAULT_COMPUTE_RESOURCE_ID is set in the environment.')
+            raise KeyError('Project does not have a compute resource ID, and no default VITE_DEFAULT_COMPUTE_RESOURCE_ID is set in the environment.')
 
     input_files: List[ProtocaasJobInputFile] = [] # {name, fileId, fileName}
     for input_file in input_files_from_request:
         file = await fetch_file(project_id, input_file.fileName)
         if file is None:
-            raise Exception(f"Project input file does not exist: {input_file.fileName}")
+            raise CreateJobException(f"Project input file does not exist: {input_file.fileName}")
         input_files.append(
             ProtocaasJobInputFile(
                 name=input_file.name,
@@ -102,7 +109,7 @@ async def create_job(
     for input_parameter in input_parameters:
         pp = next((x for x in processor_spec.parameters if x.name == input_parameter.name), None)
         if not pp:
-            raise Exception(f"Processor parameter not found: {input_parameter.name}")
+            raise CreateJobException(f"Processor parameter not found: {input_parameter.name}")
         input_parameters2.append(
             ProtocaasJobInputParameter(
                 name=input_parameter.name,

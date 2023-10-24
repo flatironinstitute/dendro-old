@@ -10,10 +10,10 @@ async def _remove_detached_files_and_jobs(project_id: str):
 
     files = await files_collection.find({
         'projectId': project_id
-    }).to_list(length=None)
+    }).to_list(length=None) # type: ignore
     jobs = await jobs_collection.find({
         'projectId': project_id
-    }).to_list(length=None)
+    }).to_list(length=None) # type: ignore
 
     for file in files:
         _remove_id_field(file)

@@ -2,26 +2,15 @@ from typing import Union, List, Any
 import traceback
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Header
+
 from ._authenticate_gui_request import _authenticate_gui_request
-from ...services.gui.create_job import create_job
+from ...services.gui.create_job import create_job, CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter
 from ...core.protocaas_types import ComputeResourceSpecProcessor
 
 
 router = APIRouter()
 
 # create job
-class CreateJobRequestInputFile(BaseModel):
-    name: str
-    fileName: str
-
-class CreateJobRequestOutputFile(BaseModel):
-    name: str
-    fileName: str
-
-class CreateJobRequestInputParameter(BaseModel):
-    name: str
-    value: Union[Any, None]
-
 class CreateJobRequest(BaseModel):
     projectId: str
     processorName: str
@@ -36,13 +25,16 @@ class CreateJobResponse(BaseModel):
     jobId: str
     success: bool
 
+class AuthException(Exception):
+    pass
+
 @router.post("/jobs")
 async def create_job_handler(data: CreateJobRequest, github_access_token: str=Header(...)) -> CreateJobResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
-            raise Exception('User is not authenticated')
+            raise AuthException('User is not authenticated')
 
         # parse the request
         project_id = data.projectId
