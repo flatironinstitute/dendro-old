@@ -5,6 +5,9 @@ if TYPE_CHECKING:
     from .Job import Job
 
 
+class SetOutputFileException(Exception):
+    pass
+
 class OutputFile:
     def __init__(self, *, name: str, job: 'Job') -> None:
         self._name = name
@@ -18,6 +21,6 @@ class OutputFile:
             resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
             if resp_upload.status_code != 200:
                 print(upload_url)
-                raise Exception(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
+                raise SetOutputFileException(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
 
         self._was_set = True

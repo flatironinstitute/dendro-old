@@ -11,6 +11,9 @@ from ..common.protocaas_types import ComputeResourceSlurmOpts
 from ._load_spec_from_uri import _load_spec_from_uri
 
 
+class ProtocaasAppException(Exception):
+    pass
+
 class App:
     """An app"""
     def __init__(self, name: str, *, help: str, app_image: Union[str, None]=None, app_executable: Union[str, None]=None) -> None:
@@ -24,7 +27,7 @@ class App:
         """
         if not app_image:
             if not app_executable:
-                raise Exception('You must set app_executable if app_image is not set')
+                raise ProtocaasAppException('You must set app_executable if app_image is not set')
 
         self._name = name
         self._help = help
@@ -42,7 +45,7 @@ class App:
             processor_func: The processor function which needs to have been decorated to be a protocaas processor.
         """
         if not hasattr(processor_func, 'protocaas_processor'):
-            raise Exception('The processor function must be decorated with @processor')
+            raise ProtocaasAppException('The processor function must be decorated with @processor')
         P = AppProcessor.from_func(processor_func)
         self._processors.append(P)
 
@@ -54,21 +57,21 @@ class App:
         APP_EXECUTABLE = os.environ.get('APP_EXECUTABLE', None)
         if JOB_ID is not None:
             if JOB_PRIVATE_KEY is None:
-                raise Exception('JOB_PRIVATE_KEY is not set')
+                raise KeyError('JOB_PRIVATE_KEY is not set')
             if JOB_INTERNAL == '1':
                 # In this mode, we run the job directly
                 # This is called internally by the other run mode (need to explain this better)
                 return self._run_job(job_id=JOB_ID, job_private_key=JOB_PRIVATE_KEY)
-            else:
-                # In this mode we run the job, including the top-level interactions with the protocaas API, such as setting the status and the console output, and checking whether the job has been canceled/deleted
-                if APP_EXECUTABLE is None:
-                    raise Exception('APP_EXECUTABLE is not set')
-                return _run_job(
-                    job_id=JOB_ID,
-                    job_private_key=JOB_PRIVATE_KEY,
-                    app_executable=APP_EXECUTABLE
-                )
-        raise Exception('You must set JOB_ID as an environment variable to run a job')
+
+            # In this mode we run the job, including the top-level interactions with the protocaas API, such as setting the status and the console output, and checking whether the job has been canceled/deleted
+            if APP_EXECUTABLE is None:
+                raise KeyError('APP_EXECUTABLE is not set')
+            return _run_job(
+                job_id=JOB_ID,
+                job_private_key=JOB_PRIVATE_KEY,
+                app_executable=APP_EXECUTABLE
+            )
+        raise KeyError('You must set JOB_ID as an environment variable to run a job')
 
     def make_spec_file(self, spec_output_file: str = 'spec.json'):
         """Create a spec.json file. This is called internally."""
@@ -132,13 +135,10 @@ class App:
         # Find the registered processor and the associated processor function
         processor_name = job.processor_name
         processor = next((p for p in self._processors if p._name == processor_name), None)
-        if not processor:
-            raise Exception(f'Processor not found: {processor_name}')
-        if not hasattr(processor, '_processor_func'):
-            raise Exception(f'Processor does not have a _processor_func attribute: {processor_name}')
+        assert processor, f'Processor not found: {processor_name}'
+        assert hasattr(processor, '_processor_func'), f'Processor does not have a _processor_func attribute: {processor_name}'
         processor_func = processor._processor_func
-        if processor_func is None:
-            raise Exception(f'processor_func is None')
+        assert processor_func is not None, f'Processor function is None: {processor_name}'
 
         # Assemble the kwargs for the processor function
         kwargs = {}
@@ -146,8 +146,7 @@ class App:
             if not input.list:
                 # this input is not a list
                 input_file = next((i for i in job.inputs if i._name == input.name), None)
-                if input_file is None:
-                    raise Exception(f'Input not found: {input.name}')
+                assert input_file, f'Input not found: {input.name}'
                 kwargs[input.name] = input_file
             else:
                 # this input is a list
@@ -164,8 +163,7 @@ class App:
                 kwargs[input.name] = the_list
         for output in processor._outputs:
             output_file = next((o for o in job.outputs if o._name == output.name), None)
-            if output_file is None:
-                raise Exception(f'Output not found: {output.name}')
+            assert output_file is not None, f'Output not found: {output.name}'
             kwargs[output.name] = output_file
         for parameter in processor._parameters:
             job_parameter = next((p for p in job.parameters if p.name == parameter.name), None)
@@ -180,10 +178,8 @@ class App:
         # Check that all outputs were set
         for output in processor._outputs:
             output_file = next((o for o in job.outputs if o._name == output.name), None)
-            if output_file is None:
-                raise Exception(f'Output not found: {output.name}')
-            if not output_file._was_set:
-                raise Exception(f'Output was not set: {output.name}')
+            assert output_file is not None, f'Output not found: {output.name}'
+            assert output_file._was_set, f'Output was not set: {output.name}'
 
 class TemporaryDirectory:
     """A context manager for temporary directories"""

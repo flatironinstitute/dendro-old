@@ -16,8 +16,11 @@ from ..common.protocaas_types import ProtocaasComputeResourceApp, ComputeResourc
 
 max_simultaneous_local_jobs = 2
 
+class ComputeResourceException(Exception):
+    pass
+
 class Daemon:
-    def __init__(self, *, dir: str):
+    def __init__(self):
         self._compute_resource_id = os.getenv('COMPUTE_RESOURCE_ID', None)
         self._compute_resource_private_key = os.getenv('COMPUTE_RESOURCE_PRIVATE_KEY', None)
         self._node_id = os.getenv('NODE_ID', None)
@@ -141,7 +144,7 @@ class Daemon:
         for job in slurm_jobs:
             processor_name = job.processorName
             if processor_name not in self._slurm_job_handlers_by_processor:
-                raise Exception(f'Unexpected: Could not find slurm job handler for processor {processor_name}')
+                raise ComputeResourceException(f'Unexpected: Could not find slurm job handler for processor {processor_name}')
             self._slurm_job_handlers_by_processor[processor_name].add_job(job)
 
     def _get_job_resource_type(self, job: ProtocaasJob) -> Union[str, None]:
@@ -186,7 +189,7 @@ class Daemon:
                 run_process=run_process,
                 return_shell_command=return_shell_command
             )
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             # do a traceback
             import traceback
             traceback.print_exc()
@@ -223,7 +226,7 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
             s.append(f'container: {container}')
         if aws_batch_opts is not None:
             if slurm_opts is not None:
-                raise Exception(f'App has awsBatch opts but also has slurm opts')
+                raise ComputeResourceException('App has awsBatch opts but also has slurm opts')
             aws_batch_job_queue = aws_batch_opts.jobQueue
             aws_batch_job_definition = aws_batch_opts.jobDefinition
             s.append(f'awsBatchJobQueue: {aws_batch_job_queue}')
@@ -268,7 +271,7 @@ def start_compute_resource(dir: str):
         if k in the_config:
             os.environ[k] = the_config[k]
 
-    daemon = Daemon(dir=dir)
+    daemon = Daemon()
     daemon.start()
 
 def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str]=None, compute_resource_node_id: Optional[str]=None):

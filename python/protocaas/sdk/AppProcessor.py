@@ -110,6 +110,9 @@ class AppProcessorTag:
             tag=spec['tag']
         )
 
+class AppProcessorException(Exception):
+    pass
+
 class AppProcessor:
     """A processor in an app"""
     def __init__(self, *,
@@ -160,7 +163,7 @@ class AppProcessor:
     def from_func(processor_func):
         pp = getattr(processor_func, 'protocaas_processor', None)
         if pp is None:
-            raise Exception('Processor function must be decorated with @processor')
+            raise AppProcessorException('Processor function must be decorated with @processor')
         name = pp['name']
         help = pp['help']
         inputs = getattr(processor_func, 'protocaas_inputs', [])

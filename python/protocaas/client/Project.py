@@ -3,6 +3,9 @@ from ..common.protocaas_types import ProtocaasProject, ProtocaasFile, ProtocaasJ
 from ..common._api_request import _client_get_api_request
 
 
+class ProjectException(Exception):
+    pass
+
 class Project:
     def __init__(self, project_data: ProtocaasProject, files_data: List[ProtocaasFile], jobs_data: List[ProtocaasJob]) -> None:
         self._project_id = project_data.projectId
@@ -26,7 +29,7 @@ class Project:
         for f in self._files:
             if f._file_data.fileName == file_name:
                 return f
-        raise Exception(f'File not found: {file_name}')
+        raise ProjectException(f'File not found: {file_name}')
     def get_folder(self, path: str) -> 'ProjectFolder':
         return ProjectFolder(self, path)
 
@@ -36,7 +39,7 @@ class ProjectFile:
     def get_url(self) -> str:
         a = self._file_data.content
         if not a.startswith('url:'):
-            raise Exception(f'Unexpected content for file {self._file_data.fileName}: {a}')
+            raise ProjectException(f'Unexpected content for file {self._file_data.fileName}: {a}')
         return a[len('url:'):]
 
 class ProjectFolder:
