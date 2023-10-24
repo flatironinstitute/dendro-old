@@ -5,15 +5,15 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Test
+    name: Tests
     steps:
     - uses: actions/checkout@v1
     - name: Install
       run: cd python && pip install -e .
     - name: Install packages needed for tests
-      run: pip install pytest pytest-cov pyright boto3 kachery_cloud autopep8
+      run: pip install pytest pytest-cov boto3 kachery_cloud
     - name: Run tests and collect coverage
-      run: devel/check_formatting.sh && cd python && pyright && pytest --cov protocaas --cov-report=xml --cov-report=term tests/
+      run: cd python && pytest --cov protocaas --cov-report=xml --cov-report=term tests/
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

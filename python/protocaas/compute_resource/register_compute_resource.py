@@ -18,7 +18,7 @@ env_var_keys = [
     'BATCH_AWS_REGION'
 ]
 
-def register_compute_resource(*, dir: str, compute_resource_id: Optional[str]=None, compute_resource_private_key: Optional[str]=None, node_name: Optional[str]=None):
+def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = None, compute_resource_private_key: Optional[str] = None, node_name: Optional[str] = None):
     """Initialize a Protocaas compute resource node.
 
     Args:

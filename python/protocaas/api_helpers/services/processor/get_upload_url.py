@@ -1,4 +1,3 @@
-import os
 from ...core.protocaas_types import ProtocaasJob
 from ...core.settings import get_settings
 from ._get_signed_upload_url import _get_signed_upload_url

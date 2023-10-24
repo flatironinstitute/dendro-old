@@ -1,22 +1,14 @@
 ## Running the tests (vscode action)
 
 ```bash
-pip install pytest pytest-cov pyright autopep8
+pip install pytest pytest-cov pyright flake8
 ```
 
 In vscode:
 
 Command palette => Run Task => Test
 
-This will test formatting (see autopep8 below), pyright, and will use pytest to run the tests in python/tests.
-
-## Running autopep8 (vscode action)
-
-This project is configured to run a very limited auto-formatting. In vscode:
-
-Command palette => Run Task => autopep8
-
-This will only apply the rules defined in python/setup.cfg.
+This will check formatting using flake8 (see below), will check typing using pyright (see below), and will use pytest to run the tests in python/tests.
 
 ## Using pyright vscode extension
 
@@ -33,8 +25,11 @@ def test2():
 
 So you should install the pyright vscode extension (ms-pyright).
 
-## Running pylint (vscode action)
+## Using flake8 vscode extension
 
-Although not all these rules are enforced it may be useful to run the pylint vscode task:
+Install the flake8 vscode extension.
 
-Command palette => Run Task => pylint
+The rules being ignored are in .flake8
+
+You can run `cd python && flake8 --config ../.flake8` to see the errors.
+

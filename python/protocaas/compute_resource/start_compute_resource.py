@@ -205,7 +205,7 @@ class Daemon:
                     return app
         return None
 
-def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str]=None, compute_resource_node_id: Optional[str]=None) -> List[App]:
+def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str] = None, compute_resource_node_id: Optional[str] = None) -> List[App]:
     url_path = f'/api/compute_resource/compute_resources/{compute_resource_id}/apps'
     resp = _compute_resource_get_api_request(
         url_path=url_path,
@@ -274,7 +274,7 @@ def start_compute_resource(dir: str):
     daemon = Daemon()
     daemon.start()
 
-def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str]=None, compute_resource_node_id: Optional[str]=None):
+def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str] = None, compute_resource_node_id: Optional[str] = None):
     url_path = f'/api/compute_resource/compute_resources/{compute_resource_id}/pubsub_subscription'
     resp = _compute_resource_get_api_request(
         url_path=url_path,

@@ -34,7 +34,7 @@ class GetProjectsResponse(BaseModel):
     success: bool
 
 @router.get("")
-async def get_projects(github_access_token: str=Header(...), tag: Optional[str]=None):
+async def get_projects(github_access_token: str = Header(...), tag: Optional[str] = None):
     try:
         if tag is None:
             user_id = await _authenticate_gui_request(github_access_token)
@@ -59,7 +59,7 @@ class AuthException(Exception):
     pass
 
 @router.post("")
-async def create_project(data: CreateProjectRequest, github_access_token: str=Header(...)) -> CreateProjectResponse:
+async def create_project(data: CreateProjectRequest, github_access_token: str = Header(...)) -> CreateProjectResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -98,7 +98,7 @@ class SetProjectNameResponse(BaseModel):
     success: bool
 
 @router.put("/{project_id}/name")
-async def set_project_name(project_id, data: SetProjectNameRequest, github_access_token: str=Header(...)) -> SetProjectNameResponse:
+async def set_project_name(project_id, data: SetProjectNameRequest, github_access_token: str = Header(...)) -> SetProjectNameResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -132,7 +132,7 @@ class SetProjectDescriptionResponse(BaseModel):
     success: bool
 
 @router.put("/{project_id}/description")
-async def set_project_description(project_id, data: SetProjectDescriptionRequest, github_access_token: str=Header(...)) -> SetProjectDescriptionResponse:
+async def set_project_description(project_id, data: SetProjectDescriptionRequest, github_access_token: str = Header(...)) -> SetProjectDescriptionResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -166,7 +166,7 @@ class SetProjectTagsResponse(BaseModel):
     success: bool
 
 @router.put("/{project_id}/tags")
-async def set_project_tags(project_id, data: SetProjectTagsRequest, github_access_token: str=Header(...)) -> SetProjectTagsResponse:
+async def set_project_tags(project_id, data: SetProjectTagsRequest, github_access_token: str = Header(...)) -> SetProjectTagsResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -197,7 +197,7 @@ class DeleteProjectResponse(BaseModel):
     success: bool
 
 @router.delete("/{project_id}")
-async def delete_project(project_id, github_access_token: str=Header(...)) -> DeleteProjectResponse:
+async def delete_project(project_id, github_access_token: str = Header(...)) -> DeleteProjectResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -239,7 +239,7 @@ class SetProjectPubliclyReadableResponse(BaseModel):
     success: bool
 
 @router.put("/{project_id}/publicly_readable")
-async def set_project_public(project_id, data: SetProjectPubliclyReadableRequest, github_access_token: str=Header(...)):
+async def set_project_public(project_id, data: SetProjectPubliclyReadableRequest, github_access_token: str = Header(...)):
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -273,7 +273,7 @@ class SetProjectComputeResourceIdResponse(BaseModel):
     success: bool
 
 @router.put("/{project_id}/compute_resource_id")
-async def set_project_compute_resource_id(project_id, data: SetProjectComputeResourceIdRequest, github_access_token: str=Header(...)):
+async def set_project_compute_resource_id(project_id, data: SetProjectComputeResourceIdRequest, github_access_token: str = Header(...)):
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -306,7 +306,7 @@ class SetProjectUsersResponse(BaseModel):
     success: bool
 
 @router.put("/{project_id}/users")
-async def set_project_users(project_id, data: SetProjectUsersRequest, github_access_token: str=Header(...)):
+async def set_project_users(project_id, data: SetProjectUsersRequest, github_access_token: str = Header(...)):
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)

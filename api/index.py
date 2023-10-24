@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 
-# Here's the reason that all the other Python files are in ../api_helpers
+# Here's the reason that all the other Python files are in ../python/protocaas/api_helpers
 # I was noticing very long build times (~15 minutes)...
 # Apparently, vercel treats every .py file in /api as a lambda function.
 # So it was building each and every one of them, even though index.py should be the only one.
 # See https://github.com/orgs/vercel/discussions/46
 
 import sys
-sys.path.append("..")
+sys.path.append("../python/protocaas")
 from api_helpers.routers.processor.router import router as processor_router
 from api_helpers.routers.compute_resource.router import router as compute_resource_router
 from api_helpers.routers.client.router import router as client_router

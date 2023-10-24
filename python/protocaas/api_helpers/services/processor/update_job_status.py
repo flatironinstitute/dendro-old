@@ -1,5 +1,4 @@
 import time
-import os
 from typing import Union
 from ...core.protocaas_types import ProtocaasJob
 from ...core.settings import get_settings

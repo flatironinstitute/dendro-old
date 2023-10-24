@@ -38,6 +38,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     # Create a function that will handle uploading the latest console output to the protocaas system
     console_output_upload_url: Union[str, None] = None
     console_output_upload_url_timestamp = 0
+
     def upload_console_output(output: str):
         nonlocal console_output_upload_url
         nonlocal console_output_upload_url_timestamp
@@ -118,7 +119,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                 try:
                     job_status = _get_job_status(job_id=job_id, job_private_key=job_private_key)
                     num_status_check_failures = 0
-                except: # pylint: disable=bare-except
+                except: # noqa: E722
                     # maybe this failed due to a network error. we'll try this a couple or a few times before giving up
                     print('Failed to check job status')
                     num_status_check_failures += 1
@@ -183,7 +184,7 @@ def _output_reader(proc, outq: queue.Queue):
     while True:
         try:
             x = proc.stdout.read(1)
-        except: # pylint: disable=bare-except
+        except: # noqa: E722
             break
         if len(x) == 0:
             break

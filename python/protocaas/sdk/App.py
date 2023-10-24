@@ -16,7 +16,7 @@ class ProtocaasAppException(Exception):
 
 class App:
     """An app"""
-    def __init__(self, name: str, *, help: str, app_image: Union[str, None]=None, app_executable: Union[str, None]=None) -> None:
+    def __init__(self, name: str, *, help: str, app_image: Union[str, None] = None, app_executable: Union[str, None] = None) -> None:
         """Construct a new Protocaas App
 
         Args:
@@ -110,9 +110,9 @@ class App:
     @staticmethod
     def from_spec_uri(
         spec_uri: str,
-        aws_batch_job_queue: Union[str, None]=None,
-        aws_batch_job_definition: Union[str, None]=None,
-        slurm_opts: Union[ComputeResourceSlurmOpts, None]=None
+        aws_batch_job_queue: Union[str, None] = None,
+        aws_batch_job_definition: Union[str, None] = None,
+        slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
     ):
         """Define an app from a spec URI (e.g., a gh url to the spec.json blob). This is called internally."""
         spec: dict = _load_spec_from_uri(spec_uri)

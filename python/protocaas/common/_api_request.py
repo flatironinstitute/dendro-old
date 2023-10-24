@@ -29,7 +29,7 @@ def _compute_resource_get_api_request(*,
     try:
         resp = requests.get(url, headers=headers, timeout=60)
         resp.raise_for_status()
-    except:
+    except: # noqa E722
         print(f'Error in compute resource get api request for {url}')
         raise
     return resp.json()
@@ -53,7 +53,7 @@ def _compute_resource_post_api_request(*,
     try:
         resp = requests.post(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
-    except:
+    except: # noqa E722
         print(f'Error in compute resource post api request for {url}')
         raise
     return resp.json()
@@ -77,7 +77,7 @@ def _compute_resource_put_api_request(*,
     try:
         resp = requests.put(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
-    except:
+    except: # noqa E722
         print(f'Error in compute resource put api request for {url}')
         raise
     return resp.json()
@@ -90,7 +90,7 @@ def _processor_get_api_request(*,
     try:
         resp = requests.get(url, headers=headers, timeout=60)
         resp.raise_for_status()
-    except:
+    except: # noqa E722
         print(f'Error in processor get api request for {url}')
         raise
     return resp.json()
@@ -104,7 +104,7 @@ def _processor_put_api_request(*,
     try:
         resp = requests.put(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
-    except:
+    except: # noqa E722
         print(f'Error in processor put api request for {url}')
         raise
     return resp.json()
@@ -116,7 +116,7 @@ def _client_get_api_request(*,
     try:
         resp = requests.get(url, timeout=60)
         resp.raise_for_status()
-    except:
+    except: # noqa E722
         print(f'Error in client get api request for {url}')
         raise
     return resp.json()
