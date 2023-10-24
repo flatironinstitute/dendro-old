@@ -1,10 +1,22 @@
+from typing import List
 import time
 import aiohttp
+import uuid
 
 
 _user_ids_for_access_tokens = {} # github access token -> {user_id: string, timestamp: float}
 
+_mock_github_access_tokens: List[str] = []
+def _create_mock_github_access_token():
+    token = 'mock:' + str(uuid.uuid4())
+    _mock_github_access_tokens.append(token)
+    return token
+
 async def _authenticate_gui_request(github_access_token: str):
+    if github_access_token.startswith('mock:'):
+        if github_access_token not in _mock_github_access_tokens:
+            raise AuthException('Invalid mock github access token')
+        return 'github|__mock__user'
     if not github_access_token:
         return None
     if github_access_token in _user_ids_for_access_tokens:

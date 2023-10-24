@@ -1,7 +1,7 @@
 ## Running the tests (vscode action)
 
 ```bash
-pip install pytest pytest-cov pyright flake8
+pip install pytest pytest-asyncio pytest-cov pyright flake8
 ```
 
 In vscode:

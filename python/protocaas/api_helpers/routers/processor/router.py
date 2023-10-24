@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from ...services.processor.update_job_status import update_job_status
 from ...services.processor.get_upload_url import get_upload_url
 from ...core.protocaas_types import ProcessorGetJobResponse, ProcessorGetJobResponseInput, ProcessorGetJobResponseOutput, ProcessorGetJobResponseParameter
-from ...clients.db import fetch_job, update_job, fetch_file
+from ...clients.db import fetch_job, fetch_file
 
 router = APIRouter()
 
@@ -14,12 +14,14 @@ router = APIRouter()
 @router.get("/jobs/{job_id}")
 async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> ProcessorGetJobResponse:
     try:
-        job = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True)
+        job = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True, include_private_key=True)
         if job is None:
             raise Exception(f"No job with ID {job_id}")
 
         if job.jobPrivateKey != job_private_key:
             raise Exception(f"Invalid job private key for job {job_id}")
+        # after we are done with it, let's delete the private key from the job object for safety
+        job.jobPrivateKey = ''
 
         inputs: List[ProcessorGetJobResponseInput] = []
         for input in job.inputFiles:
@@ -82,7 +84,7 @@ class ProcessorUpdateJobStatusResponse(BaseModel):
 @router.put("/jobs/{job_id}/status")
 async def processor_update_job_status(job_id: str, data: ProcessorUpdateJobStatusRequest, job_private_key: str = Header(...)) -> ProcessorUpdateJobStatusResponse:
     try:
-        job = await fetch_job(job_id)
+        job = await fetch_job(job_id, include_private_key=True)
         if job is None:
             raise Exception(f"No job with ID {job_id}")
         if job.jobPrivateKey != job_private_key:
@@ -103,7 +105,7 @@ class ProcessorGetJobStatusResponse(BaseModel):
 @router.get("/jobs/{job_id}/status")
 async def processor_get_job_status(job_id: str, job_private_key: str = Header(...)) -> ProcessorGetJobStatusResponse:
     try:
-        job = await fetch_job(job_id)
+        job = await fetch_job(job_id, include_private_key=True)
         if job is None:
             return ProcessorGetJobStatusResponse(status=None, success=True)
         if job.jobPrivateKey != job_private_key:
@@ -121,31 +123,6 @@ class ProcessorSetJobConsoleOutputRequest(BaseModel):
 class ProcessorSetJobConsoleOutputResponse(BaseModel):
     success: bool
 
-# This route is obsolete. Use the processor_get_upload_url() route instead.
-@router.put("/jobs/{job_id}/console_output")
-async def processor_set_job_console_output(job_id: str, data: ProcessorSetJobConsoleOutputRequest, job_private_key: str = Header(...)) -> ProcessorSetJobConsoleOutputResponse:
-    try:
-        job = await fetch_job(job_id)
-        if job is None:
-            raise Exception(f"No job with ID {job_id}")
-        if job.jobPrivateKey != job_private_key:
-            raise Exception(f"Invalid job private key for job {job_id}")
-
-        # get the console output from the request body
-        console_output = data.consoleOutput
-
-        await update_job(
-            job_id=job_id,
-            update={
-                'consoleOutput': console_output
-            }
-        )
-
-        return ProcessorSetJobConsoleOutputResponse(success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
-
 # get job output upload url
 class ProcessorGetJobOutputUploadUrlResponse(BaseModel):
     uploadUrl: str
@@ -155,7 +132,7 @@ class ProcessorGetJobOutputUploadUrlResponse(BaseModel):
 @router.get("/jobs/{job_id}/outputs/{output_name}/upload_url")
 async def processor_get_upload_url(job_id: str, output_name: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputUploadUrlResponse:
     try:
-        job = await fetch_job(job_id)
+        job = await fetch_job(job_id, include_private_key=True)
         assert job, f"No job with ID {job_id}"
         if job.jobPrivateKey != job_private_key:
             raise ValueError(f"Invalid job private key for job {job_id}")
