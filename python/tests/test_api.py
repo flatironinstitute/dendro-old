@@ -7,6 +7,7 @@ from protocaas.common._crypto_keys import generate_keypair, _sign_message_str
 
 
 @pytest.mark.asyncio
+@pytest.mark.api
 async def test_api():
     from protocaas.api_helpers.routers.gui.project_routes import create_project, CreateProjectRequest
     from protocaas.api_helpers.routers.gui.project_routes import set_project_name, SetProjectNameRequest
