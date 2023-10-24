@@ -3,6 +3,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .Job import Job
 
+
+class InputFileDownloadError(Exception):
+    pass
+
 class InputFile:
     def __init__(self, *, name: str, job: 'Job') -> None:
         self._name = name
@@ -15,7 +19,7 @@ class InputFile:
         # stream the download
         r = requests.get(url, stream=True, timeout=60 * 60 * 24 * 7)
         if r.status_code != 200:
-            raise Exception(f'Problem downloading {url}')
+            raise InputFileDownloadError(f'Error downloading file {url}: {r.status_code} {r.reason}')
         with open(dest_file_path, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:

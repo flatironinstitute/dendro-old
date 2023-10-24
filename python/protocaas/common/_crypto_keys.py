@@ -40,7 +40,7 @@ def _verify_signature_str(msg: str, public_key_hex: str, signature: str):
     pubk = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key_hex))
     try:
         pubk.verify(bytes.fromhex(signature), msg_bytes)
-    except:
+    except: # pylint: disable=bare-except
         return False
     return True
 

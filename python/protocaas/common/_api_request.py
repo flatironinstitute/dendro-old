@@ -26,9 +26,12 @@ def _compute_resource_get_api_request(*,
         headers['compute-resource-node-id'] = compute_resource_node_id
 
     url = f'{protocaas_url}{url_path}'
-    resp = requests.get(url, headers=headers, timeout=60)
-    if resp.status_code != 200:
-        raise Exception(f'Error getting {url}: {resp.status_code} {resp.text}')
+    try:
+        resp = requests.get(url, headers=headers, timeout=60)
+        resp.raise_for_status()
+    except:
+        print(f'Error in compute resource get api request for {url}')
+        raise
     return resp.json()
 
 def _compute_resource_post_api_request(*,
@@ -47,9 +50,12 @@ def _compute_resource_post_api_request(*,
     }
 
     url = f'{protocaas_url}{url_path}'
-    resp = requests.post(url, headers=headers, json=data, timeout=60)
-    if resp.status_code != 200:
-        raise Exception(f'Error posting {url}: {resp.status_code} {resp.text}')
+    try:
+        resp = requests.post(url, headers=headers, json=data, timeout=60)
+        resp.raise_for_status()
+    except:
+        print(f'Error in compute resource post api request for {url}')
+        raise
     return resp.json()
 
 def _compute_resource_put_api_request(*,
@@ -68,9 +74,12 @@ def _compute_resource_put_api_request(*,
     }
 
     url = f'{protocaas_url}{url_path}'
-    resp = requests.put(url, headers=headers, json=data, timeout=60)
-    if resp.status_code != 200:
-        raise Exception(f'Error putting {url}: {resp.status_code} {resp.text}')
+    try:
+        resp = requests.put(url, headers=headers, json=data, timeout=60)
+        resp.raise_for_status()
+    except:
+        print(f'Error in compute resource put api request for {url}')
+        raise
     return resp.json()
 
 def _processor_get_api_request(*,
@@ -78,9 +87,12 @@ def _processor_get_api_request(*,
     headers: dict
 ):
     url = f'{protocaas_url}{url_path}'
-    resp = requests.get(url, headers=headers, timeout=60)
-    if resp.status_code != 200:
-        raise Exception(f'Error getting {url}: {resp.status_code} {resp.text}')
+    try:
+        resp = requests.get(url, headers=headers, timeout=60)
+        resp.raise_for_status()
+    except:
+        print(f'Error in processor get api request for {url}')
+        raise
     return resp.json()
 
 def _processor_put_api_request(*,
@@ -89,16 +101,22 @@ def _processor_put_api_request(*,
     data: dict
 ):
     url = f'{protocaas_url}{url_path}'
-    resp = requests.put(url, headers=headers, json=data, timeout=60)
-    if resp.status_code != 200:
-        raise Exception(f'Error putting {url}: {resp.status_code} {resp.text}')
+    try:
+        resp = requests.put(url, headers=headers, json=data, timeout=60)
+        resp.raise_for_status()
+    except:
+        print(f'Error in processor put api request for {url}')
+        raise
     return resp.json()
 
 def _client_get_api_request(*,
     url_path: str
 ):
     url = f'{protocaas_url}{url_path}'
-    resp = requests.get(url, timeout=60)
-    if resp.status_code != 200:
-        raise Exception(f'Error getting {url}: {resp.status_code} {resp.text}')
+    try:
+        resp = requests.get(url, timeout=60)
+        resp.raise_for_status()
+    except:
+        print(f'Error in client get api request for {url}')
+        raise
     return resp.json()

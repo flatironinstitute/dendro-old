@@ -13,6 +13,9 @@ class JobParameter:
     name: str
     value: Any
 
+class JobApiRequestException(Exception):
+    pass
+
 class Job:
     """A job that is passed to a processor"""
     def __init__(self,
@@ -23,11 +26,11 @@ class Job:
         self._job_private_key = job_private_key
         resp = self._api_request_job_if_needed()
         if resp is None:
-            raise Exception('Unable to get job info from protocaas API')
+            raise JobApiRequestException('Unable to get job info from protocaas API')
         self._api_request_job_response: ProcessorGetJobResponse = resp
         self._api_request_job_timestamp = time.time()
         if self._api_request_job_response is None:
-            raise Exception('Unexpected: _api_request_job_response is None')
+            raise JobApiRequestException('Unexpected: _api_request_job_response is None')
         # important to set these only once here because these objects will be passed into the processor function
         self._inputs = [InputFile(name=i.name, job=self) for i in self._api_request_job_response.inputs]
         self._outputs = [OutputFile(name=o.name, job=self) for o in self._api_request_job_response.outputs]
@@ -89,7 +92,7 @@ class Job:
         resp_inputs = self._api_request_job_response.inputs
         resp_input = next((i for i in resp_inputs if i.name == name), None)
         if resp_input is None:
-            raise Exception(f'Input not found when trying to get download URL: {name}')
+            raise JobApiRequestException(f'Input not found when trying to get download URL: {name}')
         download_url = resp_input.url
         return download_url
     def _api_request_job_if_needed(self):
@@ -97,7 +100,7 @@ class Job:
         elapsed = time.time() - self._api_request_job_timestamp
         if elapsed < 30 * 60:
             # typically, signed download URLs will expire after an hour
-            return
+            return None
         url_path = f'/api/processor/jobs/{self._job_id}'
         headers = {
             'job-private-key': self._job_private_key

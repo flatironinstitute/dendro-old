@@ -21,34 +21,12 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     _debug_log(f'Running job {job_id}')
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
-    # Set the appropriate environment variables and launch the job in a background process
-    cmd = app_executable
-    env = os.environ.copy()
-    env['JOB_ID'] = job_id
-    env['JOB_PRIVATE_KEY'] = job_private_key
-    env['JOB_INTERNAL'] = '1'
-    env['PYTHONUNBUFFERED'] = '1'
-    print(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
-    _debug_log('Opening subprocess')
-    proc = subprocess.Popen(
-        cmd,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
+    # Launch the job in a separate process
+    proc = _launch_job(job_id=job_id, job_private_key=job_private_key, app_executable=app_executable)
 
     # We are going to be monitoring the output of the job in a separate thread, and it will be communicated to this thread via a queue
-    def output_reader(proc, outq: queue.Queue):
-        while True:
-            try:
-                x = proc.stdout.read(1)
-            except:
-                break
-            if len(x) == 0:
-                break
-            outq.put(x)
     outq = queue.Queue()
-    output_reader_thread = threading.Thread(target=output_reader, args=(proc, outq))
+    output_reader_thread = threading.Thread(target=_output_reader, args=(proc, outq))
     output_reader_thread.start()
 
     all_output = b''
@@ -124,7 +102,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                         _debug_log('Setting job console output')
                         # _set_job_console_output(job_id=job_id, job_private_key=job_private_key, console_output=all_output.decode('utf-8'))
                         upload_console_output(output=all_output.decode('utf-8'))
-                    except Exception as e:
+                    except Exception as e: # pylint: disable=broad-except
                         _debug_log('WARNING: problem setting console output: ' + str(e))
                         print('WARNING: problem setting console output: ' + str(e))
             if retcode is not None:
@@ -140,7 +118,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                 try:
                     job_status = _get_job_status(job_id=job_id, job_private_key=job_private_key)
                     num_status_check_failures = 0
-                except:
+                except: # pylint: disable=bare-except
                     # maybe this failed due to a network error. we'll try this a couple or a few times before giving up
                     print('Failed to check job status')
                     num_status_check_failures += 1
@@ -154,7 +132,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     raise ValueError(f'Unexpected job status: {job_status}')
             time.sleep(5) # wait 5 seconds before checking things again
         succeeded = True # No exception
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         _debug_log(f'Error running job: {str(e)}')
         succeeded = False
         error_message = str(e)
@@ -166,19 +144,52 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             if proc.stderr:
                 proc.stderr.close()
             proc.terminate()
-        except Exception:
+        except Exception: # pylint: disable=broad-except
             pass
         output_reader_thread.join()
+
     if console_output_changed:
         _debug_log('Setting final job console output')
         try:
             # _set_job_console_output(job_id=job_id, job_private_key=job_private_key, console_output=all_output.decode('utf-8'))
             upload_console_output(output=all_output.decode('utf-8'))
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             _debug_log('WARNING: problem setting final console output: ' + str(e))
             print('WARNING: problem setting final console output: ' + str(e))
-            pass
 
+    # Set the final job status
+    _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
+
+def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
+    # Set the appropriate environment variables and launch the job in a background process
+    cmd = app_executable
+    env = os.environ.copy()
+    env['JOB_ID'] = job_id
+    env['JOB_PRIVATE_KEY'] = job_private_key
+    env['JOB_INTERNAL'] = '1'
+    env['PYTHONUNBUFFERED'] = '1'
+    print(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
+    _debug_log('Opening subprocess')
+    proc = subprocess.Popen(
+        cmd,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT
+    )
+    return proc
+
+def _output_reader(proc, outq: queue.Queue):
+    """This is a thread that reads the output of the job and puts it into a queue"""
+    while True:
+        try:
+            x = proc.stdout.read(1)
+        except: # pylint: disable=bare-except
+            break
+        if len(x) == 0:
+            break
+        outq.put(x)
+
+def _finalize_job(*, job_id: str, job_private_key: str, succeeded: bool, error_message: str):
     try:
         if succeeded:
             # The job has completed successfully - update the status accordingly
@@ -190,11 +201,10 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             _debug_log('Setting job status to failed: ' + error_message)
             print('Job failed: ' + error_message)
             _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=error_message)
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         # This is unfortunate - we completed the job, but somehow failed to update the status in the protocaas system - maybe there was a network error (maybe we should retry?)
         _debug_log('WARNING: problem setting final job status: ' + str(e))
         print('WARNING: problem setting final job status: ' + str(e))
-        pass
 
 def _get_job_status(*, job_id: str, job_private_key: str) -> str:
     """Get a job status from the protocaas API"""
@@ -207,6 +217,9 @@ def _get_job_status(*, job_id: str, job_private_key: str) -> str:
         headers=headers
     )
     return res['status']
+
+class SetJobStatusError(Exception):
+    pass
 
 def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Optional[str] = None):
     """Set the status of a job in the protocaas API"""
@@ -225,7 +238,7 @@ def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Op
         data=data
     )
     if not resp['success']:
-        raise Exception(f'Error setting job status: {resp["error"]}')
+        raise SetJobStatusError(f'Error setting job status: {resp["error"]}')
 
 def _get_console_output_upload_url(*, job_id: str, job_private_key: str) -> str:
     """Get a signed upload URL for the console output of a job"""
@@ -239,11 +252,14 @@ def _get_console_output_upload_url(*, job_id: str, job_private_key: str) -> str:
     )
     return res['uploadUrl']
 
+class UploadConsoleOutputError(Exception):
+    pass
+
 def _upload_console_output(*, console_output_upload_url: str, output: str):
     """Upload the console output of a job to the cloud bucket"""
     r = requests.put(console_output_upload_url, data=output.encode('utf-8'), timeout=60)
     if r.status_code != 200:
-        raise Exception(f'Error uploading console output: {r.status_code} {r.text}')
+        raise UploadConsoleOutputError(f'Error uploading console output: {r.status_code} {r.text}')
 
 # This was the old method
 # def _set_job_console_output(*, job_id: str, job_private_key: str, console_output: str):
