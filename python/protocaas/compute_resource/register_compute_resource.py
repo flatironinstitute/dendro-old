@@ -2,7 +2,7 @@ import os
 import socket
 import time
 import yaml
-from typing import Optional
+from typing import Optional, Tuple
 from ..common._crypto_keys import sign_message, generate_keypair
 
 
@@ -18,7 +18,7 @@ env_var_keys = [
     'BATCH_AWS_REGION'
 ]
 
-def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = None, compute_resource_private_key: Optional[str] = None, node_name: Optional[str] = None):
+def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = None, compute_resource_private_key: Optional[str] = None, node_name: Optional[str] = None) -> Tuple[str, str]:
     """Initialize a Protocaas compute resource node.
 
     Args:
@@ -73,6 +73,10 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
     print('')
     print(url)
     print('')
+
+    assert compute_resource_id is not None
+    assert compute_resource_private_key is not None
+    return compute_resource_id, compute_resource_private_key
 
 def _random_string(length: int) -> str:
     import random
