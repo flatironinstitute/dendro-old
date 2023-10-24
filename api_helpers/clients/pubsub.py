@@ -19,7 +19,7 @@ async def publish_pubsub_message(*, channel: str, message: dict):
     url = f"https://ps.pndsn.com/publish/{pub_key}/{sub_key}/0/{channel}/0/{payload}?uuid={uuid}"
 
     headers = {
-    'Accept': 'application/json'
+        'Accept': 'application/json'
     }
 
     # async http get request

@@ -55,7 +55,7 @@ class AuthException(Exception):
     pass
 
 @router.put("/projects/{project_id}/files/{file_name:path}")
-async def set_file(project_id, file_name, data: SetFileRequest, github_access_token: str=Header(...)):
+async def set_file(project_id, file_name, data: SetFileRequest, github_access_token: str = Header(...)):
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -88,7 +88,7 @@ class DeleteFileResponse(BaseModel):
     success: bool
 
 @router.delete("/projects/{project_id}/files/{file_name:path}")
-async def delete_file(project_id, file_name, github_access_token: str=Header(...)):
+async def delete_file(project_id, file_name, github_access_token: str = Header(...)):
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)

@@ -41,7 +41,7 @@ class AuthException(Exception):
     pass
 
 @router.get("")
-async def get_compute_resources(github_access_token: str=Header(...)):
+async def get_compute_resources(github_access_token: str = Header(...)):
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -63,7 +63,7 @@ class SetComputeResourceAppsResponse(BaseModel):
     success: bool
 
 @router.put("/{compute_resource_id}/apps")
-async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourceAppsRequest, github_access_token: str=Header(...)) -> SetComputeResourceAppsResponse:
+async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourceAppsRequest, github_access_token: str = Header(...)) -> SetComputeResourceAppsResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -95,7 +95,7 @@ class DeleteComputeResourceResponse(BaseModel):
     success: bool
 
 @router.delete("/{compute_resource_id}")
-async def delete_compute_resource(compute_resource_id, github_access_token: str=Header(...)) -> DeleteComputeResourceResponse:
+async def delete_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> DeleteComputeResourceResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -150,7 +150,7 @@ class RegisterComputeResourceResponse(BaseModel):
     success: bool
 
 @router.post("/register")
-async def register_compute_resource(data: RegisterComputeResourceRequest, github_access_token: str=Header(...)) -> RegisterComputeResourceResponse:
+async def register_compute_resource(data: RegisterComputeResourceRequest, github_access_token: str = Header(...)) -> RegisterComputeResourceResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)
@@ -179,7 +179,7 @@ class GetJobsForComputeResourceResponse(BaseModel):
     success: bool
 
 @router.get("/{compute_resource_id}/jobs")
-async def get_jobs_for_compute_resource(compute_resource_id, github_access_token: str=Header(...)) -> GetJobsForComputeResourceResponse:
+async def get_jobs_for_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> GetJobsForComputeResourceResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)

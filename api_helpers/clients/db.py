@@ -212,7 +212,7 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
         }
     })
 
-async def fetch_job(job_id: str, *, include_dandi_api_key: bool=False, include_secret_params: bool=False):
+async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False):
     client = _get_mongo_client()
     jobs_collection = client['protocaas']['jobs']
     job = await jobs_collection.find_one({'jobId': job_id})

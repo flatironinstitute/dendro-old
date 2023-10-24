@@ -37,7 +37,7 @@ class DeleteJobResponse(BaseModel):
     success: bool
 
 @router.delete("/{job_id}")
-async def delete_job(job_id, github_access_token: str=Header(...)) -> DeleteJobResponse:
+async def delete_job(job_id, github_access_token: str = Header(...)) -> DeleteJobResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)

@@ -6,3 +6,4 @@ async def delete_project(project: ProtocaasProject):
     await delete_all_files_in_project(project.projectId)
     await delete_all_jobs_in_project(project.projectId)
     await db_delete_project(project.projectId)
+    return None

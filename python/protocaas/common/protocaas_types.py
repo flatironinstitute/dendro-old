@@ -15,7 +15,7 @@ class ProtocaasProject(BaseModel):
     tags: List[str]
     timestampCreated: float
     timestampModified: float
-    computeResourceId: Union[str, None]=None # it seems this needs to go at the end, otherwise it will be required by pydantic - not sure why
+    computeResourceId: Union[str, None] = None # it seems this needs to go at the end, otherwise it will be required by pydantic - not sure why
 
 class ProtocaasJobInputFile(BaseModel):
     name: str
@@ -24,26 +24,26 @@ class ProtocaasJobInputFile(BaseModel):
 
 class ProtocaasJobInputParameter(BaseModel):
     name: str
-    value: Union[Any, None]=None
-    secret: Union[bool, None]=None
+    value: Union[Any, None] = None
+    secret: Union[bool, None] = None
 
 class ProtocaasJobOutputFile(BaseModel):
     name: str
     fileName: str
-    fileId: Union[str, None]=None
+    fileId: Union[str, None] = None
 
 class ComputeResourceSpecProcessorParameter(BaseModel):
     name: str
     help: str
     type: str
-    default: Union[Any, None]=None
-    options: Union[List[str], List[int], None]=None
-    secret: bool=False
+    default: Union[Any, None] = None
+    options: Union[List[str], List[int], None] = None
+    secret: bool = False
 
 class ComputeResourceSpecProcessorInput(BaseModel):
     name: str
     help: str
-    list: bool=False
+    list: bool = False
 
 class ComputeResourceSpecProcessorOutput(BaseModel):
     name: str
@@ -78,19 +78,19 @@ class ProtocaasJob(BaseModel):
     timestampCreated: float
     computeResourceId: str
     status: str # 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
-    batchId: Union[str, None]=None
-    error: Union[str, None]=None
-    processorVersion: Union[str, None]=None
-    computeResourceNodeId: Union[str, None]=None
-    computeResourceNodeName: Union[str, None]=None
-    consoleOutputUrl: Union[str, None]=None
-    timestampQueued: Union[float, None]=None
-    timestampStarting: Union[float, None]=None
-    timestampStarted: Union[float, None]=None
-    timestampFinished: Union[float, None]=None
-    outputFileIds: Union[List[str], None]=None
+    batchId: Union[str, None] = None
+    error: Union[str, None] = None
+    processorVersion: Union[str, None] = None
+    computeResourceNodeId: Union[str, None] = None
+    computeResourceNodeName: Union[str, None] = None
+    consoleOutputUrl: Union[str, None] = None
+    timestampQueued: Union[float, None] = None
+    timestampStarting: Union[float, None] = None
+    timestampStarted: Union[float, None] = None
+    timestampFinished: Union[float, None] = None
+    outputFileIds: Union[List[str], None] = None
     processorSpec: ComputeResourceSpecProcessor
-    dandiApiKey: Union[str, None]=None
+    dandiApiKey: Union[str, None] = None
 
 class ProtocaasFile(BaseModel):
     projectId: str
@@ -101,32 +101,32 @@ class ProtocaasFile(BaseModel):
     timestampCreated: float
     content: str # e.g., 'url:https://...'
     metadata: dict
-    jobId: Union[str, None]=None # the job that produced this file
+    jobId: Union[str, None] = None # the job that produced this file
 
 class ComputeResourceAwsBatchOpts(BaseModel):
     jobQueue: str
     jobDefinition: str
 
 class ComputeResourceSlurmOpts(BaseModel):
-    partition: Union[str, None]=None
-    time: Union[str, None]=None
-    cpusPerTask: Union[int, None]=None
-    otherOpts: Union[str, None]=None
+    partition: Union[str, None] = None
+    time: Union[str, None] = None
+    cpusPerTask: Union[int, None] = None
+    otherOpts: Union[str, None] = None
 
 class ProtocaasComputeResourceApp(BaseModel):
     name: str
     specUri: str
-    executablePath: Union[str, None]=None # to be removed (once database has been cleared)
-    container: Union[str, None]=None # to be removed (once database has been cleared)
-    awsBatch: Union[ComputeResourceAwsBatchOpts, None]=None
-    slurm: Union[ComputeResourceSlurmOpts, None]=None
+    executablePath: Union[str, None] = None # to be removed (once database has been cleared)
+    container: Union[str, None] = None # to be removed (once database has been cleared)
+    awsBatch: Union[ComputeResourceAwsBatchOpts, None] = None
+    slurm: Union[ComputeResourceSlurmOpts, None] = None
 
 class ComputeResourceSpecApp(BaseModel):
     name: str
     help: str
     processors: List[ComputeResourceSpecProcessor]
-    appImage: Union[str, None]=None
-    appExecutable: Union[str, None]=None
+    appImage: Union[str, None] = None
+    appExecutable: Union[str, None] = None
 
 class ComputeResourceSpec(BaseModel):
     apps: List[ComputeResourceSpecApp]
@@ -137,7 +137,7 @@ class ProtocaasComputeResource(BaseModel):
     name: str
     timestampCreated: float
     apps: List[ProtocaasComputeResourceApp]
-    spec: Union[ComputeResourceSpec, None]=None
+    spec: Union[ComputeResourceSpec, None] = None
 
 class PubsubSubscription(BaseModel):
     pubnubSubscribeKey: str

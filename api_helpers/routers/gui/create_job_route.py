@@ -1,4 +1,4 @@
-from typing import Union, List, Any
+from typing import Union, List
 import traceback
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Header
@@ -29,7 +29,7 @@ class AuthException(Exception):
     pass
 
 @router.post("/jobs")
-async def create_job_handler(data: CreateJobRequest, github_access_token: str=Header(...)) -> CreateJobResponse:
+async def create_job_handler(data: CreateJobRequest, github_access_token: str = Header(...)) -> CreateJobResponse:
     try:
         # authenticate the request
         user_id = await _authenticate_gui_request(github_access_token)

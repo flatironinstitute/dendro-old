@@ -1,4 +1,3 @@
-import os
 from pydantic import BaseModel
 from fastapi import APIRouter
 import aiohttp
@@ -14,7 +13,7 @@ class GithubAuthResponse(BaseModel):
 @router.get("/github_auth/{code}")
 async def github_auth(code) -> GithubAuthResponse:
     settings = get_settings()
-    GITHUB_CLIENT_ID =settings.GITHUB_CLIENT_ID
+    GITHUB_CLIENT_ID = settings.GITHUB_CLIENT_ID
     GITHUB_CLIENT_SECRET = settings.GITHUB_CLIENT_SECRET
     if GITHUB_CLIENT_ID is None:
         raise Exception('Env var not set: VITE_GITHUB_CLIENT_ID')
