@@ -285,7 +285,7 @@ async def test_api():
             job = resp.job
             assert job.status == 'finished'
 
-            start_compute_resource(dir=tmpdir, timeout=0.1)
+            start_compute_resource(dir=tmpdir, timeout=0.1, cleanup_old_jobs=False)
 
             # gui: Delete job
             resp = await delete_job(job_id=job_id, github_access_token=github_access_token)

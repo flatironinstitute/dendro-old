@@ -84,14 +84,15 @@ class Daemon:
             )
         else:
             self._pubsub_client = None
-    def start(self, *, timeout: Optional[float] = None): # timeout is used for testing
+    def start(self, *, timeout: Optional[float] = None, cleanup_old_jobs=True): # timeout is used for testing
         timer_handle_jobs = 0
 
         # Start cleaning up old job directories
         # It's important to do this in a separate process
         # because it can take a long time to delete all the files in the tmp directories (remfile is the culprit)
         # and we don't want to block the main process from handling jobs
-        multiprocessing.Process(target=_cleanup_old_job_working_directories, args=(os.getcwd() + '/jobs',)).start()
+        if cleanup_old_jobs:
+            multiprocessing.Process(target=_cleanup_old_job_working_directories, args=(os.getcwd() + '/jobs',)).start()
 
         print('Starting compute resource')
         overall_timer = time.time()
@@ -271,7 +272,7 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
         ret.append(app)
     return ret
 
-def start_compute_resource(dir: str, *, timeout: Optional[float] = None): # timeout is used for testing
+def start_compute_resource(dir: str, *, timeout: Optional[float] = None, cleanup_old_jobs=True): # timeout is used for testing
     config_fname = os.path.join(dir, '.protocaas-compute-resource-node.yaml')
 
     if os.path.exists(config_fname):
@@ -284,7 +285,7 @@ def start_compute_resource(dir: str, *, timeout: Optional[float] = None): # time
             os.environ[k] = the_config[k]
 
     daemon = Daemon()
-    daemon.start(timeout=timeout)
+    daemon.start(timeout=timeout, cleanup_old_jobs=cleanup_old_jobs)
 
 def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str] = None, compute_resource_node_id: Optional[str] = None):
     url_path = f'/api/compute_resource/compute_resources/{compute_resource_id}/pubsub_subscription'
