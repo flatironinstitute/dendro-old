@@ -17,10 +17,10 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
         job = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True)
         if job is None:
             raise Exception(f"No job with ID {job_id}")
-        
+
         if job.jobPrivateKey != job_private_key:
             raise Exception(f"Invalid job private key for job {job_id}")
-        
+
         inputs: List[ProcessorGetJobResponseInput] = []
         for input in job.inputFiles:
             file = await fetch_file(project_id=job.projectId, file_name=input.fileName)
@@ -34,13 +34,13 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
                 name=input.name,
                 url=url
             ))
-        
+
         outputs: List[ProcessorGetJobResponseOutput] = []
         for output in job.outputFiles:
             outputs.append(ProcessorGetJobResponseOutput(
                 name=output.name
             ))
-        
+
         parameters: List[ProcessorGetJobResponseParameter] = []
         for parameter in job.inputParameters:
             parameters.append(ProcessorGetJobResponseParameter(
@@ -87,7 +87,7 @@ async def processor_update_job_status(job_id: str, data: ProcessorUpdateJobStatu
             raise Exception(f"No job with ID {job_id}")
         if job.jobPrivateKey != job_private_key:
             raise Exception(f"Invalid job private key for job {job_id}")
-        
+
         await update_job_status(job=job, status=data.status, error=data.error)
 
         return ProcessorUpdateJobStatusResponse(success=True)
@@ -108,7 +108,7 @@ async def processor_get_job_status(job_id: str, job_private_key: str = Header(..
             return ProcessorGetJobStatusResponse(status=None, success=True)
         if job.jobPrivateKey != job_private_key:
             raise Exception(f"Invalid job private key for job {job_id}")
-        
+
         return ProcessorGetJobStatusResponse(status=job.status, success=True)
     except Exception as e:
         traceback.print_exc()
@@ -158,7 +158,7 @@ async def processor_get_upload_url(job_id: str, output_name: str, job_private_ke
         job = await fetch_job(job_id)
         if job.jobPrivateKey != job_private_key:
             raise Exception(f"Invalid job private key for job {job_id}")
-        
+
         signed_upload_url = await get_upload_url(job=job, output_name=output_name)
         return ProcessorGetJobOutputUploadUrlResponse(uploadUrl=signed_upload_url, success=True)
     except Exception as e:

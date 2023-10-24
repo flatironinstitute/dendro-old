@@ -69,10 +69,10 @@ async def set_file(project_id, file_name, data: SetFileRequest, github_access_to
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
-        
+
         if not _project_is_editable(project, user_id):
             raise Exception('User does not have permission to set file content in this project')
-        
+
         file_id = await service_set_file(project_id=project_id, user_id=user_id, file_name=file_name, content=content, job_id=job_id, size=size, metadata=metadata)
 
         return SetFileResponse(fileId=file_id, success=True)
@@ -91,14 +91,14 @@ async def delete_file(project_id, file_name, github_access_token: str=Header(...
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
-        
+
         if not _project_is_editable(project, user_id):
             raise Exception('User does not have permission to delete files in this project')
-        
+
         await db_delete_file(project_id, file_name)
 
         # remove detached files and jobs

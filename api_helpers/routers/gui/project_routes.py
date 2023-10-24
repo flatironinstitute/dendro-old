@@ -66,7 +66,7 @@ async def create_project(data: CreateProjectRequest, github_access_token: str=He
 
         # parse the request
         name = data.name
-        
+
         project_id = _create_random_id(8)
         project = ProtocaasProject(
             projectId=project_id,
@@ -102,11 +102,11 @@ async def set_project_name(project_id, data: SetProjectNameRequest, github_acces
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
-        
+
         if not _project_is_editable(project, user_id):
             raise Exception('User does not have permission to set project name')
 
@@ -137,7 +137,7 @@ async def set_project_description(project_id, data: SetProjectDescriptionRequest
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
@@ -172,11 +172,11 @@ async def set_project_tags(project_id, data: SetProjectTagsRequest, github_acces
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
-        
+
         if not _project_is_editable(project, user_id):
             raise Exception('User does not have permission to set project tags')
 
@@ -204,16 +204,16 @@ async def delete_project(project_id, github_access_token: str=Header(...)) -> De
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
-        
+
         if not _user_is_project_admin(project, user_id):
             raise Exception('User does not have permission to delete this project')
-        
+
         await service_delete_project(project)
-        
+
         return DeleteProjectResponse(success=True)
     except Exception as e:
         traceback.print_exc()
@@ -247,13 +247,13 @@ async def set_project_public(project_id, data: SetProjectPubliclyReadableRequest
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
         if not _user_is_project_admin(project, user_id):
             raise Exception('User does not have permission to admin this project')
-        
+
         # parse the request
         publicly_readable = data.publiclyReadable
 
@@ -282,13 +282,13 @@ async def set_project_compute_resource_id(project_id, data: SetProjectComputeRes
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
         if not _user_is_project_admin(project, user_id):
             raise Exception('User does not have permission to admin this project')
-        
+
         # parse the request
         compute_resource_id = data.computeResourceId
 
@@ -316,13 +316,13 @@ async def set_project_users(project_id, data: SetProjectUsersRequest, github_acc
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         project = await fetch_project(project_id)
         if project is None:
             raise Exception(f"No project with ID {project_id}")
         if not _user_is_project_admin(project, user_id):
             raise Exception('User does not have permission to admin this project')
-        
+
         # parse the request
         users = data.users
 

@@ -37,7 +37,7 @@ async def set_file(
 
     if deleted_old_file:
         await _remove_detached_files_and_jobs(project_id)
-    
+
     await update_project(
         project_id=project_id,
         update={

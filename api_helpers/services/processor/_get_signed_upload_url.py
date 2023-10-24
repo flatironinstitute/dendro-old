@@ -15,7 +15,7 @@ async def _get_signed_upload_url(*,
 
     region_name = _get_region_name_from_uri(bucket_uri)
     bucket_name = _get_bucket_name_from_uri(bucket_uri)
-    
+
     s3_client = boto3.client(
         's3',
         aws_access_key_id=access_key_id,

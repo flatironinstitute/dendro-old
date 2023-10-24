@@ -106,7 +106,7 @@ async def compute_resource_get_unfinished_jobs(
             compute_resource_node_id=compute_resource_node_id,
             compute_resource_node_name=compute_resource_node_name
         )
-        
+
         return GetUnfinishedJobsResponse(jobs=jobs, success=True)
     except Exception as e:
         traceback.print_exc()

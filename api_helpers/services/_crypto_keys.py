@@ -17,7 +17,7 @@ def _sha1_of_string(txt: str) -> str:
 def _sign_message(msg: dict, public_key_hex: str, private_key_hex: str) -> str:
     msg_json = _deterministic_json_dumps(msg)
     return _sign_message_str(msg_json, public_key_hex, private_key_hex)
-    
+
 
 def _sign_message_str(msg: str, public_key_hex: str, private_key_hex: str) -> str:
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey

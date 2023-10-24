@@ -18,7 +18,7 @@ async def _create_output_file(*,
     client = _get_mongo_client()
     projects_collection = client['protocaas']['projects']
     files_collection = client['protocaas']['files']
-    
+
     existing_file = await files_collection.find_one({
         'projectId': project_id,
         'fileName': file_name
@@ -47,7 +47,7 @@ async def _create_output_file(*,
 
     if deleted_old_file:
         await _remove_detached_files_and_jobs(project_id)
-    
+
     await projects_collection.update_one({
         'projectId': project_id
     }, {

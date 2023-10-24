@@ -8,13 +8,13 @@ import os
 class Settings(BaseModel):
     # General app config
     MONGO_URI: str = os.environ.get("MONGO_URI")
-    
+
     PUBNUB_SUBSCRIBE_KEY: str = os.environ.get("VITE_PUBNUB_SUBSCRIBE_KEY")
     PUBNUB_PUBLISH_KEY: str = os.environ.get("PUBNUB_PUBLISH_KEY")
-    
+
     GITHUB_CLIENT_ID: str = os.environ.get("VITE_GITHUB_CLIENT_ID")
     GITHUB_CLIENT_SECRET: str = os.environ.get("GITHUB_CLIENT_SECRET")
-    
+
     DEFAULT_COMPUTE_RESOURCE_ID: str = os.environ.get("VITE_DEFAULT_COMPUTE_RESOURCE_ID")
 
     OUTPUT_BUCKET_URI: str = os.environ.get("OUTPUT_BUCKET_URI")

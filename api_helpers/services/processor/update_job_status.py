@@ -26,7 +26,7 @@ async def update_job_status(job: ProtocaasJob, status: str, error: Union[str, No
     elif new_status == 'failed':
         if (old_status != 'running') and (old_status != 'starting') and (old_status != 'pending'):
             raise Exception(f"Cannot set job status to failed when status is {old_status}")
-    
+
     update = {}
     if new_error:
         if new_status != 'failed':

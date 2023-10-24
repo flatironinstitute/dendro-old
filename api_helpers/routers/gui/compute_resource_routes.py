@@ -41,9 +41,9 @@ async def get_compute_resources(github_access_token: str=Header(...)):
         user_id = await _authenticate_gui_request(github_access_token)
         if not user_id:
             raise Exception('User is not authenticated')
-        
+
         compute_resources = await fetch_compute_resources_for_user(user_id)
-        
+
         return GetComputeResourcesResponse(computeResources=compute_resources, success=True)
     except Exception as e:
         traceback.print_exc()
@@ -70,10 +70,10 @@ async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourc
         compute_resource = await fetch_compute_resource(compute_resource_id)
         if compute_resource is None:
             raise Exception(f"No compute resource with ID {compute_resource_id}")
-        
+
         if compute_resource.ownerId != user_id:
             raise Exception('User does not have permission to admin this compute resource')
-        
+
         await update_compute_resource(compute_resource_id, update={
             'apps': [app.dict(exclude_none=True) for app in apps],
             'timestampModified': time.time()
@@ -101,7 +101,7 @@ async def delete_compute_resource(compute_resource_id, github_access_token: str=
             raise Exception(f"No compute resource with ID {compute_resource_id}")
         if compute_resource.ownerId != user_id:
             raise Exception('User does not have permission to delete this compute resource')
-        
+
         await delete_compute_resource(compute_resource_id)
 
         return DeleteComputeResourceResponse(success=True)
@@ -120,7 +120,7 @@ async def get_pubsub_subscription(compute_resource_id):
         compute_resource = await fetch_compute_resource(compute_resource_id)
         if compute_resource is None:
             raise Exception(f"No compute resource with ID {compute_resource_id}")
-        
+
         VITE_PUBNUB_SUBSCRIBE_KEY = get_settings().PUBNUB_SUBSCRIBE_KEY
         if VITE_PUBNUB_SUBSCRIBE_KEY is None:
             raise Exception('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY')
@@ -150,7 +150,7 @@ async def register_compute_resource(data: RegisterComputeResourceRequest, github
         user_id = await _authenticate_gui_request(github_access_token)
         if user_id is None:
             raise Exception('User is not authenticated')
-        
+
         # parse the request
         compute_resource_id = data.computeResourceId
         resource_code = data.resourceCode
@@ -159,9 +159,9 @@ async def register_compute_resource(data: RegisterComputeResourceRequest, github
         ok = _verify_resource_code(compute_resource_id, resource_code)
         if not ok:
             raise Exception('Invalid resource code')
-        
+
         await db_register_compute_resource(compute_resource_id=compute_resource_id, name=name, user_id=user_id)
-        
+
         return RegisterComputeResourceResponse(success=True)
     except Exception as e:
         traceback.print_exc()
@@ -185,7 +185,7 @@ async def get_jobs_for_compute_resource(compute_resource_id, github_access_token
             raise Exception(f"No compute resource with ID {compute_resource_id}")
         if compute_resource.ownerId != user_id:
             raise Exception('User does not have permission to view jobs for this compute resource')
-        
+
         jobs = await fetch_compute_resource_jobs(compute_resource_id, statuses=None, include_private_keys=False)
 
         return GetJobsForComputeResourceResponse(jobs=jobs, success=True)

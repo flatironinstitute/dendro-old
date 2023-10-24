@@ -41,12 +41,12 @@ async def delete_job(job_id, github_access_token: str=Header(...)) -> DeleteJobR
         job = await fetch_job(job_id)
         if job is None:
             raise Exception(f"No job with ID {job_id}")
-        
+
         project = await fetch_project(job.projectId)
 
         if not _project_is_editable(project, user_id):
             raise Exception('User does not have permission to delete jobs in this project')
-        
+
         await db_delete_job(job_id)
 
         # remove detached files and jobs
