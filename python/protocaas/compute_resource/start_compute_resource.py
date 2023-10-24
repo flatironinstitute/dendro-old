@@ -74,13 +74,17 @@ class Daemon:
             compute_resource_node_name=self._node_name,
             compute_resource_node_id=self._node_id
         )
-        self._pubsub_client = PubsubClient(
-            pubnub_subscribe_key=pubsub_subscription['pubnubSubscribeKey'],
-            pubnub_channel=pubsub_subscription['pubnubChannel'],
-            pubnub_user=pubsub_subscription['pubnubUser'],
-            compute_resource_id=self._compute_resource_id
-        )
-    def start(self):
+        pubnub_subscribe_key = pubsub_subscription['pubnubSubscribeKey']
+        if pubnub_subscribe_key != 'mock-subscribe-key':
+            self._pubsub_client = PubsubClient(
+                pubnub_subscribe_key=pubnub_subscribe_key,
+                pubnub_channel=pubsub_subscription['pubnubChannel'],
+                pubnub_user=pubsub_subscription['pubnubUser'],
+                compute_resource_id=self._compute_resource_id
+            )
+        else:
+            self._pubsub_client = None
+    def start(self, *, timeout: Optional[float] = None): # timeout is used for testing
         timer_handle_jobs = 0
 
         # Start cleaning up old job directories
@@ -90,10 +94,11 @@ class Daemon:
         multiprocessing.Process(target=_cleanup_old_job_working_directories, args=(os.getcwd() + '/jobs',)).start()
 
         print('Starting compute resource')
+        overall_timer = time.time()
         while True:
             elapsed_handle_jobs = time.time() - timer_handle_jobs
             need_to_handle_jobs = elapsed_handle_jobs > 60 * 10 # normally we will get pubsub messages for updates, but if we don't, we should check every 10 minutes
-            messages = self._pubsub_client.take_messages()
+            messages = self._pubsub_client.take_messages() if self._pubsub_client is not None else []
             for msg in messages:
                 if msg['type'] == 'newPendingJob':
                     need_to_handle_jobs = True
@@ -106,7 +111,14 @@ class Daemon:
             for slurm_job_handler in self._slurm_job_handlers_by_processor.values():
                 slurm_job_handler.do_work()
 
-            time.sleep(2)
+            overall_elapsed = time.time() - overall_timer
+            if timeout is not None and overall_elapsed > timeout:
+                print(f'Compute resource timed out after {timeout} seconds')
+                return
+            if overall_elapsed < 5:
+                time.sleep(0.01) # for the first few seconds we can sleep for a short time (useful for testing)
+            else:
+                time.sleep(2)
     def _handle_jobs(self):
         url_path = f'/api/compute_resource/compute_resources/{self._compute_resource_id}/unfinished_jobs'
         if not self._compute_resource_id:
@@ -259,7 +271,7 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
         ret.append(app)
     return ret
 
-def start_compute_resource(dir: str):
+def start_compute_resource(dir: str, *, timeout: Optional[float] = None): # timeout is used for testing
     config_fname = os.path.join(dir, '.protocaas-compute-resource-node.yaml')
 
     if os.path.exists(config_fname):
@@ -272,7 +284,7 @@ def start_compute_resource(dir: str):
             os.environ[k] = the_config[k]
 
     daemon = Daemon()
-    daemon.start()
+    daemon.start(timeout=timeout)
 
 def get_pubsub_subscription(*, compute_resource_id: str, compute_resource_private_key: str, compute_resource_node_name: Optional[str] = None, compute_resource_node_id: Optional[str] = None):
     url_path = f'/api/compute_resource/compute_resources/{compute_resource_id}/pubsub_subscription'

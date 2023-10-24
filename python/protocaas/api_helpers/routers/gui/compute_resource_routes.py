@@ -13,6 +13,12 @@ from ...core.settings import get_settings
 
 router = APIRouter()
 
+_globals = {
+    '_use_gui_mock_pubsub': False
+}
+def _set_use_gui_mock_pubsub(use_mock_pubsub: bool):
+    _globals['_use_gui_mock_pubsub'] = use_mock_pubsub
+
 # get compute resource
 class GetComputeResourceResponse(BaseModel):
     computeResource: ProtocaasComputeResource
@@ -127,14 +133,21 @@ async def get_pubsub_subscription(compute_resource_id):
         if compute_resource is None:
             raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
 
-        VITE_PUBNUB_SUBSCRIBE_KEY = get_settings().PUBNUB_SUBSCRIBE_KEY
-        if VITE_PUBNUB_SUBSCRIBE_KEY is None:
-            raise KeyError('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY')
-        subscription = PubsubSubscription(
-            pubnubSubscribeKey=VITE_PUBNUB_SUBSCRIBE_KEY,
-            pubnubChannel=compute_resource_id,
-            pubnubUser=compute_resource_id
-        )
+        if _globals['_use_gui_mock_pubsub']:
+            subscription = PubsubSubscription(
+                pubnubSubscribeKey='mock-subscribe-key',
+                pubnubChannel=compute_resource_id,
+                pubnubUser=compute_resource_id
+            )
+        else:
+            VITE_PUBNUB_SUBSCRIBE_KEY = get_settings().PUBNUB_SUBSCRIBE_KEY
+            if VITE_PUBNUB_SUBSCRIBE_KEY is None:
+                raise KeyError('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY (gui)')
+            subscription = PubsubSubscription(
+                pubnubSubscribeKey=VITE_PUBNUB_SUBSCRIBE_KEY,
+                pubnubChannel=compute_resource_id,
+                pubnubUser=compute_resource_id
+            )
         return GetPubsubSubscriptionResponse(subscription=subscription, success=True)
     except Exception as e:
         traceback.print_exc()

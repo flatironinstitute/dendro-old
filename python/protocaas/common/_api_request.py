@@ -5,6 +5,12 @@ from ._crypto_keys import _sign_message_str
 
 protocaas_url = os.getenv('PROTOCAAS_URL', 'https://protocaas.vercel.app')
 
+_globals = {
+    'test_client': None
+}
+def _use_api_test_client(test_client):
+    _globals['test_client'] = test_client
+
 def _compute_resource_get_api_request(*,
     url_path: str,
     compute_resource_id: str,
@@ -25,9 +31,16 @@ def _compute_resource_get_api_request(*,
     if compute_resource_node_id is not None:
         headers['compute-resource-node-id'] = compute_resource_node_id
 
-    url = f'{protocaas_url}{url_path}'
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
     try:
-        resp = requests.get(url, headers=headers, timeout=60)
+        resp = client.get(url, headers=headers, timeout=60)
         resp.raise_for_status()
     except: # noqa E722
         print(f'Error in compute resource get api request for {url}')
@@ -49,9 +62,16 @@ def _compute_resource_post_api_request(*,
         'compute-resource-signature': signature
     }
 
-    url = f'{protocaas_url}{url_path}'
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
     try:
-        resp = requests.post(url, headers=headers, json=data, timeout=60)
+        resp = client.post(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
     except: # noqa E722
         print(f'Error in compute resource post api request for {url}')
@@ -73,9 +93,16 @@ def _compute_resource_put_api_request(*,
         'compute-resource-signature': signature
     }
 
-    url = f'{protocaas_url}{url_path}'
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
     try:
-        resp = requests.put(url, headers=headers, json=data, timeout=60)
+        resp = client.put(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
     except: # noqa E722
         print(f'Error in compute resource put api request for {url}')
@@ -86,9 +113,16 @@ def _processor_get_api_request(*,
     url_path: str,
     headers: dict
 ):
-    url = f'{protocaas_url}{url_path}'
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
     try:
-        resp = requests.get(url, headers=headers, timeout=60)
+        resp = client.get(url, headers=headers, timeout=60)
         resp.raise_for_status()
     except: # noqa E722
         print(f'Error in processor get api request for {url}')
@@ -100,9 +134,16 @@ def _processor_put_api_request(*,
     headers: dict,
     data: dict
 ):
-    url = f'{protocaas_url}{url_path}'
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
     try:
-        resp = requests.put(url, headers=headers, json=data, timeout=60)
+        resp = client.put(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
     except: # noqa E722
         print(f'Error in processor put api request for {url}')
@@ -112,9 +153,16 @@ def _processor_put_api_request(*,
 def _client_get_api_request(*,
     url_path: str
 ):
-    url = f'{protocaas_url}{url_path}'
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
     try:
-        resp = requests.get(url, timeout=60)
+        resp = client.get(url, timeout=60)
         resp.raise_for_status()
     except: # noqa E722
         print(f'Error in client get api request for {url}')

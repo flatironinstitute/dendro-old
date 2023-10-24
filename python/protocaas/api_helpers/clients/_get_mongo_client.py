@@ -5,9 +5,14 @@ from ..core.settings import get_settings
 from .MockMongoClient import MockMongoClient
 
 
+_globals = {
+    'mock_mongo_client': None
+}
+
+print('----- a1')
+
 def _set_use_mock_mongo_client(use_mock: bool) -> None: # For testing
-    loop = asyncio.get_event_loop()
-    setattr(loop, '_use_mock_mongo_client', use_mock)
+    _globals['mock_mongo_client'] = MockMongoClient() if use_mock else None # type: ignore
 
 def _get_mongo_client() -> Union[AsyncIOMotorClient, MockMongoClient]:
     # We want one async mongo client per event loop
@@ -16,8 +21,8 @@ def _get_mongo_client() -> Union[AsyncIOMotorClient, MockMongoClient]:
         return loop._mongo_client # type: ignore
 
     # If we're using a mock client, return it
-    if hasattr(loop, '_use_mock_mongo_client') and loop._use_mock_mongo_client: # type: ignore
-        client = MockMongoClient()
+    if _globals['mock_mongo_client']:
+        client = _globals['mock_mongo_client'] # type: ignore
     else:
         # Otherwise, create a new client and store it in the global variable
         mongo_uri = get_settings().MONGO_URI
