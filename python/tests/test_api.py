@@ -1,14 +1,15 @@
 import pytest
-from protocaas.api_helpers.core.protocaas_types import ProtocaasProjectUser, ComputeResourceSpecProcessor
-from protocaas.api_helpers.clients._get_mongo_client import _set_use_mock_mongo_client
-from protocaas.api_helpers.clients.pubsub import _set_use_mock_pubsub_client
-from protocaas.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
-from protocaas.common._crypto_keys import generate_keypair, _sign_message_str
 
 
 @pytest.mark.asyncio
 @pytest.mark.api
 async def test_api():
+    # important to put the tests inside so we don't get an import error when running the non-api tests
+    from protocaas.api_helpers.core.protocaas_types import ProtocaasProjectUser, ComputeResourceSpecProcessor
+    from protocaas.api_helpers.clients._get_mongo_client import _set_use_mock_mongo_client
+    from protocaas.api_helpers.clients.pubsub import _set_use_mock_pubsub_client
+    from protocaas.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
+    from protocaas.common._crypto_keys import generate_keypair, _sign_message_str
     from protocaas.api_helpers.routers.gui.project_routes import create_project, CreateProjectRequest
     from protocaas.api_helpers.routers.gui.project_routes import set_project_name, SetProjectNameRequest
     from protocaas.api_helpers.routers.gui.project_routes import set_project_description, SetProjectDescriptionRequest
