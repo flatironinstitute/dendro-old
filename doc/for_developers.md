@@ -31,3 +31,5 @@ Install the flake8 vscode extension.
 
 The rules being ignored are in .flake8
 
+You can run `cd python && flake8 --config ../.flake8` to see the errors.
+

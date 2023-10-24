@@ -13,7 +13,7 @@ jobs:
     - name: Install packages needed for tests
       run: pip install pytest pytest-cov pyright boto3 kachery_cloud flake8
     - name: Run tests and collect coverage
-      run: cd python && flake8 && pyright && pytest --cov protocaas --cov-report=xml --cov-report=term tests/
+      run: cd python && flake8 --config ../.flake8 && pyright && pytest --cov protocaas --cov-report=xml --cov-report=term tests/
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
