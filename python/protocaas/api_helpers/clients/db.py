@@ -159,7 +159,7 @@ async def register_compute_resource(compute_resource_id: str, name: str, user_id
         )
         await compute_resources_collection.insert_one(new_compute_resource.dict(exclude_none=True))
 
-async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[List[str], None], include_private_keys: bool) -> List[ProtocaasJob]:
+async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[List[str], None], include_private_keys: bool = False) -> List[ProtocaasJob]:
     client = _get_mongo_client()
     jobs_collection = client['protocaas']['jobs']
     if statuses is not None:
@@ -212,7 +212,7 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
         }
     })
 
-async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False):
+async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False, include_private_key: bool = False):
     client = _get_mongo_client()
     jobs_collection = client['protocaas']['jobs']
     job = await jobs_collection.find_one({'jobId': job_id})
@@ -224,6 +224,8 @@ async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include
         job.dandiApiKey = None
     if not include_secret_params:
         _hide_secret_params_in_job(job)
+    if not include_private_key:
+        job.jobPrivateKey = ''
     return job
 
 async def update_job(job_id: str, update: dict):

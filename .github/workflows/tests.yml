@@ -11,7 +11,11 @@ jobs:
     - name: Install
       run: cd python && pip install -e .
     - name: Install packages needed for tests
-      run: pip install pytest pytest-cov boto3 kachery_cloud
+      run: pip install pytest pytest-asyncio pytest-cov boto3 kachery_cloud
+    - name: Run non-api tests
+      run: cd python && pytest -m "not api" tests/ # make sure we are not depending on any of the additional packages in requirements.txt
+    - name: Install packages needed for api tests
+      run: pip install -r requirements.txt
     - name: Run tests and collect coverage
       run: cd python && pytest --cov protocaas --cov-report=xml --cov-report=term tests/
     - uses: codecov/codecov-action@v3

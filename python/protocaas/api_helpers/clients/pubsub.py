@@ -1,13 +1,22 @@
 import json
 import aiohttp
 import urllib.parse
+import asyncio
 from ..core.settings import get_settings
 
 
 class PubsubError(Exception):
     pass
 
+def _set_use_mock_pubsub_client(use_mock: bool) -> None: # For testing
+    loop = asyncio.get_event_loop()
+    setattr(loop, '_use_mock_pubsub_client', use_mock)
+
 async def publish_pubsub_message(*, channel: str, message: dict):
+    if hasattr(asyncio.get_event_loop(), '_use_mock_pubsub_client') and asyncio.get_event_loop()._use_mock_pubsub_client: # type: ignore
+        # don't actually publish the message for the mock case
+        return True
+
     settings = get_settings()
     # see https://www.pubnub.com/docs/sdks/rest-api/publish-message-to-channel
     sub_key = settings.PUBNUB_SUBSCRIBE_KEY

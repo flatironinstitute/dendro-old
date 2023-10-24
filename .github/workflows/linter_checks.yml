@@ -11,7 +11,7 @@ jobs:
     - name: Install
       run: cd python && pip install -e .
     - name: Install packages needed for tests
-      run: pip install pytest pytest-cov pyright boto3 kachery_cloud flake8
+      run: pip install pytest pytest-asyncio pytest-cov pyright boto3 kachery_cloud flake8
     - name: Install additional packages used by api_helpers
       run: pip install -r requirements.txt
     - name: Run linter checks
