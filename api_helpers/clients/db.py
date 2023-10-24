@@ -10,7 +10,7 @@ from ..core._hide_secret_params_in_job import _hide_secret_params_in_job
 async def fetch_projects_for_user(user_id: Union[str, None]) -> List[ProtocaasProject]:
     client = _get_mongo_client()
     projects_collection = client['protocaas']['projects']
-    projects = await projects_collection.find({}).to_list(length=None)
+    projects = await projects_collection.find({}).to_list(length=None) # type: ignore
     for project in projects:
         _remove_id_field(project)
     projects = [ProtocaasProject(**project) for project in projects] # validate projects
@@ -26,13 +26,13 @@ async def fetch_projects_with_tag(tag: str) -> List[ProtocaasProject]:
     projects = await projects_collection.find({
         # When you use a query like { "tags": tag } against an array field in MongoDB, it checks if any element of the array matches the value.
         'tags': tag
-    }).to_list(length=None)
+    }).to_list(length=None) # type: ignore
     for project in projects:
         _remove_id_field(project)
     projects = [ProtocaasProject(**project) for project in projects] # validate projects
     return projects
 
-async def fetch_project(project_id: str) -> ProtocaasProject:
+async def fetch_project(project_id: str) -> Union[ProtocaasProject, None]:
     client = _get_mongo_client()
     projects_collection = client['protocaas']['projects']
     project = await projects_collection.find_one({'projectId': project_id})
@@ -45,7 +45,7 @@ async def fetch_project(project_id: str) -> ProtocaasProject:
 async def fetch_project_files(project_id: str) -> List[ProtocaasFile]:
     client = _get_mongo_client()
     files_collection = client['protocaas']['files']
-    files = await files_collection.find({'projectId': project_id}).to_list(length=None)
+    files = await files_collection.find({'projectId': project_id}).to_list(length=None) # type: ignore
     for file in files:
         _remove_id_field(file)
     files = [ProtocaasFile(**file) for file in files] # validate files
@@ -54,7 +54,7 @@ async def fetch_project_files(project_id: str) -> List[ProtocaasFile]:
 async def fetch_project_jobs(project_id: str, include_private_keys=False) -> List[ProtocaasJob]:
     client = _get_mongo_client()
     jobs_collection = client['protocaas']['jobs']
-    jobs = await jobs_collection.find({'projectId': project_id}).to_list(length=None)
+    jobs = await jobs_collection.find({'projectId': project_id}).to_list(length=None) # type: ignore
     for job in jobs:
         _remove_id_field(job)
     jobs = [ProtocaasJob(**job) for job in jobs] # validate jobs
@@ -114,7 +114,7 @@ async def fetch_compute_resource(compute_resource_id: str):
 async def fetch_compute_resources_for_user(user_id: str):
     client = _get_mongo_client()
     compute_resources_collection = client['protocaas']['computeResources']
-    compute_resources = await compute_resources_collection.find({'ownerId': user_id}).to_list(length=None)
+    compute_resources = await compute_resources_collection.find({'ownerId': user_id}).to_list(length=None) # type: ignore
     for compute_resource in compute_resources:
         _remove_id_field(compute_resource)
     compute_resources = [ProtocaasComputeResource(**compute_resource) for compute_resource in compute_resources] # validate compute resources
@@ -142,7 +142,7 @@ async def register_compute_resource(compute_resource_id: str, name: str, user_id
 
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
     if compute_resource is not None:
-        compute_resources_collection.update_one({'computeResourceId': compute_resource_id}, {
+        await compute_resources_collection.update_one({'computeResourceId': compute_resource_id}, {
             '$set': {
                 'ownerId': user_id,
                 'name': name,
@@ -157,7 +157,7 @@ async def register_compute_resource(compute_resource_id: str, name: str, user_id
             timestampCreated=time.time(),
             apps=[]
         )
-        compute_resources_collection.insert_one(new_compute_resource.dict(exclude_none=True))
+        await compute_resources_collection.insert_one(new_compute_resource.dict(exclude_none=True))
 
 async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[List[str], None], include_private_keys: bool) -> List[ProtocaasJob]:
     client = _get_mongo_client()
@@ -166,11 +166,11 @@ async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[
         jobs = await jobs_collection.find({
             'computeResourceId': compute_resource_id,
             'status': {'$in': statuses}
-        }).to_list(length=None)
+        }).to_list(length=None) # type: ignore
     else:
         jobs = await jobs_collection.find({
             'computeResourceId': compute_resource_id
-        }).to_list(length=None)
+        }).to_list(length=None) # type: ignore
     for job in jobs:
         _remove_id_field(job)
     jobs = [ProtocaasJob(**job) for job in jobs] # validate jobs
@@ -197,12 +197,15 @@ async def update_compute_resource_node(compute_resource_id: str, compute_resourc
         }
     }, upsert=True)
 
+class ComputeResourceNotFoundError(Exception):
+    pass
+
 async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResourceSpec):
     client = _get_mongo_client()
     compute_resources_collection = client['protocaas']['computeResources']
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
     if compute_resource is None:
-        raise Exception(f"No compute resource with ID {compute_resource_id}")
+        raise ComputeResourceNotFoundError(f"No compute resource with ID {compute_resource_id}")
     await compute_resources_collection.update_one({'computeResourceId': compute_resource_id}, {
         '$set': {
             'spec': spec.dict(exclude_none=True)

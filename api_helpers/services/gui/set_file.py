@@ -1,5 +1,5 @@
 import time
-from typing import Union, List, Any
+from typing import Union
 from ...clients.db import fetch_file, delete_file, insert_file, update_project
 from ...core.protocaas_types import ProtocaasFile
 from ...core._create_random_id import _create_random_id

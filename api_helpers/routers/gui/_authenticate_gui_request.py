@@ -22,6 +22,9 @@ async def _authenticate_gui_request(github_access_token: str):
     }
     return user_id
 
+class AuthException(Exception):
+    pass
+
 async def _get_user_id_for_access_token(github_access_token: str):
     url = 'https://api.github.com/user'
     headers = {
@@ -31,6 +34,6 @@ async def _get_user_id_for_access_token(github_access_token: str):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             if response.status != 200:
-                raise Exception(f'Error getting user ID from github access token: {response.status}')
+                raise AuthException(f'Error getting user ID from github access token: {response.status}')
             data = await response.json()
             return data['login']

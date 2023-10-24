@@ -156,11 +156,12 @@ class ProcessorGetJobOutputUploadUrlResponse(BaseModel):
 async def processor_get_upload_url(job_id: str, output_name: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputUploadUrlResponse:
     try:
         job = await fetch_job(job_id)
+        assert job, f"No job with ID {job_id}"
         if job.jobPrivateKey != job_private_key:
-            raise Exception(f"Invalid job private key for job {job_id}")
+            raise ValueError(f"Invalid job private key for job {job_id}")
 
         signed_upload_url = await get_upload_url(job=job, output_name=output_name)
         return ProcessorGetJobOutputUploadUrlResponse(uploadUrl=signed_upload_url, success=True)
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

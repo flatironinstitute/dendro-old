@@ -40,7 +40,7 @@ def _verify_signature_str(msg: str, public_key_hex: str, signature: str):
     pubk = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key_hex))
     try:
         pubk.verify(bytes.fromhex(signature), msg_bytes)
-    except:
+    except: # pylint: disable=bare-except
         return False
     return True
 
@@ -53,11 +53,11 @@ def generate_keypair():
         encoding=serialization.Encoding.Raw,
         format=serialization.PrivateFormat.Raw,
         encryption_algorithm=serialization.NoEncryption()
-    ).hex()
+    ).hex() # type: ignore
     public_key_hex = pubk.public_bytes(
         encoding=serialization.Encoding.Raw,
         format=serialization.PublicFormat.Raw
-    ).hex()
+    ).hex() # type: ignore
     test_msg = {'a': 1}
     test_signature = _sign_message(test_msg, public_key_hex, private_key_hex)
     assert _verify_signature(test_msg, public_key_hex, test_signature)

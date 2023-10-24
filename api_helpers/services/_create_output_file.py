@@ -58,14 +58,17 @@ async def _create_output_file(*,
 
     return new_file.fileId
 
+class GetSizeForRemoteFileException(Exception):
+    pass
+
 async def _get_size_for_remote_file(url: str) -> int:
     response = await _head_request(url)
     if response is None:
-        raise Exception(f"Unable to HEAD {url}")
-    size = int(response.headers.get('content-length'))
+        raise GetSizeForRemoteFileException(f"Unable to HEAD {url}")
+    size = response.headers.get('content-length')
     if size is None:
-        raise Exception(f"Unable to get content-length for {url}")
-    return size
+        raise GetSizeForRemoteFileException(f"Unable to get content-length for {url}")
+    return int(size)
 
 async def _head_request(url: str):
     async with aiohttp.ClientSession() as session:
