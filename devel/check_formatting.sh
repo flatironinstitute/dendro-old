@@ -1,6 +1,8 @@
 #!/bin/bash
 
-cd python
+for dir in python api_helpers; do
+
+cd $dir
 
 # Start with an exit code of 0 (success)
 exit_code=0
@@ -20,6 +22,10 @@ while read file; do
         exit_code=1
     fi
 done < <(find . -name '*.py')
+
+cd ..
+
+done
 
 # Exit the script with the appropriate exit code
 exit $exit_code
