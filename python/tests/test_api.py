@@ -9,8 +9,6 @@ import shutil
 async def test_api():
     # important to put the tests inside so we don't get an import error when running the non-api tests
     from protocaas.api_helpers.core.protocaas_types import ProtocaasProjectUser, ComputeResourceSpecProcessor
-    from protocaas.api_helpers.clients._get_mongo_client import _set_use_mock_mongo_client
-    from protocaas.api_helpers.clients.pubsub import _set_use_mock_pubsub_client
     from protocaas.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
     from protocaas.common._crypto_keys import _sign_message_str, sign_message
     from protocaas.api_helpers.routers.gui.project_routes import create_project, CreateProjectRequest
@@ -25,26 +23,22 @@ async def test_api():
     from protocaas.api_helpers.routers.gui.project_routes import delete_project
     from protocaas.api_helpers.routers.gui.project_routes import get_jobs
     from protocaas.api_helpers.routers.gui.create_job_route import create_job_handler, CreateJobRequest
-    from protocaas.api_helpers.routers.gui.compute_resource_routes import _set_use_gui_mock_pubsub
     from protocaas.api_helpers.routers.gui.job_routes import get_job
     from protocaas.api_helpers.routers.gui.job_routes import delete_job
     from protocaas.api_helpers.routers.compute_resource.router import compute_resource_get_unfinished_jobs
-    from protocaas.api_helpers.routers.compute_resource.router import _set_use_compute_resource_mock_pubsub
     from protocaas.api_helpers.routers.processor.router import processor_update_job_status, ProcessorUpdateJobStatusRequest
     from protocaas.compute_resource.register_compute_resource import register_compute_resource
     from protocaas.compute_resource.start_compute_resource import start_compute_resource
     from protocaas.common._api_request import _use_api_test_client
     from protocaas.api_helpers.routers.gui.compute_resource_routes import register_compute_resource as register_compute_resource_handler, RegisterComputeResourceRequest
+    from protocaas.mock import set_use_mock
+    from protocaas.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
 
     from fastapi.testclient import TestClient
     app = _get_fastapi_app()
     test_client = TestClient(app)
     _use_api_test_client(test_client)
-
-    _set_use_mock_mongo_client(True)
-    _set_use_mock_pubsub_client(True)
-    _set_use_compute_resource_mock_pubsub(True)
-    _set_use_gui_mock_pubsub(True)
+    set_use_mock(True)
     github_access_token = _create_mock_github_access_token()
 
     try:
@@ -297,10 +291,8 @@ async def test_api():
             assert len(jobs) == 0
     finally:
         _use_api_test_client(None)
-        _set_use_mock_mongo_client(False)
-        _set_use_mock_pubsub_client(False)
-        _set_use_gui_mock_pubsub(False)
-        _set_use_compute_resource_mock_pubsub(False)
+        set_use_mock(False)
+        _clear_mock_mongo_databases()
 
 def _get_fastapi_app():
     from fastapi import FastAPI

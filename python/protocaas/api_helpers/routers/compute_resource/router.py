@@ -6,14 +6,9 @@ from ...services._crypto_keys import _verify_signature_str
 from ...core.protocaas_types import ProtocaasComputeResourceApp, ProtocaasJob, ComputeResourceSpec, PubsubSubscription
 from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, update_compute_resource_node, set_compute_resource_spec
 from ...core.settings import get_settings
+from ....mock import using_mock
 
 router = APIRouter()
-
-_globals = {
-    '_use_compute_resource_mock_pubsub': False
-}
-def _set_use_compute_resource_mock_pubsub(use_mock_pubsub: bool):
-    _globals['_use_compute_resource_mock_pubsub'] = use_mock_pubsub
 
 # get apps
 class GetAppsResponse(BaseModel):
@@ -72,7 +67,7 @@ async def compute_resource_get_pubsub_subscription(
         compute_resource = await fetch_compute_resource(compute_resource_id)
         if compute_resource is None:
             raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
-        if _globals['_use_compute_resource_mock_pubsub']:
+        if using_mock():
             subscription = PubsubSubscription(
                 pubnubSubscribeKey='mock-subscribe-key',
                 pubnubChannel=compute_resource_id,

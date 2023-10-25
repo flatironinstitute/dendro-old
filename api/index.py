@@ -7,11 +7,11 @@ from fastapi import FastAPI
 # See https://github.com/orgs/vercel/discussions/46
 
 import sys
-sys.path.append("../python/protocaas")
-from api_helpers.routers.processor.router import router as processor_router
-from api_helpers.routers.compute_resource.router import router as compute_resource_router
-from api_helpers.routers.client.router import router as client_router
-from api_helpers.routers.gui.router import router as gui_router
+sys.path.append("../python")
+from protocaas.api_helpers.routers.processor.router import router as processor_router
+from protocaas.api_helpers.routers.compute_resource.router import router as compute_resource_router
+from protocaas.api_helpers.routers.client.router import router as client_router
+from protocaas.api_helpers.routers.gui.router import router as gui_router
 
 
 app = FastAPI()
