@@ -1,19 +1,15 @@
 import json
 import aiohttp
 import urllib.parse
-import asyncio
 from ..core.settings import get_settings
+from ...mock import using_mock
 
 
 class PubsubError(Exception):
     pass
 
-def _set_use_mock_pubsub_client(use_mock: bool) -> None: # For testing
-    loop = asyncio.get_event_loop()
-    setattr(loop, '_use_mock_pubsub_client', use_mock)
-
 async def publish_pubsub_message(*, channel: str, message: dict):
-    if hasattr(asyncio.get_event_loop(), '_use_mock_pubsub_client') and asyncio.get_event_loop()._use_mock_pubsub_client: # type: ignore
+    if using_mock():
         # don't actually publish the message for the mock case
         return True
 

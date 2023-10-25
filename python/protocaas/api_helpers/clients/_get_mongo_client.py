@@ -3,16 +3,12 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from ..core.settings import get_settings
 from .MockMongoClient import MockMongoClient
+from ...mock import using_mock
 
 
 _globals = {
     'mock_mongo_client': None
 }
-
-print('----- a1')
-
-def _set_use_mock_mongo_client(use_mock: bool) -> None: # For testing
-    _globals['mock_mongo_client'] = MockMongoClient() if use_mock else None # type: ignore
 
 def _get_mongo_client() -> Union[AsyncIOMotorClient, MockMongoClient]:
     # We want one async mongo client per event loop
@@ -21,8 +17,11 @@ def _get_mongo_client() -> Union[AsyncIOMotorClient, MockMongoClient]:
         return loop._mongo_client # type: ignore
 
     # If we're using a mock client, return it
-    if _globals['mock_mongo_client']:
+    if using_mock():
         client = _globals['mock_mongo_client'] # type: ignore
+        if client is None:
+            client = MockMongoClient()
+            _globals['mock_mongo_client'] = client # type: ignore
     else:
         # Otherwise, create a new client and store it in the global variable
         mongo_uri = get_settings().MONGO_URI
@@ -35,3 +34,8 @@ def _get_mongo_client() -> Union[AsyncIOMotorClient, MockMongoClient]:
     setattr(loop, '_mongo_client', client)
 
     return client
+
+def _clear_mock_mongo_databases():
+    client: MockMongoClient = _globals['mock_mongo_client'] # type: ignore
+    if client is not None:
+        client.clear_databases()

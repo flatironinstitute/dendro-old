@@ -6,45 +6,42 @@ import shutil
 
 @pytest.mark.asyncio
 @pytest.mark.api
-async def test_api():
+async def test_integration():
     # important to put the tests inside so we don't get an import error when running the non-api tests
     from protocaas.api_helpers.core.protocaas_types import ProtocaasProjectUser, ComputeResourceSpecProcessor
-    from protocaas.api_helpers.clients._get_mongo_client import _set_use_mock_mongo_client
-    from protocaas.api_helpers.clients.pubsub import _set_use_mock_pubsub_client
     from protocaas.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
-    from protocaas.common._crypto_keys import _sign_message_str, sign_message
-    from protocaas.api_helpers.routers.gui.project_routes import create_project, CreateProjectRequest
-    from protocaas.api_helpers.routers.gui.project_routes import set_project_name, SetProjectNameRequest
-    from protocaas.api_helpers.routers.gui.project_routes import set_project_description, SetProjectDescriptionRequest
-    from protocaas.api_helpers.routers.gui.project_routes import set_project_tags, SetProjectTagsRequest
-    from protocaas.api_helpers.routers.gui.project_routes import set_project_public, SetProjectPubliclyReadableRequest
-    from protocaas.api_helpers.routers.gui.project_routes import set_project_compute_resource_id, SetProjectComputeResourceIdRequest
-    from protocaas.api_helpers.routers.gui.project_routes import set_project_users, SetProjectUsersRequest
-    from protocaas.api_helpers.routers.gui.project_routes import get_project
-    from protocaas.api_helpers.routers.gui.project_routes import get_projects
-    from protocaas.api_helpers.routers.gui.project_routes import delete_project
-    from protocaas.api_helpers.routers.gui.project_routes import get_jobs
-    from protocaas.api_helpers.routers.gui.create_job_route import create_job_handler, CreateJobRequest
-    from protocaas.api_helpers.routers.gui.compute_resource_routes import _set_use_gui_mock_pubsub
-    from protocaas.api_helpers.routers.gui.job_routes import get_job
-    from protocaas.api_helpers.routers.gui.job_routes import delete_job
-    from protocaas.api_helpers.routers.compute_resource.router import compute_resource_get_unfinished_jobs
-    from protocaas.api_helpers.routers.compute_resource.router import _set_use_compute_resource_mock_pubsub
-    from protocaas.api_helpers.routers.processor.router import processor_update_job_status, ProcessorUpdateJobStatusRequest
+    from protocaas.common._crypto_keys import sign_message
+    from protocaas.api_helpers.routers.gui.project_routes import CreateProjectRequest, CreateProjectResponse
+    from protocaas.api_helpers.routers.gui.project_routes import SetProjectNameRequest, SetProjectNameResponse
+    from protocaas.api_helpers.routers.gui.project_routes import SetProjectDescriptionRequest, SetProjectDescriptionResponse
+    from protocaas.api_helpers.routers.gui.project_routes import SetProjectTagsRequest, SetProjectTagsResponse
+    from protocaas.api_helpers.routers.gui.project_routes import SetProjectPubliclyReadableRequest, SetProjectPubliclyReadableResponse
+    from protocaas.api_helpers.routers.gui.project_routes import SetProjectComputeResourceIdRequest, SetProjectComputeResourceIdResponse
+    from protocaas.api_helpers.routers.gui.project_routes import SetProjectUsersRequest, SetProjectUsersResponse
+    from protocaas.api_helpers.routers.gui.project_routes import GetProjectResponse
+    from protocaas.api_helpers.routers.gui.project_routes import GetProjectsResponse
+    from protocaas.api_helpers.routers.gui.project_routes import DeleteProjectResponse
+    from protocaas.api_helpers.routers.gui.project_routes import GetJobsResponse
+    from protocaas.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse
+    from protocaas.api_helpers.routers.gui.job_routes import GetJobResponse
+    from protocaas.api_helpers.routers.gui.job_routes import DeleteJobResponse
+    from protocaas.api_helpers.routers.compute_resource.router import GetUnfinishedJobsResponse
+    from protocaas.api_helpers.routers.processor.router import ProcessorUpdateJobStatusRequest, ProcessorUpdateJobStatusResponse
     from protocaas.compute_resource.register_compute_resource import register_compute_resource
     from protocaas.compute_resource.start_compute_resource import start_compute_resource
     from protocaas.common._api_request import _use_api_test_client
-    from protocaas.api_helpers.routers.gui.compute_resource_routes import register_compute_resource as register_compute_resource_handler, RegisterComputeResourceRequest
+    from protocaas.api_helpers.routers.gui.compute_resource_routes import RegisterComputeResourceRequest, RegisterComputeResourceResponse
+    from protocaas.mock import set_use_mock
+    from protocaas.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
+    from protocaas.common._api_request import _gui_get_api_request, _gui_post_api_request, _gui_put_api_request, _gui_delete_api_request
+    from protocaas.common._api_request import _compute_resource_get_api_request
+    from protocaas.common._api_request import _processor_put_api_request
 
     from fastapi.testclient import TestClient
     app = _get_fastapi_app()
     test_client = TestClient(app)
     _use_api_test_client(test_client)
-
-    _set_use_mock_mongo_client(True)
-    _set_use_mock_pubsub_client(True)
-    _set_use_compute_resource_mock_pubsub(True)
-    _set_use_gui_mock_pubsub(True)
+    set_use_mock(True)
     github_access_token = _create_mock_github_access_token()
 
     try:
@@ -61,7 +58,8 @@ async def test_api():
                 computeResourceId=compute_resource_id,
                 resourceCode=resource_code
             )
-            resp = await register_compute_resource_handler(data=req, github_access_token=github_access_token)
+            resp = _gui_post_api_request(url_path='/api/gui/compute_resources/register', data=req.dict(), github_access_token=github_access_token)
+            resp = RegisterComputeResourceResponse(**resp)
             assert resp.success
 
             # # Generate compute resource keys
@@ -73,13 +71,15 @@ async def test_api():
             req = CreateProjectRequest(
                 name='project1'
             )
-            resp = await create_project(data=req, github_access_token=github_access_token)
+            resp = _gui_post_api_request(url_path='/api/gui/projects', data=req.dict(), github_access_token=github_access_token)
+            resp = CreateProjectResponse(**resp)
             assert resp.success
             project1_id = resp.projectId
             req = CreateProjectRequest(
                 name='project2'
             )
-            resp = await create_project(data=req, github_access_token=github_access_token)
+            resp = _gui_post_api_request(url_path='/api/gui/projects', data=req.dict(), github_access_token=github_access_token)
+            resp = CreateProjectResponse(**resp)
             assert resp.success
             project2_id = resp.projectId
 
@@ -87,25 +87,29 @@ async def test_api():
             req = SetProjectNameRequest(
                 name='project1_renamed'
             )
-            resp = await set_project_name(project_id=project1_id, data=req, github_access_token=github_access_token)
+            resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project1_id}/name', data=req.dict(), github_access_token=github_access_token)
+            resp = SetProjectNameResponse(**resp)
             assert resp.success
 
             # gui: Set project description
             req = SetProjectDescriptionRequest(
                 description='project1_description'
             )
-            resp = await set_project_description(project_id=project1_id, data=req, github_access_token=github_access_token)
+            resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project1_id}/description', data=req.dict(), github_access_token=github_access_token)
+            resp = SetProjectDescriptionResponse(**resp)
             assert resp.success
 
             # gui: Set project tags
             req = SetProjectTagsRequest(
                 tags=['tag1', 'tag2']
             )
-            resp = await set_project_tags(project_id=project1_id, data=req, github_access_token=github_access_token)
+            resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project1_id}/tags', data=req.dict(), github_access_token=github_access_token)
+            resp = SetProjectTagsResponse(**resp)
             assert resp.success
 
             # gui: Get project
-            resp = await get_project(project_id=project1_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project1_id}', github_access_token=github_access_token)
+            resp = GetProjectResponse(**resp)
             project = resp.project
             assert project.projectId == project1_id
             assert project.name == 'project1_renamed'
@@ -122,7 +126,8 @@ async def test_api():
             req = SetProjectPubliclyReadableRequest(
                 publiclyReadable=False
             )
-            resp = await set_project_public(project_id=project1_id, data=req, github_access_token=github_access_token)
+            resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project1_id}/publicly_readable', data=req.dict(), github_access_token=github_access_token)
+            resp = SetProjectPubliclyReadableResponse(**resp)
             assert resp.success
 
             # gui: Set project compute resource id
@@ -130,7 +135,8 @@ async def test_api():
                 req = SetProjectComputeResourceIdRequest(
                     computeResourceId=compute_resource_id
                 )
-                resp = await set_project_compute_resource_id(project_id=project_id, data=req, github_access_token=github_access_token)
+                resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/compute_resource_id', data=req.dict(), github_access_token=github_access_token)
+                resp = SetProjectComputeResourceIdResponse(**resp)
                 assert resp.success
 
             # gui: Set project users
@@ -141,11 +147,13 @@ async def test_api():
                     ProtocaasProjectUser(userId='github|user_admin', role='admin')
                 ]
             )
-            resp = await set_project_users(project_id=project1_id, data=req, github_access_token=github_access_token)
+            resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project1_id}/users', data=req.dict(), github_access_token=github_access_token)
+            resp = SetProjectUsersResponse(**resp)
             assert resp.success
 
             # gui: Get project
-            resp = await get_project(project_id=project1_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project1_id}', github_access_token=github_access_token)
+            resp = GetProjectResponse(**resp)
             project = resp.project
             assert project.publiclyReadable is False
             assert project.computeResourceId == compute_resource_id
@@ -156,17 +164,20 @@ async def test_api():
             ]
 
             # gui: Get all projects
-            resp = await get_projects(github_access_token=github_access_token)
+            resp = _gui_get_api_request(url_path='/api/gui/projects', github_access_token=github_access_token)
+            resp = GetProjectsResponse(**resp)
             projects = resp.projects
             assert len(projects) == 2
             assert project1_id in [p.projectId for p in projects]
 
             # gui: Delete project
-            resp = await delete_project(project_id=project1_id, github_access_token=github_access_token)
+            resp = _gui_delete_api_request(url_path=f'/api/gui/projects/{project1_id}', github_access_token=github_access_token)
+            resp = DeleteProjectResponse(**resp)
             assert resp.success
 
             # gui: Get all projects
-            resp = await get_projects(github_access_token=github_access_token)
+            resp = _gui_get_api_request(url_path='/api/gui/projects', github_access_token=github_access_token)
+            resp = GetProjectsResponse(**resp)
             projects = resp.projects
             assert len(projects) == 1
 
@@ -174,7 +185,8 @@ async def test_api():
             req = SetProjectComputeResourceIdRequest(
                 computeResourceId=compute_resource_id
             )
-            resp = await set_project_compute_resource_id(project_id=project2_id, data=req, github_access_token=github_access_token)
+            resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project2_id}/compute_resource_id', data=req.dict(), github_access_token=github_access_token)
+            resp = SetProjectComputeResourceIdResponse(**resp)
             assert resp.success
 
             # gui: Create job
@@ -198,13 +210,15 @@ async def test_api():
                 batchId=None,
                 dandiApiKey=None,
             )
-            resp = await create_job_handler(data=req, github_access_token=github_access_token)
+            resp = _gui_post_api_request(url_path='/api/gui/jobs', data=req.dict(), github_access_token=github_access_token)
+            resp = CreateJobResponse(**resp)
             assert resp.success
             job_id = resp.jobId
             assert job_id
 
             # gui: Get job
-            resp = await get_job(job_id=job_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+            resp = GetJobResponse(**resp)
             job = resp.job
             assert job.jobId == job_id
             assert job.projectId == project2_id
@@ -225,20 +239,20 @@ async def test_api():
             assert not job.jobPrivateKey # should not be exposed to GUI
 
             # gui: Get jobs
-            resp = await get_jobs(project_id=project2_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/jobs', github_access_token=github_access_token)
+            resp = GetJobsResponse(**resp)
             jobs = resp.jobs
             assert len(jobs) == 1
 
             # compute_resource: Get unfinished jobs
-            expected_payload = f'/api/compute_resource/compute_resources/{compute_resource_id}/unfinished_jobs'
-            signature = _sign_message_str(expected_payload, compute_resource_id, compute_resource_private_key)
-            resp = await compute_resource_get_unfinished_jobs(
+            resp = _compute_resource_get_api_request(
+                url_path=f'/api/compute_resource/compute_resources/{compute_resource_id}/unfinished_jobs',
                 compute_resource_id=compute_resource_id,
-                compute_resource_payload=expected_payload,
-                compute_resource_signature=signature,
+                compute_resource_private_key=compute_resource_private_key,
                 compute_resource_node_id='mock_node_id',
                 compute_resource_node_name='mock_node_name'
             )
+            resp = GetUnfinishedJobsResponse(**resp)
             jobs = resp.jobs
             assert len(jobs) == 1
             job = jobs[0]
@@ -250,11 +264,14 @@ async def test_api():
             req = ProcessorUpdateJobStatusRequest(
                 status='starting'
             )
-            resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
+            resp = _processor_put_api_request(url_path=f'/api/processor/jobs/{job_id}/status', data=req.dict(), headers={'job-private-key': job_private_key})
+            resp = ProcessorUpdateJobStatusResponse(**resp)
+            # resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
             assert resp.success
 
             # gui: Get job
-            resp = await get_job(job_id=job_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+            resp = GetJobResponse(**resp)
             job = resp.job
             assert job.status == 'starting'
 
@@ -262,11 +279,14 @@ async def test_api():
             req = ProcessorUpdateJobStatusRequest(
                 status='running'
             )
-            resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
+            resp = _processor_put_api_request(url_path=f'/api/processor/jobs/{job_id}/status', data=req.dict(), headers={'job-private-key': job_private_key})
+            resp = ProcessorUpdateJobStatusResponse(**resp)
+            # resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
             assert resp.success
 
             # gui: Get job
-            resp = await get_job(job_id=job_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+            resp = GetJobResponse(**resp)
             job = resp.job
             assert job.status == 'running'
 
@@ -277,30 +297,33 @@ async def test_api():
             req = ProcessorUpdateJobStatusRequest(
                 status='finished'
             )
-            resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
+            resp = _processor_put_api_request(url_path=f'/api/processor/jobs/{job_id}/status', data=req.dict(), headers={'job-private-key': job_private_key})
+            resp = ProcessorUpdateJobStatusResponse(**resp)
+            # resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
             assert resp.success
 
             # gui: Get job
-            resp = await get_job(job_id=job_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+            resp = GetJobResponse(**resp)
             job = resp.job
             assert job.status == 'finished'
 
             start_compute_resource(dir=tmpdir, timeout=0.1, cleanup_old_jobs=False)
 
             # gui: Delete job
-            resp = await delete_job(job_id=job_id, github_access_token=github_access_token)
+            resp = _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+            resp = DeleteJobResponse(**resp)
             assert resp.success
 
             # gui: Get jobs
-            resp = await get_jobs(project_id=project2_id)
+            resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/jobs', github_access_token=github_access_token)
+            resp = GetJobsResponse(**resp)
             jobs = resp.jobs
             assert len(jobs) == 0
     finally:
         _use_api_test_client(None)
-        _set_use_mock_mongo_client(False)
-        _set_use_mock_pubsub_client(False)
-        _set_use_gui_mock_pubsub(False)
-        _set_use_compute_resource_mock_pubsub(False)
+        set_use_mock(False)
+        _clear_mock_mongo_databases()
 
 def _get_fastapi_app():
     from fastapi import FastAPI

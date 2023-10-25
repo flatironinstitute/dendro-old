@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Type
 import os
 import json
 import shutil
@@ -9,6 +9,7 @@ from .Job import Job
 from ._run_job import _run_job
 from ..common.protocaas_types import ComputeResourceSlurmOpts
 from ._load_spec_from_uri import _load_spec_from_uri
+from .ProcessorBase import ProcessorBase
 
 
 class ProtocaasAppException(Exception):
@@ -38,15 +39,13 @@ class App:
         self._aws_batch_job_definition: Union[str, None] = None
         self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
 
-    def add_processor(self, processor_func):
-        """Add a processor function to the app
+    def add_processor(self, processor_class: Type[ProcessorBase]):
+        """Add a processor to the app
 
         Args:
-            processor_func: The processor function which needs to have been decorated to be a protocaas processor.
+            processor_class (Type[ProcessorBase]): The processor class for the processor
         """
-        if not hasattr(processor_func, 'protocaas_processor'):
-            raise ProtocaasAppException('The processor function must be decorated with @processor')
-        P = AppProcessor.from_func(processor_func)
+        P = AppProcessor.from_processor_class(processor_class)
         self._processors.append(P)
 
     def run(self):
@@ -55,6 +54,13 @@ class App:
         JOB_PRIVATE_KEY = os.environ.get('JOB_PRIVATE_KEY', None)
         JOB_INTERNAL = os.environ.get('JOB_INTERNAL', None)
         APP_EXECUTABLE = os.environ.get('APP_EXECUTABLE', None)
+        SPEC_OUTPUT_FILE = os.environ.get('SPEC_OUTPUT_FILE', None)
+        if SPEC_OUTPUT_FILE is not None:
+            if JOB_ID is not None:
+                raise Exception('Cannot set both JOB_ID and SPEC_OUTPUT_FILE')
+            with open(SPEC_OUTPUT_FILE, 'w') as f:
+                json.dump(self.get_spec(), f, indent=4)
+            return
         if JOB_ID is not None:
             if JOB_PRIVATE_KEY is None:
                 raise KeyError('JOB_PRIVATE_KEY is not set')
@@ -136,18 +142,18 @@ class App:
         processor_name = job.processor_name
         processor = next((p for p in self._processors if p._name == processor_name), None)
         assert processor, f'Processor not found: {processor_name}'
-        assert hasattr(processor, '_processor_func'), f'Processor does not have a _processor_func attribute: {processor_name}'
-        processor_func = processor._processor_func
-        assert processor_func is not None, f'Processor function is None: {processor_name}'
+        if not processor._processor_class:
+            raise Exception(f'Processor does not have a processor_class: {processor_name}')
+        processor_class = processor._processor_class
 
-        # Assemble the kwargs for the processor function
-        kwargs = {}
+        # Assemble the context for the processor function
+        context = object()
         for input in processor._inputs:
             if not input.list:
                 # this input is not a list
                 input_file = next((i for i in job.inputs if i._name == input.name), None)
                 assert input_file, f'Input not found: {input.name}'
-                kwargs[input.name] = input_file
+                setattr(context, input.name, input_file)
             else:
                 # this input is a list
                 the_list: List[InputFile] = []
@@ -160,20 +166,21 @@ class App:
                         break
                     the_list.append(input_file)
                     ii += 1
-                kwargs[input.name] = the_list
+                setattr(context, input.name, the_list)
         for output in processor._outputs:
             output_file = next((o for o in job.outputs if o._name == output.name), None)
             assert output_file is not None, f'Output not found: {output.name}'
-            kwargs[output.name] = output_file
+            setattr(context, output.name, output_file)
         for parameter in processor._parameters:
             job_parameter = next((p for p in job.parameters if p.name == parameter.name), None)
             if job_parameter is None:
-                kwargs[parameter.name] = parameter.default
+                # The parameter was not set, so use the default
+                setattr(context, parameter.name, parameter.default)
             else:
-                kwargs[parameter.name] = job_parameter.value
+                setattr(context, parameter.name, job_parameter.value)
 
         # Run the processor function
-        processor_func(**kwargs)
+        processor_class.run(context)
 
         # Check that all outputs were set
         for output in processor._outputs:

@@ -9,6 +9,8 @@ class MockMongoClient:
         if key not in self._dbs:
             self._dbs[key] = MockMongoDatabase()
         return self._dbs[key]
+    def clear_databases(self):
+        self._dbs = {}
 
 class MockMongoDatabase:
     def __init__(self):

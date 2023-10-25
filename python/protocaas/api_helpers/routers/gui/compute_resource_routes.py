@@ -9,15 +9,10 @@ from ._authenticate_gui_request import _authenticate_gui_request
 from ...clients.db import fetch_compute_resource, fetch_compute_resources_for_user, update_compute_resource, fetch_compute_resource_jobs
 from ...clients.db import register_compute_resource as db_register_compute_resource
 from ...core.settings import get_settings
+from ....mock import using_mock
 
 
 router = APIRouter()
-
-_globals = {
-    '_use_gui_mock_pubsub': False
-}
-def _set_use_gui_mock_pubsub(use_mock_pubsub: bool):
-    _globals['_use_gui_mock_pubsub'] = use_mock_pubsub
 
 # get compute resource
 class GetComputeResourceResponse(BaseModel):
@@ -133,7 +128,7 @@ async def get_pubsub_subscription(compute_resource_id):
         if compute_resource is None:
             raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
 
-        if _globals['_use_gui_mock_pubsub']:
+        if using_mock():
             subscription = PubsubSubscription(
                 pubnubSubscribeKey='mock-subscribe-key',
                 pubnubChannel=compute_resource_id,
