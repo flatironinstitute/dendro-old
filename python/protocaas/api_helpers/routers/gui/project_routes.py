@@ -14,7 +14,7 @@ from ...services.gui.delete_project import delete_project as service_delete_proj
 router = APIRouter()
 
 # get project
-class GetProjectReponse(BaseModel):
+class GetProjectResponse(BaseModel):
     project: ProtocaasProject
     success: bool
 
@@ -23,7 +23,7 @@ async def get_project(project_id):
     try:
         project = await fetch_project(project_id)
         assert project is not None, f"No project with ID {project_id}"
-        return GetProjectReponse(project=project, success=True)
+        return GetProjectResponse(project=project, success=True)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e)) from e

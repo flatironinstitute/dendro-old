@@ -168,3 +168,100 @@ def _client_get_api_request(*,
         print(f'Error in client get api request for {url}')
         raise
     return resp.json()
+
+####################################################################################################
+# The GUI API requests below are only here for use with pytest since the real GUI requests come from the browser using typescript
+
+def _gui_get_api_request(*,
+    url_path: str,
+    github_access_token: str
+):
+    headers = {
+        'github-access-token': github_access_token
+    }
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
+    try:
+        resp = client.get(url, headers=headers, timeout=60)
+        resp.raise_for_status()
+    except: # noqa E722
+        print(f'Error in gui get api request for {url}')
+        raise
+    return resp.json()
+
+def _gui_post_api_request(*,
+    url_path: str,
+    github_access_token: str,
+    data: dict
+):
+    headers = {
+        'github-access-token': github_access_token
+    }
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
+    try:
+        resp = client.post(url, headers=headers, json=data, timeout=60)
+        resp.raise_for_status()
+    except: # noqa E722
+        print(f'Error in gui post api request for {url}')
+        raise
+    return resp.json()
+
+def _gui_put_api_request(*,
+    url_path: str,
+    github_access_token: str,
+    data: dict
+):
+    headers = {
+        'github-access-token': github_access_token
+    }
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
+    try:
+        resp = client.put(url, headers=headers, json=data, timeout=60)
+        resp.raise_for_status()
+    except: # noqa E722
+        print(f'Error in gui put api request for {url}')
+        raise
+    return resp.json()
+
+def _gui_delete_api_request(*,
+    url_path: str,
+    github_access_token: str
+):
+    headers = {
+        'github-access-token': github_access_token
+    }
+    test_client = _globals['test_client']
+    if test_client is None:
+        url = f'{protocaas_url}{url_path}'
+        client = requests
+    else:
+        assert url_path.startswith('/api')
+        url = url_path
+        client = test_client
+    try:
+        resp = client.delete(url, headers=headers, timeout=60)
+        resp.raise_for_status()
+    except: # noqa E722
+        print(f'Error in gui delete api request for {url}')
+        raise
+    return resp.json()
