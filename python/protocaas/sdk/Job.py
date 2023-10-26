@@ -24,11 +24,11 @@ class Job:
     ) -> None:
         self._job_id = job_id
         self._job_private_key = job_private_key
+        self._api_request_job_timestamp = time.time()
         resp = self._api_request_job_if_needed()
         if resp is None:
             raise JobApiRequestException('Unable to get job info from protocaas API')
         self._api_request_job_response: ProcessorGetJobResponse = resp
-        self._api_request_job_timestamp = time.time()
         if self._api_request_job_response is None:
             raise JobApiRequestException('Unexpected: _api_request_job_response is None')
         # important to set these only once here because these objects will be passed into the processor function
