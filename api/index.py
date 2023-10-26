@@ -17,8 +17,25 @@ from protocaas.api_helpers.routers.compute_resource.router import router as comp
 from protocaas.api_helpers.routers.client.router import router as client_router
 from protocaas.api_helpers.routers.gui.router import router as gui_router
 
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
+
+# Set up CORS
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://protocaas.vercel.app"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # requests from a processing job
 app.include_router(processor_router, prefix="/api/processor", tags=["Processor"])

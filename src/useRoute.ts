@@ -36,6 +36,7 @@ const useRoute = () => {
     const search = location.search
     const searchParams = useMemo(() => new URLSearchParams(search), [search])
     const staging = searchParams.get('staging') === '1'
+    const deployedApi = searchParams.get('deployed-api') === '1'
     const route: Route = useMemo(() => {
         if (p === '/about') {
             return {
@@ -111,6 +112,9 @@ const useRoute = () => {
         else if (staging) {
             queries.push(`staging=1`)
         }
+        if (deployedApi) {
+            queries.push(`deployed-api=1`)
+        }
         if (r.page === 'project') {
             if (r.tab) queries.push(`tab=${r.tab}`)
         }
@@ -133,26 +137,21 @@ const useRoute = () => {
             navigate(`/compute-resource/${r.computeResourceId}` + queryString)
         }
         else if (r.page === 'compute-resources') {
-            navigate('/compute-resources')
+            navigate('/compute-resources' + queryString)
         }
         else if (r.page === 'projects') {
-            navigate('/projects')
+            navigate('/projects' + queryString)
         }
         else if (r.page === 'register-compute-resource') {
-            navigate(`/register-compute-resource/${r.computeResourceId}/${r.resourceCode}`)
+            navigate(`/register-compute-resource/${r.computeResourceId}/${r.resourceCode}` + queryString)
         }
         else if (r.page === 'github-auth') {
-            navigate('/github/auth')
+            navigate('/github/auth' + queryString)
         }
         else if (r.page === 'about') {
-            if (staging) {
-                navigate('/about?staging=1')
-            }
-            else {
-                navigate('/about')
-            }
+            navigate('/about' + queryString)
         }
-    }, [navigate, staging])
+    }, [navigate, staging, deployedApi])
 
     const toggleStaging = useCallback(() => {
         if (staging) {
