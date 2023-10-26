@@ -30,7 +30,7 @@ class Processor1(ProcessorBase):
         print(f'text2: {context.text2}')
         print(f'text3: {context.text3}')
         print(f'val1: {context.val1}')
-        time.sleep(1)
+        time.sleep(0.3)
         print('End Processor1 in mock app')
 
 app = App(

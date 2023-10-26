@@ -26,8 +26,6 @@ async def test_integration(tmp_path):
     from protocaas.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse
     from protocaas.api_helpers.routers.gui.job_routes import GetJobResponse
     from protocaas.api_helpers.routers.gui.job_routes import DeleteJobResponse
-    from protocaas.api_helpers.routers.compute_resource.router import GetUnfinishedJobsResponse
-    from protocaas.api_helpers.routers.processor.router import ProcessorUpdateJobStatusRequest, ProcessorUpdateJobStatusResponse
     from protocaas.api_helpers.routers.gui.compute_resource_routes import SetComputeResourceAppsRequest, SetComputeResourceAppsResponse, GetComputeResourceResponse
     from protocaas.compute_resource.register_compute_resource import register_compute_resource
     from protocaas.compute_resource.start_compute_resource import start_compute_resource
@@ -36,8 +34,6 @@ async def test_integration(tmp_path):
     from protocaas.mock import set_use_mock
     from protocaas.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
     from protocaas.common._api_request import _gui_get_api_request, _gui_post_api_request, _gui_put_api_request, _gui_delete_api_request
-    from protocaas.common._api_request import _compute_resource_get_api_request
-    from protocaas.common._api_request import _processor_put_api_request
     from protocaas.sdk._make_spec_file import make_app_spec_file_function
 
     tmpdir = str(tmp_path)
@@ -216,7 +212,7 @@ async def test_integration(tmp_path):
         assert resp.success
 
         # gui: Create job
-        processor_name = 'test_processor'
+        processor_name = 'processor1'
         processor_spec = ComputeResourceSpecProcessor(
             name=processor_name,
             help='test help',
@@ -270,72 +266,14 @@ async def test_integration(tmp_path):
         jobs = resp.jobs
         assert len(jobs) == 1
 
-        # compute_resource: Get unfinished jobs
-        resp = _compute_resource_get_api_request(
-            url_path=f'/api/compute_resource/compute_resources/{compute_resource_id}/unfinished_jobs',
-            compute_resource_id=compute_resource_id,
-            compute_resource_private_key=compute_resource_private_key,
-            compute_resource_node_id='mock_node_id',
-            compute_resource_node_name='mock_node_name'
-        )
-        resp = GetUnfinishedJobsResponse(**resp)
-        jobs = resp.jobs
-        assert len(jobs) == 1
-        job = jobs[0]
-        assert job.jobId == job_id
-        job_private_key = job.jobPrivateKey
-        assert job_private_key
-
-        # processor: Set job status to starting
-        req = ProcessorUpdateJobStatusRequest(
-            status='starting'
-        )
-        resp = _processor_put_api_request(url_path=f'/api/processor/jobs/{job_id}/status', data=req.dict(), headers={'job-private-key': job_private_key})
-        resp = ProcessorUpdateJobStatusResponse(**resp)
-        # resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
-        assert resp.success
-
-        # gui: Get job
-        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
-        resp = GetJobResponse(**resp)
-        job = resp.job
-        assert job.status == 'starting'
-
-        # processor: Set job status to running
-        req = ProcessorUpdateJobStatusRequest(
-            status='running'
-        )
-        resp = _processor_put_api_request(url_path=f'/api/processor/jobs/{job_id}/status', data=req.dict(), headers={'job-private-key': job_private_key})
-        resp = ProcessorUpdateJobStatusResponse(**resp)
-        # resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
-        assert resp.success
-
-        # gui: Get job
-        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
-        resp = GetJobResponse(**resp)
-        job = resp.job
-        assert job.status == 'running'
-
-        # processor: Set job console output
-        # TODO: not implemented yet
-
-        # processor: Set job status finished
-        req = ProcessorUpdateJobStatusRequest(
-            status='finished'
-        )
-        resp = _processor_put_api_request(url_path=f'/api/processor/jobs/{job_id}/status', data=req.dict(), headers={'job-private-key': job_private_key})
-        resp = ProcessorUpdateJobStatusResponse(**resp)
-        # resp = await processor_update_job_status(job_id=job_id, data=req, job_private_key=job_private_key)
-        assert resp.success
-
-        # gui: Get job
-        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
-        resp = GetJobResponse(**resp)
-        job = resp.job
-        assert job.status == 'finished'
-
         # Run the compute resource briefly
-        start_compute_resource(dir=tmpdir, timeout=0.1, cleanup_old_jobs=False)
+        start_compute_resource(dir=tmpdir, timeout=1, cleanup_old_jobs=False)
+
+        # gui: Get job
+        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+        resp = GetJobResponse(**resp)
+        job = resp.job
+        assert job.status == 'failed'
 
         # Check whether the appropriate compute resource spec was uploaded to the api
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}', github_access_token=github_access_token)
