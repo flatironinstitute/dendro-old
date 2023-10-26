@@ -66,7 +66,6 @@ class Daemon:
                 'spec': spec
             }
         )
-
         print('Getting pubsub info')
         pubsub_subscription = get_pubsub_subscription(
             compute_resource_id=self._compute_resource_id,
@@ -84,6 +83,7 @@ class Daemon:
             )
         else:
             self._pubsub_client = None
+
     def start(self, *, timeout: Optional[float] = None, cleanup_old_jobs=True): # timeout is used for testing
         timer_handle_jobs = 0
 
@@ -120,6 +120,7 @@ class Daemon:
                 time.sleep(0.01) # for the first few seconds we can sleep for a short time (useful for testing)
             else:
                 time.sleep(2)
+
     def _handle_jobs(self):
         url_path = f'/api/compute_resource/compute_resources/{self._compute_resource_id}/unfinished_jobs'
         if not self._compute_resource_id:
@@ -170,14 +171,19 @@ class Daemon:
         if app._slurm_opts is not None:
             return 'slurm'
         return 'local'
+
     def _is_local_job(self, job: ProtocaasJob) -> bool:
         return self._get_job_resource_type(job) == 'local'
+
     def _is_aws_batch_job(self, job: ProtocaasJob) -> bool:
         return self._get_job_resource_type(job) == 'aws_batch'
+
     def _is_slurm_job(self, job: ProtocaasJob) -> bool:
         return self._get_job_resource_type(job) == 'slurm'
+
     def _job_is_pending(self, job: ProtocaasJob) -> bool:
         return job.status == 'pending'
+
     def _start_job(self, job: ProtocaasJob, run_process: bool = True, return_shell_command: bool = False):
         job_id = job.jobId
         if job_id in self._attempted_to_start_job_ids:
@@ -274,7 +280,6 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
 
 def start_compute_resource(dir: str, *, timeout: Optional[float] = None, cleanup_old_jobs=True): # timeout is used for testing
     config_fname = os.path.join(dir, '.protocaas-compute-resource-node.yaml')
-
     if os.path.exists(config_fname):
         with open(config_fname, 'r', encoding='utf8') as f:
             the_config = yaml.safe_load(f)
@@ -283,7 +288,6 @@ def start_compute_resource(dir: str, *, timeout: Optional[float] = None, cleanup
     for k in env_var_keys:
         if k in the_config:
             os.environ[k] = the_config[k]
-
     daemon = Daemon()
     daemon.start(timeout=timeout, cleanup_old_jobs=cleanup_old_jobs)
 

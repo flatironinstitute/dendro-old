@@ -17,7 +17,14 @@ class ProtocaasAppException(Exception):
 
 class App:
     """An app"""
-    def __init__(self, name: str, *, help: str, app_image: Union[str, None] = None, app_executable: Union[str, None] = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        *,
+        help: str,
+        app_image: Union[str, None] = None,
+        app_executable: Union[str, None] = None
+    ) -> None:
         """Construct a new Protocaas App
 
         Args:
@@ -106,7 +113,9 @@ class App:
         """Define an app from a spec. This is called internally."""
         app = App(
             name=spec['name'],
-            help=spec['help']
+            help=spec['help'],
+            app_image=spec.get('appImage', None),
+            app_executable=spec.get('appExecutable', None)
         )
         for processor_spec in spec['processors']:
             processor = AppProcessor.from_spec(processor_spec)
@@ -123,8 +132,6 @@ class App:
         """Define an app from a spec URI (e.g., a gh url to the spec.json blob). This is called internally."""
         spec: dict = _load_spec_from_uri(spec_uri)
         a = App.from_spec(spec)
-        setattr(a, '_app_image', spec.get('appImage', None))
-        setattr(a, "_app_executable", spec.get('appExecutable', None))
         setattr(a, "_aws_batch_job_queue", aws_batch_job_queue)
         setattr(a, "_aws_batch_job_definition", aws_batch_job_definition)
         setattr(a, "_slurm_opts", slurm_opts)
