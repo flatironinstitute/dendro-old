@@ -3,13 +3,14 @@ import pytest
 import time
 import tempfile
 import shutil
+import json
 
 
 @pytest.mark.asyncio
 @pytest.mark.api
 async def test_integration(tmp_path):
     # important to put the tests inside so we don't get an import error when running the non-api tests
-    from protocaas.api_helpers.core.protocaas_types import ProtocaasProjectUser, ComputeResourceSpecProcessor, ProtocaasComputeResourceApp
+    from protocaas.api_helpers.core.protocaas_types import ProtocaasProjectUser, ComputeResourceSpecApp, ProtocaasComputeResourceApp
     from protocaas.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
     from protocaas.common._crypto_keys import sign_message
     from protocaas.api_helpers.routers.gui.project_routes import CreateProjectRequest, CreateProjectResponse
@@ -23,7 +24,7 @@ async def test_integration(tmp_path):
     from protocaas.api_helpers.routers.gui.project_routes import GetProjectsResponse
     from protocaas.api_helpers.routers.gui.project_routes import DeleteProjectResponse
     from protocaas.api_helpers.routers.gui.project_routes import GetJobsResponse
-    from protocaas.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse
+    from protocaas.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse, CreateJobRequestInputParameter
     from protocaas.api_helpers.routers.gui.job_routes import GetJobResponse
     from protocaas.api_helpers.routers.gui.job_routes import DeleteJobResponse
     from protocaas.api_helpers.routers.gui.compute_resource_routes import SetComputeResourceAppsRequest, SetComputeResourceAppsResponse, GetComputeResourceResponse
@@ -54,6 +55,9 @@ async def test_integration(tmp_path):
         # Create spec.json for mock app
         make_app_spec_file_function(app_dir=tmpdir + '/mock_app', spec_output_file=tmpdir + '/mock_app/spec.json')
         assert os.path.exists(tmpdir + '/mock_app/spec.json')
+        with open(tmpdir + '/mock_app/spec.json', 'r') as f:
+            spec = json.load(f)
+        compute_resource_spec_app = ComputeResourceSpecApp(**spec)
 
         # Register compute resource in directory
         compute_resource_id, compute_resource_private_key = register_compute_resource(dir=tmpdir, node_name='test_node')
@@ -212,22 +216,28 @@ async def test_integration(tmp_path):
         assert resp.success
 
         # gui: Create job
-        processor_name = 'processor1'
-        processor_spec = ComputeResourceSpecProcessor(
-            name=processor_name,
-            help='test help',
-            inputs=[],
-            outputs=[],
-            parameters=[],
-            attributes=[],
-            tags=[]
-        )
+        processor_name = 'mock-processor1'
+        processor_spec = compute_resource_spec_app.processors[0]
         req = CreateJobRequest(
             projectId=project2_id,
             processorName=processor_name,
             inputFiles=[],
             outputFiles=[],
-            inputParameters=[],
+            inputParameters=[
+                CreateJobRequestInputParameter(
+                    name='text1',
+                    value='this is text1'
+                ),
+                CreateJobRequestInputParameter(
+                    name='text2',
+                    value='this is text2'
+                ),
+                # text3 has a default
+                CreateJobRequestInputParameter(
+                    name='val1',
+                    value=12
+                )
+            ],
             processorSpec=processor_spec,
             batchId=None,
             dandiApiKey=None,
@@ -245,9 +255,6 @@ async def test_integration(tmp_path):
         assert job.jobId == job_id
         assert job.projectId == project2_id
         assert job.processorName == processor_name
-        assert job.inputFiles == []
-        assert job.outputFiles == []
-        assert job.inputParameters == []
         assert job.processorSpec == processor_spec
         assert job.batchId is None
         assert job.dandiApiKey is None
@@ -273,7 +280,9 @@ async def test_integration(tmp_path):
         resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
         resp = GetJobResponse(**resp)
         job = resp.job
-        assert job.status == 'failed'
+        if job.status == 'failed':
+            raise Exception(f'Job failed: {job.error}')
+        assert job.status == 'finished'
 
         # Check whether the appropriate compute resource spec was uploaded to the api
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}', github_access_token=github_access_token)
