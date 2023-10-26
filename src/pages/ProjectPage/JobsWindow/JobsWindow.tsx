@@ -3,14 +3,12 @@ import { useProject } from "../ProjectPageContext";
 import JobsTable from "./JobsTable";
 
 type Props = {
-    width: number,
-    height: number,
     fileName: string
     createJobEnabled?: boolean
     createJobTitle?: string
 }
 
-const JobsWindow: FunctionComponent<Props> = ({ width, height, fileName, createJobEnabled, createJobTitle }) => {
+const JobsWindow: FunctionComponent<Props> = ({ fileName, createJobEnabled, createJobTitle }) => {
     const {jobs, openTab} = useProject()
 
     const filteredJobs = useMemo(() => {
@@ -28,8 +26,6 @@ const JobsWindow: FunctionComponent<Props> = ({ width, height, fileName, createJ
 
     return (
         <JobsTable
-            width={width}
-            height={height}
             fileName={fileName}
             jobs={filteredJobs}
             onJobClicked={jobId => openTab(`job:${jobId}`)}

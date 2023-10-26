@@ -5,11 +5,10 @@ import './Processor.css'
 import { useProject } from "./ProjectPageContext"
 
 type ProcessorsViewProps = {
-    width: number
-    height: number
+
 }
 
-const ProcessorsView: FunctionComponent<ProcessorsViewProps> = ({width, height}) => {
+const ProcessorsView: FunctionComponent<ProcessorsViewProps> = ({ }) => {
     const {computeResource} = useProject()
     const allProcessors = useMemo(() => {
         if (!computeResource) return []
@@ -18,14 +17,13 @@ const ProcessorsView: FunctionComponent<ProcessorsViewProps> = ({width, height})
     }, [computeResource])
     if (!computeResource) return <div>Loading compute resource spec...</div>
     return (
-        <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
+        <div style={{overflowY: 'auto'}}>
             <hr />
             {
                 allProcessors.map((processor, i) => (
                     <span key={i}>
                         <ProcessorView
                             processor={processor}
-                            width={width}
                         />
                         <hr />
                     </span>
@@ -37,17 +35,16 @@ const ProcessorsView: FunctionComponent<ProcessorsViewProps> = ({width, height})
 
 type ProcessorViewProps = {
     processor: ComputeResourceSpecProcessor
-    width: number
 }
 
-const ProcessorView: FunctionComponent<ProcessorViewProps> = ({processor, width}) => {
+const ProcessorView: FunctionComponent<ProcessorViewProps> = ({ processor }) => {
     const attrs: {[key: string]: any} = {}
     processor.attributes.forEach((attr) => {
         attrs[attr.name] = attr.value
     })
     const wipElmt = attrs.wip ? <span style={{color: 'darkblue'}}> (WIP)</span> : null
     return (
-        <div className="Processor" style={{position: 'relative', width: width - 20, padding: 10, overflowY: 'auto'}}>
+        <div className="Processor" style={{position: 'relative', padding: 10, overflowY: 'auto'}}>
             <div style={{display: 'flex', flexDirection: 'row'}}>
                 <div className="ProcessorImage" style={{width: 100,  marginRight: 10}}>
                     {

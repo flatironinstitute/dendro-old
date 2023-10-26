@@ -8,7 +8,6 @@ import ComputeResourceAppsTableMenuBar from "./ComputeResourceAppsTableMenuBar"
 import NewAppWindow from "./NewAppWindow"
 
 type Props = {
-    width: number
     height: number
     computeResource: ProtocaasComputeResource
     onNewApp: (name: string, specUri: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
@@ -20,7 +19,7 @@ const menuBarHeight = 30
 const hPadding = 20
 const vPadding = 5
 
-const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, computeResource, onNewApp, onEditApp, onDeleteApps}) => {
+const ComputeResourceAppsTable: FunctionComponent<Props> = ({ height, computeResource, onNewApp, onEditApp, onDeleteApps}) => {
     const [selectedAppNames, selectedAppNamesDispatch] = useReducer(selectedStringsReducer, new Set<string>())
 
     const {visible: newAppWindowVisible, handleOpen: openNewAppWindow, handleClose: closeNewAppWindow} = useModalDialog()
@@ -39,10 +38,9 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
     }, [selectedAppNames, computeResource])
 
     return (
-        <div style={{position: 'relative', width, height}}>
-            <div style={{position: 'absolute', width: width - hPadding * 2, height: menuBarHeight - vPadding * 2, paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
+        <div style={{position: 'relative', height}}>
+            <div style={{ height: menuBarHeight - vPadding * 2, paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
                 <ComputeResourceAppsTableMenuBar
-                    width={width - hPadding * 2}
                     height={menuBarHeight - vPadding * 2}
                     selectedAppNames={Array.from(selectedAppNames)}
                     onAddApp={openNewAppWindow}
@@ -50,7 +48,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
                     onEditApp={openEditAppWindow}
                 />
             </div>
-            <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
+            <div style={{height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
                 <table className="scientific-table" style={{fontSize: 12}}>
                     <thead>
                         <tr>

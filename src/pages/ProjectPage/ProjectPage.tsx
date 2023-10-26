@@ -21,11 +21,10 @@ import DandisetView from "../DandiBrowser/DandisetView";
 import { AssetResponse, AssetsResponseItem } from "../DandiBrowser/types";
 
 type Props = {
-    width: number
-    height: number
+
 }
 
-const ProjectPage: FunctionComponent<Props> = ({width, height}) => {
+const ProjectPage: FunctionComponent<Props> = ({ }) => {
     const {route} = useRoute()
     if (route.page !== 'project') throw Error('route.page != project')
     const projectId = route.projectId
@@ -33,10 +32,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height}) => {
         <SetupProjectPage
             projectId={projectId}
         >
-            <ProjectPageChild
-                width={width}
-                height={height}
-            />
+            <ProjectPageChild/>
         </SetupProjectPage>
     )
 }
@@ -79,41 +75,27 @@ const projectPageViews: ProjectPageView[] = [
     }
 ]
 
-const ProjectPageChild: FunctionComponent<Props> = ({width, height}) => {
+const ProjectPageChild: FunctionComponent<Props> = ({ }) => {
     const leftMenuPanelWidth = 150
     return (
         <SetupComputeResources>
-            <div style={{position: 'absolute', width, height, overflow: 'hidden'}}>
-                <HBoxLayout
-                    widths={[leftMenuPanelWidth, width - leftMenuPanelWidth]}
-                    height={height}
-                >
-                    <LeftMenuPanel
-                        width={0}
-                        height={0}
-                    />
-                    <MainPanel
-                        width={0}
-                        height={0}
-                    />
-                </HBoxLayout>
-            </div>
+            <LeftMenuPanel/>
+            <MainPanel/>
         </SetupComputeResources>
     )
 }
 
 type LeftMenuPanelProps = {
-    width: number
-    height: number
+
 }
 
-const LeftMenuPanel: FunctionComponent<LeftMenuPanelProps> = ({width, height}) => {
+const LeftMenuPanel: FunctionComponent<LeftMenuPanelProps> = ({ }) => {
     const {route, setRoute} = useRoute()
     const {projectId} = useProject()
     if (route.page !== 'project') throw Error(`Unexpected route ${JSON.stringify(route)}`)
     const currentView = route.tab || 'project-home'
     return (
-        <div style={{position: 'absolute', width, height, overflow: 'hidden', background: '#fafafa'}}>
+        <div style={{gridArea: 'b', background: '#fafafa'}}>
             {
                 projectPageViews.map(view => (
                     <div
@@ -130,11 +112,10 @@ const LeftMenuPanel: FunctionComponent<LeftMenuPanelProps> = ({width, height}) =
 }
 
 type MainPanelProps = {
-    width: number
-    height: number
+  
 }
 
-const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
+const MainPanel: FunctionComponent<MainPanelProps> = ({ }) => {
     const {openTab, project, refreshFiles, computeResourceId} = useProject()
     const auth = useGithubAuth()
     const {route, setRoute, staging} = useRoute()
@@ -247,32 +228,22 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
     }, [handleImportDandiNwbFiles, stagingStr, staging])
 
     return (
-        <div style={{position: 'absolute', width, height, overflow: 'hidden', background: 'white'}}>
-            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-home' ? undefined : 'hidden'}}>
-                <ProjectHome
-                    width={width}
-                    height={height}
-                />
+        <div className="main" style={{overflow: 'auto', background: 'white'}}>
+            <div style={{display: currentView === 'project-home' ? undefined : 'none'}}>
+                <ProjectHome />
             </div>
-            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-files' ? undefined : 'hidden'}}>
+            <div style={{display: currentView === 'project-files' ? undefined : 'none'}}>
                 <ProjectFiles
-                    width={width}
-                    height={height}
                     onRunBatchSpikeSorting={handleRunSpikeSorting}
                     onDandiUpload={handleDandiUpload}
                 />
             </div>
-            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
-                <ProjectJobs
-                    width={width}
-                    height={height}
-                />
+            <div style={{display: currentView === 'project-jobs' ? undefined : 'none'}}>
+                <ProjectJobs/>
             </div>
             {dandisetId && (
-                <div style={{position: 'absolute', width, height, visibility: currentView === 'dandi-import' ? undefined : 'hidden'}}>
+                <div style={{display: currentView === 'dandi-import' ? undefined : 'none'}}>
                     <DandisetView
-                        width={width}
-                        height={height}
                         useStaging={staging}
                         dandisetId={dandisetId}
                         onImportItems={handleImportItems}
@@ -286,18 +257,13 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     onNwbFileSelected={handleImportManualNwbFile}
                 />
             </div> */}
-            <div style={{position: 'absolute', width, height, visibility: currentView === 'processors' ? undefined : 'hidden'}}>
-                <ProcessorsView
-                    width={width}
-                    height={height}
-                />
+            <div style={{display: currentView === 'processors' ? undefined : 'none'}}>
+                <ProcessorsView/>
             </div>
-            <div style={{position: 'absolute', width, height, visibility: currentView === 'compute-resource' ? undefined : 'hidden'}}>
+            <div style={{display: currentView === 'compute-resource' ? undefined : 'none'}}>
                 {
                     computeResourceId && (
                         <ComputeResourcePage
-                            width={width}
-                            height={height}
                             computeResourceId={computeResourceId}
                         />
                     )

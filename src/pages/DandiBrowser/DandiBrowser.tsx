@@ -7,8 +7,7 @@ import useRoute from "../../useRoute"
 import Hyperlink from "../../components/Hyperlink"
 
 type Props = {
-    width: number
-    height: number
+  
 }
 
 export const getDandiApiHeaders = (useStaging: boolean): {[key: string]: string} => {
@@ -27,7 +26,7 @@ export const getDandiApiHeaders = (useStaging: boolean): {[key: string]: string}
 
 const topBarHeight = 12
 const searchBarHeight = 50
-const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
+const DandiBrowser: FunctionComponent<Props> = ({ }) => {
     const {staging, toggleStaging} = useRoute()
     const [searchText, setSearchText] = useState<string>('')
     const [searchResult, setSearchResults] = useState<DandisetSearchResultItem[]>([])
@@ -54,62 +53,51 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
     }, [searchText, stagingStr, staging])
 
     return (
-        <div style={{position: 'absolute', width, height, background: 'white'}}>
-            <div style={{position: 'absolute', width, height: topBarHeight, top: 0, overflow: 'hidden', background: 'white', display: 'flex', justifyContent: 'right'}}>
+        <div className="main">
+            <div style={{height: topBarHeight, background: 'white', display: 'flex', justifyContent: 'right'}}>
                 {/* <Checkbox checked={staging} onClick={toggleStaging} label="use staging site" /> */}
                 <span style={{fontSize: 10}}><Hyperlink onClick={toggleStaging}>use {staging ? 'main site' : 'staging site'}</Hyperlink></span>
                 <div style={{width: 50}} />
             </div>
-            <div style={{position: 'absolute', width, height: searchBarHeight, top: topBarHeight, overflow: 'hidden', background: 'white'}}>
+            <div style={{height: searchBarHeight, top: topBarHeight, background: 'white'}}>
                 <SearchBar
-                    width={width}
                     height={searchBarHeight}
                     onSearch={setSearchText}
                 />
             </div>
-            <div style={{position: 'absolute', width, height: height - searchBarHeight - topBarHeight, top: searchBarHeight + topBarHeight, overflow: 'hidden'}}>
-                <SearchResults
-                    width={width}
-                    height={height - searchBarHeight}
-                    searchResults={searchResult}
-                    useStaging={staging}
-                />
-            </div>
+            <SearchResults
+                searchResults={searchResult}
+                useStaging={staging}
+            />
         </div>
     )
 }
 
 type SearchBarProps = {
-    width: number
     height: number
     onSearch: (searchText: string) => void
 }
 
-const SearchBar: FunctionComponent<SearchBarProps> = ({width, height, onSearch}) => {
+const SearchBar: FunctionComponent<SearchBarProps> = ({ height, onSearch }) => {
     const [searchText, setSearchText] = useState<string>('')
     const searchButtonWidth = height
     
     return (
-        <div style={{paddingLeft: 15}}>
-            <div style={{position: 'absolute', left: 0, top: 0, width: searchButtonWidth, height}}>
-                <SearchButton width={searchButtonWidth} height={height} onClick={() => onSearch(searchText)} />
-            </div>
-
-            <div style={{position: 'absolute', left: searchButtonWidth, top: 0, width: width - searchButtonWidth, height}}>
-                <input
-                    style={{width: width - 40 - searchButtonWidth, height: 30, fontSize: 20, padding: 5}}
-                    type="text" placeholder="Search DANDI"
-                    onChange={e => setSearchText(e.target.value)}
-                    // when enter is pressed
-                    onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                            onSearch(searchText)
-                        }
-                    }}
-                    // do not spell check
-                    spellCheck={false}
-                />
-            </div>
+        <div style={{padding: '0px 15px', width: '100%', display: 'flex', flexWrap: 'wrap', alignItems: 'center'}}>
+            <SearchButton width={searchButtonWidth} height={height} onClick={() => onSearch(searchText)} />
+            <input
+                style={{ height: 30, flexGrow: '1', fontSize: 20, padding: 5 }}
+                type="text" placeholder="Search DANDI"
+                onChange={e => setSearchText(e.target.value)}
+                // when enter is pressed
+                onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                        onSearch(searchText)
+                    }
+                }}
+                // do not spell check
+                spellCheck={false}
+            />
         </div>
     )
 }
@@ -131,7 +119,7 @@ type SearchButtonProps = {
     height: number
 }
 
-const SearchButton: FunctionComponent<SearchButtonProps> = ({onClick, width, height}) => {
+const SearchButton: FunctionComponent<SearchButtonProps> = ({onClick, height}) => {
     return (
         <SmallIconButton
             icon={<Search />}

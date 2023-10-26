@@ -6,15 +6,13 @@ import { useProject } from "../ProjectPageContext"
 import prepareDandiUploadTask, { DandiUploadTask } from "../DandiUpload/prepareDandiUploadTask"
 
 type FileBrowserMenuBarProps = {
-    width: number
-    height: number
     selectedFileNames: string[]
     onResetSelection: () => void
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
 }
 
-const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload }) => {
+const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {

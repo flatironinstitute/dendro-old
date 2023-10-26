@@ -8,8 +8,6 @@ import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitio
 import { ElapsedTimeComponent } from "../FileEditor/NwbFileEditor";
 
 type Props = {
-    width: number,
-    height: number,
     jobId: string
 }
 
@@ -51,7 +49,7 @@ const useJob = (jobId: string) => {
     return {job, refreshJob, jobConsoleOutput}
 }
 
-const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
+const JobView: FunctionComponent<Props> = ({ jobId }) => {
     const {job, refreshJob, jobConsoleOutput} = useJob(jobId)
     const secretParameterNames = useMemo(() => {
         if (!job) return []
@@ -82,7 +80,7 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
         )
     }
     return (
-        <div style={{position: 'absolute', width, height, background: 'white', overflowY: 'auto'}}>
+        <div style={{ background: 'white', overflowY: 'auto'}}>
             <hr />
             <button onClick={refreshJob}>Refresh</button>
             <hr />

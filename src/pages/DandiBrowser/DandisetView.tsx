@@ -12,13 +12,11 @@ import useProjectsForTag from "./useProjectsForTag"
 
 type DandisetViewProps = {
     dandisetId: string
-    width: number
-    height: number
     useStaging?: boolean
     onImportItems?: (items: {dandisetId: string, dandisetVersion: string, assetItem: AssetsResponseItem}[]) => Promise<void>
 }
 
-const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, height, useStaging, onImportItems}) => {
+const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, useStaging, onImportItems}) => {
     const [dandisetResponse, setDandisetResponse] = useState<DandisetSearchResultItem | null>(null)
     const [dandisetVersionInfo, setDandisetVersionInfo] = useState<DandisetVersionInfo | null>(null)
     const [assetsResponses, setAssetsResponses] = useState<AssetsResponse[]>([])
@@ -172,8 +170,8 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
     const topBarHeight = canImport ? 30 : 0
     const buttonColor = selectedAssets.assetPaths.length > 0 ? 'darkgreen' : 'gray'
     return (
-        <div style={{position: 'absolute', width, height, overflowY: 'hidden'}}>
-            <div style={{position: 'absolute', top: 0, width, height: topBarHeight, borderBottom: 'solid 1px #ccc'}}>
+        <div style={{overflowY: 'scroll'}}>
+            <div style={{top: 0, height: topBarHeight, borderBottom: 'solid 1px #ccc'}}>
                 {
                     onImportItems && (
                         canImport ? (
@@ -188,7 +186,7 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
                     )
                 }
             </div>
-            <div style={{position: 'absolute', top: topBarHeight, width, height: height - topBarHeight, overflowY: 'auto'}}>
+            <div style={{ overflowY: 'auto'}}>
                 <div style={{fontSize: 20, fontWeight: 'bold', padding: 5}}>
                     <a href={externalLink} target="_blank" rel="noreferrer" style={{color: applicationBarColorDarkened}}>{X.dandiset.identifier} ({X.version}): {X.name}</a>
                 </div>

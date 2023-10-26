@@ -4,17 +4,13 @@ import NwbFileEditor from "./NwbFileEditor";
 
 type Props = {
     fileName: string
-    width: number
-    height: number
 }
 
-const FileEditor: FunctionComponent<Props> = ({fileName, width, height}) => {
+const FileEditor: FunctionComponent<Props> = ({fileName }) => {
     if (fileName.endsWith('.nwb')) {
         return (
             <NwbFileEditor
                 fileName={fileName}
-                width={width}
-                height={height}
             />
         )
     }

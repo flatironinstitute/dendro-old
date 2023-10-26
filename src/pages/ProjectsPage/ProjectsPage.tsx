@@ -5,14 +5,13 @@ import Hyperlink from "../../components/Hyperlink";
 import './ProjectsPage.css'
 
 type Props = {
-    width: number
-    height: number
+
 }
 
-const ProjectsPage: FunctionComponent<Props> = ({width, height}) => {
+const ProjectsPage: FunctionComponent<Props> = ({ }) => {
     const {setRoute} = useRoute()
     return (
-        <div className="projects-page">
+        <div className="projects-page main">
             <h3>Your projects</h3>
             <ProjectsTable />
             <hr />

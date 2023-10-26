@@ -8,8 +8,6 @@ import formatByteCount from "./formatByteCount"
 import { DandisetSearchResultItem } from "./types"
 
 type SearchResultsProps = {
-    width: number
-    height: number
     searchResults: DandisetSearchResultItem[]
     useStaging?: boolean
 }
@@ -17,7 +15,7 @@ type SearchResultsProps = {
 const defaultMinLeft = 200
 const defaultMaxLeft = 500
 
-const SearchResults: FunctionComponent<SearchResultsProps> = ({width, height, searchResults, useStaging}) => {
+const SearchResults: FunctionComponent<SearchResultsProps> = ({searchResults, useStaging}) => {
     // const [selectedDandisetItem, setSelectedDandisetItem] = useState<DandisetSearchResultItem | null>(null)
     const {route, setRoute} = useRoute()
     const dandisetId = route.page === 'dandiset' ? route.dandisetId : undefined
@@ -41,15 +39,10 @@ const SearchResults: FunctionComponent<SearchResultsProps> = ({width, height, se
 
     return (
         <Splitter
-            width={width}
-            height={height}
-            initialPosition={Math.max(defaultMinLeft, Math.min(defaultMaxLeft, width * 0.25))}
             direction='horizontal'
             hideSecondChild={!dandisetId}
         >
             <SearchResultsLeft
-                width={0}
-                height={0}
                 searchResults={searchResults}
                 setSelectedItem={setSelectedDandisetItem}
                 // onImportItems={onImportItems} // not actually needed
@@ -57,8 +50,6 @@ const SearchResults: FunctionComponent<SearchResultsProps> = ({width, height, se
             />
             <DandisetView
                 dandisetId={dandisetId || ''}
-                width={0}
-                height={0}
                 // onClickAsset={(assetItem: AssetsResponseItem) => {onClickAsset(selectedItem?.identifier || '', selectedItem?.most_recent_published_version?.version || 'draft', assetItem)}}
                 useStaging={useStaging}
                 onImportItems={undefined}
@@ -69,7 +60,11 @@ const SearchResults: FunctionComponent<SearchResultsProps> = ({width, height, se
 
 const SearchResultsLeft: FunctionComponent<SearchResultsProps & {setSelectedItem: (item: DandisetSearchResultItem) => void}> = ({width, height, searchResults, setSelectedItem}) => {
     return (
-        <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
+        <div style={{
+            overflowY: 'auto', 
+            height: '100%',
+            minWidth: defaultMinLeft
+        }}>
             {
                 searchResults.map((result, i) => (
                     <SearchResultItem
@@ -86,11 +81,10 @@ const SearchResultsLeft: FunctionComponent<SearchResultsProps & {setSelectedItem
 
 type SearchResultItemProps = {
     result: DandisetSearchResultItem
-    width: number
     onClick: () => void
 }
 
-const SearchResultItem: FunctionComponent<SearchResultItemProps> = ({result, width, onClick}) => {
+const SearchResultItem: FunctionComponent<SearchResultItemProps> = ({result, onClick}) => {
     const {identifier, created, modified, contact_person, most_recent_published_version, draft_version} = result
     const X = most_recent_published_version || draft_version
     if (!X) return <div>Unexpected error: no version</div>

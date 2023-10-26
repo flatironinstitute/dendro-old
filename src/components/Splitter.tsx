@@ -2,9 +2,9 @@ import React, { FunctionComponent, PropsWithChildren, ReactElement, useEffect, u
 import Draggable, { DraggableData, DraggableEvent } from 'react-draggable';
 
 interface Props {
-    width: number
-    height: number
-    initialPosition: number
+    // width: number
+    // height: number
+    initialPosition: number // Ratio?
     positionFromRight?: boolean
     onChange?: (newPosition: number) => void
     gripThickness?: number
@@ -23,13 +23,14 @@ const defaultGripMargin = 2
 const Draggable1: any = Draggable
 
 const Splitter: FunctionComponent<PropsWithChildren<Props>> = (props) => {
-    const {width, height, initialPosition, onChange, adjustable=true, positionFromRight=false, direction='horizontal', hideSecondChild} = props
+    const { width, height, initialPosition, onChange, adjustable=true, positionFromRight=false, direction='horizontal', hideSecondChild} = props
 
     const size1 = direction === 'horizontal' ? width : height
     // const size2 = direction === 'horizontal' ? height : width
 
     const [gripPosition, setGripPosition] = useState<number>(initialPosition)
     useEffect(() => {
+
         if (gripPosition > size1 - 4) {
             setGripPosition(size1 - 4)
         }
@@ -65,7 +66,7 @@ const Splitter: FunctionComponent<PropsWithChildren<Props>> = (props) => {
     }
 
     if (!child2) {
-        return <child1.type {...child1.props} width={width} height={height} />
+        return <child1.type {...child1.props}/>
     }
 
     let gripPositionFromLeft = positionFromRight ? size1 - gripPosition : gripPosition
@@ -79,36 +80,9 @@ const Splitter: FunctionComponent<PropsWithChildren<Props>> = (props) => {
     const size1A = gripPositionFromLeft - gripThickness / 2 - gripMargin
     const size1B = size1 - size1A - gripThickness - 2 * gripMargin
 
-    const style0: React.CSSProperties = {
-        top: 0,
-        left: 0,
-        width: width,
-        height: height,
-        overflow: 'hidden'
-    };
-    const style1: React.CSSProperties = {
-        left: 0,
-        top: 0,
-        width: direction === 'horizontal' ? size1A : width,
-        height: direction === 'horizontal' ? height : size1A,
-        zIndex: 0,
-        overflowY: direction === 'horizontal' ? 'auto' : 'hidden',
-        overflowX: direction === 'horizontal' ? 'hidden' : 'auto'
-    };
-    const style2: React.CSSProperties = {
-        left: direction === 'horizontal' ? size1A + gripThickness + 2 * gripMargin : 0,
-        top: direction === 'horizontal' ? 0 : size1A + gripThickness + 2 * gripMargin,
-        width: direction === 'horizontal' ? size1B : width,
-        height: direction === 'horizontal' ? height : size1B,
-        zIndex: 0,
-        overflowY: direction === 'horizontal' ? 'auto' : 'hidden',
-        overflowX: direction === 'horizontal' ? 'hidden' : 'auto'
-    };
     const styleGripOuter: React.CSSProperties = {
         left: 0,
         top: 0,
-        width: direction === 'horizontal' ? gripThickness + 2 * gripMargin : width,
-        height: direction === 'horizontal' ? height : gripThickness + 2 * gripMargin,
         backgroundColor: 'transparent',
         cursor: direction === 'horizontal' ? 'col-resize' : 'row-resize',
         zIndex: 9998
@@ -116,16 +90,12 @@ const Splitter: FunctionComponent<PropsWithChildren<Props>> = (props) => {
     const styleGrip: React.CSSProperties = {
         left: direction === 'horizontal' ? gripMargin : 0,
         top: direction === 'horizontal' ? 0 : gripMargin,
-        width: direction === 'horizontal' ? gripThickness : width,
-        height: direction === 'horizontal' ? height : gripThickness,
         background: 'rgb(230, 230, 230)',
         cursor: direction === 'horizontal' ? 'col-resize' : 'row-resize'
     };
     const styleGripInner: React.CSSProperties = {
         top: direction === 'horizontal' ? 0 : (gripThickness - gripInnerThickness) / 2,
         left: direction === 'horizontal' ? (gripThickness - gripInnerThickness) / 2 : 0,
-        width: direction === 'horizontal' ? gripInnerThickness : width,
-        height: direction === 'horizontal' ? height : gripInnerThickness,
         background: 'gray',
         cursor: direction === 'horizontal' ? 'col-resize' : 'row-resize'
     };
@@ -140,10 +110,17 @@ const Splitter: FunctionComponent<PropsWithChildren<Props>> = (props) => {
         setGripPosition(newGripPosition)
         onChange && onChange(newGripPosition)
     }
+
+    console.log('HIEE!', hideSecondChild)
     return (
-        <div className="splitter" style={{...style0, position: 'relative'}}>
-            <div key="child1" style={{...style1, position: 'absolute'}} className="SplitterChild">
-                <child1.type {...child1.props} width={direction === 'horizontal' ? size1A : width} height={direction === 'horizontal' ? height : size1A} />
+        <div style={{ 
+            position: 'relative', 
+            display: 'flex', 
+            height: '100%',
+            overflow: 'hidden'
+        }}>
+            <div key="child1" className="splitterChild" style={{ overflow: 'auto' }}>
+                <child1.type {...child1.props} />
             </div>
             {
                 adjustable && !hideSecondChild && (
@@ -164,10 +141,12 @@ const Splitter: FunctionComponent<PropsWithChildren<Props>> = (props) => {
                 )
             }
 
-            <div key="child2" style={{...style2, position: 'absolute'}} className="SplitterChild">
-                {/* <child2.type ref={ref} {...child2.props} width={direction === 'horizontal' ? size1B : width} height={direction === 'horizontal' ? height : size1B} /> */}
-                <child2.type {...child2.props} width={direction === 'horizontal' ? size1B : width} height={direction === 'horizontal' ? height : size1B} />
-            </div>
+            {
+                !hideSecondChild && <div key="child2" className="splitterChild" style={{ overflow: 'auto' }}>
+                    {/* <child2.type ref={ref} {...child2.props} width={direction === 'horizontal' ? size1B : width} height={direction === 'horizontal' ? height : size1B} /> */}
+                    <child2.type {...child2.props} />
+                </div>
+            }
         </div>
     )
 }

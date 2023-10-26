@@ -9,12 +9,10 @@ import JobsTable from "../ProjectPage/JobsWindow/JobsTable";
 import ComputeResourceAppsTable from "./ComputeResourceAppsTable";
 
 type Props = {
-    width: number
-    height: number
     computeResourceId: string
 }
 
-const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeResourceId}) => {
+const ComputeResourcesPage: FunctionComponent<Props> = ({ computeResourceId }) => {
     const [computeResource, setComputeResources] = useState<ProtocaasComputeResource>()
 
     const auth = useGithubAuth()
@@ -73,7 +71,7 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
     const jobsTableHeight = 500
 
     return (
-        <div style={{padding: 20}}>
+        <div style={{padding: 20, overflowY: 'auto'}}>
             <h3>
                 Compute resource: {computeResource?.name}
             </h3>
@@ -103,7 +101,6 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
             <hr />
             <h4>Apps</h4>
             {computeResource && <ComputeResourceAppsTable
-                width={width}
                 height={appsTableHeight}
                 computeResource={computeResource}
                 onNewApp={handleNewApp}
@@ -113,7 +110,6 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
             <hr />
             <h4>Jobs</h4>
             <JobsTable
-                width={width}
                 height={jobsTableHeight}
                 jobs={sortedJobs}
                 fileName={""}

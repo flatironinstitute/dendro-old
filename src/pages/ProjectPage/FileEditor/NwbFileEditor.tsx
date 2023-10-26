@@ -15,16 +15,12 @@ import { getDandiApiHeaders } from "../../DandiBrowser/DandiBrowser";
 
 type Props = {
     fileName: string
-    width: number
-    height: number
 }
 
-const NwbFileEditor: FunctionComponent<Props> = ({fileName, width, height}) => {
+const NwbFileEditor: FunctionComponent<Props> = ({ fileName }) => {
     return (
         <Splitter
-            width={width}
-            height={height}
-            initialPosition={height * 2 / 3}
+            initialPosition={2 / 3}
             direction="vertical"
         >
             <NwbFileEditorChild
@@ -157,7 +153,7 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
     }, [jobs, nbFile])
 
     return (
-        <div style={{position: 'absolute', width, height, background: 'white'}}>
+        <div style={{background: 'white'}}>
             <hr />
             <table className="table1">
                 <tbody>

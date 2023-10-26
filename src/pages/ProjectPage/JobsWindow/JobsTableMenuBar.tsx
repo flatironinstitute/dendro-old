@@ -5,15 +5,13 @@ import { confirm } from "../../../confirm_prompt_alert"
 import { useProject } from "../ProjectPageContext"
 
 type JobsTableMenuBarProps = {
-    width: number
-    height: number
     selectedJobIds: string[]
     onResetSelection: () => void
     createJobEnabled?: boolean
     createJobTitle?: string
 }
 
-const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, height, selectedJobIds, onResetSelection, createJobEnabled, createJobTitle}) => {
+const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({selectedJobIds, onResetSelection, createJobEnabled, createJobTitle}) => {
     const {deleteJob, refreshJobs, projectRole} = useProject()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {

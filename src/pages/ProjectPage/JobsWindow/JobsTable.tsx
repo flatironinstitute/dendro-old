@@ -10,8 +10,8 @@ import { Checkbox, selectedStringsReducer } from "../FileBrowser/FileBrowser2";
 import JobsTableMenuBar from "./JobsTableMenuBar";
 
 type Props = {
-    width: number
-    height: number
+    width?: number
+    height?: number
     fileName: string
     jobs: ProtocaasJob[] | undefined
     onJobClicked: (jobId: string) => void
@@ -35,7 +35,7 @@ type RowItem = {
     role: string
 }
 
-const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, onJobClicked, createJobEnabled, createJobTitle }) => {
+const JobsTable: FunctionComponent<Props> = ({ height = 100, fileName, jobs, onJobClicked, createJobEnabled, createJobTitle }) => {
     const sortedJobs = useMemo(() => {
         if (!jobs) return []
         return [...jobs].sort((a, b) => (b.timestampCreated - a.timestampCreated))
@@ -212,18 +212,16 @@ const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, on
     }, [sortedJobs, selectedJobIds])
 
     return (
-        <div style={{position: 'relative', width, height}}>
-            <div style={{position: 'absolute', width: width - hPadding * 2, height: menuBarHeight - vPadding * 2, paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
+        <div style={{position: 'relative', height}}>
+            <div style={{ height: menuBarHeight - vPadding * 2, paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
                 <JobsTableMenuBar
-                    width={width - hPadding * 2}
-                    height={menuBarHeight - vPadding * 2}
                     selectedJobIds={Array.from(selectedJobIds)}
                     onResetSelection={() => selectedJobIdsDispatch({type: 'set', values: new Set<string>()})}
                     createJobEnabled={createJobEnabled}
                     createJobTitle={createJobTitle}
                 />
             </div>
-            <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
+            <div style={{ height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
                 <table className="scientific-table" style={{fontSize: 12}}>
                     <thead>
                         <tr>

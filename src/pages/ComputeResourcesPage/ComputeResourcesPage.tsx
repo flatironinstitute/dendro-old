@@ -11,7 +11,7 @@ type Props = {
 const ComputeResourcesPage: FunctionComponent<Props> = ({width, height}) => {
     return (
         <SetupComputeResources>
-            <div className="compute-resources-page">
+            <div className="compute-resources-page main">
                 <h3>Your compute resources</h3>
                 <ComputeResourcesTable />
                 <hr />

@@ -11,13 +11,11 @@ type Props = {
     currentTabId: string | undefined
     setCurrentTabId: (id: string) => void
     onCloseTab: (id: string) => void
-    width: number
-    height: number
 }
 
 const tabBarHeight = 30
 
-const TabWidget: FunctionComponent<PropsWithChildren<Props>> = ({children, tabs, currentTabId, setCurrentTabId, onCloseTab, width, height}) => {
+const TabWidget: FunctionComponent<PropsWithChildren<Props>> = ({children, tabs, currentTabId, setCurrentTabId, onCloseTab}) => {
     const currentTabIndex = useMemo(() => {
         if (!currentTabId) return undefined
         const index = tabs.findIndex(t => t.id === currentTabId)
@@ -28,10 +26,7 @@ const TabWidget: FunctionComponent<PropsWithChildren<Props>> = ({children, tabs,
     if ((children2 || []).length !== tabs.length) {
         throw Error(`TabWidget: incorrect number of tabs ${(children2 || []).length} <> ${tabs.length}`)
     }
-    const hMargin = 8
-    const vMargin = 8
-    const W = (width || 300) - hMargin * 2
-    const H = height - vMargin * 2
+
     const [hasBeenVisible, setHasBeenVisible] = useState<number[]>([])
     useEffect(() => {
         if (currentTabIndex === undefined) return
@@ -45,10 +40,10 @@ const TabWidget: FunctionComponent<PropsWithChildren<Props>> = ({children, tabs,
     }, [setCurrentTabId, tabs])
     return (
         <div
-            style={{position: 'absolute', left: hMargin, top: vMargin, width: W, height: H, overflow: 'hidden'}}
+            style={{overflow: 'hidden'}}
             className="TabWidget"
         >
-            <div key="tabwidget-bar" style={{position: 'absolute', left: 0, top: 0, width: W, height: tabBarHeight }}>
+            <div key="tabwidget-bar" style={{ height: tabBarHeight }}>
                 <TabWidgetTabBar
                     tabs={tabs}
                     currentTabIndex={currentTabIndex}
@@ -62,7 +57,7 @@ const TabWidget: FunctionComponent<PropsWithChildren<Props>> = ({children, tabs,
                     return (
                         <div key={`child-${i}`} style={{visibility: visible ? undefined : 'hidden', overflowY: 'hidden', overflowX: 'hidden', position: 'absolute', left: 0, top: tabBarHeight, width: W, height: H, background: 'white'}}>
                             {(visible || hasBeenVisible.includes(i)) && (
-                                <c.type {...c.props} width={W} height={H - tabBarHeight}/>
+                                <c.type {...c.props}/>
                             )}
                         </div>
                     )

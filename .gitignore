@@ -1,6 +1,8 @@
 tmp
 __pycache__
 
+.env
+
 # Logs
 logs
 *.log

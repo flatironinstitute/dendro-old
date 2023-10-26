@@ -11,18 +11,17 @@ import ProjectSettingsWindow from "./ProjectSettingsWindow";
 import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay";
 
 type Props = {
-    width: number
-    height: number
+
 }
 
-const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
+const ProjectHome: FunctionComponent<Props> = ({ }) => {
     const {setRoute} = useRoute()
     const {project, files, jobs, projectId} = useProject()
 
     const {visible: settingsWindowVisible, handleOpen: openSettingsWindow, handleClose: closeSettingsWindow} = useModalDialog()
 
     return (
-        <div style={{position: 'absolute', width, height, overflow: 'hidden', padding: 10, background: 'white'}}>
+        <div id="home" style={{overflow: 'hidden', padding: 10, background: 'white'}}>
             <div style={{fontSize: 20, fontWeight: 'bold'}}>Project: {project?.name}</div>
             &nbsp;
             <table className="table1" style={{maxWidth: 500}}>

@@ -4,7 +4,6 @@ import SmallIconButton from "../../components/SmallIconButton"
 import { confirm } from "../../confirm_prompt_alert"
 
 type ComputeResourceAppsTableMenuBarProps = {
-    width: number
     height: number
     selectedAppNames: string[]
     onDeleteApps: (appNames: string[]) => void
@@ -12,7 +11,7 @@ type ComputeResourceAppsTableMenuBarProps = {
     onEditApp: () => void
 }
 
-const ComputeResourceAppsTableMenuBar: FunctionComponent<ComputeResourceAppsTableMenuBarProps> = ({width, height, selectedAppNames, onAddApp, onDeleteApps, onEditApp}) => {
+const ComputeResourceAppsTableMenuBar: FunctionComponent<ComputeResourceAppsTableMenuBarProps> = ({ selectedAppNames, onAddApp, onDeleteApps, onEditApp}) => {
     const handleDelete = useCallback(async () => {
         const okay = await confirm(`Are you sure you want to delete these ${selectedAppNames.length} apps?`)
         if (!okay) return

@@ -3,11 +3,9 @@ import { useProject } from "../ProjectPageContext"
 
 type FigurlFileEditorProps = {
     fileName: string
-    width: number
-    height: number
 }
 
-const FigurlFileEditor: FunctionComponent<FigurlFileEditorProps> = ({fileName, width, height}) => {
+const FigurlFileEditor: FunctionComponent<FigurlFileEditorProps> = ({ fileName }) => {
     if (!fileName.endsWith('.figurl')) {
         throw Error('Unexpected file extension: ' + fileName)
     }

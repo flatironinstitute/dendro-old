@@ -33,7 +33,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
     }, [])
 
     return (
-        <span>
+        <span style={{ gridArea: 'a'}}>
             <AppBar position="static" style={{height: applicationBarHeight - 10, color: 'black', background: applicationBarColor}}>
                 <Toolbar style={{minHeight: applicationBarHeight - 10}}>
                     <img src="/protocaas.png" alt="logo" height={30} style={{paddingBottom: 3, cursor: 'pointer'}} onClick={onHome} />

@@ -12,8 +12,6 @@ import formatByteCount from './formatByteCount';
 import { DandiUploadTask } from '../DandiUpload/prepareDandiUploadTask';
 
 type Props = {
-    width: number
-    height: number
     files: ProtocaasFile[] | undefined
     onOpenFile: (path: string) => void
     onDeleteFile: (path: string) => void
@@ -117,7 +115,7 @@ type TreeNode = {
     file?: ProtocaasFile
 }
 
-const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload}) => {
+const FileBrowser2: FunctionComponent<Props> = ({ onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload}) => {
     const {currentTabName} = useProject()
 
     const rootNode = useMemo(() => {
@@ -269,18 +267,16 @@ const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, file
     }, [files, selectedFileNames])
     
     return (
-        <div style={{position: 'absolute', width, height, userSelect: 'none'}}>
-            <div style={{position: 'absolute', width: width - hPadding * 2, height: menuBarHeight - vPadding * 2, paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
+        <div style={{userSelect: 'none'}}>
+            <div style={{ paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
                 <FileBrowserMenuBar
-                    width={width - hPadding * 2}
-                    height={menuBarHeight - vPadding * 2}
                     selectedFileNames={Array.from(selectedFileNames)}
                     onResetSelection={() => selectedFileNamesDispatch({type: 'set', values: new Set()})}
                     onRunBatchSpikeSorting={onRunBatchSpikeSorting}
                     onDandiUpload={onDandiUpload}
                 />
             </div>
-            <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
+            <div style={{overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
                 <table className="file-browser-table">
                     <thead>
                         <tr>

@@ -9,13 +9,11 @@ import { confirm } from "../../confirm_prompt_alert";
 import { DandiUploadTask } from "./DandiUpload/prepareDandiUploadTask";
 
 type ProjectFilesProps = {
-    width: number
-    height: number
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
 }
 
-const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onDandiUpload}) => {
+const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({onRunBatchSpikeSorting, onDandiUpload}) => {
     const {filesIncludingPending, openTab, deleteFile, closeTab, openTabs, refreshFiles} = useProject()
 
     const handleOpenFile = useCallback((fileName: string) => {
@@ -33,15 +31,11 @@ const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRu
 
     return (
         <Splitter
-            width={width}
-            height={height}
-            initialPosition={width / 2}
+            initialPosition={1 / 2}
             direction="horizontal"
             hideSecondChild={openTabs.length === 0}
         >
             <FileBrowser2
-                width={0}
-                height={0}
                 files={filesIncludingPending}
                 onOpenFile={handleOpenFile}
                 onDeleteFile={handleDeleteFile}
