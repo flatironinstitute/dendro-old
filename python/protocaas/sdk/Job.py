@@ -24,7 +24,7 @@ class Job:
     ) -> None:
         self._job_id = job_id
         self._job_private_key = job_private_key
-        self._api_request_job_timestamp = time.time()
+        self._api_request_job_timestamp = 0
         resp = self._api_request_job_if_needed()
         if resp is None:
             raise JobApiRequestException('Unable to get job info from protocaas API')
