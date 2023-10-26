@@ -5,7 +5,7 @@ import getAuthorizationHeaderForUrl from "./getAuthorizationHeaderForUrl";
 type Auth = GithubAuthData
 
 const queryParams = new URLSearchParams(window.location.search)
-const apiBase = queryParams.get('deployed-api') == '1' ? `https://protocaas.vercel.app` : ''
+export const apiBase = queryParams.get('deployed-api') == '1' ? `https://protocaas.vercel.app` : ''
 
 export const getRequest = async (url: string, auth: Auth | undefined): Promise<any> => {
     const response = await fetch(url, {
