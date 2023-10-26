@@ -18,11 +18,11 @@ class ProtocaasAppException(Exception):
 class App:
     """An app"""
     def __init__(
-        self, 
-        name: str, 
-        *, 
-        help: str, 
-        app_image: Union[str, None] = None, 
+        self,
+        name: str,
+        *,
+        help: str,
+        app_image: Union[str, None] = None,
         app_executable: Union[str, None] = None
     ) -> None:
         """Construct a new Protocaas App
