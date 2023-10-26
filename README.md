@@ -1,3 +1,4 @@
+[![testing](https://github.com/scratchrealm/protocaas/actions/workflows/tests.yml/badge.svg)](https://github.com/scratchrealm/protocaas/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/scratchrealm/protocaas/graph/badge.svg?token=B2DUYR34RZ)](https://codecov.io/gh/scratchrealm/protocaas)
 
 # Protocaas (prototype v3) - Neuroscience Analysis Web App
