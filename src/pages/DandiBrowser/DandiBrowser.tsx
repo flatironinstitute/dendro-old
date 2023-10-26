@@ -57,7 +57,7 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
         <div style={{position: 'absolute', width, height, background: 'white'}}>
             <div style={{position: 'absolute', width, height: topBarHeight, top: 0, overflow: 'hidden', background: 'white', display: 'flex', justifyContent: 'right'}}>
                 {/* <Checkbox checked={staging} onClick={toggleStaging} label="use staging site" /> */}
-                <span style={{fontSize: 10}}><Hyperlink onClick={toggleStaging}>use {staging ? 'production' : 'staging'}</Hyperlink></span>
+                <span style={{fontSize: 10}}><Hyperlink onClick={toggleStaging}>use {staging ? 'main site' : 'staging site'}</Hyperlink></span>
                 <div style={{width: 50}} />
             </div>
             <div style={{position: 'absolute', width, height: searchBarHeight, top: topBarHeight, overflow: 'hidden', background: 'white'}}>

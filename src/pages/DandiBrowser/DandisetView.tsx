@@ -195,12 +195,14 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
                 <div>
                     <span>PROJECTS:&nbsp;</span>
                     {
-                        projects && projects.map((project) => (
+                        projects ? projects.map((project) => (
                             <span key={project.projectId}>
                                 <Hyperlink onClick={() => setRoute({page: 'project', projectId: project.projectId})}>{project.name}</Hyperlink>
                                 <span> | </span>
                             </span>
-                        ))
+                        )) : (
+                            <span style={{color: 'gray'}}>Loading projects...</span>
+                        )
                     }
                     <Hyperlink onClick={handleCreateProject}>Create a new protocaas project for this dandiset</Hyperlink>
                 </div>

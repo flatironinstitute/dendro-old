@@ -1,13 +1,13 @@
+import { Computer, Help, Key, Login, Logout, Work } from "@mui/icons-material";
 import { AppBar, Toolbar } from "@mui/material";
 import { FunctionComponent, useCallback, useMemo, useState } from "react";
-import useRoute from "./useRoute";
-import SmallIconButton from "./components/SmallIconButton";
-import { useGithubAuth } from "./GithubAuth/useGithubAuth";
-import { Computer, Help, Key, Login, Logout } from "@mui/icons-material";
-import ModalWindow from "./components/ModalWindow/ModalWindow";
-import GitHubLoginWindow from "./GitHub/GitHubLoginWindow";
 import ApiKeysWindow from "./ApiKeysWindow/ApiKeysWindow";
+import GitHubLoginWindow from "./GitHub/GitHubLoginWindow";
+import { useGithubAuth } from "./GithubAuth/useGithubAuth";
 import UserIdComponent from "./UserIdComponent";
+import ModalWindow from "./components/ModalWindow/ModalWindow";
+import SmallIconButton from "./components/SmallIconButton";
+import useRoute from "./useRoute";
 
 type Props = {
     // none
@@ -52,6 +52,14 @@ const ApplicationBar: FunctionComponent<Props> = () => {
                             icon={<Computer />}
                             onClick={() => setRoute({page: 'compute-resources'})}
                             title={`Configure compute resources`}
+                        />
+                    </span>
+                    &nbsp;&nbsp;
+                    <span>
+                        <SmallIconButton
+                            icon={<Work />}
+                            onClick={() => setRoute({page: 'projects'})}
+                            title={`Manage projects`}
                         />
                     </span>
                     &nbsp;&nbsp;

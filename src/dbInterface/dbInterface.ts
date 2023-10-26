@@ -79,7 +79,7 @@ export const fetchProjectsForTag = async (tag: string, auth: Auth): Promise<Prot
     return projects
 }
 
-export const fetchProjectsForUser = async (projectId: string, auth: Auth): Promise<ProtocaasProject[]> => {
+export const fetchProjectsForUser = async (auth: Auth): Promise<ProtocaasProject[]> => {
     const url = `/api/gui/projects`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchProjects: ${response.error}`)

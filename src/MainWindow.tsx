@@ -10,6 +10,7 @@ import RegisterComputeResourcePage from "./pages/RegisterComputeResourcePage/Reg
 import ComputeResourcePage from "./pages/ComputeResourcePage/ComputeResourcePage";
 import ComputeResourcesPage from "./pages/ComputeResourcesPage/ComputeResourcesPage";
 import GitHubAuthPage from "./GitHub/GitHubAuthPage";
+import ProjectsPage from "./pages/ProjectsPage/ProjectsPage";
 
 type Props = {
     // none
@@ -41,6 +42,8 @@ const MainWindow: FunctionComponent<Props> = () => {
                         />
                     ) : route.page === 'compute-resources' ? (
                         <ComputeResourcesPage width={width} height={height} />
+                    ) : route.page === 'projects' ? (
+                        <ProjectsPage width={width} height={height} />
                     ) : route.page === 'register-compute-resource' ? (
                         <RegisterComputeResourcePage />
                     ) : route.page === 'github-auth' ? (
