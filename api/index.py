@@ -6,8 +6,12 @@ from fastapi import FastAPI
 # So it was building each and every one of them, even though index.py should be the only one.
 # See https://github.com/orgs/vercel/discussions/46
 
+import os
+thisdir = os.path.dirname(os.path.realpath(__file__))
+
 import sys
-sys.path.append("../python")
+print(f'This dir: {thisdir}')
+sys.path.append(thisdir + "/../python")
 from protocaas.api_helpers.routers.processor.router import router as processor_router
 from protocaas.api_helpers.routers.compute_resource.router import router as compute_resource_router
 from protocaas.api_helpers.routers.client.router import router as client_router
