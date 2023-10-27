@@ -6,6 +6,7 @@ import time
 import subprocess
 import requests
 from ..common._api_request import _processor_get_api_request, _processor_put_api_request
+from ..mock import using_mock
 
 
 # This function is called internally by the compute resource daemon through the protocaas CLI
@@ -47,9 +48,14 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             # every 30 minutes, request a new upload url (the old one expires after 1 hour)
             console_output_upload_url_timestamp = time.time()
             # request a signed upload url for the console output
-            console_output_upload_url = _get_console_output_upload_url(job_id=job_id, job_private_key=job_private_key)
+            if using_mock():
+                console_output_upload_url = None
+            else:
+                console_output_upload_url = _get_console_output_upload_url(job_id=job_id, job_private_key=job_private_key)
         if console_output_upload_url is not None:
             _upload_console_output(console_output_upload_url=console_output_upload_url, output=output)
+        if using_mock():
+            print('MOCK: Console output: ' + output)
 
     num_status_check_failures = 0 # keep track of this so we don't do infinite retries
     succeeded = False # whether we succeeded in running the job without an exception
@@ -162,6 +168,13 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
 
 def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
+    if using_mock():
+        proc = subprocess.Popen(
+            ['protocaas', 'run-mock-job'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
+        return proc
     # Set the appropriate environment variables and launch the job in a background process
     cmd = app_executable
     env = os.environ.copy()

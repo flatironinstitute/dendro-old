@@ -5,6 +5,7 @@ from ..sdk.App import App
 from ..common._api_request import _processor_put_api_request
 from ..common.protocaas_types import ComputeResourceSlurmOpts
 from ._run_job_in_aws_batch import _run_job_in_aws_batch
+from ..mock import using_mock
 
 
 class JobException(Exception):
@@ -139,6 +140,30 @@ def _run_local_job(*,
     run_process: bool,
     return_shell_command: bool,
 ):
+    if using_mock():
+        print('Running job directly for mock testing')
+
+        from ..sdk.App import App
+
+        app_instance: App = _load_app_from_main(app_executable)
+
+        old_environ = {}
+        for k, v in env_vars.items():
+            old_environ[k] = os.environ.get(k, None)
+            os.environ[k] = v
+
+        # Call the make_spec_file method
+        print('MOCK: running app instance')
+        app_instance.run()
+        print('MOCK: Done running app instance')
+
+        for k, v in old_environ.items():
+            if v is None:
+                del os.environ[k]
+            else:
+                os.environ[k] = v
+        return ''
+
     if run_process:
         print(f'Running: {app_executable}')
         subprocess.Popen(
@@ -239,3 +264,26 @@ def _get_kachery_cloud_credentials():
         return None, None
     client_id, private_key = _get_client_keys_hex()
     return client_id, private_key
+
+def _load_app_from_main(py_file_path: str):
+    import sys
+
+    # Split the file path into directory and module name (without .py)
+    dir_path, file_name = os.path.split(py_file_path)
+    module_name = os.path.splitext(file_name)[0]
+    if module_name != 'main':
+        raise Exception(f'Unexpected module name (expected main): {module_name}')
+
+    # Save the original sys.path
+    original_sys_path = list(sys.path)
+
+    # Append the directory path to sys.path
+    sys.path.append(dir_path)
+
+    try:
+        from main import app # type: ignore
+    finally:
+        # Restore the original sys.path
+        sys.path = original_sys_path
+
+    return app

@@ -1,7 +1,12 @@
+import os
 from protocaas.client import load_project
 
 
 def test_load_project():
+    if os.getenv('NO_INTERNET') == '1':
+        print('Skipping test_load_project because NO_INTERNET is set to 1')
+        return
+
     # if this project or file disappears then we'll need to update that here
     project_id = 'ae9596fb'
     file_name = 'imported/000618/sub-paired-english/sub-paired-english_ses-paired-english-m108-191125-163508_ecephys.nwb'
