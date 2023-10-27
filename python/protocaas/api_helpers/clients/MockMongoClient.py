@@ -53,16 +53,11 @@ class MockMongoCollection:
                 return
         raise KeyError("No document matches query")
     async def delete_many(self, query: Dict):
-        for key, document in self._documents.items():
+        document_items = list(self._documents.items()) # need to do it this way because we're deleting from the dict
+        for key, document in document_items:
             if _document_matches_query(document, query):
                 del self._documents[key]
         return
-    async def count_documents(self, query: Dict):
-        count = 0
-        for document in self._documents.values():
-            if _document_matches_query(document, query):
-                count += 1
-        return count
 
 class MockMongoCursor:
     def __init__(self, documents: Dict[str, Dict], query: Dict):
@@ -89,8 +84,12 @@ def _document_matches_query(document: Dict, query: Dict) -> bool:
             else:
                 raise NotImplementedError()
         else:
-            if document[key] != value:
-                return False
+            if isinstance(document[key], list):
+                if value not in document[key]:
+                    return False
+            else:
+                if document[key] != value:
+                    return False
     return True
 
 # The below are used for reference. Uncomment to test the above in the linter.

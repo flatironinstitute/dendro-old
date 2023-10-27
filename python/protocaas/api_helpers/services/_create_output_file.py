@@ -4,6 +4,7 @@ from ..clients._get_mongo_client import _get_mongo_client
 from ..core._create_random_id import _create_random_id
 from ._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 from ..core.protocaas_types import ProtocaasFile
+from ...mock import using_mock
 
 
 async def _create_output_file(*,
@@ -13,7 +14,10 @@ async def _create_output_file(*,
     user_id: str,
     job_id: str
 ) -> str: # returns the ID of the created file
-    size = await _get_size_for_remote_file(url)
+    if not using_mock():
+        size = await _get_size_for_remote_file(url)
+    else:
+        size = 1 # size of mock file
 
     client = _get_mongo_client()
     projects_collection = client['protocaas']['projects']

@@ -180,11 +180,8 @@ class App:
             setattr(context, output.name, output_file)
         for parameter in processor._parameters:
             job_parameter = next((p for p in job.parameters if p.name == parameter.name), None)
-            if job_parameter is None:
-                # The parameter was not set, so use the default
-                setattr(context, parameter.name, parameter.default)
-            else:
-                setattr(context, parameter.name, job_parameter.value)
+            parameter_value = parameter.default if job_parameter is None else job_parameter.value
+            _setattr_where_name_may_have_dots(context, parameter.name, parameter_value)
 
         # Run the processor function
         processor_class.run(context)
@@ -217,3 +214,15 @@ def _get_job(*, job_id: str, job_private_key: str) -> Job:
         job_private_key=job_private_key
     )
     return job
+
+def _setattr_where_name_may_have_dots(obj, name, value):
+    """Set an attribute on an object, where the name may have dots in it"""
+    if '.' not in name:
+        setattr(obj, name, value)
+        return
+    parts = name.split('.')
+    for part in parts[:-1]:
+        if not hasattr(obj, part):
+            setattr(obj, part, ContextObject())
+        obj = getattr(obj, part)
+    setattr(obj, parts[-1], value)

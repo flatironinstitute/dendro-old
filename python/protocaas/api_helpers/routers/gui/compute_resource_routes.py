@@ -8,6 +8,7 @@ from ...core.protocaas_types import ProtocaasComputeResource, ProtocaasComputeRe
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...clients.db import fetch_compute_resource, fetch_compute_resources_for_user, update_compute_resource, fetch_compute_resource_jobs
 from ...clients.db import register_compute_resource as db_register_compute_resource
+from ...clients.db import delete_compute_resource as db_delete_compute_resource
 from ...core.settings import get_settings
 from ....mock import using_mock
 
@@ -109,7 +110,7 @@ async def delete_compute_resource(compute_resource_id, github_access_token: str 
         if compute_resource.ownerId != user_id:
             raise AuthException('User does not have permission to delete this compute resource')
 
-        await delete_compute_resource(compute_resource_id)
+        await db_delete_compute_resource(compute_resource_id)
 
         return DeleteComputeResourceResponse(success=True)
     except Exception as e:

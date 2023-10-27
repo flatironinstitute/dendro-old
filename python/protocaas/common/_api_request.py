@@ -47,36 +47,37 @@ def _compute_resource_get_api_request(*,
         raise
     return resp.json()
 
-def _compute_resource_post_api_request(*,
-    url_path: str,
-    compute_resource_id: str,
-    compute_resource_private_key: str,
-    data: dict
-):
-    payload = url_path
-    signature = _sign_message_str(payload, compute_resource_id, compute_resource_private_key)
+# not used right now
+# def _compute_resource_post_api_request(*,
+#     url_path: str,
+#     compute_resource_id: str,
+#     compute_resource_private_key: str,
+#     data: dict
+# ):
+#     payload = url_path
+#     signature = _sign_message_str(payload, compute_resource_id, compute_resource_private_key)
 
-    headers = {
-        'compute-resource-id': compute_resource_id,
-        'compute-resource-payload': payload,
-        'compute-resource-signature': signature
-    }
+#     headers = {
+#         'compute-resource-id': compute_resource_id,
+#         'compute-resource-payload': payload,
+#         'compute-resource-signature': signature
+#     }
 
-    test_client = _globals['test_client']
-    if test_client is None:
-        url = f'{protocaas_url}{url_path}'
-        client = requests
-    else:
-        assert url_path.startswith('/api')
-        url = url_path
-        client = test_client
-    try:
-        resp = client.post(url, headers=headers, json=data, timeout=60)
-        resp.raise_for_status()
-    except Exception as e:
-        print(f'Error in compute resource post api request for {url}; {e}')
-        raise
-    return resp.json()
+#     test_client = _globals['test_client']
+#     if test_client is None:
+#         url = f'{protocaas_url}{url_path}'
+#         client = requests
+#     else:
+#         assert url_path.startswith('/api')
+#         url = url_path
+#         client = test_client
+#     try:
+#         resp = client.post(url, headers=headers, json=data, timeout=60)
+#         resp.raise_for_status()
+#     except Exception as e:
+#         print(f'Error in compute resource post api request for {url}; {e}')
+#         raise
+#     return resp.json()
 
 def _compute_resource_put_api_request(*,
     url_path: str,

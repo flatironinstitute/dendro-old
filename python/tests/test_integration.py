@@ -24,17 +24,22 @@ async def test_integration(tmp_path):
     from protocaas.api_helpers.routers.gui.project_routes import GetProjectsResponse
     from protocaas.api_helpers.routers.gui.project_routes import DeleteProjectResponse
     from protocaas.api_helpers.routers.gui.project_routes import GetJobsResponse
-    from protocaas.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse, CreateJobRequestInputParameter
+    from protocaas.api_helpers.routers.gui.file_routes import SetFileRequest, SetFileResponse
+    from protocaas.api_helpers.routers.gui.file_routes import GetFilesResponse, GetFileResponse
+    from protocaas.api_helpers.routers.gui.file_routes import DeleteFileResponse
+    from protocaas.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse, CreateJobRequestInputParameter, CreateJobRequestInputFile, CreateJobRequestOutputFile
     from protocaas.api_helpers.routers.gui.job_routes import GetJobResponse
     from protocaas.api_helpers.routers.gui.job_routes import DeleteJobResponse
-    from protocaas.api_helpers.routers.gui.compute_resource_routes import SetComputeResourceAppsRequest, SetComputeResourceAppsResponse, GetComputeResourceResponse
+    from protocaas.api_helpers.routers.gui.compute_resource_routes import SetComputeResourceAppsRequest, SetComputeResourceAppsResponse, GetComputeResourceResponse, GetComputeResourcesResponse, DeleteComputeResourceResponse
+    from protocaas.api_helpers.routers.gui.compute_resource_routes import GetJobsForComputeResourceResponse, GetPubsubSubscriptionResponse
+    from protocaas.api_helpers.routers.client.router import GetProjectResponse as ClientGetProjectResponse, GetProjectFilesResponse as ClientGetProjectFilesResponse, GetProjectJobsResponse as ClientGetProjectJobsResponse
     from protocaas.compute_resource.register_compute_resource import register_compute_resource
     from protocaas.compute_resource.start_compute_resource import start_compute_resource
     from protocaas.common._api_request import _use_api_test_client
     from protocaas.api_helpers.routers.gui.compute_resource_routes import RegisterComputeResourceRequest, RegisterComputeResourceResponse
     from protocaas.mock import set_use_mock
     from protocaas.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
-    from protocaas.common._api_request import _gui_get_api_request, _gui_post_api_request, _gui_put_api_request, _gui_delete_api_request
+    from protocaas.common._api_request import _gui_get_api_request, _gui_post_api_request, _gui_put_api_request, _gui_delete_api_request, _client_get_api_request
     from protocaas.sdk._make_spec_file import make_app_spec_file_function
 
     tmpdir = str(tmp_path)
@@ -88,10 +93,16 @@ async def test_integration(tmp_path):
         resp = SetComputeResourceAppsResponse(**resp)
         assert resp.success
 
-        # # Generate compute resource keys
-        # public_key_hex, private_key_hex = generate_keypair()
-        # compute_resource_id = public_key_hex
-        # compute_resource_private_key = private_key_hex
+        # gui: Get compute resources for user
+        resp = _gui_get_api_request(url_path='/api/gui/compute_resources', github_access_token=github_access_token)
+        resp = GetComputeResourcesResponse(**resp)
+        assert resp.success
+        assert len(resp.computeResources) == 1
+
+        # gui: Get pubsub subscription
+        resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/pubsub_subscription', github_access_token=github_access_token)
+        resp = GetPubsubSubscriptionResponse(**resp)
+        assert resp.success
 
         # gui: Create projects
         req = CreateProjectRequest(
@@ -148,6 +159,12 @@ async def test_integration(tmp_path):
         assert project.timestampModified > 0
         assert project.computeResourceId is None
 
+        # client: Get project
+        resp = _client_get_api_request(url_path=f'/api/client/projects/{project1_id}')
+        resp = ClientGetProjectResponse(**resp)
+        assert resp.success
+        assert resp.project.projectId == project1_id
+
         # gui: Set project publicly readable
         req = SetProjectPubliclyReadableRequest(
             publiclyReadable=False
@@ -196,6 +213,13 @@ async def test_integration(tmp_path):
         assert len(projects) == 2
         assert project1_id in [p.projectId for p in projects]
 
+        # gui: Get projects with tag
+        resp = _gui_get_api_request(url_path='/api/gui/projects?tag=tag1', github_access_token=github_access_token)
+        resp = GetProjectsResponse(**resp)
+        projects = resp.projects
+        assert len(projects) == 1
+        assert projects[0].projectId == project1_id
+
         # gui: Delete project
         resp = _gui_delete_api_request(url_path=f'/api/gui/projects/{project1_id}', github_access_token=github_access_token)
         resp = DeleteProjectResponse(**resp)
@@ -215,14 +239,67 @@ async def test_integration(tmp_path):
         resp = SetProjectComputeResourceIdResponse(**resp)
         assert resp.success
 
+        # gui: Create a dummy input file (required for test job)
+        req = SetFileRequest(
+            content='url:https://fake-url',
+            size=1
+        )
+        resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project2_id}/files/mock-input', data=req.dict(), github_access_token=github_access_token)
+        resp = SetFileResponse(**resp)
+        assert resp.success
+
+        # gui: Get file
+        resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files/mock-input', github_access_token=github_access_token)
+        resp = GetFileResponse(**resp)
+        assert resp.success
+        assert resp.file.fileName == 'mock-input'
+
+        # client: Get project files
+        resp = _client_get_api_request(url_path=f'/api/client/projects/{project2_id}/files')
+        resp = ClientGetProjectFilesResponse(**resp)
+        assert resp.success
+        assert len(resp.files) == 1
+
+        # gui: Create and delete a file
+        req = SetFileRequest(
+            content='url:https://fake-url',
+            size=1
+        )
+        resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project2_id}/files/mock-file2', data=req.dict(), github_access_token=github_access_token)
+        resp = SetFileResponse(**resp)
+        assert resp.success
+        resp = _gui_delete_api_request(url_path=f'/api/gui/projects/{project2_id}/files/mock-file2', github_access_token=github_access_token)
+        resp = DeleteFileResponse(**resp)
+        assert resp.success
+
+        # gui: Get files
+        resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files', github_access_token=github_access_token)
+        resp = GetFilesResponse(**resp)
+        assert resp.success
+        assert len(resp.files) == 1
+
         # gui: Create job
         processor_name = 'mock-processor1'
         processor_spec = compute_resource_spec_app.processors[0]
         req = CreateJobRequest(
             projectId=project2_id,
             processorName=processor_name,
-            inputFiles=[],
-            outputFiles=[],
+            inputFiles=[
+                CreateJobRequestInputFile(
+                    name='input_file',
+                    fileName='mock-input'
+                ),
+                CreateJobRequestInputFile(
+                    name='input_list[0]',
+                    fileName='mock-input'
+                ),
+            ],
+            outputFiles=[
+                CreateJobRequestOutputFile(
+                    name='output_file',
+                    fileName='mock-output'
+                )
+            ],
             inputParameters=[
                 CreateJobRequestInputParameter(
                     name='text1',
@@ -236,6 +313,10 @@ async def test_integration(tmp_path):
                 CreateJobRequestInputParameter(
                     name='val1',
                     value=12
+                ),
+                CreateJobRequestInputParameter(
+                    name='group.num',
+                    value=3
                 )
             ],
             processorSpec=processor_spec,
@@ -273,6 +354,18 @@ async def test_integration(tmp_path):
         jobs = resp.jobs
         assert len(jobs) == 1
 
+        # gui: Get compute resource jobs
+        resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/jobs', github_access_token=github_access_token)
+        resp = GetJobsForComputeResourceResponse(**resp)
+        assert resp.success
+        assert len(resp.jobs) == 1
+
+        # client: Get project jobs
+        resp = _client_get_api_request(url_path=f'/api/client/projects/{project2_id}/jobs')
+        resp = ClientGetProjectJobsResponse(**resp)
+        assert resp.success
+        assert len(resp.jobs) == 1
+
         # Run the compute resource briefly
         start_compute_resource(dir=tmpdir, timeout=1, cleanup_old_jobs=False)
 
@@ -284,6 +377,12 @@ async def test_integration(tmp_path):
             raise Exception(f'Job failed: {job.error}')
         assert job.status == 'completed'
 
+        # gui: Get output file
+        resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files/mock-output', github_access_token=github_access_token)
+        resp = GetFileResponse(**resp)
+        assert resp.success
+        assert resp.file.fileName == 'mock-output'
+
         # Check whether the appropriate compute resource spec was uploaded to the api
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}', github_access_token=github_access_token)
         resp = GetComputeResourceResponse(**resp)
@@ -292,7 +391,7 @@ async def test_integration(tmp_path):
         assert compute_resource.spec
         assert len(compute_resource.spec.apps) == 1
 
-        # gui: Delete job
+        # gui: Delete job (should trigger deletion of output file)
         resp = _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
         resp = DeleteJobResponse(**resp)
         assert resp.success
@@ -302,6 +401,24 @@ async def test_integration(tmp_path):
         resp = GetJobsResponse(**resp)
         jobs = resp.jobs
         assert len(jobs) == 0
+
+        # gui: Get files
+        resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files', github_access_token=github_access_token)
+        resp = GetFilesResponse(**resp)
+        assert resp.success
+        assert len(resp.files) == 1
+        assert resp.files[0].fileName == 'mock-input'
+
+        # gui: Delete compute resource
+        resp = _gui_delete_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}', github_access_token=github_access_token)
+        resp = DeleteComputeResourceResponse(**resp)
+        assert resp.success
+
+        # gui Get compute resources
+        resp = _gui_get_api_request(url_path='/api/gui/compute_resources', github_access_token=github_access_token)
+        resp = GetComputeResourcesResponse(**resp)
+        assert resp.success
+        assert len(resp.computeResources) == 0
     finally:
         _use_api_test_client(None)
         set_use_mock(False)
