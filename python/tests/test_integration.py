@@ -282,7 +282,7 @@ async def test_integration(tmp_path):
         job = resp.job
         if job.status == 'failed':
             raise Exception(f'Job failed: {job.error}')
-        assert job.status == 'finished'
+        assert job.status == 'completed'
 
         # Check whether the appropriate compute resource spec was uploaded to the api
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}', github_access_token=github_access_token)

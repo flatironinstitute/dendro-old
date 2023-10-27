@@ -1,5 +1,7 @@
 import time
 from typing import Union
+
+from protocaas.mock import using_mock
 from ...core.protocaas_types import ProtocaasJob
 from ...core.settings import get_settings
 from .._create_output_file import _create_output_file
@@ -30,7 +32,7 @@ async def update_job_status(job: ProtocaasJob, status: str, error: Union[str, No
     if new_error:
         if new_status != 'failed':
             raise Exception(f"Cannot set job error when status is {new_status}")
-    if new_status == 'completed':
+    if new_status == 'completed' and not using_mock():
         # we need to create the output files before marking the job as completed
         output_bucket_base_url = get_settings().OUTPUT_BUCKET_BASE_URL
         if output_bucket_base_url is None:

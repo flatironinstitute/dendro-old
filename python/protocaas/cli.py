@@ -1,3 +1,4 @@
+import time
 import click
 from .compute_resource.register_compute_resource import register_compute_resource as register_compute_resource_function
 from .compute_resource.start_compute_resource import start_compute_resource as start_compute_resource_function
@@ -27,6 +28,15 @@ def start_compute_resource():
 def make_app_spec_file(app_dir: str, spec_output_file: str):
     make_app_spec_file_function(app_dir=app_dir, spec_output_file=spec_output_file)
 
+# ------------------------------------------------------------
+# Mock job cli
+# ------------------------------------------------------------
+@click.command(help='Run a mock job')
+def run_mock_job():
+    print('Running mock job')
+    time.sleep(0.5)
+    print('Mock job completed')
+
 
 @click.command(help='Run an app')
 def run_app():
@@ -43,3 +53,4 @@ main.add_command(register_compute_resource)
 main.add_command(start_compute_resource)
 main.add_command(make_app_spec_file)
 main.add_command(run_app)
+main.add_command(run_mock_job)
