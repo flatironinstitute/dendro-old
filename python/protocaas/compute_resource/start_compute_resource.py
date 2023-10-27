@@ -11,7 +11,7 @@ from .register_compute_resource import env_var_keys
 from ..sdk.App import App
 from ..sdk._run_job import _set_job_status
 from .PubsubClient import PubsubClient
-from ..common.protocaas_types import ProtocaasComputeResourceApp, ComputeResourceSlurmOpts, ProtocaasJob
+from ..api_helpers.core.protocaas_types import ProtocaasComputeResourceApp, ComputeResourceSlurmOpts, ProtocaasJob
 
 
 max_simultaneous_local_jobs = 2
@@ -233,10 +233,14 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
         compute_resource_node_name=compute_resource_node_name,
         compute_resource_node_id=compute_resource_node_id
     )
-    apps = resp['apps']
-    apps = [ProtocaasComputeResourceApp(**app) for app in apps] # validation
+    from ..api_helpers.routers.compute_resource.router import GetAppsResponse
+    resp = GetAppsResponse(**resp)
+    compute_resource_apps = resp.apps
+    return _load_apps_from_compute_resource_apps(compute_resource_apps)
+
+def _load_apps_from_compute_resource_apps(compute_resource_apps: List[ProtocaasComputeResourceApp]) -> List[App]:
     ret = []
-    for a in apps:
+    for a in compute_resource_apps:
         container = a.container
         aws_batch_opts = a.awsBatch
         slurm_opts = a.slurm

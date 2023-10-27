@@ -7,7 +7,7 @@ from .InputFile import InputFile
 from .AppProcessor import AppProcessor
 from .Job import Job
 from ._run_job import _run_job
-from ..common.protocaas_types import ComputeResourceSlurmOpts
+from ..api_helpers.core.protocaas_types import ComputeResourceSlurmOpts
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
 

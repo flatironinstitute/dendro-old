@@ -1,5 +1,5 @@
 from typing import List
-from ..common.protocaas_types import ProtocaasProject, ProtocaasFile, ProtocaasJob
+from ..api_helpers.core.protocaas_types import ProtocaasProject, ProtocaasFile, ProtocaasJob
 from ..common._api_request import _client_get_api_request
 
 

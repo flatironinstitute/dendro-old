@@ -3,7 +3,7 @@ import subprocess
 from typing import Union
 from ..sdk.App import App
 from ..common._api_request import _processor_put_api_request
-from ..common.protocaas_types import ComputeResourceSlurmOpts
+from ..api_helpers.core.protocaas_types import ComputeResourceSlurmOpts
 from ._run_job_in_aws_batch import _run_job_in_aws_batch
 from ..mock import using_mock
 
