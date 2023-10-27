@@ -40,6 +40,26 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     console_output_upload_url: Union[str, None] = None
     console_output_upload_url_timestamp = 0
 
+    def check_for_new_console_output():
+        nonlocal outq
+        nonlocal last_newline_index_in_output
+        nonlocal all_output
+        nonlocal console_output_changed
+        while True:
+            try:
+                # get the latest output from the job
+                x = outq.get(block=False)
+
+                if x == b'\n':
+                    last_newline_index_in_output = len(all_output)
+                if x == b'\r':
+                    # handle carriage return (e.g. in progress bar)
+                    all_output = all_output[:last_newline_index_in_output + 1]
+                all_output += x
+                console_output_changed = True
+            except queue.Empty:
+                break
+
     def upload_console_output(output: str):
         nonlocal console_output_upload_url
         nonlocal console_output_upload_url_timestamp
@@ -64,20 +84,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                 # don't check this now -- wait until after we had a chance to read the last console output
             except subprocess.TimeoutExpired:
                 retcode = None # process is still running
-            while True:
-                try:
-                    # get the latest output from the job
-                    x = outq.get(block=False)
-
-                    if x == b'\n':
-                        last_newline_index_in_output = len(all_output)
-                    if x == b'\r':
-                        # handle carriage return (e.g. in progress bar)
-                        all_output = all_output[:last_newline_index_in_output + 1]
-                    all_output += x
-                    console_output_changed = True
-                except queue.Empty:
-                    break
+            check_for_new_console_output()
 
             if console_output_changed:
                 elapsed = time.time() - last_report_console_output_time
@@ -152,6 +159,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             pass
         output_reader_thread.join()
 
+    check_for_new_console_output()
     if console_output_changed:
         _debug_log('Setting final job console output')
         try:
