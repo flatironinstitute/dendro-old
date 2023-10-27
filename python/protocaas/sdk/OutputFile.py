@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import requests
+from ..mock import using_mock
 
 if TYPE_CHECKING:
     from .Job import Job
@@ -18,9 +19,10 @@ class OutputFile:
 
         # Upload the file to the URL
         with open(local_file_path, 'rb') as f:
-            resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
-            if resp_upload.status_code != 200:
-                print(upload_url)
-                raise SetOutputFileException(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
+            if not using_mock():
+                resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
+                if resp_upload.status_code != 200:
+                    print(upload_url)
+                    raise SetOutputFileException(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
 
         self._was_set = True

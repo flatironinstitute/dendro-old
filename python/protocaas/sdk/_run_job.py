@@ -48,10 +48,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             # every 30 minutes, request a new upload url (the old one expires after 1 hour)
             console_output_upload_url_timestamp = time.time()
             # request a signed upload url for the console output
-            if using_mock():
-                console_output_upload_url = None
-            else:
-                console_output_upload_url = _get_console_output_upload_url(job_id=job_id, job_private_key=job_private_key)
+            console_output_upload_url = _get_console_output_upload_url(job_id=job_id, job_private_key=job_private_key)
         if console_output_upload_url is not None:
             _upload_console_output(console_output_upload_url=console_output_upload_url, output=output)
         if using_mock():
@@ -169,11 +166,20 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
 
 def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
     if using_mock():
+        # it's not going to work to run the mock job in a separate proecess because the mock environment will not exist
+        # so instead we are going to run a dummy mock jub, and then for test coverage,
+        # we are also going to do execute _run_job on the app
         proc = subprocess.Popen(
             ['protocaas', 'run-mock-job'],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
         )
+
+        # here's where we execute _run_job for test coverage
+        from ..compute_resource._start_job import _load_app_from_main
+        app_instance = _load_app_from_main(app_executable)
+        app_instance._run_job(job_id=job_id, job_private_key=job_private_key)
+
         return proc
     # Set the appropriate environment variables and launch the job in a background process
     cmd = app_executable
@@ -271,6 +277,8 @@ class UploadConsoleOutputError(Exception):
 
 def _upload_console_output(*, console_output_upload_url: str, output: str):
     """Upload the console output of a job to the cloud bucket"""
+    if using_mock():
+        return
     r = requests.put(console_output_upload_url, data=output.encode('utf-8'), timeout=60)
     if r.status_code != 200:
         raise UploadConsoleOutputError(f'Error uploading console output: {r.status_code} {r.text}')

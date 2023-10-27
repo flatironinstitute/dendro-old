@@ -9,10 +9,6 @@ class PubsubError(Exception):
     pass
 
 async def publish_pubsub_message(*, channel: str, message: dict):
-    if using_mock():
-        # don't actually publish the message for the mock case
-        return True
-
     settings = get_settings()
     # see https://www.pubnub.com/docs/sdks/rest-api/publish-message-to-channel
     sub_key = settings.PUBNUB_SUBSCRIBE_KEY
@@ -26,6 +22,10 @@ async def publish_pubsub_message(*, channel: str, message: dict):
     headers = {
         'Accept': 'application/json'
     }
+
+    if using_mock():
+        # don't actually publish the message for the mock case
+        return True
 
     # async http get request
     async with aiohttp.ClientSession() as session:

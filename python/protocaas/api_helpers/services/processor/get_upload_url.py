@@ -1,3 +1,4 @@
+from protocaas.mock import using_mock
 from ...core.protocaas_types import ProtocaasJob
 from ...core.settings import get_settings
 from ._get_signed_upload_url import _get_signed_upload_url
@@ -15,6 +16,9 @@ async def get_upload_url(job: ProtocaasJob, output_name: str):
             raise Exception(f"No output with name {output_name} **")
 
     object_key = f"protocaas-outputs/{job.jobId}/{output_name}"
+
+    if using_mock():
+        return f"https://mock-bucket.s3.amazonaws.com/{object_key}?mock-signature"
 
     OUTPUT_BUCKET_URI = settings.OUTPUT_BUCKET_URI
     if OUTPUT_BUCKET_URI is None:

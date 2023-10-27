@@ -265,7 +265,7 @@ def _get_kachery_cloud_credentials():
     client_id, private_key = _get_client_keys_hex()
     return client_id, private_key
 
-def _load_app_from_main(py_file_path: str):
+def _load_app_from_main(py_file_path: str) -> App:
     import sys
 
     # Split the file path into directory and module name (without .py)
