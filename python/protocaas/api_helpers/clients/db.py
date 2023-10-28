@@ -112,7 +112,7 @@ async def fetch_compute_resource(compute_resource_id: str, raise_on_not_found=Fa
         if raise_on_not_found:
             raise ComputeResourceNotFoundError(f"No compute resource with ID {compute_resource_id}")
         else:
-            return None
+            return None # pragma: no cover (not ever run with raise_on_not_found=False)
     _remove_id_field(compute_resource)
     compute_resource = ProtocaasComputeResource(**compute_resource) # validate compute resource
     return compute_resource
@@ -210,8 +210,7 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
     client = _get_mongo_client()
     compute_resources_collection = client['protocaas']['computeResources']
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
-    if compute_resource is None:
-        raise ComputeResourceNotFoundError(f"No compute resource with ID {compute_resource_id}")
+    assert compute_resource is not None, f"No compute resource with ID {compute_resource_id}"
     await compute_resources_collection.update_one({'computeResourceId': compute_resource_id}, {
         '$set': {
             'spec': spec.dict(exclude_none=True)
@@ -230,7 +229,7 @@ async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include
         if raise_on_not_found:
             raise JobNotFoundError(f"No job with ID {job_id}")
         else:
-            return None
+            return None # pragma: no cover (not ever run with raise_on_not_found=False)
     job = ProtocaasJob(**job) # validate job
     if not include_dandi_api_key:
         job.dandiApiKey = None

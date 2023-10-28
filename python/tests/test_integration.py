@@ -80,6 +80,19 @@ async def test_integration(tmp_path):
         resp = RegisterComputeResourceResponse(**resp)
         assert resp.success
 
+        # gui: Register the same compute resource again (should be okay)
+        resource_code_payload = {'timestamp': int(time.time())}
+        resource_code_signature = sign_message(resource_code_payload, compute_resource_id, compute_resource_private_key)
+        resource_code = f'{resource_code_payload["timestamp"]}-{resource_code_signature}'
+        req = RegisterComputeResourceRequest(
+            name='test_compute_resource-second-time',
+            computeResourceId=compute_resource_id,
+            resourceCode=resource_code
+        )
+        resp = _gui_post_api_request(url_path='/api/gui/compute_resources/register', data=req.dict(), github_access_token=github_access_token)
+        resp = RegisterComputeResourceResponse(**resp)
+        assert resp.success
+
         # gui: set compute resource apps
         req = SetComputeResourceAppsRequest(
             apps=[
@@ -98,6 +111,12 @@ async def test_integration(tmp_path):
         resp = GetComputeResourcesResponse(**resp)
         assert resp.success
         assert len(resp.computeResources) == 1
+
+        # gui: Try to get compute resource and one that does not exist
+        resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}', github_access_token=github_access_token)
+        resp = GetComputeResourceResponse(**resp)
+        with pytest.raises(Exception):
+            resp = _gui_get_api_request(url_path='/api/gui/compute_resources/does_not_exist', github_access_token=github_access_token)
 
         # gui: Get pubsub subscription
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/pubsub_subscription', github_access_token=github_access_token)
@@ -159,11 +178,19 @@ async def test_integration(tmp_path):
         assert project.timestampModified > 0
         assert project.computeResourceId is None
 
+        # gui: Get project that does not exist
+        with pytest.raises(Exception):
+            resp = _gui_get_api_request(url_path='/api/gui/projects/does_not_exist', github_access_token=github_access_token)
+
         # client: Get project
         resp = _client_get_api_request(url_path=f'/api/client/projects/{project1_id}')
         resp = ClientGetProjectResponse(**resp)
         assert resp.success
         assert resp.project.projectId == project1_id
+
+        # client: Get project that does not exist
+        with pytest.raises(Exception):
+            resp = _client_get_api_request(url_path='/api/client/projects/does_not_exist')
 
         # gui: Set project publicly readable
         req = SetProjectPubliclyReadableRequest(
@@ -254,6 +281,10 @@ async def test_integration(tmp_path):
         assert resp.success
         assert resp.file.fileName == 'mock-input'
 
+        # gui Try to get file that does not exist
+        with pytest.raises(Exception):
+            _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files/does_not_exist', github_access_token=github_access_token)
+
         # client: Get project files
         resp = _client_get_api_request(url_path=f'/api/client/projects/{project2_id}/files')
         resp = ClientGetProjectFilesResponse(**resp)
@@ -317,6 +348,10 @@ async def test_integration(tmp_path):
                 CreateJobRequestInputParameter(
                     name='group.num',
                     value=3
+                ),
+                CreateJobRequestInputParameter(
+                    name='group.secret_param',
+                    value='456'
                 )
             ],
             processorSpec=processor_spec,
@@ -347,6 +382,10 @@ async def test_integration(tmp_path):
         assert job.timestampStarting is None
         assert job.computeResourceId == compute_resource_id
         assert not job.jobPrivateKey # should not be exposed to GUI
+
+        # gui: Try to get job that does not exist
+        with pytest.raises(Exception):
+            _gui_get_api_request(url_path='/api/gui/jobs/does_not_exist', github_access_token=github_access_token)
 
         # gui: Get jobs
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/jobs', github_access_token=github_access_token)
@@ -390,6 +429,10 @@ async def test_integration(tmp_path):
         compute_resource = resp.computeResource
         assert compute_resource.spec
         assert len(compute_resource.spec.apps) == 1
+
+        # gui: Try delete job without proper github access token
+        with pytest.raises(Exception):
+            _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token='bad_access_token')
 
         # gui: Delete job (should trigger deletion of output file)
         resp = _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)

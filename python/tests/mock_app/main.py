@@ -10,6 +10,7 @@ from protocaas.sdk import App, ProcessorBase, InputFile, OutputFile, field
 @dataclass
 class MockParameterGroup:
     num: int = field(help='Number', default=1)
+    secret_param: str = field(help='Secret param', default='123', secret=True)
 
 @dataclass
 class MockProcessor1Context:

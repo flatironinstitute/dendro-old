@@ -5,7 +5,7 @@ from ...core.protocaas_types import ProtocaasJob
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project
 from ...clients.db import fetch_job, fetch_project, delete_job as db_delete_job
-from .common import api_route_wrapper
+from ..common import api_route_wrapper
 
 
 router = APIRouter()

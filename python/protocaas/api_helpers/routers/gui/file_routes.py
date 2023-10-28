@@ -7,7 +7,7 @@ from ._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project
 from ...clients.db import fetch_file, fetch_project_files, fetch_project, delete_file as db_delete_file
 from ...services.gui.set_file import set_file as service_set_file
-from .common import api_route_wrapper
+from ..common import api_route_wrapper
 
 router = APIRouter()
 
