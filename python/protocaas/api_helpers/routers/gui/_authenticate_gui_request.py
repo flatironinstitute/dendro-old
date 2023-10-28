@@ -12,13 +12,13 @@ def _create_mock_github_access_token():
     _mock_github_access_tokens.append(token)
     return token
 
-async def _authenticate_gui_request(github_access_token: str):
+async def _authenticate_gui_request(github_access_token: str, raise_on_not_authenticated=False):
     if github_access_token.startswith('mock:'):
         if github_access_token not in _mock_github_access_tokens:
             raise AuthException('Invalid mock github access token')
         return 'github|__mock__user'
     if not github_access_token:
-        return None
+        raise AuthException('User is not authenticated')
     if github_access_token in _user_ids_for_access_tokens:
         a = _user_ids_for_access_tokens[github_access_token]
         elapsed = time.time() - a['timestamp']

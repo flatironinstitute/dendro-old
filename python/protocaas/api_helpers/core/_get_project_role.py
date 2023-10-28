@@ -2,6 +2,9 @@ from typing import Union
 from .protocaas_types import ProtocaasProject
 
 
+class AuthException(Exception):
+    pass
+
 def _get_project_role(project: ProtocaasProject, user_id: Union[str, None]) -> str:
     if user_id:
         if user_id.startswith('admin|'):
@@ -26,11 +29,14 @@ def _project_has_user(project: ProtocaasProject, user_id: Union[str, None]) -> b
         return True
     return False
 
-def _project_is_readable(project: ProtocaasProject, user_id: Union[str, None]) -> bool:
-    return _get_project_role(project, user_id) in ['admin', 'editor', 'viewer']
+def _check_user_can_read_project(project: ProtocaasProject, user_id: Union[str, None]):
+    if not _get_project_role(project, user_id) in ['admin', 'editor', 'viewer']:
+        raise AuthException('User does not have read permission for this project')
 
-def _project_is_editable(project: ProtocaasProject, user_id: Union[str, None]) -> bool:
-    return _get_project_role(project, user_id) in ['admin', 'editor']
+def _check_user_can_edit_project(project: ProtocaasProject, user_id: Union[str, None]):
+    if not _get_project_role(project, user_id) in ['admin', 'editor']:
+        raise AuthException('User does not have edit permission for this project')
 
-def _user_is_project_admin(project: ProtocaasProject, user_id: Union[str, None]) -> bool:
-    return _get_project_role(project, user_id) == 'admin'
+def _check_user_is_project_admin(project: ProtocaasProject, user_id: Union[str, None]):
+    if not _get_project_role(project, user_id) == 'admin':
+        raise AuthException('User does not have admin permission for this project')

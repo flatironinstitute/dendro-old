@@ -15,10 +15,8 @@ async def github_auth(code) -> GithubAuthResponse:
     settings = get_settings()
     GITHUB_CLIENT_ID = settings.GITHUB_CLIENT_ID
     GITHUB_CLIENT_SECRET = settings.GITHUB_CLIENT_SECRET
-    if GITHUB_CLIENT_ID is None:
-        raise Exception('Env var not set: VITE_GITHUB_CLIENT_ID')
-    if GITHUB_CLIENT_SECRET is None:
-        raise Exception('Env var not set: GITHUB_CLIENT_SECRET')
+    assert GITHUB_CLIENT_ID, 'Env var not set: VITE_GITHUB_CLIENT_ID'
+    assert GITHUB_CLIENT_SECRET, 'Env var not set: VITE_GITHUB_CLIENT_SECRET'
     url = f'https://github.com/login/oauth/access_token?client_id={GITHUB_CLIENT_ID}&client_secret={GITHUB_CLIENT_SECRET}&code={code}'
     headers = {
         'accept': 'application/json'

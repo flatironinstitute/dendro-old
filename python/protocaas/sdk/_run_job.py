@@ -189,13 +189,17 @@ def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
         app_instance._run_job(job_id=job_id, job_private_key=job_private_key)
 
         return proc
+
     # Set the appropriate environment variables and launch the job in a background process
     cmd = app_executable
     env = os.environ.copy()
-    env['JOB_ID'] = job_id
-    env['JOB_PRIVATE_KEY'] = job_private_key
-    env['JOB_INTERNAL'] = '1'
-    env['PYTHONUNBUFFERED'] = '1'
+    env = {
+        **env,
+        'JOB_ID': job_id,
+        'JOB_PRIVATE_KEY': job_private_key,
+        'JOB_INTERNAL': '1',
+        'PYTHONUNBUFFERED': '1'
+    }
     print(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
     _debug_log('Opening subprocess')
     proc = subprocess.Popen(

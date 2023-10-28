@@ -1,8 +1,7 @@
 from typing import List, Any
-import traceback
 import time
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature
 from ...core.protocaas_types import ProtocaasComputeResource, ProtocaasComputeResourceApp, PubsubSubscription
 from ._authenticate_gui_request import _authenticate_gui_request
@@ -11,6 +10,7 @@ from ...clients.db import register_compute_resource as db_register_compute_resou
 from ...clients.db import delete_compute_resource as db_delete_compute_resource
 from ...core.settings import get_settings
 from ....mock import using_mock
+from .common import api_route_wrapper
 
 
 router = APIRouter()
@@ -24,15 +24,11 @@ class ComputeResourceNotFoundException(Exception):
     pass
 
 @router.get("/{compute_resource_id}")
+@api_route_wrapper
 async def get_compute_resource(compute_resource_id) -> GetComputeResourceResponse:
-    try:
-        compute_resource = await fetch_compute_resource(compute_resource_id)
-        if compute_resource is None:
-            raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
-        return GetComputeResourceResponse(computeResource=compute_resource, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    assert compute_resource
+    return GetComputeResourceResponse(computeResource=compute_resource, success=True)
 
 # get compute resources
 class GetComputeResourcesResponse(BaseModel):
@@ -43,19 +39,14 @@ class AuthException(Exception):
     pass
 
 @router.get("")
+@api_route_wrapper
 async def get_compute_resources(github_access_token: str = Header(...)):
-    try:
-        # authenticate the request
-        user_id = await _authenticate_gui_request(github_access_token)
-        if not user_id:
-            raise AuthException('User is not authenticated')
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
 
-        compute_resources = await fetch_compute_resources_for_user(user_id)
+    compute_resources = await fetch_compute_resources_for_user(user_id)
 
-        return GetComputeResourcesResponse(computeResources=compute_resources, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    return GetComputeResourcesResponse(computeResources=compute_resources, success=True)
 
 # set compute resource apps
 class SetComputeResourceAppsRequest(BaseModel):
@@ -65,57 +56,45 @@ class SetComputeResourceAppsResponse(BaseModel):
     success: bool
 
 @router.put("/{compute_resource_id}/apps")
+@api_route_wrapper
 async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourceAppsRequest, github_access_token: str = Header(...)) -> SetComputeResourceAppsResponse:
-    try:
-        # authenticate the request
-        user_id = await _authenticate_gui_request(github_access_token)
-        if not user_id:
-            raise AuthException('User is not authenticated')
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
 
-        # parse the request
-        apps = data.apps
+    # parse the request
+    apps = data.apps
 
-        compute_resource = await fetch_compute_resource(compute_resource_id)
-        if compute_resource is None:
-            raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    assert compute_resource
 
-        if compute_resource.ownerId != user_id:
-            raise AuthException('User does not have permission to admin this compute resource')
+    if compute_resource.ownerId != user_id:
+        raise AuthException('User does not have permission to admin this compute resource')
 
-        await update_compute_resource(compute_resource_id, update={
-            'apps': [app.dict(exclude_none=True) for app in apps],
-            'timestampModified': time.time()
-        })
+    await update_compute_resource(compute_resource_id, update={
+        'apps': [app.dict(exclude_none=True) for app in apps],
+        'timestampModified': time.time()
+    })
 
-        return SetComputeResourceAppsResponse(success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    return SetComputeResourceAppsResponse(success=True)
 
 # delete compute resource
 class DeleteComputeResourceResponse(BaseModel):
     success: bool
 
 @router.delete("/{compute_resource_id}")
+@api_route_wrapper
 async def delete_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> DeleteComputeResourceResponse:
-    try:
-        # authenticate the request
-        user_id = await _authenticate_gui_request(github_access_token)
-        if not user_id:
-            raise AuthException('User is not authenticated')
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
 
-        compute_resource = await fetch_compute_resource(compute_resource_id)
-        if compute_resource is None:
-            raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
-        if compute_resource.ownerId != user_id:
-            raise AuthException('User does not have permission to delete this compute resource')
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    assert compute_resource
+    if compute_resource.ownerId != user_id:
+        raise AuthException('User does not have permission to delete this compute resource')
 
-        await db_delete_compute_resource(compute_resource_id)
+    await db_delete_compute_resource(compute_resource_id)
 
-        return DeleteComputeResourceResponse(success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    return DeleteComputeResourceResponse(success=True)
 
 # get pubsub subscription
 class GetPubsubSubscriptionResponse(BaseModel):
@@ -123,31 +102,27 @@ class GetPubsubSubscriptionResponse(BaseModel):
     success: bool
 
 @router.get("/{compute_resource_id}/pubsub_subscription")
+@api_route_wrapper
 async def get_pubsub_subscription(compute_resource_id):
-    try:
-        compute_resource = await fetch_compute_resource(compute_resource_id)
-        if compute_resource is None:
-            raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    assert compute_resource
 
-        if using_mock():
-            subscription = PubsubSubscription(
-                pubnubSubscribeKey='mock-subscribe-key',
-                pubnubChannel=compute_resource_id,
-                pubnubUser=compute_resource_id
-            )
-        else:
-            VITE_PUBNUB_SUBSCRIBE_KEY = get_settings().PUBNUB_SUBSCRIBE_KEY
-            if VITE_PUBNUB_SUBSCRIBE_KEY is None:
-                raise KeyError('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY (gui)')
-            subscription = PubsubSubscription(
-                pubnubSubscribeKey=VITE_PUBNUB_SUBSCRIBE_KEY,
-                pubnubChannel=compute_resource_id,
-                pubnubUser=compute_resource_id
-            )
-        return GetPubsubSubscriptionResponse(subscription=subscription, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    if using_mock():
+        subscription = PubsubSubscription(
+            pubnubSubscribeKey='mock-subscribe-key',
+            pubnubChannel=compute_resource_id,
+            pubnubUser=compute_resource_id
+        )
+    else:
+        VITE_PUBNUB_SUBSCRIBE_KEY = get_settings().PUBNUB_SUBSCRIBE_KEY
+        if VITE_PUBNUB_SUBSCRIBE_KEY is None:
+            raise KeyError('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY (gui)')
+        subscription = PubsubSubscription(
+            pubnubSubscribeKey=VITE_PUBNUB_SUBSCRIBE_KEY,
+            pubnubChannel=compute_resource_id,
+            pubnubUser=compute_resource_id
+        )
+    return GetPubsubSubscriptionResponse(subscription=subscription, success=True)
 
 # register compute resource
 class RegisterComputeResourceRequest(BaseModel):
@@ -159,28 +134,23 @@ class RegisterComputeResourceResponse(BaseModel):
     success: bool
 
 @router.post("/register")
+@api_route_wrapper
 async def register_compute_resource(data: RegisterComputeResourceRequest, github_access_token: str = Header(...)) -> RegisterComputeResourceResponse:
-    try:
-        # authenticate the request
-        user_id = await _authenticate_gui_request(github_access_token)
-        if user_id is None:
-            raise AuthException('User is not authenticated')
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
 
-        # parse the request
-        compute_resource_id = data.computeResourceId
-        resource_code = data.resourceCode
-        name = data.name
+    # parse the request
+    compute_resource_id = data.computeResourceId
+    resource_code = data.resourceCode
+    name = data.name
 
-        ok = _verify_resource_code(compute_resource_id, resource_code)
-        if not ok:
-            raise AuthException('Invalid resource code')
+    ok = _verify_resource_code(compute_resource_id, resource_code)
+    if not ok:
+        raise AuthException('Invalid resource code')
 
-        await db_register_compute_resource(compute_resource_id=compute_resource_id, name=name, user_id=user_id)
+    await db_register_compute_resource(compute_resource_id=compute_resource_id, name=name, user_id=user_id)
 
-        return RegisterComputeResourceResponse(success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    return RegisterComputeResourceResponse(success=True)
 
 # get jobs for compute resource
 class GetJobsForComputeResourceResponse(BaseModel):
@@ -188,25 +158,19 @@ class GetJobsForComputeResourceResponse(BaseModel):
     success: bool
 
 @router.get("/{compute_resource_id}/jobs")
+@api_route_wrapper
 async def get_jobs_for_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> GetJobsForComputeResourceResponse:
-    try:
-        # authenticate the request
-        user_id = await _authenticate_gui_request(github_access_token)
-        if not user_id:
-            raise AuthException('User is not authenticated')
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
 
-        compute_resource = await fetch_compute_resource(compute_resource_id)
-        if compute_resource is None:
-            raise ComputeResourceNotFoundException(f"No compute resource with ID {compute_resource_id}")
-        if compute_resource.ownerId != user_id:
-            raise AuthException('User does not have permission to view jobs for this compute resource')
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    assert compute_resource
+    if compute_resource.ownerId != user_id:
+        raise AuthException('User does not have permission to view jobs for this compute resource')
 
-        jobs = await fetch_compute_resource_jobs(compute_resource_id, statuses=None, include_private_keys=False)
+    jobs = await fetch_compute_resource_jobs(compute_resource_id, statuses=None, include_private_keys=False)
 
-        return GetJobsForComputeResourceResponse(jobs=jobs, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    return GetJobsForComputeResourceResponse(jobs=jobs, success=True)
 
 def _verify_resource_code(compute_resource_id: str, resource_code: str) -> bool:
     # check that timestamp is within 5 minutes of current time
