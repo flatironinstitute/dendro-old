@@ -32,14 +32,17 @@ async def fetch_projects_with_tag(tag: str) -> List[ProtocaasProject]:
     projects = [ProtocaasProject(**project) for project in projects] # validate projects
     return projects
 
-async def fetch_project(project_id: str) -> Union[ProtocaasProject, None]:
+async def fetch_project(project_id: str, *, raise_on_not_found=False) -> Union[ProtocaasProject, None]:
     client = _get_mongo_client()
     projects_collection = client['protocaas']['projects']
     project = await projects_collection.find_one({'projectId': project_id})
     # here I'd like to validate project
     _remove_id_field(project)
     if project is None:
-        return None
+        if raise_on_not_found:
+            raise Exception(f"No project with ID {project_id}")
+        else:
+            return None
     return ProtocaasProject(**project) # validate project
 
 async def fetch_project_files(project_id: str) -> List[ProtocaasFile]:
@@ -101,12 +104,15 @@ async def insert_project(project: ProtocaasProject):
     projects_collection = client['protocaas']['projects']
     await projects_collection.insert_one(project.dict(exclude_none=True))
 
-async def fetch_compute_resource(compute_resource_id: str):
+async def fetch_compute_resource(compute_resource_id: str, raise_on_not_found=False):
     client = _get_mongo_client()
     compute_resources_collection = client['protocaas']['computeResources']
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
     if compute_resource is None:
-        return None
+        if raise_on_not_found:
+            raise ComputeResourceNotFoundError(f"No compute resource with ID {compute_resource_id}")
+        else:
+            return None
     _remove_id_field(compute_resource)
     compute_resource = ProtocaasComputeResource(**compute_resource) # validate compute resource
     return compute_resource
@@ -212,13 +218,19 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
         }
     })
 
-async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False, include_private_key: bool = False):
+class JobNotFoundError(Exception):
+    pass
+
+async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False, include_private_key: bool = False, raise_on_not_found=False):
     client = _get_mongo_client()
     jobs_collection = client['protocaas']['jobs']
     job = await jobs_collection.find_one({'jobId': job_id})
     _remove_id_field(job)
     if job is None:
-        return None
+        if raise_on_not_found:
+            raise JobNotFoundError(f"No job with ID {job_id}")
+        else:
+            return None
     job = ProtocaasJob(**job) # validate job
     if not include_dandi_api_key:
         job.dandiApiKey = None

@@ -3,7 +3,7 @@ from typing import Union, List, Any
 from pydantic import BaseModel
 from ...core.protocaas_types import ComputeResourceSpecProcessor, ProtocaasJobInputFile, ProtocaasJobOutputFile, ProtocaasJob, ProtocaasJobInputParameter
 from ...clients.db import fetch_project, fetch_file, delete_file, fetch_project_jobs, delete_job, insert_job
-from ...core._get_project_role import _project_is_editable
+from ...core._get_project_role import _check_user_can_edit_project
 from ...core._create_random_id import _create_random_id
 from ...clients.pubsub import publish_pubsub_message
 from .._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
@@ -41,14 +41,11 @@ async def create_job(
     project = await fetch_project(project_id)
     assert project is not None, f"No project with ID {project_id}"
 
-    if not _project_is_editable(project, user_id):
-        raise AuthException('User does not have permission to create jobs')
+    _check_user_can_edit_project(project, user_id)
 
-    compute_resource_id = project.computeResourceId
+    compute_resource_id = project.computeResourceId if project.computeResourceId else get_settings().DEFAULT_COMPUTE_RESOURCE_ID
     if not compute_resource_id:
-        compute_resource_id = get_settings().DEFAULT_COMPUTE_RESOURCE_ID
-        if compute_resource_id is None:
-            raise KeyError('Project does not have a compute resource ID, and no default VITE_DEFAULT_COMPUTE_RESOURCE_ID is set in the environment.')
+        raise KeyError('Project does not have a compute resource ID, and no default VITE_DEFAULT_COMPUTE_RESOURCE_ID is set in the environment.')
 
     input_files: List[ProtocaasJobInputFile] = [] # {name, fileId, fileName}
     for input_file in input_files_from_request:

@@ -1,13 +1,13 @@
 from typing import Union, List
-import traceback
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, Header
 from ...services._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 from ...core.protocaas_types import ProtocaasFile
 from ._authenticate_gui_request import _authenticate_gui_request
-from ...core._get_project_role import _project_is_editable
+from ...core._get_project_role import _check_user_can_edit_project
 from ...clients.db import fetch_file, fetch_project_files, fetch_project, delete_file as db_delete_file
 from ...services.gui.set_file import set_file as service_set_file
+from .common import api_route_wrapper
 
 router = APIRouter()
 
@@ -17,14 +17,11 @@ class GetFileResponse(BaseModel):
     success: bool
 
 @router.get("/projects/{project_id}/files/{file_name:path}")
+@api_route_wrapper
 async def get_file(project_id, file_name):
-    try:
-        file = await fetch_file(project_id, file_name)
-        assert file is not None, f"No file with name {file_name} in project with ID {project_id}"
-        return GetFileResponse(file=file, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    file = await fetch_file(project_id, file_name)
+    assert file is not None, f"No file with name {file_name} in project with ID {project_id}"
+    return GetFileResponse(file=file, success=True)
 
 # get files
 class GetFilesResponse(BaseModel):
@@ -32,13 +29,10 @@ class GetFilesResponse(BaseModel):
     success: bool
 
 @router.get("/projects/{project_id}/files")
+@api_route_wrapper
 async def get_files(project_id):
-    try:
-        files = await fetch_project_files(project_id)
-        return GetFilesResponse(files=files, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    files = await fetch_project_files(project_id)
+    return GetFilesResponse(files=files, success=True)
 
 # set file
 class SetFileRequest(BaseModel):
@@ -55,58 +49,46 @@ class AuthException(Exception):
     pass
 
 @router.put("/projects/{project_id}/files/{file_name:path}")
+@api_route_wrapper
 async def set_file(project_id, file_name, data: SetFileRequest, github_access_token: str = Header(...)):
-    try:
-        # authenticate the request
-        user_id = await _authenticate_gui_request(github_access_token)
-        if not user_id:
-            raise AuthException('User not authenticated')
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
 
-        # parse the request
-        content = data.content
-        job_id = data.jobId
-        size = data.size
-        metadata = data.metadata
+    # parse the request
+    content = data.content
+    job_id = data.jobId
+    size = data.size
+    metadata = data.metadata
 
-        assert size is not None, "size must be specified"
+    assert size is not None, "size must be specified"
 
-        project = await fetch_project(project_id)
-        assert project is not None, f"No project with ID {project_id}"
+    project = await fetch_project(project_id)
+    assert project is not None, f"No project with ID {project_id}"
 
-        if not _project_is_editable(project, user_id):
-            raise AuthException('User does not have permission to set file content in this project')
+    _check_user_can_edit_project(project, user_id)
 
-        file_id = await service_set_file(project_id=project_id, user_id=user_id, file_name=file_name, content=content, job_id=job_id, size=size, metadata=metadata)
+    file_id = await service_set_file(project_id=project_id, user_id=user_id, file_name=file_name, content=content, job_id=job_id, size=size, metadata=metadata)
 
-        return SetFileResponse(fileId=file_id, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    return SetFileResponse(fileId=file_id, success=True)
 
 # delete file
 class DeleteFileResponse(BaseModel):
     success: bool
 
 @router.delete("/projects/{project_id}/files/{file_name:path}")
+@api_route_wrapper
 async def delete_file(project_id, file_name, github_access_token: str = Header(...)):
-    try:
-        # authenticate the request
-        user_id = await _authenticate_gui_request(github_access_token)
-        if not user_id:
-            raise AuthException('User not authenticated')
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
 
-        project = await fetch_project(project_id)
-        assert project is not None, f"No project with ID {project_id}"
+    project = await fetch_project(project_id)
+    assert project is not None, f"No project with ID {project_id}"
 
-        if not _project_is_editable(project, user_id):
-            raise AuthException('User does not have permission to delete files in this project')
+    _check_user_can_edit_project(project, user_id)
 
-        await db_delete_file(project_id, file_name)
+    await db_delete_file(project_id, file_name)
 
-        # remove detached files and jobs
-        await _remove_detached_files_and_jobs(project_id)
+    # remove detached files and jobs
+    await _remove_detached_files_and_jobs(project_id)
 
-        return DeleteFileResponse(success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    return DeleteFileResponse(success=True)
