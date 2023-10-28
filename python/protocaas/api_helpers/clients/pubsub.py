@@ -28,7 +28,7 @@ async def publish_pubsub_message(*, channel: str, message: dict):
         return True
 
     # async http get request
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession() as session: # pragma: no cover
         async with session.get(url, headers=headers) as resp:
             if resp.status != 200:
                 raise PubsubError(f"Error publishing to pubsub: {resp.status} {resp.text}")

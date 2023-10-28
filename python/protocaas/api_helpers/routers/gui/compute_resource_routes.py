@@ -10,7 +10,7 @@ from ...clients.db import register_compute_resource as db_register_compute_resou
 from ...clients.db import delete_compute_resource as db_delete_compute_resource
 from ...core.settings import get_settings
 from ....mock import using_mock
-from .common import api_route_wrapper
+from ..common import api_route_wrapper
 
 
 router = APIRouter()

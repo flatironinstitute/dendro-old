@@ -8,7 +8,7 @@ from ._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project, _check_user_is_project_admin
 from ...clients.db import fetch_project, insert_project, update_project, fetch_project_jobs, fetch_projects_for_user, fetch_projects_with_tag
 from ...services.gui.delete_project import delete_project as service_delete_project
-from .common import api_route_wrapper
+from ..common import api_route_wrapper
 
 
 router = APIRouter()

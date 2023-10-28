@@ -1,9 +1,9 @@
 from typing import List
-import traceback
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from ...core.protocaas_types import ProtocaasProject, ProtocaasFile, ProtocaasJob
 from ...clients.db import fetch_project, fetch_project_files, fetch_project_jobs
+from ..common import api_route_wrapper
 
 router = APIRouter()
 
@@ -16,15 +16,12 @@ class ProjectError(Exception):
     pass
 
 @router.get("/projects/{project_id}")
+@api_route_wrapper
 async def get_project(project_id) -> GetProjectResponse:
-    try:
-        project = await fetch_project(project_id)
-        if project is None:
-            raise ProjectError(f"No project with ID {project_id}")
-        return GetProjectResponse(project=project, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    project = await fetch_project(project_id)
+    if project is None:
+        raise ProjectError(f"No project with ID {project_id}")
+    return GetProjectResponse(project=project, success=True)
 
 # get project files
 class GetProjectFilesResponse(BaseModel):
@@ -32,13 +29,10 @@ class GetProjectFilesResponse(BaseModel):
     success: bool
 
 @router.get("/projects/{project_id}/files")
+@api_route_wrapper
 async def get_project_files(project_id) -> GetProjectFilesResponse:
-    try:
-        files = await fetch_project_files(project_id)
-        return GetProjectFilesResponse(files=files, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    files = await fetch_project_files(project_id)
+    return GetProjectFilesResponse(files=files, success=True)
 
 # get project jobs
 class GetProjectJobsResponse(BaseModel):
@@ -46,10 +40,7 @@ class GetProjectJobsResponse(BaseModel):
     success: bool
 
 @router.get("/projects/{project_id}/jobs")
+@api_route_wrapper
 async def get_project_jobs(project_id) -> GetProjectJobsResponse:
-    try:
-        jobs = await fetch_project_jobs(project_id)
-        return GetProjectJobsResponse(jobs=jobs, success=True)
-    except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e)) from e
+    jobs = await fetch_project_jobs(project_id)
+    return GetProjectJobsResponse(jobs=jobs, success=True)
