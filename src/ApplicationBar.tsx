@@ -87,7 +87,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
                         &nbsp;
                         {
                             !signedIn && (
-                                <span style={{position: 'relative', top: -5}}>Log in</span>
+                                <span style={{position: 'relative', top: -5}}>Sign in</span>
                             )
                         }
                     </span>
