@@ -2,8 +2,6 @@ import { useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 export type Route = {
-    page: 'home'
-} | {
     page: 'dandisets'
 } | {
     page: 'dandiset'
@@ -97,7 +95,7 @@ const useRoute = () => {
         }
         else {
             return {
-                page: 'home'
+                page: 'dandisets'
             }
         }
     }, [p, searchParams])
@@ -119,10 +117,7 @@ const useRoute = () => {
             if (r.tab) queries.push(`tab=${r.tab}`)
         }
         const queryString = queries.length > 0 ? `?${queries.join('&')}` : ''
-        if (r.page === 'home') {
-            navigate('/' + queryString)
-        }
-        else if (r.page === 'dandisets') {
+        if (r.page === 'dandisets') {
             navigate('/dandisets' + queryString)
         }
         else if (r.page === 'dandiset') {

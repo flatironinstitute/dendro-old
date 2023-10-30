@@ -25,7 +25,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
     const {visible: apiKeysWindowVisible, handleOpen: openApiKeysWindow, handleClose: closeApiKeysWindow} = useModalDialog()
 
     const onHome = useCallback(() => {
-        setRoute({page: 'home'})
+        setRoute({page: 'dandisets'})
     }, [setRoute])
 
     const onHelp = useCallback(() => {

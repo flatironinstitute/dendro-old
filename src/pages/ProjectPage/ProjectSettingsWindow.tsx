@@ -53,7 +53,7 @@ const DeleteProjectButton: FunctionComponent = () => {
         const okay = await confirm('Are you sure you want to delete this project?')
         if (!okay) return
         await deleteProject()
-        setRoute({page: 'home'})
+        setRoute({page: 'dandisets'})
     }, [deleteProject, setRoute])
 
     return (
