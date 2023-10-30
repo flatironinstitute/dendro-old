@@ -3,7 +3,7 @@ import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay";
 import { App, fetchComputeResource, fetchJobsForComputeResource, setComputeResourceApps } from "../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 import { timeAgoString } from "../../timeStrings";
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ProtocaasComputeResource, ProtocaasJob } from "../../types/protocaas-types";
+import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, DendroComputeResource, DendroJob } from "../../types/dendro-types";
 import UserIdComponent from "../../UserIdComponent";
 import JobsTable from "../ProjectPage/JobsWindow/JobsTable";
 import ComputeResourceAppsTable from "./ComputeResourceAppsTable";
@@ -15,7 +15,7 @@ type Props = {
 }
 
 const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeResourceId}) => {
-    const [computeResource, setComputeResources] = useState<ProtocaasComputeResource>()
+    const [computeResource, setComputeResources] = useState<DendroComputeResource>()
 
     const auth = useGithubAuth()
 
@@ -34,7 +34,7 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
         return () => {canceled = true}
     }, [computeResourceId, auth, refreshCode])
 
-    const [jobs, setJobs] = useState<ProtocaasJob[] | undefined>()
+    const [jobs, setJobs] = useState<DendroJob[] | undefined>()
 
     useEffect(() => {
         (async () => {

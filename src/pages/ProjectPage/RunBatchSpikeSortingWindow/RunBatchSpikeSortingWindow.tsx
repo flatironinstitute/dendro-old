@@ -1,8 +1,8 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
 import Hyperlink from "../../../components/Hyperlink"
-import { ProtocaasProcessingJobDefinition, createJob, defaultJobDefinition, fetchFile, protocaasJobDefinitionReducer } from "../../../dbInterface/dbInterface"
-import { ComputeResourceSpecProcessor, ProtocaasFile } from "../../../types/protocaas-types"
+import { DendroProcessingJobDefinition, createJob, defaultJobDefinition, fetchFile, dendroJobDefinitionReducer } from "../../../dbInterface/dbInterface"
+import { ComputeResourceSpecProcessor, DendroFile } from "../../../types/dendro-types"
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow"
 import { useNwbFile } from "../FileEditor/NwbFileEditor"
 import { useProject } from "../ProjectPageContext"
@@ -38,10 +38,10 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         return spikeSorterProcessors.find(p => (p.name === selectedSpikeSortingProcessor))
     }, [spikeSorterProcessors, selectedSpikeSortingProcessor])
 
-    const [jobDefinition, jobDefinitionDispatch] = useReducer(protocaasJobDefinitionReducer, defaultJobDefinition)
+    const [jobDefinition, jobDefinitionDispatch] = useReducer(dendroJobDefinitionReducer, defaultJobDefinition)
     useEffect(() => {
         if (!processor) return
-        const jd: ProtocaasProcessingJobDefinition = {
+        const jd: DendroProcessingJobDefinition = {
             inputFiles: [
                 {
                     name: 'input',
@@ -66,19 +66,19 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         })
     }, [processor])
 
-    const [representativeProtocaasFile, setRepresentativeProtocaasFile] = useState<ProtocaasFile | undefined>(undefined)
+    const [representativeDendroFile, setRepresentativeDendroFile] = useState<DendroFile | undefined>(undefined)
     useEffect(() => {
         let canceled = false
         if (filePaths.length === 0) return
         ; (async () => {
             const f = await fetchFile(projectId, filePaths[0], auth)
             if (canceled) return
-            setRepresentativeProtocaasFile(f)
+            setRepresentativeDendroFile(f)
         })()
         return () => {canceled = true}
     }, [filePaths, projectId, auth])
 
-    const cc = representativeProtocaasFile?.content || ''
+    const cc = representativeDendroFile?.content || ''
     const nwbUrl = cc.startsWith('url:') ? cc.slice('url:'.length) : ''
     const representativeNwbFile = useNwbFile(nwbUrl)
 
@@ -101,7 +101,7 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         for (let i = 0; i < filePaths.length; i++) {
             const filePath = filePaths[i]
             const filePath2 = filePath.startsWith('imported/') ? filePath.slice('imported/'.length) : filePath
-            const jobDefinition2: ProtocaasProcessingJobDefinition = deepCopy(jobDefinition)
+            const jobDefinition2: DendroProcessingJobDefinition = deepCopy(jobDefinition)
             const outputFileName = `generated/${appendDescToNwbPath(filePath2, descriptionString)}`
             const outputExists = files.find(f => (f.fileName === outputFileName))
             if (outputExists && !overwriteExistingOutputs) {

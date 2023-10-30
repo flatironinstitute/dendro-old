@@ -4,7 +4,7 @@ from typing import List
 import time
 import os
 from dataclasses import dataclass
-from protocaas.sdk import App, ProcessorBase, InputFile, OutputFile, field
+from dendro.sdk import App, ProcessorBase, InputFile, OutputFile, field
 
 
 @dataclass

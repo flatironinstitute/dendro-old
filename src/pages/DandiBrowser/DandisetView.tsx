@@ -204,7 +204,7 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
                             <span style={{color: 'gray'}}>Loading projects...</span>
                         )
                     }
-                    <Hyperlink onClick={handleCreateProject}>Create a new protocaas project for this dandiset</Hyperlink>
+                    <Hyperlink onClick={handleCreateProject}>Create a new dendro project for this dandiset</Hyperlink>
                 </div>
                 <div style={{fontSize: 14, padding: 5}}>
                     {

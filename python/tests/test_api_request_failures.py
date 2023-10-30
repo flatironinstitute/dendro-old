@@ -1,7 +1,7 @@
 import pytest
-from protocaas.common._api_request import _processor_get_api_request, _processor_put_api_request
-from protocaas.common._api_request import _client_get_api_request
-from protocaas.common._api_request import _gui_get_api_request, _gui_put_api_request, _gui_post_api_request, _gui_delete_api_request
+from dendro.common._api_request import _processor_get_api_request, _processor_put_api_request
+from dendro.common._api_request import _client_get_api_request
+from dendro.common._api_request import _gui_get_api_request, _gui_put_api_request, _gui_post_api_request, _gui_delete_api_request
 
 def test_api_request_failures():
     from requests import exceptions

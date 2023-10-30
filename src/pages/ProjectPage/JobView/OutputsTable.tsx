@@ -1,11 +1,11 @@
 import { FunctionComponent, useCallback } from "react"
 import Hyperlink from "../../../components/Hyperlink"
-import { ProtocaasJob } from "../../../types/protocaas-types"
+import { DendroJob } from "../../../types/dendro-types"
 import useRoute from "../../../useRoute"
 import { useProject } from "../ProjectPageContext"
 
 type OutputsTableProps = {
-    job: ProtocaasJob
+    job: DendroJob
 }
 
 const OutputsTable: FunctionComponent<OutputsTableProps> = ({ job }) => {

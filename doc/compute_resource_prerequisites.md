@@ -1,6 +1,6 @@
-# Protocaas compute resource prerequisites
+# Dendro compute resource prerequisites
 
-Suppose you have a Linux machine and would like to use it as a protocaas compute resource. Here are the recommended steps to prepare it with the necessary software.
+Suppose you have a Linux machine and would like to use it as a dendro compute resource. Here are the recommended steps to prepare it with the necessary software.
 
 ## Use Linux
 
@@ -30,6 +30,6 @@ or add this command to your ~/.bashrc file to automatically start in this enviro
 
 ## Install docker or singularity
 
-To use your computer as a protocaas compute resource, you'll most likely need to install either docker or singularity. Docker is simpler to install, whereas singularity is better for shared environments or compute clusters.
+To use your computer as a dendro compute resource, you'll most likely need to install either docker or singularity. Docker is simpler to install, whereas singularity is better for shared environments or compute clusters.
 
 To install docker server (or docker engine): https://docs.docker.com/engine/install/

@@ -10,37 +10,37 @@ import json
 @pytest.mark.api
 async def test_integration(tmp_path):
     # important to put the tests inside so we don't get an import error when running the non-api tests
-    from protocaas.api_helpers.core.protocaas_types import ProtocaasProjectUser, ComputeResourceSpecApp, ProtocaasComputeResourceApp
-    from protocaas.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
-    from protocaas.common._crypto_keys import sign_message
-    from protocaas.api_helpers.routers.gui.project_routes import CreateProjectRequest, CreateProjectResponse
-    from protocaas.api_helpers.routers.gui.project_routes import SetProjectNameRequest, SetProjectNameResponse
-    from protocaas.api_helpers.routers.gui.project_routes import SetProjectDescriptionRequest, SetProjectDescriptionResponse
-    from protocaas.api_helpers.routers.gui.project_routes import SetProjectTagsRequest, SetProjectTagsResponse
-    from protocaas.api_helpers.routers.gui.project_routes import SetProjectPubliclyReadableRequest, SetProjectPubliclyReadableResponse
-    from protocaas.api_helpers.routers.gui.project_routes import SetProjectComputeResourceIdRequest, SetProjectComputeResourceIdResponse
-    from protocaas.api_helpers.routers.gui.project_routes import SetProjectUsersRequest, SetProjectUsersResponse
-    from protocaas.api_helpers.routers.gui.project_routes import GetProjectResponse
-    from protocaas.api_helpers.routers.gui.project_routes import GetProjectsResponse
-    from protocaas.api_helpers.routers.gui.project_routes import DeleteProjectResponse
-    from protocaas.api_helpers.routers.gui.project_routes import GetJobsResponse
-    from protocaas.api_helpers.routers.gui.file_routes import SetFileRequest, SetFileResponse
-    from protocaas.api_helpers.routers.gui.file_routes import GetFilesResponse, GetFileResponse
-    from protocaas.api_helpers.routers.gui.file_routes import DeleteFileResponse
-    from protocaas.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse, CreateJobRequestInputParameter, CreateJobRequestInputFile, CreateJobRequestOutputFile
-    from protocaas.api_helpers.routers.gui.job_routes import GetJobResponse
-    from protocaas.api_helpers.routers.gui.job_routes import DeleteJobResponse
-    from protocaas.api_helpers.routers.gui.compute_resource_routes import SetComputeResourceAppsRequest, SetComputeResourceAppsResponse, GetComputeResourceResponse, GetComputeResourcesResponse, DeleteComputeResourceResponse
-    from protocaas.api_helpers.routers.gui.compute_resource_routes import GetJobsForComputeResourceResponse, GetPubsubSubscriptionResponse
-    from protocaas.api_helpers.routers.client.router import GetProjectResponse as ClientGetProjectResponse, GetProjectFilesResponse as ClientGetProjectFilesResponse, GetProjectJobsResponse as ClientGetProjectJobsResponse
-    from protocaas.compute_resource.register_compute_resource import register_compute_resource
-    from protocaas.compute_resource.start_compute_resource import start_compute_resource
-    from protocaas.common._api_request import _use_api_test_client
-    from protocaas.api_helpers.routers.gui.compute_resource_routes import RegisterComputeResourceRequest, RegisterComputeResourceResponse
-    from protocaas.mock import set_use_mock
-    from protocaas.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
-    from protocaas.common._api_request import _gui_get_api_request, _gui_post_api_request, _gui_put_api_request, _gui_delete_api_request, _client_get_api_request
-    from protocaas.sdk._make_spec_file import make_app_spec_file_function
+    from dendro.api_helpers.core.dendro_types import DendroProjectUser, ComputeResourceSpecApp, DendroComputeResourceApp
+    from dendro.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
+    from dendro.common._crypto_keys import sign_message
+    from dendro.api_helpers.routers.gui.project_routes import CreateProjectRequest, CreateProjectResponse
+    from dendro.api_helpers.routers.gui.project_routes import SetProjectNameRequest, SetProjectNameResponse
+    from dendro.api_helpers.routers.gui.project_routes import SetProjectDescriptionRequest, SetProjectDescriptionResponse
+    from dendro.api_helpers.routers.gui.project_routes import SetProjectTagsRequest, SetProjectTagsResponse
+    from dendro.api_helpers.routers.gui.project_routes import SetProjectPubliclyReadableRequest, SetProjectPubliclyReadableResponse
+    from dendro.api_helpers.routers.gui.project_routes import SetProjectComputeResourceIdRequest, SetProjectComputeResourceIdResponse
+    from dendro.api_helpers.routers.gui.project_routes import SetProjectUsersRequest, SetProjectUsersResponse
+    from dendro.api_helpers.routers.gui.project_routes import GetProjectResponse
+    from dendro.api_helpers.routers.gui.project_routes import GetProjectsResponse
+    from dendro.api_helpers.routers.gui.project_routes import DeleteProjectResponse
+    from dendro.api_helpers.routers.gui.project_routes import GetJobsResponse
+    from dendro.api_helpers.routers.gui.file_routes import SetFileRequest, SetFileResponse
+    from dendro.api_helpers.routers.gui.file_routes import GetFilesResponse, GetFileResponse
+    from dendro.api_helpers.routers.gui.file_routes import DeleteFileResponse
+    from dendro.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse, CreateJobRequestInputParameter, CreateJobRequestInputFile, CreateJobRequestOutputFile
+    from dendro.api_helpers.routers.gui.job_routes import GetJobResponse
+    from dendro.api_helpers.routers.gui.job_routes import DeleteJobResponse
+    from dendro.api_helpers.routers.gui.compute_resource_routes import SetComputeResourceAppsRequest, SetComputeResourceAppsResponse, GetComputeResourceResponse, GetComputeResourcesResponse, DeleteComputeResourceResponse
+    from dendro.api_helpers.routers.gui.compute_resource_routes import GetJobsForComputeResourceResponse, GetPubsubSubscriptionResponse
+    from dendro.api_helpers.routers.client.router import GetProjectResponse as ClientGetProjectResponse, GetProjectFilesResponse as ClientGetProjectFilesResponse, GetProjectJobsResponse as ClientGetProjectJobsResponse
+    from dendro.compute_resource.register_compute_resource import register_compute_resource
+    from dendro.compute_resource.start_compute_resource import start_compute_resource
+    from dendro.common._api_request import _use_api_test_client
+    from dendro.api_helpers.routers.gui.compute_resource_routes import RegisterComputeResourceRequest, RegisterComputeResourceResponse
+    from dendro.mock import set_use_mock
+    from dendro.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
+    from dendro.common._api_request import _gui_get_api_request, _gui_post_api_request, _gui_put_api_request, _gui_delete_api_request, _client_get_api_request
+    from dendro.sdk._make_spec_file import make_app_spec_file_function
 
     tmpdir = str(tmp_path)
 
@@ -96,7 +96,7 @@ async def test_integration(tmp_path):
         # gui: set compute resource apps
         req = SetComputeResourceAppsRequest(
             apps=[
-                ProtocaasComputeResourceApp(
+                DendroComputeResourceApp(
                     name='mock_app',
                     specUri=f'file://{tmpdir}/mock_app/spec.json'
                 )
@@ -212,9 +212,9 @@ async def test_integration(tmp_path):
         # gui: Set project users
         req = SetProjectUsersRequest(
             users=[
-                ProtocaasProjectUser(userId='github|user_viewer', role='viewer'),
-                ProtocaasProjectUser(userId='github|user_editor', role='editor'),
-                ProtocaasProjectUser(userId='github|user_admin', role='admin')
+                DendroProjectUser(userId='github|user_viewer', role='viewer'),
+                DendroProjectUser(userId='github|user_editor', role='editor'),
+                DendroProjectUser(userId='github|user_admin', role='admin')
             ]
         )
         resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project1_id}/users', data=req.dict(), github_access_token=github_access_token)
@@ -228,9 +228,9 @@ async def test_integration(tmp_path):
         assert project.publiclyReadable is False
         assert project.computeResourceId == compute_resource_id
         assert project.users == [
-            ProtocaasProjectUser(userId='github|user_viewer', role='viewer'), # hmmm, how are these classes being compared?
-            ProtocaasProjectUser(userId='github|user_editor', role='editor'),
-            ProtocaasProjectUser(userId='github|user_admin', role='admin')
+            DendroProjectUser(userId='github|user_viewer', role='viewer'), # hmmm, how are these classes being compared?
+            DendroProjectUser(userId='github|user_editor', role='editor'),
+            DendroProjectUser(userId='github|user_admin', role='admin')
         ]
 
         # gui: Get all projects
@@ -471,10 +471,10 @@ def _get_fastapi_app():
     from fastapi import FastAPI
 
     # this code is duplicated with api/index.py, I know
-    from protocaas.api_helpers.routers.processor.router import router as processor_router
-    from protocaas.api_helpers.routers.compute_resource.router import router as compute_resource_router
-    from protocaas.api_helpers.routers.client.router import router as client_router
-    from protocaas.api_helpers.routers.gui.router import router as gui_router
+    from dendro.api_helpers.routers.processor.router import router as processor_router
+    from dendro.api_helpers.routers.compute_resource.router import router as compute_resource_router
+    from dendro.api_helpers.routers.client.router import router as client_router
+    from dendro.api_helpers.routers.gui.router import router as gui_router
 
     app = FastAPI()
 

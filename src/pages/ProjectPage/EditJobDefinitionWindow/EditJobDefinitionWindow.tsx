@@ -1,8 +1,8 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import Hyperlink from "../../../components/Hyperlink";
-import { ProtocaasProcessingJobDefinition, ProtocaasProcessingJobDefinitionAction } from "../../../dbInterface/dbInterface";
+import { DendroProcessingJobDefinition, DendroProcessingJobDefinitionAction } from "../../../dbInterface/dbInterface";
 import { RemoteH5File } from "../../../RemoteH5File/RemoteH5File";
-import { ComputeResourceSpecProcessor, ComputeResourceSpecProcessorParameter } from "../../../types/protocaas-types";
+import { ComputeResourceSpecProcessor, ComputeResourceSpecProcessorParameter } from "../../../types/dendro-types";
 import useRoute from "../../../useRoute";
 import { useProject } from "../ProjectPageContext";
 import { useElectricalSeriesPaths } from "../FileEditor/NwbFileEditor";
@@ -10,8 +10,8 @@ import { useElectricalSeriesPaths } from "../FileEditor/NwbFileEditor";
 
 
 type EditJobDefinitionWindowProps = {
-    jobDefinition: ProtocaasProcessingJobDefinition | undefined
-    jobDefinitionDispatch?: (action: ProtocaasProcessingJobDefinitionAction) => void
+    jobDefinition: DendroProcessingJobDefinition | undefined
+    jobDefinitionDispatch?: (action: DendroProcessingJobDefinitionAction) => void
     secretParameterNames?: string[]
     processor: ComputeResourceSpecProcessor
     nwbFile?: RemoteH5File

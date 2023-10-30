@@ -1,4 +1,4 @@
-# Protocaas for developers
+# Dendro for developers
 
 Here are some notes for developers. This is not a complete guide, but it should help you get started. Please contact the authors if you have any questions. We are happy to accept questions and pull requests.
 
@@ -10,7 +10,7 @@ Here are some notes for developers. This is not a complete guide, but it should 
 ## Running the Python tests (vscode action)
 
 ```bash
-# Install protocaas
+# Install dendro
 cd python
 pip install -e .
 ```
@@ -64,7 +64,7 @@ Install yarn (`npm install -g yarn`).
 
 ```bash
 # Install the dependencies
-cd protocaas
+cd dendro
 yarn install
 ```
 
