@@ -29,7 +29,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
     }, [setRoute])
 
     const onHelp = useCallback(() => {
-        window.open('https://github.com/scratchrealm/dendro/blob/main/README.md', '_blank')
+        window.open('https://github.com/flatironinstitute/dendro/blob/main/README.md', '_blank')
     }, [])
 
     return (

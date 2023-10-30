@@ -12,7 +12,7 @@ setup(
     version=__version__,
     author="Jeremy Magland",
     author_email="jmagland@flatironinstitute.org",
-    url="https://github.com/scratchrealm/dendro",
+    url="https://github.com/flatironinstitute/dendro",
     description="Create, run, and share neuroscience analyses in the browser",
     long_description=long_description,
     long_description_content_type='text/markdown',
