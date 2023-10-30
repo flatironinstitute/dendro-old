@@ -1,16 +1,16 @@
 [![testing](https://github.com/flatironinstitute/dendro/actions/workflows/tests.yml/badge.svg)](https://github.com/flatironinstitute/dendro/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/flatironinstitute/dendro/graph/badge.svg?token=B2DUYR34RZ)](https://codecov.io/gh/flatironinstitute/dendro)
 
-# Dendro (prototype v3) - Neuroscience Analysis Web App
+# Dendro (prototype v4)
 
-Dendro is a **prototype** web application designed for scientists in research labs who want to efficiently manage and conduct neurophysiology data analysis. The current focus is spike sorting of electrophysiology data. Whether you are working with your own data or utilizing public resources from the [DANDI Archive](https://dandiarchive.org/), Dendro provides a user-friendly platform for organizing, running, and sharing neuroscientific processing jobs.
+Dendro is a web application and compute framework aimed at researchers who want to manage and analyze neurophysiological data. It is designed to be used in conjunction with the [DANDI Archive](https://dandiarchive.org/), a public repository for neurophysiology data. For now we are focusing on supporting spike sorting of electrophysiology data, but we plan to expand the capabilities in the future.
 
-:warning: **Please note:** This software is currently in the prototype phase and is not recommended for production use.
+:warning: Currently, this software is in the prototype stage, so it is not recommended for production use.
 
-If you're a lab working with electrophysiology data and looking for a solution to spike sort your data, consider trying this software as a beta tester. You can use it in the cloud *or* with your local resources. Reach out to one of the authors if interested.
+Reach out to the authors if you are interested in **beta testing** Dendro. You can use it in the cloud *or* with your local resources.
 
 * [Access the live site](https://dendro.vercel.app) (it's a prototype!)
-* [Learn how to host a compute resource](./doc/host_compute_resource.md)
+* [Learn how to host a Dendro compute resource](./doc/host_compute_resource.md)
 
 ## System Requirements
 
@@ -22,7 +22,7 @@ If you want to [host your own compute resource](./doc/host_compute_resource.md) 
 
 ### Upload raw ephys data to DANDI
 
-The first step in uploading your raw electrophysiology data to DANDI is to convert it to the NWB format. You can use [NeuroConv](https://neuroconv.readthedocs.io/en/main/user_guide/user_guide.html) and/or [nwb-guide](https://github.com/NeurodataWithoutBorders/nwb-guide).
+To process your data using Dendro, you should first prepare and upload your data to DANDI by creating a public or embargoed dandiset. To convert your neurophysiology data to NWB (Neurodata Without Borders) format, you should use [NeuroConv](https://neuroconv.readthedocs.io/en/main/user_guide/user_guide.html) and/or [nwb-guide](https://github.com/NeurodataWithoutBorders/nwb-guide).
 
 Once your data is in NWB format, create a new dandiset on [DANDI Archive](https://dandiarchive.org/) and then [follow these instructions to upload your data](https://www.dandiarchive.org/handbook/13_upload). If you are not ready to make your data public, you can choose to create an embargoed (private) dandiset and share it with collaborators. If you are only testing the system, you can use the [staging site](https://gui-staging.dandiarchive.org/).
 
@@ -40,7 +40,7 @@ Once you have created a Dendro project associated with a dandiset (see above) yo
 
 Once you have imported NWB files from DANDI into your Dendro project, you can begin processing your data. At this point you will need to select a compute resource. By default a very limited default compute resource will be used, which is okay for quick tests. For more serious processing, you will need to [set up your own compute resource](./doc/host_compute_resource.md). You can select the compute resource by clicking the "Settings" button on the "Project home" tab.
 
-Once you have selected the compute resource for your project, you can select files for spike sorting using the checkboxes and then click "Run spike sorting". Choose the desired spike sorter, set the desired sorting parameters, and click "Submit". Note that in order to run spike sorting, your NWB files will need to have the appropriate ElectricalSeries data objects in the acquisition section.
+Once you have selected the compute resource for your project, you can select files for spike sorting using the checkboxes and then click "Run spike sorting". Choose the desired spike sorter, set the desired sorting parameters, and click "Submit". Note that in order to run spike sorting, your NWB files will need to have the appropriate ElectricalSeries data objects in the acquisition section as well as the appropriate probe geometry.
 
 You can then monitor the sorting jobs using the "Jobs" tab, or by viewing the greyed-out files inside the "generated" folder.
 
@@ -72,7 +72,7 @@ More detailed instructions will be forthcoming. For now you can take a look at t
 
 Dendro organizes datasets into projects, files and jobs, streamlining your data management process. Each project is associated a dandiset and a compute resource and comprises files and processing jobs. You can choose to make your projects public or private.
 
-Project files serve as either pointers to external data sources (e.g., DANDI assets) or as the output of specific processing jobs. These files are typically formatted in NWB (Neurodata Without Borders) format. To get started, you can use the DANDI import tool to seamlessly import data from DANDI repositories. Once imported, you can define processing jobs, such as spike sorting, that take these raw data files as input and generate new project files as output. Project files are immutable.
+Project files serve as either pointers to external data sources (e.g., DANDI assets) or as the output of specific processing jobs. These files are typically formatted in NWB format. To get started, you can use the DANDI import tool to seamlessly import data from DANDI repositories. Once imported, you can define processing jobs, such as spike sorting, that take these raw data files as input and generate new project files as output. Project files are immutable.
 
 ### Files and Jobs are Tightly Linked
 
@@ -82,7 +82,7 @@ Files and jobs can also be automatically deleted if a new job is queued that wou
 
 ### Processing Apps
 
-Dendro processing tools are organized into plugin apps which are containerized executable programs. At this point, there are only [a few processing apps available](https://github.com/scratchrealm/pc-spike-sorting), including:
+Dendro processing tools are organized into plugin apps which are containerized executable programs. At this time, there are only [a few processing apps available](https://github.com/scratchrealm/pc-spike-sorting), including:
 
 - Spike sorting using Kilosort 2.5
 - Spike sorting using Kilosort 3
