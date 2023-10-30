@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 import { fetchProjectsForUser } from "../../dbInterface/dbInterface";
-import { ProtocaasProject } from "../../types/protocaas-types";
+import { DendroProject } from "../../types/dendro-types";
 
-const useProjectsForUser = (): ProtocaasProject[] | undefined => {
-    const [projects, setProjects] = useState<ProtocaasProject[] | undefined>(undefined)
+const useProjectsForUser = (): DendroProject[] | undefined => {
+    const [projects, setProjects] = useState<DendroProject[] | undefined>(undefined)
     const auth = useGithubAuth()
     useEffect(() => {
         let canceled = false

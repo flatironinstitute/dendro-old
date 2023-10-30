@@ -1,6 +1,6 @@
-# Hosting a Protocaas compute resource
+# Hosting a Dendro compute resource
 
-Each Protocaas project comes equipped with a dedicated compute resource for executing analysis jobs. The default setting uses a compute resource provided by the author with limitations on CPU, memory, and concurrent jobs, shared among all users. This public resource should only be used for testing with small jobs. Contact one of the authors if you would like to run more intensive processing or configure your own compute resources.
+Each Dendro project comes equipped with a dedicated compute resource for executing analysis jobs. The default setting uses a compute resource provided by the author with limitations on CPU, memory, and concurrent jobs, shared among all users. This public resource should only be used for testing with small jobs. Contact one of the authors if you would like to run more intensive processing or configure your own compute resources.
 
 Prerequisites
 
@@ -11,7 +11,7 @@ Clone this repo, then
 
 ```bash
 # install
-cd protocaas/python
+cd dendro/python
 pip install -e .
 ```
 
@@ -20,14 +20,14 @@ pip install -e .
 export COMPUTE_RESOURCE_DIR=/some/path
 export CONTAINER_METHOD=singularity # or docker
 cd $COMPUTE_RESOURCE_DIR
-protocaas register-compute-resource
+dendro register-compute-resource
 # Open the provided link in a browser and log in using GitHub
 ```
 
 ```bash
 # Start the compute resource
 cd $COMPUTE_RESOURCE_DIR
-protocaas start-compute-resource
+dendro start-compute-resource
 # Leave this open in a terminal. It is recommended that you use a terminal multiplexer like tmux or screen.
 ```
 
@@ -71,7 +71,7 @@ You will need to provide the following fields when configuring the app in the we
 * Job queue: the name of the AWS Batch job queue to use
 * Job definition: the name of the AWS Batch job definition to use
 
-You will also need to provide your AWS credentials in the `.protocaas-compute-resource-node.yaml` in the directory where yur compute resource node daemon is running.
+You will also need to provide your AWS credentials in the `.dendro-compute-resource-node.yaml` in the directory where yur compute resource node daemon is running.
 
 Don't forget to restart your compute resource node after making changes to the web interface.
 

@@ -1,7 +1,7 @@
 script_jobs
 example-data
 tmp
-.protocaas-compute-resource-node.yaml
+.dendro-compute-resource-node.yaml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -16,7 +16,7 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height}) => {
                 <ComputeResourcesTable />
                 <hr />
                 <p>
-                    <a href="https://github.com/scratchrealm/protocaas/blob/main/doc/host_compute_resource.md" target="_blank" rel="noreferrer">
+                    <a href="https://github.com/scratchrealm/dendro/blob/main/doc/host_compute_resource.md" target="_blank" rel="noreferrer">
                         Add a compute resource
                     </a>
                 </p>

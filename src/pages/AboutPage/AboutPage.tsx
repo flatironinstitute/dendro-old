@@ -8,7 +8,7 @@ type Props = {
 const AboutPage: FunctionComponent<Props> = ({width, height}) => {
     return (
         <div>
-            This is protocaas.
+            This is dendro.
         </div>
     )
 }

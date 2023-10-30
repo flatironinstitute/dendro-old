@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 from dataclasses import dataclass
-from protocaas.sdk import App, ProcessorBase, InputFile, OutputFile, field
+from dendro.sdk import App, ProcessorBase, InputFile, OutputFile, field
 
 
 def test_app():

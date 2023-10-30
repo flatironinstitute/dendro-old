@@ -1,5 +1,5 @@
 import os
-from protocaas.client import load_project
+from dendro.client import load_project
 
 
 def test_load_project():
@@ -8,7 +8,7 @@ def test_load_project():
         return
 
     # if this project or file disappears then we'll need to update that here
-    project_id = 'ae9596fb'
+    project_id = '462c0566'
     file_name = 'imported/000618/sub-paired-english/sub-paired-english_ses-paired-english-m108-191125-163508_ecephys.nwb'
     project = load_project(project_id)
     file = project.get_file(file_name)

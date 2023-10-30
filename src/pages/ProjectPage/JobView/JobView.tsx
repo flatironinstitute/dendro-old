@@ -1,8 +1,8 @@
 import { FunctionComponent, PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
 import ComputeResourceNameDisplay from "../../../ComputeResourceNameDisplay";
-import { defaultJobDefinition, fetchJob, ProtocaasProcessingJobDefinition } from "../../../dbInterface/dbInterface";
+import { defaultJobDefinition, fetchJob, DendroProcessingJobDefinition } from "../../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";
-import { ProtocaasJob } from "../../../types/protocaas-types";
+import { DendroJob } from "../../../types/dendro-types";
 import UserIdComponent from "../../../UserIdComponent";
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow";
 import { ElapsedTimeComponent } from "../FileEditor/NwbFileEditor";
@@ -14,7 +14,7 @@ type Props = {
 }
 
 const useJob = (jobId: string) => {
-    const [job, setJob] = useState<ProtocaasJob | undefined>()
+    const [job, setJob] = useState<DendroJob | undefined>()
 
     const [refreshCode, setRefreshCode] = useState(0)
     const refreshJob = useCallback(() => {
@@ -57,9 +57,9 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
         if (!job) return []
         return job.processorSpec.parameters.filter(p => p.secret).map(p => p.name)
     }, [job])
-    const jobDefinition: ProtocaasProcessingJobDefinition = useMemo(() => {
+    const jobDefinition: DendroProcessingJobDefinition = useMemo(() => {
         if (!job) return defaultJobDefinition
-        const ret: ProtocaasProcessingJobDefinition = {
+        const ret: DendroProcessingJobDefinition = {
             inputFiles: job.inputFiles.map(f => ({
                 name: f.name,
                 fileName: f.fileName

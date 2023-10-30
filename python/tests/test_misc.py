@@ -1,23 +1,23 @@
 import pytest
-from protocaas.api_helpers.core._get_project_role import _check_user_can_edit_project, _check_user_can_read_project, _check_user_is_project_admin, _project_has_user, AuthException
-from protocaas.api_helpers.core.protocaas_types import ProtocaasProject, ProtocaasProjectUser
+from dendro.api_helpers.core._get_project_role import _check_user_can_edit_project, _check_user_can_read_project, _check_user_is_project_admin, _project_has_user, AuthException
+from dendro.api_helpers.core.dendro_types import DendroProject, DendroProjectUser
 
 def test_get_project_role():
-    project = ProtocaasProject(
+    project = DendroProject(
         projectId='test-project-id',
         name='test-project-name',
         description='test-project-description',
         ownerId='github|test-owner-id',
         users=[
-            ProtocaasProjectUser(
+            DendroProjectUser(
                 userId='github|admin-user',
                 role='admin'
             ),
-            ProtocaasProjectUser(
+            DendroProjectUser(
                 userId='github|editor-user',
                 role='editor'
             ),
-            ProtocaasProjectUser(
+            DendroProjectUser(
                 userId='github|viewer-user',
                 role='viewer'
             )
