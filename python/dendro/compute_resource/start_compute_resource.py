@@ -233,9 +233,16 @@ def _load_apps(*, compute_resource_id: str, compute_resource_private_key: str, c
         compute_resource_node_name=compute_resource_node_name,
         compute_resource_node_id=compute_resource_node_id
     )
-    from ..api_helpers.routers.compute_resource.router import GetAppsResponse
-    resp = GetAppsResponse(**resp)
-    compute_resource_apps = resp.apps
+
+    # It would be nice to do it this way, but we can't because we don't want to import stuff from the api here
+    # from ..api_helpers.routers.compute_resource.router import GetAppsResponse
+    # resp = GetAppsResponse(**resp)
+    # compute_resource_apps = resp.apps
+
+    # instead:
+    compute_resource_apps = resp['apps']
+    compute_resource_apps = [DendroComputeResourceApp(**app) for app in compute_resource_apps]
+
     return _load_apps_from_compute_resource_apps(compute_resource_apps)
 
 def _load_apps_from_compute_resource_apps(compute_resource_apps: List[DendroComputeResourceApp]) -> List[App]:
