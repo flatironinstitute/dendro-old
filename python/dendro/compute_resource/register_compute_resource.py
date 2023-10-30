@@ -74,9 +74,9 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
     print(url)
     print('')
 
-    assert compute_resource_id is not None
-    assert compute_resource_private_key is not None
-    return compute_resource_id, compute_resource_private_key
+    assert COMPUTE_RESOURCE_ID is not None
+    assert COMPUTE_RESOURCE_PRIVATE_KEY is not None
+    return COMPUTE_RESOURCE_ID, COMPUTE_RESOURCE_PRIVATE_KEY
 
 def _random_string(length: int) -> str:
     import random
