@@ -4,7 +4,7 @@ import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "
 import Hyperlink from "../../../components/Hyperlink";
 import ComputeResourceNameDisplay from "../../../ComputeResourceNameDisplay";
 import { timeAgoString } from "../../../timeStrings";
-import { ProtocaasJob } from "../../../types/protocaas-types";
+import { DendroJob } from "../../../types/dendro-types";
 import UserIdComponent from "../../../UserIdComponent";
 import { Checkbox, selectedStringsReducer } from "../FileBrowser/FileBrowser2";
 import JobsTableMenuBar from "./JobsTableMenuBar";
@@ -13,7 +13,7 @@ type Props = {
     width?: number
     height?: number
     fileName: string
-    jobs: ProtocaasJob[] | undefined
+    jobs: DendroJob[] | undefined
     onJobClicked: (jobId: string) => void
     createJobEnabled?: boolean
     createJobTitle?: string
@@ -25,7 +25,7 @@ const vPadding = 5
 
 type RowItem = {
     type: 'job'
-    job: ProtocaasJob
+    job: DendroJob
     timestampCreated: number
 } | {
     type: 'batch'

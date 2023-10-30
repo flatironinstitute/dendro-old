@@ -1,4 +1,4 @@
-name: testing
+name: CI
 
 on: [push, pull_request]
 
@@ -19,7 +19,7 @@ jobs:
     - name: Install other packages needed for api tests
       run: pip install httpx
     - name: Run tests and collect coverage
-      run: cd python && pytest --cov protocaas --cov-report=xml --cov-report=term tests/
+      run: cd python && pytest --cov dendro --cov-report=xml --cov-report=term tests/
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,9 +1,9 @@
 import { FunctionComponent, useEffect, useMemo, useState } from "react"
 import { App } from "../../dbInterface/dbInterface"
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ProtocaasComputeResource } from "../../types/protocaas-types"
+import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, DendroComputeResource } from "../../types/dendro-types"
 
 type Props = {
-    computeResource: ProtocaasComputeResource
+    computeResource: DendroComputeResource
     onNewApp: (name: string, specUri: string, awsBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
     appBeingEdited?: App
 }

@@ -1,6 +1,6 @@
 import { Build } from "@mui/icons-material"
 import { FunctionComponent, useMemo } from "react"
-import { ComputeResourceSpecProcessor } from "../../types/protocaas-types"
+import { ComputeResourceSpecProcessor } from "../../types/dendro-types"
 import './Processor.css'
 import { useProject } from "./ProjectPageContext"
 

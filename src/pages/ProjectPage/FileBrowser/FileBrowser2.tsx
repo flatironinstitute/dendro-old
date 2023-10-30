@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react";
 import Hyperlink from '../../../components/Hyperlink';
 import { timeAgoString } from '../../../timeStrings';
-import { ProtocaasFile } from '../../../types/protocaas-types';
+import { DendroFile } from '../../../types/dendro-types';
 import { useProject } from '../ProjectPageContext';
 import './file-browser-table.css';
 import FileBrowserMenuBar from './FileBrowserMenuBar';
@@ -12,7 +12,7 @@ import formatByteCount from './formatByteCount';
 import { DandiUploadTask } from '../DandiUpload/prepareDandiUploadTask';
 
 type Props = {
-    files: ProtocaasFile[] | undefined
+    files: DendroFile[] | undefined
     onOpenFile: (path: string) => void
     onDeleteFile: (path: string) => void
     hideSizeColumn?: boolean
@@ -112,7 +112,7 @@ type TreeNode = {
     type: 'file' | 'folder'
     name: string
     subNodes: TreeNode[]
-    file?: ProtocaasFile
+    file?: DendroFile
 }
 
 const FileBrowser2: FunctionComponent<Props> = ({ onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload}) => {
@@ -359,7 +359,7 @@ export const FileIcon: FunctionComponent<{fileName: string}> = ({fileName}) => {
     }
     else if (ext === 'stan') {
         // return <FontAwesomeIcon icon={faFile as any} style={{color: 'darkorange'}} />
-        return <img src="/protocaas-logo.png" alt="logo" height={14} style={{paddingBottom: 0, cursor: 'pointer'}} />
+        return <img src="/dendro-logo.png" alt="logo" height={14} style={{paddingBottom: 0, cursor: 'pointer'}} />
     }
     else if (ext === 'nwb') {
         return <FontAwesomeIcon icon={faFile as any} style={{color: 'red'}} />

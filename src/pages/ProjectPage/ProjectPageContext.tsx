@@ -2,7 +2,7 @@ import React, { FunctionComponent, PropsWithChildren, useCallback, useEffect, us
 import { deleteFile, deleteJob, deleteProject, fetchFiles, fetchJobsForProject, fetchProject, setProjectName, setProjectDescription, getComputeResource, setProjectComputeResourceId } from '../../dbInterface/dbInterface';
 import { useGithubAuth } from '../../GithubAuth/useGithubAuth';
 import { onPubsubMessage, setPubNubListenChannel } from '../../pubnub/pubnub';
-import { ProtocaasComputeResource, ProtocaasFile, ProtocaasJob, ProtocaasProject } from '../../types/protocaas-types';
+import { DendroComputeResource, DendroFile, DendroJob, DendroProject } from '../../types/dendro-types';
 
 type Props = {
     projectId: string
@@ -106,18 +106,18 @@ const openTabsReducer = (state: OpenTabsState, action: OpenTabsAction) => {
 
 type ProjectPageContextType = {
     projectId: string
-    project?: ProtocaasProject
-    files?: ProtocaasFile[]
-    filesIncludingPending?: ProtocaasFile[]
+    project?: DendroProject
+    files?: DendroFile[]
+    filesIncludingPending?: DendroFile[]
     openTabs: {
         tabName: string
         content?: string
         editedContent?: string
     }[]
     currentTabName?: string
-    jobs?: ProtocaasJob[]
+    jobs?: DendroJob[]
     computeResourceId?: string
-    computeResource?: ProtocaasComputeResource
+    computeResource?: DendroComputeResource
     projectRole?: 'admin' | 'viewer' | 'none' | 'editor'
     openTab: (tabName: string) => void
     closeTab: (tabName: string) => void
@@ -158,12 +158,12 @@ const ProjectPageContext = React.createContext<ProjectPageContextType>({
 })
 
 export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({children, projectId}) => {
-    const [project, setProject] = React.useState<ProtocaasProject | undefined>()
-    const [files, setFiles] = React.useState<ProtocaasFile[] | undefined>()
+    const [project, setProject] = React.useState<DendroProject | undefined>()
+    const [files, setFiles] = React.useState<DendroFile[] | undefined>()
     const [refreshFilesCode, setRefreshFilesCode] = React.useState(0)
     const refreshFiles = useCallback(() => setRefreshFilesCode(rfc => rfc + 1), [])
 
-    const [jobs, setJobs] = React.useState<ProtocaasJob[] | undefined>(undefined)
+    const [jobs, setJobs] = React.useState<DendroJob[] | undefined>(undefined)
     const [refreshJobsCode, setRefreshJobsCode] = React.useState(0)
     const refreshJobs = useCallback(() => setRefreshJobsCode(c => c + 1), [])
 
@@ -212,7 +212,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
     }, [refreshJobsCode, projectId, auth])
 
     // if any jobs are newly completed, refresh the files
-    const [previousJobs, setPreviousJobs] = React.useState<ProtocaasJob[] | undefined>(undefined)
+    const [previousJobs, setPreviousJobs] = React.useState<DendroJob[] | undefined>(undefined)
     useEffect(() => {
         if (!jobs) return
         if (previousJobs) {
@@ -277,7 +277,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         if (!jobs) return undefined
         if (!files) return undefined
         const fileNames = new Set(files.map(f => f.fileName))
-        const pf: ProtocaasFile[] = []
+        const pf: DendroFile[] = []
         for (const job of jobs) {
             if (['pending', 'starting', 'queued', 'running', 'failed'].includes(job.status)) {
                 for (const out of job.outputFiles) {
@@ -305,7 +305,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         return files && pendingFiles ? [...files, ...pendingFiles] : undefined
     }, [files, pendingFiles])
 
-    const [computeResource, setComputeResource] = React.useState<ProtocaasComputeResource | undefined>(undefined)
+    const [computeResource, setComputeResource] = React.useState<DendroComputeResource | undefined>(undefined)
     useEffect(() => {
         let canceled = false
         const load = async () => {

@@ -1,6 +1,6 @@
 import shutil
 import tempfile
-from protocaas.compute_resource.register_compute_resource import register_compute_resource
+from dendro.compute_resource.register_compute_resource import register_compute_resource
 
 
 def test_register_compute_resource():

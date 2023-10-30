@@ -8,7 +8,7 @@ import JobsWindow from "../JobsWindow/JobsWindow";
 import LoadNwbInPythonWindow from "../LoadNwbInPythonWindow/LoadNwbInPythonWindow";
 import { useProject } from "../ProjectPageContext";
 import SpikeSortingOutputSection from "./SpikeSortingOutputSection/SpikeSortingOutputSection";
-import { ProtocaasJob } from "../../../types/protocaas-types";
+import { DendroJob } from "../../../types/dendro-types";
 import { AssetResponse } from "../../DandiBrowser/types";
 import { getDandiApiHeaders } from "../../DandiBrowser/DandiBrowser";
 
@@ -326,7 +326,7 @@ const isDandiAssetUrl = (url: string) => {
 }
 
 type ElapsedTimeComponentProps = {
-    job: ProtocaasJob
+    job: DendroJob
 }
 
 export const ElapsedTimeComponent: FunctionComponent<ElapsedTimeComponentProps> = ({job}) => {
