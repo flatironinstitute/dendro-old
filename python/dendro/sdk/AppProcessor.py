@@ -1,9 +1,9 @@
 from typing import Any, List, Union, Dict, Type
 from dataclasses import dataclass
 import inspect
-
-from ._get_context_attributes_for_dataclass import _get_context_attributes_for_dataclass
-from .ProcessorBase import ProcessorBase, _default_not_specified
+from pydantic import BaseModel
+from pydantic_core import PydanticUndefined
+from .ProcessorBase import ProcessorBase
 from .InputFile import InputFile
 from .OutputFile import OutputFile
 
@@ -11,12 +11,12 @@ from .OutputFile import OutputFile
 class AppProcessorInput:
     """An input file of a processor in an app"""
     name: str
-    help: str
+    description: str
     list: bool
     def get_spec(self):
         ret: Dict[str, Any] = {
             'name': self.name,
-            'help': self.help
+            'description': self.description
         }
         if self.list:
             ret['list'] = True
@@ -25,7 +25,7 @@ class AppProcessorInput:
     def from_spec(spec):
         return AppProcessorInput(
             name=spec['name'],
-            help=spec['help'],
+            description=spec['description'],
             list=spec.get('list', False)
         )
 
@@ -33,24 +33,24 @@ class AppProcessorInput:
 class AppProcessorOutput:
     """An output file of a processor in an app"""
     name: str
-    help: str
+    description: str
     def get_spec(self):
         return {
             'name': self.name,
-            'help': self.help
+            'description': self.description
         }
     @staticmethod
     def from_spec(spec):
         return AppProcessorOutput(
             name=spec['name'],
-            help=spec['help']
+            description=spec['description']
         )
 
 @dataclass
 class AppProcessorParameter:
     """A parameter of a processor in an app"""
     name: str
-    help: str
+    description: str
     type: Any
     default: Any
     options: Union[List[str], List[int], List[float], None]
@@ -58,10 +58,10 @@ class AppProcessorParameter:
     def get_spec(self):
         ret: Dict[str, Any] = {
             'name': self.name,
-            'help': self.help,
+            'description': self.description,
             'type': _type_to_string(self.type)
         }
-        if self.default != _default_not_specified:
+        if self.default != PydanticUndefined:
             ret['default'] = self.default
         if self.options is not None:
             ret['options'] = self.options
@@ -70,12 +70,12 @@ class AppProcessorParameter:
         return ret
     @staticmethod
     def from_spec(spec):
-        default = spec.get('default', _default_not_specified)
+        default = spec.get('default', PydanticUndefined)
         options = spec.get('options', None)
         secret = spec.get('secret', False)
         return AppProcessorParameter(
             name=spec['name'],
-            help=spec['help'],
+            description=spec['description'],
             type=_type_from_string(spec['type']),
             default=default,
             options=options,
@@ -120,7 +120,7 @@ class AppProcessor:
     """A processor in an app"""
     def __init__(self, *,
         name: str,
-        help: str,
+        description: str,
         label: str,
         inputs: List[AppProcessorInput],
         outputs: List[AppProcessorOutput],
@@ -130,7 +130,7 @@ class AppProcessor:
         processor_class: Union[Type[ProcessorBase], None] = None
     ) -> None:
         self._name = name
-        self._help = help
+        self._description = description
         self._label = label
         self._inputs = inputs
         self._outputs = outputs
@@ -141,7 +141,7 @@ class AppProcessor:
     def get_spec(self):
         return {
             'name': self._name,
-            'help': self._help,
+            'description': self._description,
             'label': self._label,
             'inputs': [i.get_spec() for i in self._inputs],
             'outputs': [o.get_spec() for o in self._outputs],
@@ -158,7 +158,7 @@ class AppProcessor:
         tags = [AppProcessorTag.from_spec(t) for t in spec['tags']]
         return AppProcessor(
             name=spec['name'],
-            help=spec['help'],
+            description=spec['description'],
             label=spec['label'],
             inputs=inputs,
             outputs=outputs,
@@ -169,7 +169,7 @@ class AppProcessor:
     @staticmethod
     def from_processor_class(processor_class: Type[ProcessorBase]):
         name = processor_class.name
-        help = processor_class.help
+        description = processor_class.description
         label = processor_class.label
         tags = processor_class.tags
         attributes = processor_class.attributes
@@ -186,7 +186,7 @@ class AppProcessor:
 
         return AppProcessor(
             name=name,
-            help=help,
+            description=description,
             label=label,
             inputs=inputs,
             outputs=outputs,
@@ -205,67 +205,83 @@ def _get_context_inputs_outputs_parameters_for_processor(processor_class: Type[P
 
     return _get_context_inputs_outputs_parameters_for_dataclass(context_param.annotation)
 
-def _get_context_inputs_outputs_parameters_for_dataclass(x: Type[Any]):
-    context_attributes = _get_context_attributes_for_dataclass(x)
+def _get_context_inputs_outputs_parameters_for_dataclass(context_class: Type[BaseModel]):
+    context_fields = []
+    for name, field in context_class.model_fields.items():
+        if name is None:
+            continue
+        print(field)
+        context_fields.append({
+            'name': name,
+            'description': field.description if hasattr(field, 'description') else '',
+            'annotation': field.annotation if hasattr(field, 'annotation') else None,
+            'default': field.default if hasattr(field, 'default') else PydanticUndefined,
+            'options': getattr(field, 'options') if hasattr(field, 'options') else None,
+            'secret': getattr(field, 'secret') if hasattr(field, 'secret') else None,
+        })
 
     inputs: List[AppProcessorInput] = []
     outputs: List[AppProcessorOutput] = []
     parameters: List[AppProcessorParameter] = []
-    for context_attribute in context_attributes:
-        if context_attribute.type_hint == InputFile or context_attribute.type_hint == List[InputFile]:
-            is_list = context_attribute.type_hint == List[InputFile]
-            field = context_attribute.field
+    for context_field in context_fields:
+        name: str = context_field['name']
+        description: str = context_field['description']
+        annotation: Any = context_field['annotation']
+        default: Any = context_field['default']
+        secret: Union[bool, None] = context_field['secret']
+        options: Union[List[str], None] = context_field['options']
+        if annotation == InputFile or annotation == List[InputFile]:
+            is_list = annotation == List[InputFile]
             inputs.append(AppProcessorInput(
-                name=context_attribute.name,
-                help=field.help,
+                name=name,
+                description=description,
                 list=is_list
             ))
             # check to make sure other fields are not set
-            if field.options is not None:
-                raise AppProcessorException(f"Input {context_attribute.name} has options set - only parameters can have options")
-            if field.secret is not None:
-                raise AppProcessorException(f"Input {context_attribute.name} has secret set - only parameters can have secret set")
-            if field.default is not _default_not_specified:
-                raise AppProcessorException(f"Input {context_attribute.name} has default set - only parameters can have default set")
-        elif context_attribute.type_hint == OutputFile:
-            field = context_attribute.field
+            if options is not None:
+                raise AppProcessorException(f"Input {name} has options set - only parameters can have options")
+            if secret is not None:
+                raise AppProcessorException(f"Input {name} has secret set - only parameters can have secret set")
+            if default is not PydanticUndefined:
+                raise AppProcessorException(f"Input {name} has default set - only parameters can have default set")
+        elif annotation == OutputFile:
             outputs.append(AppProcessorOutput(
-                name=context_attribute.name,
-                help=field.help
+                name=name,
+                description=description
             ))
             # check to make sure other fields are not set
-            if field.options is not None:
-                raise AppProcessorException(f"Input {context_attribute.name} has options set - only parameters can have options")
-            if field.secret is not None:
-                raise AppProcessorException(f"Input {context_attribute.name} has secret set - only parameters can have secret set")
-            if field.default is not _default_not_specified:
-                raise AppProcessorException(f"Input {context_attribute.name} has default set - only parameters can have default set")
-        elif _is_valid_parameter_type(context_attribute.type_hint):
+            if options is not None:
+                raise AppProcessorException(f"Input {name} has options set - only parameters can have options")
+            if secret is not None:
+                raise AppProcessorException(f"Input {name} has secret set - only parameters can have secret set")
+            if default is not PydanticUndefined:
+                raise AppProcessorException(f"Input {name} has default set - only parameters can have default set")
+        elif _is_valid_parameter_type(annotation):
             parameters.append(AppProcessorParameter(
-                name=context_attribute.name,
-                help=context_attribute.field.help,
-                type=context_attribute.type_hint,
-                default=context_attribute.field.default,
-                options=context_attribute.field.options,
-                secret=context_attribute.field.secret if context_attribute.field.secret is not None else False
+                name=name,
+                description=description,
+                type=annotation,
+                default=default,
+                options=options,
+                secret=secret if secret is not None else False
             ))
-        elif _is_dataclass(context_attribute.type_hint):
-            inputs0, outputs0, parameters0 = _get_context_inputs_outputs_parameters_for_dataclass(context_attribute.type_hint)
+        elif _is_pydantic_model_class(annotation):
+            inputs0, outputs0, parameters0 = _get_context_inputs_outputs_parameters_for_dataclass(annotation)
             for input0 in inputs0:
-                input0.name = f'{context_attribute.name}.{input0.name}'
+                input0.name = f'{name}.{input0.name}'
                 inputs.append(input0)
             for output0 in outputs0:
-                output0.name = f'{context_attribute.name}.{output0.name}'
+                output0.name = f'{name}.{output0.name}'
                 outputs.append(output0)
             for parameter0 in parameters0:
-                parameter0.name = f'{context_attribute.name}.{parameter0.name}'
+                parameter0.name = f'{name}.{parameter0.name}'
                 parameters.append(parameter0)
         else:
-            raise AppProcessorException(f"Unsupported type for {context_attribute.name}: {context_attribute.type_hint}")
+            raise AppProcessorException(f"Unsupported type for {name}: {annotation}")
     return inputs, outputs, parameters
 
-def _is_dataclass(type: Any):
-    return hasattr(type, '__dataclass_fields__')
+def _is_pydantic_model_class(type: Any):
+    return inspect.isclass(type) and issubclass(type, BaseModel)
 
 _type_map = {
     'str': str,

@@ -84,7 +84,7 @@ export const isDendroJobOutputFile = (x: any): x is DendroJobOutputFile => {
 
 export type ComputeResourceSpecProcessorParameter = {
     name: string
-    help: string
+    description: string
     type: string
     default?: any
     options?: string[] | number[]
@@ -94,7 +94,7 @@ export type ComputeResourceSpecProcessorParameter = {
 export const isComputeResourceSpecProcessorParameter = (x: any): x is ComputeResourceSpecProcessorParameter => {
     return validateObject(x, {
         name: isString,
-        help: isString,
+        description: isString,
         type: isString,
         default: optional(isString),
         options: optional(isArrayOf(isOneOf([isString, isNumber]))),
@@ -104,27 +104,27 @@ export const isComputeResourceSpecProcessorParameter = (x: any): x is ComputeRes
 
 export type ComputeResourceSpecProcessorInput = {
     name: string
-    help: string
+    description: string
     list: boolean
 }
 
 export const isComputeResourceSpecProcessorInput = (x: any): x is ComputeResourceSpecProcessorInput => {
     return validateObject(x, {
         name: isString,
-        help: isString,
+        description: isString,
         list: isBoolean
     })
 }
 
 export type ComputeResourceSpecProcessorOutput = {
     name: string
-    help: string
+    description: string
 }
 
 export const isComputeResourceSpecProcessorOutput = (x: any): x is ComputeResourceSpecProcessorOutput => {
     return validateObject(x, {
         name: isString,
-        help: isString
+        description: isString
     })
 }
 
@@ -152,7 +152,7 @@ export const isComputeResourceSpecProcessorTag = (x: any): x is ComputeResourceS
 
 export type ComputeResourceSpecProcessor = {
     name: string
-    help: string
+    description: string
     inputs: ComputeResourceSpecProcessorInput[]
     outputs: ComputeResourceSpecProcessorOutput[]
     parameters: ComputeResourceSpecProcessorParameter[]
@@ -163,7 +163,7 @@ export type ComputeResourceSpecProcessor = {
 export const isComputeResourceSpecProcessor = (x: any): x is ComputeResourceSpecProcessor => {
     return validateObject(x, {
         name: isString,
-        help: isString,
+        description: isString,
         inputs: isArrayOf(isComputeResourceSpecProcessorInput),
         outputs: isArrayOf(isComputeResourceSpecProcessorOutput),
         parameters: isArrayOf(isComputeResourceSpecProcessorParameter),
@@ -307,7 +307,7 @@ export const isDendroComputeResourceApp = (x: any): x is DendroComputeResourceAp
 
 export type ComputeResourceSpecApp = {
     name: string
-    help: string
+    description: string
     processors: ComputeResourceSpecProcessor[]
     appImage?: string
     appExecutable?: string
@@ -316,7 +316,7 @@ export type ComputeResourceSpecApp = {
 export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp => {
     return validateObject(x, {
         name: isString,
-        help: isString,
+        description: isString,
         processors: isArrayOf(isComputeResourceSpecProcessor),
         appImage: isString,
         appExecutable: isString

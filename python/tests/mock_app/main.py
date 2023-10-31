@@ -3,29 +3,27 @@
 from typing import List
 import time
 import os
-from dataclasses import dataclass
-from dendro.sdk import App, ProcessorBase, InputFile, OutputFile, field
+from dendro.sdk import BaseModel, Field
+from dendro.sdk import App, ProcessorBase, InputFile, OutputFile
 
 
-@dataclass
-class MockParameterGroup:
-    num: int = field(help='Number', default=1)
-    secret_param: str = field(help='Secret param', default='123', secret=True)
+class MockParameterGroup(BaseModel):
+    num: int = Field(description='Number', default=1)
+    secret_param: str = Field(description='Secret param', default='123', json_schema_extra={'secret': True})
 
-@dataclass
-class MockProcessor1Context:
-    input_file: InputFile = field(help='Input file')
-    input_list: List[InputFile] = field(help='Input file list')
-    output_file: OutputFile = field(help='Output file')
-    text1: str = field(help='Text 1', default='abc')
-    text2: str = field(help='Text 2')
-    text3: str = field(help='Text 3', default='xyz', options=['abc', 'xyz'])
-    val1: float = field(help='Value 1', default=1.0)
-    group: MockParameterGroup = field(help='Group', default=MockParameterGroup())
+class MockProcessor1Context(BaseModel):
+    input_file: InputFile = Field(description='Input file')
+    input_list: List[InputFile] = Field(description='Input file list')
+    output_file: OutputFile = Field(description='Output file')
+    text1: str = Field(description='Text 1', default='abc')
+    text2: str = Field(description='Text 2')
+    text3: str = Field(description='Text 3', default='xyz', json_schema_extra={'options': ['abc', 'xyz']})
+    val1: float = Field(description='Value 1', default=1.0)
+    group: MockParameterGroup = Field(description='Group', default=MockParameterGroup())
 
 class MockProcessor1(ProcessorBase):
     name = 'mock-processor1'
-    help = 'This is mock processor 1'
+    description = 'This is mock processor 1'
     label = 'Mock Processor 1'
     tags = ['mock-processor1', 'test']
     attributes = {'test': True}
@@ -51,7 +49,7 @@ class MockProcessor1(ProcessorBase):
 
 app = App(
     name='test-app',
-    help='This is a test app',
+    description='This is a test app',
     app_image=None,
     app_executable=os.path.abspath(__file__)
 )

@@ -60,7 +60,7 @@ const ProcessorView: FunctionComponent<ProcessorViewProps> = ({processor, width}
                 </div>
                 <div className="ProcessorSecondColumn" style={{flex: 1}}>
                     <div className="ProcessorTitle">{attrs.label || attrs.name}{wipElmt}</div>
-                    <div className="ProcessorDescription">{processor.help}</div>
+                    <div className="ProcessorDescription">{processor.description}</div>
                     <div>&nbsp;</div>
                     <div className="ProcessorParameters">
                         <ProcessorParametersView processor={processor} />
@@ -84,17 +84,17 @@ const ProcessorParametersView: FunctionComponent<ProcessorParametersViewProps> =
         <div>
             <div>
                 {processor.inputs.map((p, i) => <div key={i}>
-                    {p.name} - {p.help}
+                    {p.name} - {p.description}
                 </div>)}
             </div>
             <div>
                 {processor.outputs.map((p, i) => <div key={i}>
-                    {p.name} - {p.help}
+                    {p.name} - {p.description}
                 </div>)}
             </div>
             <div>
                 {processor.parameters.map((p, i) => <div key={i}>
-                    {p.name} - {p.help}
+                    {p.name} - {p.description}
                 </div>)}
             </div>
         </div>

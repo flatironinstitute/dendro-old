@@ -21,7 +21,7 @@ class App:
         self,
         name: str,
         *,
-        help: str,
+        description: str,
         app_image: Union[str, None] = None,
         app_executable: Union[str, None] = None
     ) -> None:
@@ -29,7 +29,7 @@ class App:
 
         Args:
             name (str): The name of the app
-            help (str): A description of the app
+            description (str): A description of the app
             app_image (Union[str, None], optional): The URI for the docker image, or None if no image is to be used. Defaults to None.
             app_executable (Union[str, None], optional): The app executable within the docker image, or on the local file system if app_image=None. If app_image is set, this will default to /app/main.py. If app_image is not set, then an exception with be thrown if this is not set.
         """
@@ -38,7 +38,7 @@ class App:
                 raise DendroAppException('You must set app_executable if app_image is not set')
 
         self._name = name
-        self._help = help
+        self._description = description
         self._app_image = app_image
         self._app_executable = app_executable
         self._processors: List[AppProcessor] = []
@@ -100,7 +100,7 @@ class App:
             )
         spec = {
             'name': self._name,
-            'help': self._help,
+            'description': self._description,
             'appImage': self._app_image,
             'appExecutable': self._app_executable,
             'executable': self._app_executable,
@@ -113,7 +113,7 @@ class App:
         """Define an app from a spec. This is called internally."""
         app = App(
             name=spec['name'],
-            help=spec['help'],
+            description=spec['description'],
             app_image=spec.get('appImage', None),
             app_executable=spec.get('appExecutable', None)
         )

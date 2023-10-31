@@ -77,7 +77,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                     <InputRow
                         key={input.name}
                         name={input.name}
-                        description={input.help}
+                        description={input.description}
                         value={jobDefinition?.inputFiles.find(f => (f.name === input.name))?.fileName}
                         setValid={valid => {
                             validParametersDispatch({
@@ -97,7 +97,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                     <OutputRow
                         key={output.name}
                         name={output.name}
-                        description={output.help}
+                        description={output.description}
                         value={jobDefinition?.outputFiles.find(f => (f.name === output.name))?.fileName}
                         setValid={valid => {
                             validParametersDispatch({
@@ -241,7 +241,7 @@ type ParameterRowProps = {
 }
 
 const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, nwbFile, setValue, setValid, readOnly, secret}) => {
-    const {type, name, help} = parameter
+    const {type, name, description} = parameter
     const [isValid, setIsValid] = useState<boolean>(false)
     return (
         <tr>
@@ -282,7 +282,7 @@ const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, n
                     )
                 }
             </td>
-            <td>{help}</td>
+            <td>{description}</td>
         </tr>
     )
 }

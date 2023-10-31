@@ -37,7 +37,7 @@ const OutputsTable: FunctionComponent<OutputsTableProps> = ({ job }) => {
                                         {x?.fileName || 'unknown'}
                                     </Hyperlink>
                                 </td>
-                                <td>{output.help}</td>
+                                <td>{output.description}</td>
                             </tr>
                         )
                     })
