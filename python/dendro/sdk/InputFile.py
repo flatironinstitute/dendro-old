@@ -1,4 +1,6 @@
 import requests
+import h5py
+import remfile
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .Job import Job
@@ -28,10 +30,7 @@ class InputFile:
                 if chunk:
                     f.write(chunk)
 
-    def to_si_recording(self, electrical_series_path: str):
-        from .utils.input_file import to_si_recording
-
-        return to_si_recording(
-            url=self.get_url(),
-            electrical_series_path=electrical_series_path
-        )
+    def get_h5py_file(self):
+        url = self.get_url()
+        remf = remfile.File(url)
+        return h5py.File(remf, 'r')
