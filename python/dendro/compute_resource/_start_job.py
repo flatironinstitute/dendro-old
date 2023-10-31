@@ -1,9 +1,10 @@
 import os
+import sys
 import subprocess
 from typing import Union
 from ..sdk.App import App
 from ..common._api_request import _processor_put_api_request
-from ..api_helpers.core.dendro_types import ComputeResourceSlurmOpts
+from ..common.dendro_types import ComputeResourceSlurmOpts
 from ._run_job_in_aws_batch import _run_job_in_aws_batch
 from ..mock import using_mock
 
@@ -95,6 +96,7 @@ def _start_job(*,
         env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     if not app_image:
+        print('------------------------ app_executable', app_executable)
         return _run_local_job(
             app_executable=app_executable,
             env_vars=env_vars,
@@ -146,23 +148,28 @@ def _run_local_job(*,
         from ..sdk.App import App
 
         app_instance: App = _load_app_from_main(app_executable)
+        try:
+            print('---------------------------- www', app_executable, [p._name for p in app_instance._processors])
 
-        old_environ = {}
-        for k, v in env_vars.items():
-            old_environ[k] = os.environ.get(k, None)
-            os.environ[k] = v
-
-        # Call the make_spec_file method
-        print('MOCK: running app instance')
-        app_instance.run()
-        print('MOCK: Done running app instance')
-
-        for k, v in old_environ.items():
-            if v is None:
-                del os.environ[k]
-            else:
+            old_environ = {}
+            for k, v in env_vars.items():
+                old_environ[k] = os.environ.get(k, None)
                 os.environ[k] = v
-        return ''
+
+            # Call the make_spec_file method
+            print('MOCK: running app instance')
+            app_instance.run()
+            print('MOCK: Done running app instance')
+
+            for k, v in old_environ.items():
+                if v is None:
+                    del os.environ[k]
+                else:
+                    os.environ[k] = v
+            return ''
+        finally:
+            if 'main' in sys.modules:
+                del sys.modules['main'] # important to do this so that at a later time we can load a different main.py
 
     if run_process:
         print(f'Running: {app_executable}')
@@ -275,13 +282,14 @@ def _load_app_from_main(py_file_path: str) -> App:
         raise Exception(f'Unexpected module name (expected main): {module_name}')
 
     # Save the original sys.path
-    original_sys_path = list(sys.path)
+    original_sys_path = [p for p in sys.path] # important to create a copy here
 
-    # Append the directory path to sys.path
-    sys.path.append(dir_path)
+    # Prepend the directory path to sys.path
+    sys.path.insert(0, dir_path)
 
     try:
-        from main import app # type: ignore
+        import main # type: ignore
+        app = main.app
     finally:
         # Restore the original sys.path
         sys.path = original_sys_path

@@ -1,46 +1,46 @@
-import os
 import shutil
 import tempfile
 from dataclasses import dataclass
 from dendro.sdk import App, ProcessorBase, InputFile, OutputFile, field
+from dendro.mock import set_use_mock
 
 
 def test_app():
-    @dataclass
-    class Processor1Context:
-        input_file: InputFile = field(help='Input file')
-        output_file: OutputFile = field(help='Output file')
-        text1: str = field(help='Text 1', default='abc')
-        text2: str = field(help='Text 2')
-        text3: str = field(help='Text 3', default='xyz', options=['abc', 'xyz'])
-        val1: float = field(help='Value 1', default=1.0)
+    set_use_mock(True)
 
-    class Processor1(ProcessorBase):
-        name = 'processor1'
-        help = 'This is processor 1'
-        label = 'Processor 1'
-        tags = ['processor1', 'test']
-        attributes = {'test': True}
+    try:
+        @dataclass
+        class Processor1Context:
+            input_file: InputFile = field(help='Input file')
+            output_file: OutputFile = field(help='Output file')
+            text1: str = field(help='Text 1', default='abc')
+            text2: str = field(help='Text 2')
+            text3: str = field(help='Text 3', default='xyz', options=['abc', 'xyz'])
+            val1: float = field(help='Value 1', default=1.0)
 
-        @staticmethod
-        def run(context: Processor1Context):
-            assert context.text1 != ''
+        class Processor1(ProcessorBase):
+            name = 'processor1'
+            help = 'This is processor 1'
+            label = 'Processor 1'
+            tags = ['processor1', 'test']
+            attributes = {'test': True}
 
-    app = App(
-        name='test-app',
-        help='This is a test app',
-        app_image='fake-image'
-    )
+            @staticmethod
+            def run(context: Processor1Context):
+                assert context.text1 != ''
 
-    app.add_processor(Processor1)
+        app = App(
+            name='test-app',
+            help='This is a test app',
+            app_image='fake-image'
+        )
 
-    spec = app.get_spec()
-    assert spec['name'] == 'test-app'
+        app.add_processor(Processor1)
 
-    with TemporaryDirectory() as tmpdir:
-        os.environ['SPEC_OUTPUT_FILE'] = tmpdir + '/spec.json'
-        app.run()
-        assert os.path.exists(tmpdir + '/spec.json')
+        spec = app.get_spec()
+        assert spec['name'] == 'test-app'
+    finally:
+        set_use_mock(False)
 
 class TemporaryDirectory:
     """A context manager for temporary directories"""

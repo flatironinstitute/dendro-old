@@ -2,7 +2,7 @@ from typing import Union, List
 from pydantic import BaseModel
 from fastapi import APIRouter, Header
 from ...services._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
-from ...core.dendro_types import DendroFile
+from ....common.dendro_types import DendroFile
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project
 from ...clients.db import fetch_file, fetch_project_files, fetch_project, delete_file as db_delete_file

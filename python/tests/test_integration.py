@@ -1,4 +1,5 @@
 import os
+
 import pytest
 import time
 import tempfile
@@ -10,7 +11,7 @@ import json
 @pytest.mark.api
 async def test_integration(tmp_path):
     # important to put the tests inside so we don't get an import error when running the non-api tests
-    from dendro.api_helpers.core.dendro_types import DendroProjectUser, ComputeResourceSpecApp, DendroComputeResourceApp
+    from dendro.common.dendro_types import DendroProjectUser, ComputeResourceSpecApp, DendroComputeResourceApp, ComputeResourceSlurmOpts
     from dendro.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
     from dendro.common._crypto_keys import sign_message
     from dendro.api_helpers.routers.gui.project_routes import CreateProjectRequest, CreateProjectResponse
@@ -56,6 +57,7 @@ async def test_integration(tmp_path):
     try:
         # Copy mock app source code
         shutil.copytree(src=this_dir + '/mock_app', dst=tmpdir + '/mock_app')
+        shutil.copytree(src=this_dir + '/mock_app_2', dst=tmpdir + '/mock_app_2')
 
         # Create spec.json for mock app
         make_app_spec_file_function(app_dir=tmpdir + '/mock_app', spec_output_file=tmpdir + '/mock_app/spec.json')
@@ -63,6 +65,13 @@ async def test_integration(tmp_path):
         with open(tmpdir + '/mock_app/spec.json', 'r') as f:
             spec = json.load(f)
         compute_resource_spec_app = ComputeResourceSpecApp(**spec)
+
+        # Create spec.json for mock app 2
+        make_app_spec_file_function(app_dir=tmpdir + '/mock_app_2', spec_output_file=tmpdir + '/mock_app_2/spec.json')
+        assert os.path.exists(tmpdir + '/mock_app_2/spec.json')
+        with open(tmpdir + '/mock_app_2/spec.json', 'r') as f:
+            spec_2 = json.load(f)
+        compute_resource_spec_app_2 = ComputeResourceSpecApp(**spec_2)
 
         # Register compute resource in directory
         compute_resource_id, compute_resource_private_key = register_compute_resource(dir=tmpdir, node_name='test_node')
@@ -99,6 +108,16 @@ async def test_integration(tmp_path):
                 DendroComputeResourceApp(
                     name='mock_app',
                     specUri=f'file://{tmpdir}/mock_app/spec.json'
+                ),
+                DendroComputeResourceApp(
+                    name='mock_app_2_slurm',
+                    specUri=f'file://{tmpdir}/mock_app_2/spec.json',
+                    slurm=ComputeResourceSlurmOpts(
+                        partition='test_partition',
+                        time='00:01:00',
+                        cpusPerTask=4,
+                        otherOpts='--test=opt'
+                    )
                 )
             ]
         )
@@ -361,14 +380,38 @@ async def test_integration(tmp_path):
         resp = _gui_post_api_request(url_path='/api/gui/jobs', data=req.dict(), github_access_token=github_access_token)
         resp = CreateJobResponse(**resp)
         assert resp.success
-        job_id = resp.jobId
-        assert job_id
+        job_id_1 = resp.jobId
+        assert job_id_1
+
+        # gui: Create job for app 2
+        processor_name_2 = 'mock-processor2'
+        processor_spec_2 = compute_resource_spec_app_2.processors[0]
+        req = CreateJobRequest(
+            projectId=project2_id,
+            processorName=processor_name_2,
+            inputFiles=[],
+            outputFiles=[],
+            inputParameters=[
+                CreateJobRequestInputParameter(
+                    name='text1',
+                    value='this is text1'
+                )
+            ],
+            processorSpec=processor_spec_2,
+            batchId=None,
+            dandiApiKey=None,
+        )
+        resp = _gui_post_api_request(url_path='/api/gui/jobs', data=req.dict(), github_access_token=github_access_token)
+        resp = CreateJobResponse(**resp)
+        assert resp.success
+        job_id_2 = resp.jobId
+        assert job_id_2
 
         # gui: Get job
-        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id_1}', github_access_token=github_access_token)
         resp = GetJobResponse(**resp)
         job = resp.job
-        assert job.jobId == job_id
+        assert job.jobId == job_id_1
         assert job.projectId == project2_id
         assert job.processorName == processor_name
         assert job.processorSpec == processor_spec
@@ -391,25 +434,26 @@ async def test_integration(tmp_path):
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/jobs', github_access_token=github_access_token)
         resp = GetJobsResponse(**resp)
         jobs = resp.jobs
-        assert len(jobs) == 1
+        assert len(jobs) == 2
 
         # gui: Get compute resource jobs
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/jobs', github_access_token=github_access_token)
         resp = GetJobsForComputeResourceResponse(**resp)
         assert resp.success
-        assert len(resp.jobs) == 1
+        assert len(resp.jobs) == 2
 
         # client: Get project jobs
         resp = _client_get_api_request(url_path=f'/api/client/projects/{project2_id}/jobs')
         resp = ClientGetProjectJobsResponse(**resp)
         assert resp.success
-        assert len(resp.jobs) == 1
+        assert len(resp.jobs) == 2
 
         # Run the compute resource briefly
         start_compute_resource(dir=tmpdir, timeout=1, cleanup_old_jobs=False)
+        start_compute_resource(dir=tmpdir, timeout=1, cleanup_old_jobs=False)
 
         # gui: Get job
-        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id_1}', github_access_token=github_access_token)
         resp = GetJobResponse(**resp)
         job = resp.job
         if job.status == 'failed':
@@ -428,14 +472,14 @@ async def test_integration(tmp_path):
         assert resp.success
         compute_resource = resp.computeResource
         assert compute_resource.spec
-        assert len(compute_resource.spec.apps) == 1
+        assert len(compute_resource.spec.apps) == 2
 
         # gui: Try delete job without proper github access token
         with pytest.raises(Exception):
-            _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token='bad_access_token')
+            _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id_1}', github_access_token='bad_access_token')
 
         # gui: Delete job (should trigger deletion of output file)
-        resp = _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id}', github_access_token=github_access_token)
+        resp = _gui_delete_api_request(url_path=f'/api/gui/jobs/{job_id_1}', github_access_token=github_access_token)
         resp = DeleteJobResponse(**resp)
         assert resp.success
 
@@ -443,7 +487,7 @@ async def test_integration(tmp_path):
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/jobs', github_access_token=github_access_token)
         resp = GetJobsResponse(**resp)
         jobs = resp.jobs
-        assert len(jobs) == 0
+        assert len(jobs) == 1
 
         # gui: Get files
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files', github_access_token=github_access_token)

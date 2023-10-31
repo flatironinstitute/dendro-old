@@ -1,5 +1,5 @@
 from typing import List
-from ..api_helpers.core.dendro_types import DendroProject, DendroFile, DendroJob
+from ..common.dendro_types import DendroProject, DendroFile, DendroJob
 from ..common._api_request import _client_get_api_request
 
 

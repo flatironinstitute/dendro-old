@@ -3,7 +3,7 @@ import time
 from pydantic import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature
-from ...core.dendro_types import DendroComputeResource, DendroComputeResourceApp, PubsubSubscription
+from ....common.dendro_types import DendroComputeResource, DendroComputeResourceApp, PubsubSubscription
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...clients.db import fetch_compute_resource, fetch_compute_resources_for_user, update_compute_resource, fetch_compute_resource_jobs
 from ...clients.db import register_compute_resource as db_register_compute_resource

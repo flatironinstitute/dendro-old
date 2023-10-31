@@ -1,6 +1,6 @@
 from ..clients._get_mongo_client import _get_mongo_client
 from ..clients._remove_id_field import _remove_id_field
-from ..core.dendro_types import DendroFile, DendroJob
+from ...common.dendro_types import DendroFile, DendroJob
 
 
 async def _remove_detached_files_and_jobs(project_id: str):

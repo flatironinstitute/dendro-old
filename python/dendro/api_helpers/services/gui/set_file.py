@@ -1,7 +1,7 @@
 import time
 from typing import Union
 from ...clients.db import fetch_file, delete_file, insert_file, update_project
-from ...core.dendro_types import DendroFile
+from ....common.dendro_types import DendroFile
 from ...core._create_random_id import _create_random_id
 from .._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 

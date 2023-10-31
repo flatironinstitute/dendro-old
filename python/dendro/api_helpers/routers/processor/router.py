@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 from ...services.processor.update_job_status import update_job_status
 from ...services.processor.get_upload_url import get_upload_url
-from ...core.dendro_types import ProcessorGetJobResponse, ProcessorGetJobResponseInput, ProcessorGetJobResponseOutput, ProcessorGetJobResponseParameter
+from ....common.dendro_types import ProcessorGetJobResponse, ProcessorGetJobResponseInput, ProcessorGetJobResponseOutput, ProcessorGetJobResponseParameter
 from ...clients.db import fetch_job, fetch_file
 
 router = APIRouter()

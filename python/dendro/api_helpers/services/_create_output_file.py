@@ -3,7 +3,7 @@ import aiohttp
 from ..clients._get_mongo_client import _get_mongo_client
 from ..core._create_random_id import _create_random_id
 from ._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
-from ..core.dendro_types import DendroFile
+from ...common.dendro_types import DendroFile
 from ...mock import using_mock
 
 

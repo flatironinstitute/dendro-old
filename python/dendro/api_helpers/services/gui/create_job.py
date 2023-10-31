@@ -1,7 +1,7 @@
 import time
 from typing import Union, List, Any
 from pydantic import BaseModel
-from ...core.dendro_types import ComputeResourceSpecProcessor, DendroJobInputFile, DendroJobOutputFile, DendroJob, DendroJobInputParameter
+from ....common.dendro_types import ComputeResourceSpecProcessor, DendroJobInputFile, DendroJobOutputFile, DendroJob, DendroJobInputParameter
 from ...clients.db import fetch_project, fetch_file, delete_file, fetch_project_jobs, delete_job, insert_job
 from ...core._get_project_role import _check_user_can_edit_project
 from ...core._create_random_id import _create_random_id

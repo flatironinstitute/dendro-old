@@ -2,7 +2,9 @@ from typing import List
 import os
 import time
 import subprocess
-from ..api_helpers.core.dendro_types import ComputeResourceSlurmOpts, DendroJob
+
+from ..mock import using_mock
+from ..common.dendro_types import ComputeResourceSlurmOpts, DendroJob
 from .start_compute_resource import Daemon
 
 
@@ -25,7 +27,8 @@ class SlurmJobHandler:
         elapsed_since_last_job_added = time.time() - self._time_of_last_job_added
         # wait a bit before starting jobs because maybe more will be added, and we want to start them all at once
         if elapsed_since_last_job_added < 5:
-            return
+            if not using_mock():
+                return
         max_jobs_in_batch = 20
         num_jobs_to_start = min(max_jobs_in_batch, len(self._jobs))
         if num_jobs_to_start > 0:
@@ -73,9 +76,10 @@ class SlurmJobHandler:
             slurm_opts_str = ' '.join(oo)
             cmd = f'srun -n {len(jobs)} {slurm_opts_str} bash {slurm_script_fname}'
             print(f'Running slurm batch: {cmd}')
-            subprocess.Popen(
-                cmd.split(' '),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True
-            )
+            if not using_mock():
+                subprocess.Popen(
+                    cmd.split(' '),
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )

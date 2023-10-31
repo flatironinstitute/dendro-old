@@ -1,7 +1,7 @@
 from typing import List
 from pydantic import BaseModel
 from fastapi import APIRouter
-from ...core.dendro_types import DendroProject, DendroFile, DendroJob
+from ....common.dendro_types import DendroProject, DendroFile, DendroJob
 from ...clients.db import fetch_project, fetch_project_files, fetch_project_jobs
 from ..common import api_route_wrapper
 

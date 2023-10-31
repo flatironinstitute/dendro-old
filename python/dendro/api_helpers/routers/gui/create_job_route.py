@@ -4,7 +4,7 @@ from fastapi import APIRouter, Header
 
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...services.gui.create_job import create_job, CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter
-from ...core.dendro_types import ComputeResourceSpecProcessor
+from ....common.dendro_types import ComputeResourceSpecProcessor
 from ..common import api_route_wrapper
 
 

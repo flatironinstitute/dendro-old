@@ -3,7 +3,7 @@ import time
 from fastapi import APIRouter, Header
 from pydantic import BaseModel
 from ...core._create_random_id import _create_random_id
-from ...core.dendro_types import DendroJob, DendroProject, DendroProjectUser
+from ....common.dendro_types import DendroJob, DendroProject, DendroProjectUser
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project, _check_user_is_project_admin
 from ...clients.db import fetch_project, insert_project, update_project, fetch_project_jobs, fetch_projects_for_user, fetch_projects_with_tag

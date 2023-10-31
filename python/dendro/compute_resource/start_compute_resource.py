@@ -10,7 +10,7 @@ from .register_compute_resource import env_var_keys
 from ..sdk.App import App
 from ..sdk._run_job import _set_job_status
 from .PubsubClient import PubsubClient
-from ..api_helpers.core.dendro_types import DendroComputeResourceApp, DendroJob
+from ..common.dendro_types import DendroComputeResourceApp, DendroJob
 
 
 max_simultaneous_local_jobs = 2
@@ -185,19 +185,25 @@ class Daemon:
         return job.status == 'pending'
 
     def _start_job(self, job: DendroJob, run_process: bool = True, return_shell_command: bool = False):
+        if not run_process: print('------------------------------------------------ start job 1') # noqa
         job_id = job.jobId
         if job_id in self._attempted_to_start_job_ids:
+            if not run_process: print('------------------------------------------------ start job 2') # noqa
             return '' # see above comment about why this is necessary
         self._attempted_to_start_job_ids.add(job_id)
         job_private_key = job.jobPrivateKey
         processor_name = job.processorName
         app = self._find_app_with_processor(processor_name)
         if app is None:
+            if not run_process: print('------------------------------------------------ start job 3') # noqa
             msg = f'Could not find app with processor name {processor_name}'
             print(msg)
             _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=msg)
             return ''
         try:
+            if not run_process: print('------------------------------------------------ find app with processor', processor_name, app._name) # noqa
+            if not run_process: print('------------------------------------------------ start job 4') # noqa
+            if not run_process: print('------------------------------ zzz', [p._name for p in app._processors]) # noqa
             print(f'Starting job {job_id} {processor_name}')
             from ._start_job import _start_job
             return _start_job(
@@ -209,6 +215,7 @@ class Daemon:
                 return_shell_command=return_shell_command
             )
         except Exception as e: # pylint: disable=broad-except
+            if not run_process: print('------------------------------------------------ start job 5') # noqa
             # do a traceback
             import traceback
             traceback.print_exc()
