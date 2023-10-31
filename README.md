@@ -1,3 +1,4 @@
+[![PyPI version](https://badge.fury.io/py/dendro.svg)](https://badge.fury.io/py/dendro)
 [![testing](https://github.com/flatironinstitute/dendro/actions/workflows/tests.yml/badge.svg)](https://github.com/flatironinstitute/dendro/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/flatironinstitute/dendro/graph/badge.svg?token=B2DUYR34RZ)](https://codecov.io/gh/flatironinstitute/dendro)
 
