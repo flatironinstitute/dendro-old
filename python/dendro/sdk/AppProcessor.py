@@ -211,9 +211,8 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
         if name is None:
             continue
         json_schema_extra = field.json_schema_extra
-        secret = json_schema_extra.get('secret', False) if json_schema_extra is not None else False
+        secret = json_schema_extra.get('secret', None) if json_schema_extra is not None else None
         options = json_schema_extra.get('options', None) if json_schema_extra is not None else None
-
         context_fields.append({
             'name': name,
             'description': field.description if hasattr(field, 'description') else '',
