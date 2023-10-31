@@ -148,7 +148,6 @@ class App:
         # Find the registered processor and the associated processor function
         processor_name = job.processor_name
         processor = next((p for p in self._processors if p._name == processor_name), None)
-        print('----------------------- yyy', [p._name for p in self._processors])
         assert processor, f'Processor not found: {processor_name}'
         if not processor._processor_class:
             raise Exception(f'Processor does not have a processor_class: {processor_name}')

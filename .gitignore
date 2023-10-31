@@ -1,3 +1,4 @@
+slurm_batch_*
 tmp
 __pycache__
 

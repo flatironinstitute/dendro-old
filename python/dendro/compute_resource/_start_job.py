@@ -96,7 +96,6 @@ def _start_job(*,
         env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     if not app_image:
-        print('------------------------ app_executable', app_executable)
         return _run_local_job(
             app_executable=app_executable,
             env_vars=env_vars,
@@ -149,8 +148,6 @@ def _run_local_job(*,
 
         app_instance: App = _load_app_from_main(app_executable)
         try:
-            print('---------------------------- www', app_executable, [p._name for p in app_instance._processors])
-
             old_environ = {}
             for k, v in env_vars.items():
                 old_environ[k] = os.environ.get(k, None)
