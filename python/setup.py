@@ -26,7 +26,8 @@ setup(
         'remfile>=0.1.8',
         'pubnub>=7.2.0',
         'pydantic',
-        'cryptography'
+        'cryptography',
+        'h5py>=3.10.0'
     ],
     entry_points={
         "console_scripts": [
