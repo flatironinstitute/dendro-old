@@ -2,7 +2,7 @@ from typing import List
 from pydantic import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature_str
-from ...core.dendro_types import DendroComputeResourceApp, DendroJob, ComputeResourceSpec, PubsubSubscription
+from ....common.dendro_types import DendroComputeResourceApp, DendroJob, ComputeResourceSpec, PubsubSubscription
 from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, update_compute_resource_node, set_compute_resource_spec
 from ...core.settings import get_settings
 from ....mock import using_mock

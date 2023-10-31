@@ -2,7 +2,7 @@ import time
 from typing import List, Union
 from ._get_mongo_client import _get_mongo_client
 from ._remove_id_field import _remove_id_field
-from ..core.dendro_types import DendroProject, DendroFile, DendroJob, DendroComputeResource, ComputeResourceSpec
+from ...common.dendro_types import DendroProject, DendroFile, DendroJob, DendroComputeResource, ComputeResourceSpec
 from ..core._get_project_role import _project_has_user
 from ..core._hide_secret_params_in_job import _hide_secret_params_in_job
 

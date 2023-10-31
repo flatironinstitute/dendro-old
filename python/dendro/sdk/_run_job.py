@@ -1,3 +1,4 @@
+import sys
 import os
 from typing import Union, Optional
 import threading
@@ -186,9 +187,13 @@ def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
         # here's where we execute _run_job for test coverage
         from ..compute_resource._start_job import _load_app_from_main
         app_instance = _load_app_from_main(app_executable)
-        app_instance._run_job(job_id=job_id, job_private_key=job_private_key)
+        try:
+            app_instance._run_job(job_id=job_id, job_private_key=job_private_key)
 
-        return proc
+            return proc
+        finally:
+            if 'main' in sys.modules:
+                del sys.modules['main'] # important to do this so that at a later time we can load a different main.py
 
     # Set the appropriate environment variables and launch the job in a background process
     cmd = app_executable

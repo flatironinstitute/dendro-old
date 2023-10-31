@@ -2,7 +2,7 @@ import time
 from typing import Union
 
 from dendro.mock import using_mock
-from ...core.dendro_types import DendroJob
+from ....common.dendro_types import DendroJob
 from ...core.settings import get_settings
 from .._create_output_file import _create_output_file
 from ...clients.db import update_job

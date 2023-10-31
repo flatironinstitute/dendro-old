@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from .InputFile import InputFile
 from .OutputFile import OutputFile
 from ..common._api_request import _processor_get_api_request
-from ..api_helpers.core.dendro_types import ProcessorGetJobResponse
+from ..common.dendro_types import ProcessorGetJobResponse
 
 
 @dataclass

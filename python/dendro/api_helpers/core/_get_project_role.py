@@ -1,5 +1,5 @@
 from typing import Union
-from .dendro_types import DendroProject
+from ...common.dendro_types import DendroProject
 
 
 class AuthException(Exception):

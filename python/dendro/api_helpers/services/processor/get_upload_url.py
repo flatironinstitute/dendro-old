@@ -1,5 +1,5 @@
 from dendro.mock import using_mock
-from ...core.dendro_types import DendroJob
+from ....common.dendro_types import DendroJob
 from ...core.settings import get_settings
 from ._get_signed_upload_url import _get_signed_upload_url
 

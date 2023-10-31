@@ -1,6 +1,6 @@
 import pytest
 from dendro.api_helpers.core._get_project_role import _check_user_can_edit_project, _check_user_can_read_project, _check_user_is_project_admin, _project_has_user, AuthException
-from dendro.api_helpers.core.dendro_types import DendroProject, DendroProjectUser
+from dendro.common.dendro_types import DendroProject, DendroProjectUser
 
 def test_get_project_role():
     project = DendroProject(

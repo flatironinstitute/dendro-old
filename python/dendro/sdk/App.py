@@ -7,7 +7,7 @@ from .InputFile import InputFile
 from .AppProcessor import AppProcessor
 from .Job import Job
 from ._run_job import _run_job
-from ..api_helpers.core.dendro_types import ComputeResourceSlurmOpts
+from ..common.dendro_types import ComputeResourceSlurmOpts
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
 
@@ -148,6 +148,7 @@ class App:
         # Find the registered processor and the associated processor function
         processor_name = job.processor_name
         processor = next((p for p in self._processors if p._name == processor_name), None)
+        print('----------------------- yyy', [p._name for p in self._processors])
         assert processor, f'Processor not found: {processor_name}'
         if not processor._processor_class:
             raise Exception(f'Processor does not have a processor_class: {processor_name}')

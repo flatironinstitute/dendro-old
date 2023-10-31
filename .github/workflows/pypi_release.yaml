@@ -18,13 +18,13 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install
-        run: cd python && pip install -e .
+        run: cd python && pip install -e .[compute_resource]
       - name: Install packages needed for tests
         run: pip install pytest pytest-asyncio pytest-cov boto3 kachery_cloud
       - name: Run non-api tests
         run: cd python && pytest -m "not api" tests/ # make sure we are not depending on any of the additional packages in requirements.txt
       - name: Install packages needed for api tests
-        run: pip install -r requirements.txt
+        run: cd python && pip install -e .[api]
       - name: Install other packages needed for api tests
         run: pip install httpx
       - name: Run tests and collect coverage
