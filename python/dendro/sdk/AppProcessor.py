@@ -203,14 +203,13 @@ def _get_context_inputs_outputs_parameters_for_processor(processor_class: Type[P
         raise Exception('The run method should have exactly one parameter')
     context_param = list(run_parameters.values())[0]
 
-    return _get_context_inputs_outputs_parameters_for_dataclass(context_param.annotation)
+    return _get_context_inputs_outputs_parameters_for_model(context_param.annotation)
 
-def _get_context_inputs_outputs_parameters_for_dataclass(context_class: Type[BaseModel]):
+def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseModel]):
     context_fields = []
     for name, field in context_class.model_fields.items():
         if name is None:
             continue
-        print(field)
         context_fields.append({
             'name': name,
             'description': field.description if hasattr(field, 'description') else '',
@@ -266,7 +265,7 @@ def _get_context_inputs_outputs_parameters_for_dataclass(context_class: Type[Bas
                 secret=secret if secret is not None else False
             ))
         elif _is_pydantic_model_class(annotation):
-            inputs0, outputs0, parameters0 = _get_context_inputs_outputs_parameters_for_dataclass(annotation)
+            inputs0, outputs0, parameters0 = _get_context_inputs_outputs_parameters_for_model(annotation)
             for input0 in inputs0:
                 input0.name = f'{name}.{input0.name}'
                 inputs.append(input0)
