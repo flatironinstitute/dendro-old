@@ -210,13 +210,17 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
     for name, field in context_class.model_fields.items():
         if name is None:
             continue
+        json_schema_extra = field.json_schema_extra
+        secret = json_schema_extra.get('secret', False) if json_schema_extra is not None else False
+        options = json_schema_extra.get('options', None) if json_schema_extra is not None else None
+
         context_fields.append({
             'name': name,
             'description': field.description if hasattr(field, 'description') else '',
             'annotation': field.annotation if hasattr(field, 'annotation') else None,
             'default': field.default if hasattr(field, 'default') else PydanticUndefined,
-            'options': getattr(field, 'options') if hasattr(field, 'options') else None,
-            'secret': getattr(field, 'secret') if hasattr(field, 'secret') else None,
+            'options': options,
+            'secret': secret,
         })
 
     inputs: List[AppProcessorInput] = []
