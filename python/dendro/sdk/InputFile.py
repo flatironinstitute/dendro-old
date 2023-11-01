@@ -41,6 +41,7 @@ class InputFile:
                     f.write(chunk)
 
     def get_h5py_file(self):
-        url = self.get_url()
-        remf = remfile.File(url)
+        # self has a get_file() method
+        # It's important to do it this way so that the url can renew as needed
+        remf = remfile.File(self)
         return h5py.File(remf, 'r')

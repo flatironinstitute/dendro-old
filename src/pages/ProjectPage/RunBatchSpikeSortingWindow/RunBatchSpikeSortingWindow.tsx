@@ -171,7 +171,7 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                         <tr>
                             <td>Description string in output file name</td>
                             <td>
-                                <input type="text" value={descriptionString} onChange={evt => setDescriptionString(evt.target.value)} /> {`*_desc-${descriptionString}.nwb`}
+                                <input type="text" value={descriptionString} onChange={evt => setDescriptionString(evt.target.value)} />
                                 {
                                     !descriptionStringIsValid && (
                                         <span style={{color: 'red'}}>Invalid description string</span>
@@ -252,11 +252,11 @@ const createRandomId = (numChars: number) => {
 }
 
 const appendDescToNwbPath = (nwbPath: string, desc: string) => {
-    // for example, sub-paired-english_ses-paired-english-m26-190524-100859-cell3_ecephys.nwb goes to sub-paired-english_ses-paired-english-m26-190524-100859-cell3_ecephys_desc-{processorName}.nwb
-    const parts = nwbPath.split('.')
-    const ext = parts.pop()
-    const pp = replaceUnderscoreWithDash(desc)
-    return `${parts.join('.')}_desc-${pp}.${ext}`
+    // for example, sub-paired-english_ses-paired-english-m26-190524-100859-cell3_ecephys.nwb goes to sub-paired-english_ses-paired-english-m26-190524-100859-cell3_desc-{processorName}_ecephys.nwb
+    const desc2 = replaceUnderscoreWithDash(desc)
+    const parts = nwbPath.split('_')
+    const lastPart = parts.pop()
+    return `${parts.join('_')}_desc-${desc2}_${lastPart}`
 }
 
 const replaceUnderscoreWithDash = (x: string) => {
