@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os
-from dendro.sdk import BaseModel, Field
+from dendro import BaseModel, Field
 from dendro.sdk import App, ProcessorBase
 
 

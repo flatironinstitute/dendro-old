@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from ... import BaseModel
 import os
 
 # Note: BaseSettings is no longer a part of pydantic package, and I didn't want to add a dependency on pydantic-settings

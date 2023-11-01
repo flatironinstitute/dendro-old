@@ -1,7 +1,7 @@
 from typing import Any, List, Union, Dict, Type
 from dataclasses import dataclass
 import inspect
-from pydantic import BaseModel
+from .. import BaseModel
 from pydantic_core import PydanticUndefined
 from .ProcessorBase import ProcessorBase
 from .InputFile import InputFile
@@ -207,12 +207,27 @@ def _get_context_inputs_outputs_parameters_for_processor(processor_class: Type[P
 
 def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseModel]):
     context_fields = []
-    for name, field in context_class.model_fields.items():
+    try:
+        # This works in pydantic v2
+        model_fields = context_class.model_fields
+    except AttributeError:
+        # This is the alternative for pydantic v1
+        model_fields = context_class.__fields__
+    for name, field in model_fields.items():
         if name is None:
             continue
-        json_schema_extra = field.json_schema_extra
-        secret = json_schema_extra.get('secret', None) if json_schema_extra is not None else None
-        options = json_schema_extra.get('options', None) if json_schema_extra is not None else None
+        if name == 'model_config':
+            # necessary to skip for our version of pydantic BaseModel
+            continue
+        if hasattr(field, 'json_schema_extra'):
+            # this works in pydantic v2
+            json_schema_extra = field.json_schema_extra
+            secret = json_schema_extra.get('secret', None) if json_schema_extra is not None else None
+            options = json_schema_extra.get('options', None) if json_schema_extra is not None else None
+        else:
+            # this is the alternative for pydantic v1
+            secret = field.secret if hasattr(field, 'secret') else None
+            options = field.options if hasattr(field, 'options') else None
         context_fields.append({
             'name': name,
             'description': field.description if hasattr(field, 'description') else '',
@@ -244,7 +259,7 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
                 raise AppProcessorException(f"Input {name} has options set - only parameters can have options")
             if secret is not None:
                 raise AppProcessorException(f"Input {name} has secret set - only parameters can have secret set")
-            if default is not PydanticUndefined:
+            if default is not PydanticUndefined and default is not None: # None case only necessary for pydantic v1
                 raise AppProcessorException(f"Input {name} has default set - only parameters can have default set")
         elif annotation == OutputFile:
             outputs.append(AppProcessorOutput(
@@ -256,7 +271,7 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
                 raise AppProcessorException(f"Input {name} has options set - only parameters can have options")
             if secret is not None:
                 raise AppProcessorException(f"Input {name} has secret set - only parameters can have secret set")
-            if default is not PydanticUndefined:
+            if default is not PydanticUndefined and default is not None: # None case only necessary for pydantic v1
                 raise AppProcessorException(f"Input {name} has default set - only parameters can have default set")
         elif _is_valid_parameter_type(annotation):
             parameters.append(AppProcessorParameter(

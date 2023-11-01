@@ -1,5 +1,5 @@
 from typing import Union, List, Any
-from pydantic import BaseModel
+from .. import BaseModel
 
 class DendroProjectUser(BaseModel):
     userId: str

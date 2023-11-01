@@ -1,6 +1,6 @@
 from typing import List, Any
 import time
-from pydantic import BaseModel
+from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature
 from ....common.dendro_types import DendroComputeResource, DendroComputeResourceApp, PubsubSubscription

@@ -3,7 +3,7 @@
 from typing import List
 import time
 import os
-from dendro.sdk import BaseModel, Field
+from dendro import BaseModel, Field
 from dendro.sdk import App, ProcessorBase, InputFile, OutputFile
 
 

@@ -1,6 +1,6 @@
 import shutil
 import tempfile
-from dendro.sdk import BaseModel, Field
+from dendro import BaseModel, Field
 from dendro.sdk import App, ProcessorBase, InputFile, OutputFile
 from dendro.mock import set_use_mock
 

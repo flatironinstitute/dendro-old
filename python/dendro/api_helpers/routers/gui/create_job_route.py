@@ -1,5 +1,5 @@
 from typing import Union, List
-from pydantic import BaseModel
+from .... import BaseModel
 from fastapi import APIRouter, Header
 
 from ._authenticate_gui_request import _authenticate_gui_request
