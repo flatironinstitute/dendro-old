@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from typing import Union
+from typing import Union, Dict, Any
 from ..sdk.App import App
 from ..common._api_request import _processor_put_api_request
 from ..common.dendro_types import ComputeResourceSlurmOpts
@@ -20,12 +20,15 @@ def _set_job_status_to_starting(*,
     headers = {
         'job-private-key': job_private_key
     }
+    data: Dict[str, Any] = {
+        'status': 'starting'
+    }
+    if os.environ.get('DENDRO_FORCE_STATUS_UPDATES', None) == '1':
+        data['force_update'] = True
     resp = _processor_put_api_request(
         url_path=url_path,
         headers=headers,
-        data={
-            'status': 'starting'
-        }
+        data=data
     )
     if not resp['success']:
         raise JobException(f'Error setting job status to starting: {resp["error"]}')

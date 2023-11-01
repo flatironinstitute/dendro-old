@@ -9,24 +9,25 @@ from ...clients.db import update_job
 from ...clients.pubsub import publish_pubsub_message
 
 
-async def update_job_status(job: DendroJob, status: str, error: Union[str, None]):
+async def update_job_status(job: DendroJob, status: str, error: Union[str, None], force_update: Union[bool, None] = None):
     old_status = job.status
 
     new_status = status
     new_error = error
 
-    if new_status == 'starting':
-        if old_status != 'pending':
-            raise Exception(f"Cannot set job status to starting when status is {old_status}")
-    elif new_status == 'running':
-        if old_status != 'starting':
-            raise Exception(f"Cannot set job status to running when status is {old_status}")
-    elif new_status == 'completed':
-        if old_status != 'running':
-            raise Exception(f"Cannot set job status to completed when status is {old_status}")
-    elif new_status == 'failed':
-        if (old_status != 'running') and (old_status != 'starting') and (old_status != 'pending'):
-            raise Exception(f"Cannot set job status to failed when status is {old_status}")
+    if not force_update:
+        if new_status == 'starting':
+            if old_status != 'pending':
+                raise Exception(f"Cannot set job status to starting when status is {old_status}")
+        elif new_status == 'running':
+            if old_status != 'starting':
+                raise Exception(f"Cannot set job status to running when status is {old_status}")
+        elif new_status == 'completed':
+            if old_status != 'running':
+                raise Exception(f"Cannot set job status to completed when status is {old_status}")
+        elif new_status == 'failed':
+            if (old_status != 'running') and (old_status != 'starting') and (old_status != 'pending'):
+                raise Exception(f"Cannot set job status to failed when status is {old_status}")
 
     update = {}
     if new_error:

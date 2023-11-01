@@ -1,6 +1,6 @@
 import sys
 import os
-from typing import Union, Optional
+from typing import Union, Optional, Dict, Any
 import threading
 import queue
 import time
@@ -264,11 +264,13 @@ def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Op
     headers = {
         'job-private-key': job_private_key
     }
-    data = {
+    data: Dict[str, Any] = {
         'status': status
     }
     if error is not None:
         data['error'] = error
+    if os.environ.get('DENDRO_FORCE_STATUS_UPDATES', None) == '1':
+        data['force_update'] = True
     resp = _processor_put_api_request(
         url_path=url_path,
         headers=headers,

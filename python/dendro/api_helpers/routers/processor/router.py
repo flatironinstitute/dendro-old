@@ -77,6 +77,7 @@ async def _resolve_dandi_url(url: str, *, dandi_api_key: Union[str, None]) -> st
 class ProcessorUpdateJobStatusRequest(BaseModel):
     status: str
     error: Union[str, None] = None
+    force_update: Union[bool, None] = None
 
 class ProcessorUpdateJobStatusResponse(BaseModel):
     success: bool
@@ -90,7 +91,7 @@ async def processor_update_job_status(job_id: str, data: ProcessorUpdateJobStatu
         if job.jobPrivateKey != job_private_key:
             raise Exception(f"Invalid job private key for job {job_id}")
 
-        await update_job_status(job=job, status=data.status, error=data.error)
+        await update_job_status(job=job, status=data.status, error=data.error, force_update=data.force_update)
 
         return ProcessorUpdateJobStatusResponse(success=True)
     except Exception as e:
