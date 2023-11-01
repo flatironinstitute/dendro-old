@@ -1,3 +1,4 @@
+from typing import Union
 import requests
 import h5py
 import remfile
@@ -11,12 +12,21 @@ class InputFileDownloadError(Exception):
 
 
 class InputFile:
-    def __init__(self, *, name: str, job: 'Job') -> None:
+    def __init__(self, *, name: str, job: Union['Job', None] = None, url: Union[str, None] = None) -> None:
         self._name = name
         self._job = job
+        self._direct_url = url
+
+        if self._job is None and self._direct_url is None:
+            raise Exception('Either job or url must be specified in InputFile')
 
     def get_url(self) -> str:
-        return self._job._get_download_url_for_input_file(name=self._name)
+        if self._direct_url is not None:
+            return self._direct_url
+        elif self._job is not None:
+            return self._job._get_download_url_for_input_file(name=self._name)
+        else:
+            raise Exception('Unexpected: both direct_url and job are None')
 
     def download(self, dest_file_path: str):
         url = self.get_url()
