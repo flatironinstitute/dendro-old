@@ -22,8 +22,7 @@ project = prc.load_project('${project.projectId}')
 
 # Lazy load ${fileName}
 nwb_file = project.get_file('${fileName}')
-nwb_url = nwb_file.get_url()
-nwb_remf = remfile.File(nwb_url)
+nwb_remf = remfile.File(nwb_file)
 io = pynwb.NWBHDF5IO(file=h5py.File(nwb_remf, 'r'), mode='r')
 nwb = io.read()
 
