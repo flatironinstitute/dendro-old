@@ -1,7 +1,7 @@
 from typing import List, Optional
 import time
 from fastapi import APIRouter, Header
-from pydantic import BaseModel
+from .... import BaseModel
 from ...core._create_random_id import _create_random_id
 from ....common.dendro_types import DendroJob, DendroProject, DendroProjectUser
 from ._authenticate_gui_request import _authenticate_gui_request

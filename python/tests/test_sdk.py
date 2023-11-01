@@ -1,7 +1,7 @@
 import shutil
 import tempfile
-from dataclasses import dataclass
-from dendro.sdk import App, ProcessorBase, InputFile, OutputFile, field
+from dendro import BaseModel, Field
+from dendro.sdk import App, ProcessorBase, InputFile, OutputFile
 from dendro.mock import set_use_mock
 
 
@@ -9,18 +9,17 @@ def test_app():
     set_use_mock(True)
 
     try:
-        @dataclass
-        class Processor1Context:
-            input_file: InputFile = field(help='Input file')
-            output_file: OutputFile = field(help='Output file')
-            text1: str = field(help='Text 1', default='abc')
-            text2: str = field(help='Text 2')
-            text3: str = field(help='Text 3', default='xyz', options=['abc', 'xyz'])
-            val1: float = field(help='Value 1', default=1.0)
+        class Processor1Context(BaseModel):
+            input_file: InputFile = Field(description='Input file')
+            output_file: OutputFile = Field(description='Output file')
+            text1: str = Field(description='Text 1', default='abc')
+            text2: str = Field(description='Text 2')
+            text3: str = Field(description='Text 3', default='xyz', json_schema_extra={'options': ['abc', 'xyz']})
+            val1: float = Field(description='Value 1', default=1.0)
 
         class Processor1(ProcessorBase):
             name = 'processor1'
-            help = 'This is processor 1'
+            description = 'This is processor 1'
             label = 'Processor 1'
             tags = ['processor1', 'test']
             attributes = {'test': True}
@@ -31,7 +30,7 @@ def test_app():
 
         app = App(
             name='test-app',
-            help='This is a test app',
+            description='This is a test app',
             app_image='fake-image'
         )
 

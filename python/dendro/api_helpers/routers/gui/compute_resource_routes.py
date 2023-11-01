@@ -1,6 +1,6 @@
 from typing import List, Any
 import time
-from pydantic import BaseModel
+from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature
 from ....common.dendro_types import DendroComputeResource, DendroComputeResourceApp, PubsubSubscription
@@ -71,7 +71,7 @@ async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourc
         raise AuthException('User does not have permission to admin this compute resource')
 
     await update_compute_resource(compute_resource_id, update={
-        'apps': [app.dict(exclude_none=True) for app in apps],
+        'apps': [app.model_dump(exclude_none=True) for app in apps],
         'timestampModified': time.time()
     })
 

@@ -1,5 +1,5 @@
 from typing import List
-from pydantic import BaseModel
+from .... import BaseModel
 from fastapi import APIRouter
 from ....common.dendro_types import DendroProject, DendroFile, DendroJob
 from ...clients.db import fetch_project, fetch_project_files, fetch_project_jobs

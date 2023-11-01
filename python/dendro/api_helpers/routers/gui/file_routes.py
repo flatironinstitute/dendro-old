@@ -1,5 +1,5 @@
 from typing import Union, List
-from pydantic import BaseModel
+from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 from ....common.dendro_types import DendroFile

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Header
-from pydantic import BaseModel
+from .... import BaseModel
 from ...services._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 from ....common.dendro_types import DendroJob
 from ._authenticate_gui_request import _authenticate_gui_request

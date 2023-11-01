@@ -47,7 +47,7 @@ async def _create_output_file(*,
         metadata={},
         jobId=job_id
     )
-    await files_collection.insert_one(new_file.dict(exclude_none=True))
+    await files_collection.insert_one(new_file.model_dump(exclude_none=True))
 
     if deleted_old_file:
         await _remove_detached_files_and_jobs(project_id)

@@ -102,7 +102,7 @@ async def delete_all_jobs_in_project(project_id: str):
 async def insert_project(project: DendroProject):
     client = _get_mongo_client()
     projects_collection = client['dendro']['projects']
-    await projects_collection.insert_one(project.dict(exclude_none=True))
+    await projects_collection.insert_one(project.model_dump(exclude_none=True))
 
 async def fetch_compute_resource(compute_resource_id: str, raise_on_not_found=False):
     client = _get_mongo_client()
@@ -163,7 +163,7 @@ async def register_compute_resource(compute_resource_id: str, name: str, user_id
             timestampCreated=time.time(),
             apps=[]
         )
-        await compute_resources_collection.insert_one(new_compute_resource.dict(exclude_none=True))
+        await compute_resources_collection.insert_one(new_compute_resource.model_dump(exclude_none=True))
 
 async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[List[str], None], include_private_keys: bool = False) -> List[DendroJob]:
     client = _get_mongo_client()
@@ -213,7 +213,7 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
     assert compute_resource is not None, f"No compute resource with ID {compute_resource_id}"
     await compute_resources_collection.update_one({'computeResourceId': compute_resource_id}, {
         '$set': {
-            'spec': spec.dict(exclude_none=True)
+            'spec': spec.model_dump(exclude_none=True)
         }
     })
 
@@ -258,7 +258,7 @@ async def delete_job(job_id: str):
 async def insert_job(job: DendroJob):
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
-    await jobs_collection.insert_one(job.dict(exclude_none=True))
+    await jobs_collection.insert_one(job.model_dump(exclude_none=True))
 
 async def fetch_file(project_id: str, file_name: str):
     client = _get_mongo_client()
@@ -284,4 +284,4 @@ async def delete_file(project_id: str, file_name: str):
 async def insert_file(file: DendroFile):
     client = _get_mongo_client()
     files_collection = client['dendro']['files']
-    await files_collection.insert_one(file.dict(exclude_none=True))
+    await files_collection.insert_one(file.model_dump(exclude_none=True))

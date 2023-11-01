@@ -77,7 +77,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                     <InputRow
                         key={input.name}
                         name={input.name}
-                        description={input.help}
+                        description={input.description}
                         value={jobDefinition?.inputFiles.find(f => (f.name === input.name))?.fileName}
                         setValid={valid => {
                             validParametersDispatch({
@@ -97,7 +97,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                     <OutputRow
                         key={output.name}
                         name={output.name}
-                        description={output.help}
+                        description={output.description}
                         value={jobDefinition?.outputFiles.find(f => (f.name === output.name))?.fileName}
                         setValid={valid => {
                             validParametersDispatch({
@@ -241,7 +241,7 @@ type ParameterRowProps = {
 }
 
 const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, nwbFile, setValue, setValid, readOnly, secret}) => {
-    const {type, name, help} = parameter
+    const {type, name, description} = parameter
     const [isValid, setIsValid] = useState<boolean>(false)
     return (
         <tr>
@@ -282,7 +282,7 @@ const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, n
                     )
                 }
             </td>
-            <td>{help}</td>
+            <td>{description}</td>
         </tr>
     )
 }
@@ -316,6 +316,9 @@ const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({paramet
     }
     else if (type === 'List[float]') {
         return <FloatListEdit value={value} setValue={setValue} setValid={setValid} />
+    }
+    else if (type === 'List[str]') {
+        return <StringListEdit value={value} setValue={setValue} setValid={setValid} />
     }
     else {
         return <div>Unsupported type: {type}</div>
@@ -517,6 +520,70 @@ const FloatListEdit: FunctionComponent<FloatListEditProps> = ({value, setValue, 
     const isValid = useMemo(() => {
         if (internalValue === undefined) return false
         return stringIsValidFloatList(internalValue)
+    }, [internalValue])
+
+    return (
+        <span>
+            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} />
+            {
+                isValid ? null : <span style={{color: 'red'}}>x</span>
+            }
+        </span>
+    )
+}
+
+type StringListEditProps = {
+    value: any
+    setValue: (value: any) => void
+    setValid: (valid: boolean) => void
+}
+
+const isStringListType = (x: any) => {
+    if (!Array.isArray(x)) return false
+    for (let i=0; i<x.length; i++) {
+        if (typeof(x[i]) !== 'string') return false
+    }
+    return true
+}
+
+function stringListToString(x: string[]) {
+    return x.join(', ')
+}
+
+function stringToStringList(s: string) {
+    return s.split(',').map(x => x.trim())
+}
+
+function stringIsValidStringList(s: string) {
+    const stringListRegex = /^([^,]+)(,\s*[^,]+)*$/;
+    return stringListRegex.test(s);
+}
+
+const StringListEdit: FunctionComponent<StringListEditProps> = ({value, setValue, setValid}) => {
+    const [internalValue, setInternalValue] = useState<string | undefined>(undefined)
+    useEffect(() => {
+        if (isStringListType(value)) {
+            setInternalValue(old => {
+                if ((old !== undefined) && (stringIsValidStringList(old)) && (stringListToString(value) === old)) return old
+                return stringListToString(value)
+            })
+        }
+    }, [value])
+
+    useEffect(() => {
+        if (internalValue === undefined) return
+        if (stringIsValidStringList(internalValue)) {
+            setValue(stringToStringList(internalValue))
+            setValid(true)
+        }
+        else {
+            setValid(false)
+        }
+    }, [internalValue, setValue, setValid])
+
+    const isValid = useMemo(() => {
+        if (internalValue === undefined) return false
+        return stringIsValidStringList(internalValue)
     }, [internalValue])
 
     return (

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from .... import BaseModel
 from fastapi import APIRouter
 import aiohttp
 from ...core.settings import get_settings

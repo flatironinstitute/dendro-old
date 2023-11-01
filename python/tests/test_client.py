@@ -8,7 +8,7 @@ def test_load_project():
         return
 
     # if this project or file disappears then we'll need to update that here
-    project_id = '462c0566'
+    project_id = 'eb87e88a'
     file_name = 'imported/000618/sub-paired-english/sub-paired-english_ses-paired-english-m108-191125-163508_ecephys.nwb'
     project = load_project(project_id)
     file = project.get_file(file_name)

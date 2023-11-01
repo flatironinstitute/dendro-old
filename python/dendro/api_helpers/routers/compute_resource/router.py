@@ -1,5 +1,5 @@
 from typing import List
-from pydantic import BaseModel
+from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature_str
 from ....common.dendro_types import DendroComputeResourceApp, DendroJob, ComputeResourceSpec, PubsubSubscription
