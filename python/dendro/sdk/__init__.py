@@ -5,3 +5,5 @@ from .OutputFile import OutputFile
 from .App import App
 
 from .ProcessorBase import ProcessorBase
+
+from .. import BaseModel, Field
