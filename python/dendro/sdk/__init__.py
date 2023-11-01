@@ -6,8 +6,7 @@ from .App import App
 
 from .ProcessorBase import ProcessorBase
 
-from pydantic import BaseModel as PydanticBaseModel, Field
+from pydantic import BaseModel as PydanticBaseModel, ConfigDict, Field
 
 class BaseModel(PydanticBaseModel):
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
