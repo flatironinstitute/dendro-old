@@ -17,7 +17,7 @@ class InputFile:
         self._job = job
         self._direct_url = url
 
-        if self._job is None and self._url is None:
+        if self._job is None and self._direct_url is None:
             raise Exception('Either job or url must be specified in InputFile')
 
     def get_url(self) -> str:
