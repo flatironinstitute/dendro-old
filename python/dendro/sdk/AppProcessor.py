@@ -220,14 +220,12 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
             # necessary to skip for our version of pydantic BaseModel
             continue
         if hasattr(field, 'json_schema_extra'):
-            # this works in pydantic v2
             json_schema_extra = field.json_schema_extra
             secret = json_schema_extra.get('secret', None) if json_schema_extra is not None else None
             options = json_schema_extra.get('options', None) if json_schema_extra is not None else None
         else:
-            # this is the alternative for pydantic v1
-            secret = field.secret if hasattr(field, 'secret') else None # type: ignore
-            options = field.options if hasattr(field, 'options') else None # type: ignore
+            secret = None
+            options = None
         context_fields.append({
             'name': name,
             'description': field.description if hasattr(field, 'description') else '',
