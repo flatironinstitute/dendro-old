@@ -101,6 +101,7 @@ class Job:
         if elapsed < 30 * 60:
             # typically, signed download URLs will expire after an hour
             return None
+        self._api_request_job_timestamp = time.time() # this is a crucial line to avoid excessive API requests
         url_path = f'/api/processor/jobs/{self._job_id}'
         headers = {
             'job-private-key': self._job_private_key
