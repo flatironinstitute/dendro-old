@@ -12,6 +12,7 @@ Reach out to the authors if you are interested in **beta testing** Dendro. You c
 
 * [Access the live site](https://dendro.vercel.app) (it's a prototype!)
 * [Learn how to host a Dendro compute resource](./doc/host_compute_resource.md)
+* [Learn how to create a custom Dendro processing app](./doc/create_dendro_app.md)
 
 ## System Requirements
 
@@ -67,7 +68,7 @@ See [hosting a compute resource](./doc/host_compute_resource.md).
 
 ### Contribute a custom processing app for spike sorting
 
-More detailed instructions will be forthcoming. For now you can take a look at the [source code for the currently-available processing apps](https://github.com/scratchrealm/pc-spike-sorting).
+See [create a custom processing app](./doc/create_dendro_app.md).
 
 ### Projects, Files and Jobs
 

@@ -1,0 +1,44 @@
+{
+    "name": "letter_count",
+    "description": "Example Dendro processing app for tutorial",
+    "appImage": "",
+    "appExecutable": "/home/magland/src/dendro/doc/letter_count/main.py",
+    "executable": "/home/magland/src/dendro/doc/letter_count/main.py",
+    "processors": [
+        {
+            "name": "letter_count",
+            "description": "\nThis is the a processor in the letter_count app. It counts the number of times a particular letter appears in a text file and produces and JSON file with the result.\n",
+            "label": "Letter Count",
+            "inputs": [
+                {
+                    "name": "input",
+                    "description": "Input text file"
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "output",
+                    "description": "Output JSON file"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "letter",
+                    "description": "Letter to count",
+                    "type": "str"
+                }
+            ],
+            "attributes": [
+                {
+                    "name": "wip",
+                    "value": true
+                }
+            ],
+            "tags": [
+                {
+                    "tag": "tutorial"
+                }
+            ]
+        }
+    ]
+}
