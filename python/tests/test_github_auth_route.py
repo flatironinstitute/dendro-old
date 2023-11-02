@@ -1,10 +1,11 @@
 import pytest
 import os
 
-from dendro.api_helpers.routers.gui.github_auth_routes import github_auth, GithubAuthError
 
 @pytest.mark.asyncio
+@pytest.mark.api
 async def test_github_auth():
+    from dendro.api_helpers.routers.gui.github_auth_routes import github_auth, GithubAuthError
     old_env = os.environ.copy()
     try:
         os.environ['VITE_GITHUB_CLIENT_ID'] = 'test-client-id'
