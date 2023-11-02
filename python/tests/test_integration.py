@@ -20,6 +20,7 @@ async def test_integration(tmp_path):
     from dendro.mock import set_use_mock
     from dendro.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
     from dendro.common._api_request import _gui_post_api_request, _client_get_api_request
+    from dendro.common.dendro_types import ComputeResourceSlurmOpts
 
     tmpdir = str(tmp_path)
 
@@ -69,7 +70,13 @@ async def test_integration(tmp_path):
             ),
             DendroComputeResourceApp(
                 name='mock_app_2',
-                specUri=f'file://{tmpdir}/mock_app_2/spec.json'
+                specUri=f'file://{tmpdir}/mock_app_2/spec.json',
+                slurm=ComputeResourceSlurmOpts(
+                    partition='test_partition',
+                    time='1:00:00',
+                    cpusPerTask=4,
+                    otherOpts='--test=1'
+                )
             )
         ]
         _set_compute_resource_apps(
