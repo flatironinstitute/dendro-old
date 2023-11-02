@@ -29,6 +29,7 @@ async def test_integration(tmp_path):
     _use_api_test_client(test_client)
     set_use_mock(True)
     github_access_token = _create_mock_github_access_token()
+    github_access_token_for_other_user = _create_mock_github_access_token()
 
     this_dir = os.path.dirname(os.path.realpath(__file__))
 
@@ -52,6 +53,14 @@ async def test_integration(tmp_path):
         # gui: Register the same compute resource again (should be okay)
         _register_compute_resource(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, github_access_token=github_access_token, name='test-cr-again')
 
+        # gui: Fail register compute resource
+        with pytest.raises(Exception):
+            _register_compute_resource(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, github_access_token=github_access_token, name='test-cr', bad_resource_code=True)
+        with pytest.raises(Exception):
+            _register_compute_resource(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, github_access_token=github_access_token, name='test-cr', bad_signature=True)
+        with pytest.raises(Exception):
+            _register_compute_resource(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, github_access_token=github_access_token, name='test-cr', bad_resource_code_timestamp=True)
+
         # gui: set compute resource apps
         apps = [
             DendroComputeResourceApp(
@@ -68,6 +77,14 @@ async def test_integration(tmp_path):
             apps=apps,
             github_access_token=github_access_token
         )
+
+        # gui: Fail at setting apps by other user
+        with pytest.raises(Exception):
+            _set_compute_resource_apps(
+                compute_resource_id=compute_resource_id,
+                apps=apps,
+                github_access_token=github_access_token_for_other_user
+            )
 
         # gui: Get compute resources for user
         _check_num_compute_resources_for_user(github_access_token=github_access_token, num_compute_resources=1)
@@ -93,11 +110,17 @@ async def test_integration(tmp_path):
         # gui: Set project tags
         _set_project_tags(project_id=project1_id, tags=['tag1', 'tag2'], github_access_token=github_access_token)
 
+        # gui: Fail because not authenticated
+        with pytest.raises(Exception):
+            _set_project_name(project_id=project1_id, name='project1_renamed_2', github_access_token='')
+        with pytest.raises(Exception):
+            _set_project_name(project_id=project1_id, name='project1_renamed_2', github_access_token=github_access_token + '-bad') # keep the mock: at the beginning
+
         # gui: Get project
         project = _get_project(project_id=project1_id, github_access_token=github_access_token)
         assert project.name == 'project1_renamed'
         assert project.description == 'project1_description'
-        assert project.ownerId == 'github|__mock__user'
+        assert project.ownerId == 'github|' + github_access_token[len('mock:'):]
         assert project.users == []
         assert project.publiclyReadable is True
         assert project.tags == ['tag1', 'tag2']
@@ -273,9 +296,37 @@ async def test_integration(tmp_path):
         jobs = _get_compute_resource_jobs(compute_resource_id=compute_resource_id, github_access_token=github_access_token)
         assert len(jobs) == 3
 
+        # gui: Fail getting compute resource jobs by unauthorized user
+        with pytest.raises(Exception):
+            _get_compute_resource_jobs(compute_resource_id=compute_resource_id, github_access_token=github_access_token_for_other_user)
+
         # client: Get project jobs
         jobs = _client_get_project_jobs(project_id=project2_id)
         assert len(jobs) == 3
+
+        # compute resource: get unfinished jobs
+        jobs = _compute_resource_get_unfinished_jobs(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key)
+        assert len(jobs) == 3
+        job = jobs[0]
+        assert job.jobPrivateKey
+
+        # compute resource: fail getting unfinished jobs
+        with pytest.raises(Exception):
+            _compute_resource_get_unfinished_jobs(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, wrong_payload=True)
+        with pytest.raises(Exception):
+            _compute_resource_get_unfinished_jobs(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, wrong_signature=True)
+
+        # processor: Get job output upload url
+        url = _get_job_output_upload_url(job_id=job.jobId, job_private_key=job.jobPrivateKey, output_name='output_file')
+        assert url
+
+        # processor: Fail getting job output upload url for unknown output
+        with pytest.raises(Exception):
+            _get_job_output_upload_url(job_id=job.jobId, job_private_key=job.jobPrivateKey, output_name='unknown-output')
+
+        # processor: Fail getting job output upload url do to incorrect private key
+        with pytest.raises(Exception):
+            _get_job_output_upload_url(job_id=job.jobId, job_private_key=job.jobPrivateKey + 'x', output_name='output_file')
 
         # Run the compute resource briefly (will handle the jobs)
         start_compute_resource(dir=compute_resource_dir, timeout=3, cleanup_old_jobs=False)
@@ -316,6 +367,10 @@ async def test_integration(tmp_path):
         files = _get_project_files(project_id=project2_id, github_access_token=github_access_token)
         assert len(files) == 1
         assert files[0].fileName == 'mock-input'
+
+        # gui: Fail at deleting compute resource by unauthorized user
+        with pytest.raises(Exception):
+            _delete_compute_resource(compute_resource_id=compute_resource_id, github_access_token=github_access_token_for_other_user)
 
         # gui: Delete compute resource
         _delete_compute_resource(compute_resource_id=compute_resource_id, github_access_token=github_access_token)
@@ -376,14 +431,21 @@ def _create_spec_json_for_mock_app(app_dir: str):
     compute_resource_spec = ComputeResourceSpecApp(**spec)
     return compute_resource_spec
 
-def _register_compute_resource(compute_resource_id: str, compute_resource_private_key: str, github_access_token: str, name: str):
+def _register_compute_resource(compute_resource_id: str, compute_resource_private_key: str, github_access_token: str, name: str, bad_resource_code_timestamp: bool = False, bad_resource_code: bool = False, bad_signature: bool = False):
     from dendro.common._crypto_keys import sign_message
     from dendro.api_helpers.routers.gui.compute_resource_routes import RegisterComputeResourceRequest, RegisterComputeResourceResponse
     from dendro.common._api_request import _gui_post_api_request
 
-    resource_code_payload = {'timestamp': int(time.time())}
+    timestamp = int(time.time())
+    if bad_resource_code_timestamp:
+        timestamp = timestamp - 10000
+    resource_code_payload = {'timestamp': timestamp}
     resource_code_signature = sign_message(resource_code_payload, compute_resource_id, compute_resource_private_key)
+    if bad_signature:
+        resource_code_signature = 'bad-signature'
     resource_code = f'{resource_code_payload["timestamp"]}-{resource_code_signature}'
+    if bad_resource_code:
+        resource_code = 'bad-resource-code'
     req = RegisterComputeResourceRequest(
         name=name,
         computeResourceId=compute_resource_id,
@@ -638,3 +700,31 @@ def _get_compute_resources(github_access_token: str):
     resp = GetComputeResourcesResponse(**resp)
     assert resp.success
     return resp.computeResources
+
+def _compute_resource_get_unfinished_jobs(compute_resource_id: str, compute_resource_private_key: str, wrong_payload: bool = False, wrong_signature: bool = False):
+    from dendro.common.dendro_types import DendroJob
+    from dendro.common._api_request import _compute_resource_get_api_request
+    url_path = f'/api/compute_resource/compute_resources/{compute_resource_id}/unfinished_jobs'
+    resp = _compute_resource_get_api_request(
+        url_path=url_path,
+        compute_resource_id=compute_resource_id,
+        compute_resource_private_key=compute_resource_private_key,
+        compute_resource_node_name='test_node',
+        compute_resource_node_id='test_node_id',
+        _wrong_payload_for_testing=wrong_payload,
+        _wrong_signature_for_testing=wrong_signature
+    )
+    jobs = resp['jobs']
+    jobs = [DendroJob(**job) for job in jobs]
+    return jobs
+
+def _get_job_output_upload_url(job_id: str, job_private_key: str, output_name: str):
+    from dendro.api_helpers.routers.processor.router import ProcessorGetJobOutputUploadUrlResponse
+    from dendro.common._api_request import _processor_get_api_request
+    headers = {
+        'job-private-key': job_private_key,
+        'job-id': job_id
+    }
+    resp = _processor_get_api_request(url_path=f'/api/processor/jobs/{job_id}/outputs/{output_name}/upload_url', headers=headers)
+    resp = ProcessorGetJobOutputUploadUrlResponse(**resp)
+    return resp.uploadUrl

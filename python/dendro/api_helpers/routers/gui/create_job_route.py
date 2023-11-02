@@ -25,9 +25,6 @@ class CreateJobResponse(BaseModel):
     jobId: str
     success: bool
 
-class AuthException(Exception):
-    pass
-
 @router.post("/jobs")
 @api_route_wrapper
 async def create_job_handler(data: CreateJobRequest, github_access_token: str = Header(...)) -> CreateJobResponse:

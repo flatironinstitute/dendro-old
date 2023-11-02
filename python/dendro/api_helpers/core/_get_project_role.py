@@ -1,9 +1,7 @@
 from typing import Union
 from ...common.dendro_types import DendroProject
+from ..routers.common import AuthException
 
-
-class AuthException(Exception):
-    pass
 
 def _get_project_role(project: DendroProject, user_id: Union[str, None]) -> str:
     if user_id:

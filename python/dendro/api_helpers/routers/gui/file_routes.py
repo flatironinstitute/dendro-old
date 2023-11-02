@@ -45,9 +45,6 @@ class SetFileResponse(BaseModel):
     fileId: str
     success: bool
 
-class AuthException(Exception):
-    pass
-
 @router.put("/projects/{project_id}/files/{file_name:path}")
 @api_route_wrapper
 async def set_file(project_id, file_name, data: SetFileRequest, github_access_token: str = Header(...)):

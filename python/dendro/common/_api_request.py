@@ -16,10 +16,17 @@ def _compute_resource_get_api_request(*,
     compute_resource_id: str,
     compute_resource_private_key: str,
     compute_resource_node_name: Optional[str],
-    compute_resource_node_id: Optional[str]
+    compute_resource_node_id: Optional[str],
+    _wrong_payload_for_testing: bool = False,
+    _wrong_signature_for_testing: bool = False
 ):
     payload = url_path
     signature = _sign_message_str(payload, compute_resource_id, compute_resource_private_key)
+
+    if _wrong_payload_for_testing:
+        payload = 'wrong payload'
+    if _wrong_signature_for_testing:
+        signature = 'wrong signature'
 
     headers = {
         'compute-resource-id': compute_resource_id,
