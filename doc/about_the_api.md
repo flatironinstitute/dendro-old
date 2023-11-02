@@ -1,6 +1,6 @@
 # About the Dendro API
 
-The Dendro API is implemented using Python with [FastAPI](https://fastapi.tiangolo.com/, deployed as serverless functions on [Vercel](https://vercel.com/about). It is divided into four sections: GUI, Compute Resource, Processor, and Client.
+The Dendro API is implemented using Python with [FastAPI](https://fastapi.tiangolo.com/), deployed as serverless functions on [Vercel](https://vercel.com/about). It is divided into four sections: GUI, Compute Resource, Processor, and Client.
 
 Here is the [ReDoc-generated documentation](https://dendro.vercel.app/redoc) and the [Swagger UI-generated documentation](https://dendro.vercel.app/docs).
 
