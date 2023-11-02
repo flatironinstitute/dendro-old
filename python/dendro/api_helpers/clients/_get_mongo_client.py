@@ -1,16 +1,18 @@
-from typing import Union
+from typing import Union, TYPE_CHECKING
 import asyncio
-from motor.motor_asyncio import AsyncIOMotorClient
 from ..core.settings import get_settings
 from .MockMongoClient import MockMongoClient
 from ...mock import using_mock
+
+if TYPE_CHECKING:
+    from motor.motor_asyncio import AsyncIOMotorClient
 
 
 _globals = {
     'mock_mongo_client': None
 }
 
-def _get_mongo_client() -> Union[AsyncIOMotorClient, MockMongoClient]:
+def _get_mongo_client() -> Union['AsyncIOMotorClient', MockMongoClient]:
     # We want one async mongo client per event loop
     loop = asyncio.get_event_loop()
     if hasattr(loop, '_mongo_client'):
