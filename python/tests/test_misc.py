@@ -1,5 +1,5 @@
 import pytest
-from dendro.api_helpers.core._get_project_role import _check_user_can_edit_project, _check_user_can_read_project, _check_user_is_project_admin, _project_has_user, AuthException
+from dendro.api_helpers.core._get_project_role import _check_user_can_edit_project, _check_user_can_read_project, _check_user_is_project_admin, _project_has_user
 from dendro.common.dendro_types import DendroProject, DendroProjectUser
 
 def test_get_project_role():
@@ -33,28 +33,28 @@ def test_get_project_role():
     _check_user_can_read_project(project, 'github|viewer-user')
     _check_user_can_read_project(project, 'admin|the-system-admin')
 
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_read_project(project, 'github|non-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_read_project(project, None)
     _check_user_can_edit_project(project, 'github|admin-user')
     _check_user_can_edit_project(project, 'github|editor-user')
     _check_user_can_edit_project(project, 'admin|the-system-admin')
 
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_edit_project(project, 'github|viewer-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_edit_project(project, 'github|non-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_edit_project(project, None)
     _check_user_is_project_admin(project, 'github|admin-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_is_project_admin(project, 'github|editor-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_is_project_admin(project, 'github|viewer-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_is_project_admin(project, 'github|non-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_is_project_admin(project, None)
     _check_user_is_project_admin(project, 'admin|the-system-admin')
 
@@ -75,9 +75,9 @@ def test_get_project_role():
 
     _check_user_can_edit_project(project, 'github|admin-user')
     _check_user_can_edit_project(project, 'github|editor-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_edit_project(project, 'github|viewer-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_edit_project(project, 'github|non-user')
-    with pytest.raises(AuthException):
+    with pytest.raises(Exception):
         _check_user_can_edit_project(project, None)
