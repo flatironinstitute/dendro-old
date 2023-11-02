@@ -1,16 +1,16 @@
-from typing import List, Any
+from typing import List
 import time
 from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature
-from ....common.dendro_types import DendroComputeResource, DendroComputeResourceApp, PubsubSubscription
+from ....common.dendro_types import DendroComputeResource, DendroComputeResourceApp, DendroJob, PubsubSubscription
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...clients.db import fetch_compute_resource, fetch_compute_resources_for_user, update_compute_resource, fetch_compute_resource_jobs
 from ...clients.db import register_compute_resource as db_register_compute_resource
 from ...clients.db import delete_compute_resource as db_delete_compute_resource
 from ...core.settings import get_settings
 from ....mock import using_mock
-from ..common import api_route_wrapper
+from ..common import api_route_wrapper, AuthException
 
 
 router = APIRouter()
@@ -34,9 +34,6 @@ async def get_compute_resource(compute_resource_id) -> GetComputeResourceRespons
 class GetComputeResourcesResponse(BaseModel):
     computeResources: List[DendroComputeResource]
     success: bool
-
-class AuthException(Exception):
-    pass
 
 @router.get("")
 @api_route_wrapper
@@ -113,7 +110,7 @@ async def get_pubsub_subscription(compute_resource_id):
             pubnubChannel=compute_resource_id,
             pubnubUser=compute_resource_id
         )
-    else:
+    else: # pragma: no cover
         VITE_PUBNUB_SUBSCRIBE_KEY = get_settings().PUBNUB_SUBSCRIBE_KEY
         if VITE_PUBNUB_SUBSCRIBE_KEY is None:
             raise KeyError('Environment variable not set: VITE_PUBNUB_SUBSCRIBE_KEY (gui)')
@@ -154,7 +151,7 @@ async def register_compute_resource(data: RegisterComputeResourceRequest, github
 
 # get jobs for compute resource
 class GetJobsForComputeResourceResponse(BaseModel):
-    jobs: List[Any]
+    jobs: List[DendroJob]
     success: bool
 
 @router.get("/{compute_resource_id}/jobs")
@@ -174,10 +171,14 @@ async def get_jobs_for_compute_resource(compute_resource_id, github_access_token
 
 def _verify_resource_code(compute_resource_id: str, resource_code: str) -> bool:
     # check that timestamp is within 5 minutes of current time
-    timestamp = int(resource_code.split('-')[0])
-    if abs(timestamp - time.time()) > 300:
+    try:
+        timestamp = int(resource_code.split('-')[0])
+        if abs(timestamp - time.time()) > 300:
+            return False
+        signature = resource_code.split('-')[1]
+        if not _verify_signature({'timestamp': timestamp}, compute_resource_id, signature):
+            return False
+        return True
+    except Exception:
+        print(f'Error verifying resource code: {resource_code}')
         return False
-    signature = resource_code.split('-')[1]
-    if not _verify_signature({'timestamp': timestamp}, compute_resource_id, signature):
-        return False
-    return True

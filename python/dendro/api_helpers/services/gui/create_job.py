@@ -21,9 +21,6 @@ class CreateJobRequestInputParameter(BaseModel):
     name: str
     value: Union[Any, None]
 
-class AuthException(Exception):
-    pass
-
 class CreateJobException(Exception):
     pass
 

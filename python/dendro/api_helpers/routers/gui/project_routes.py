@@ -49,9 +49,6 @@ class CreateProjectResponse(BaseModel):
     projectId: str
     success: bool
 
-class AuthException(Exception):
-    pass
-
 @router.post("")
 @api_route_wrapper
 async def create_project(data: CreateProjectRequest, github_access_token: str = Header(...)) -> CreateProjectResponse:

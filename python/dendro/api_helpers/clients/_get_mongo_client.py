@@ -5,7 +5,7 @@ from .MockMongoClient import MockMongoClient
 from ...mock import using_mock
 
 if TYPE_CHECKING:
-    from motor.motor_asyncio import AsyncIOMotorClient
+    from motor.motor_asyncio import AsyncIOMotorClient # pragma: no cover
 
 
 _globals = {
@@ -26,12 +26,13 @@ def _get_mongo_client() -> Union['AsyncIOMotorClient', MockMongoClient]:
         if client is None:
             client = MockMongoClient()
             _globals['mock_mongo_client'] = client # type: ignore
-    else:
-        # Otherwise, create a new client and store it in the global variable
-        assert mongo_uri is not None, 'MONGO_URI environment variable not set' # pragma: no cover
+    else: # pragma: no cover
+        # Otherwise, create a new client
+        assert mongo_uri is not None, 'MONGO_URI environment variable not set'
         from motor.motor_asyncio import AsyncIOMotorClient
-        client = AsyncIOMotorClient(mongo_uri) # pragma: no cover
+        client = AsyncIOMotorClient(mongo_uri)
 
+    # Store the client on the event loop
     setattr(loop, '_mongo_client', client)
 
     return client

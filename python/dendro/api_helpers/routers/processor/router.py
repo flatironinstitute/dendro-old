@@ -108,12 +108,12 @@ async def processor_get_job_status(job_id: str, job_private_key: str = Header(..
     try:
         job = await fetch_job(job_id, include_private_key=True)
         if job is None:
-            return ProcessorGetJobStatusResponse(status=None, success=True)
+            return ProcessorGetJobStatusResponse(status=None, success=True) # pragma: no cover
         if job.jobPrivateKey != job_private_key:
-            raise Exception(f"Invalid job private key for job {job_id}")
+            raise Exception(f"Invalid job private key for job {job_id}") # pragma: no cover
 
         return ProcessorGetJobStatusResponse(status=job.status, success=True)
-    except Exception as e:
+    except Exception as e: # pragma: no cover
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 

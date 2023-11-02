@@ -17,6 +17,8 @@ from ..mock import using_mock
 # * Sets the job status to completed or failed in the database via the API
 
 def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
+    time_scale_factor = 1 if not using_mock() else 10000
+
     _run_job_timer = time.time()
 
     # set the job status to running by calling the remote dendro API
@@ -35,7 +37,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     last_newline_index_in_output = -1
     last_report_console_output_time = time.time()
     console_output_changed = False
-    last_check_job_exists_time = time.time()
+    last_check_job_exists_time = time.time() if not using_mock() else 0
 
     # Create a function that will handle uploading the latest console output to the dendro system
     console_output_upload_url: Union[str, None] = None
@@ -65,7 +67,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
         nonlocal console_output_upload_url
         nonlocal console_output_upload_url_timestamp
         elapsed = time.time() - console_output_upload_url_timestamp
-        if elapsed > 60 * 30:
+        if elapsed > 60 * 30 / time_scale_factor:
             # every 30 minutes, request a new upload url (the old one expires after 1 hour)
             console_output_upload_url_timestamp = time.time()
             # request a signed upload url for the console output
@@ -79,12 +81,17 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     succeeded = False # whether we succeeded in running the job without an exception
     error_message = '' # if we fail, this will be set to the exception message
     try:
+        first_iteration = True
         while True:
-            try:
-                retcode = proc.wait(1)
-                # don't check this now -- wait until after we had a chance to read the last console output
-            except subprocess.TimeoutExpired:
-                retcode = None # process is still running
+            skip_this_check = using_mock() and first_iteration
+            if not skip_this_check:
+                try:
+                    retcode = proc.wait(1)
+                    # don't check this now -- wait until after we had a chance to read the last console output
+                except subprocess.TimeoutExpired:
+                    retcode = None # process is still running
+            else:
+                retcode = None
             check_for_new_console_output()
 
             if console_output_changed:
@@ -94,17 +101,17 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                 if retcode is not None:
                     # if the job is finished, report the console output
                     do_report = True
-                elif run_job_elapsed_time < 60 * 2:
+                elif run_job_elapsed_time < 60 * 2 / time_scale_factor:
                     # for the first 2 minutes, report every 10 seconds
-                    if elapsed > 10:
+                    if elapsed > 10 / time_scale_factor:
                         do_report = True
-                elif run_job_elapsed_time < 60 * 10:
+                elif run_job_elapsed_time < 60 * 10 / time_scale_factor:
                     # for the next 8 minutes, report every 30 seconds
-                    if elapsed > 30:
+                    if elapsed > 30 / time_scale_factor:
                         do_report = True
                 else:
                     # after that, report every 120 seconds
-                    if elapsed > 60:
+                    if elapsed > 60 * 2 / time_scale_factor:
                         do_report = True
                 if do_report:
                     # we are going to report the console output
@@ -125,7 +132,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
 
             # check whether job was canceled due to it having been deleted from the dendro system
             elapsed = time.time() - last_check_job_exists_time
-            if elapsed > 120:
+            if elapsed > 120 / time_scale_factor:
                 last_check_job_exists_time = time.time()
                 try:
                     job_status = _get_job_status(job_id=job_id, job_private_key=job_private_key)
@@ -142,7 +149,8 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                     raise ValueError('Job does not exist (was probably canceled)')
                 if job_status != 'running':
                     raise ValueError(f'Unexpected job status: {job_status}')
-            time.sleep(5) # wait 5 seconds before checking things again
+            time.sleep(5 / time_scale_factor) # wait 5 seconds before checking things again
+            first_iteration = False
         succeeded = True # No exception
     except Exception as e: # pylint: disable=broad-except
         _debug_log(f'Error running job: {str(e)}')

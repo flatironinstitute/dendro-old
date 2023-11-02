@@ -2,9 +2,6 @@ from typing import Union
 from ...common.dendro_types import DendroProject
 
 
-class AuthException(Exception):
-    pass
-
 def _get_project_role(project: DendroProject, user_id: Union[str, None]) -> str:
     if user_id:
         if user_id.startswith('admin|'):
@@ -31,12 +28,12 @@ def _project_has_user(project: DendroProject, user_id: Union[str, None]) -> bool
 
 def _check_user_can_read_project(project: DendroProject, user_id: Union[str, None]):
     if not _get_project_role(project, user_id) in ['admin', 'editor', 'viewer']:
-        raise AuthException('User does not have read permission for this project')
+        raise Exception('User does not have read permission for this project')
 
 def _check_user_can_edit_project(project: DendroProject, user_id: Union[str, None]):
     if not _get_project_role(project, user_id) in ['admin', 'editor']:
-        raise AuthException('User does not have edit permission for this project')
+        raise Exception('User does not have edit permission for this project')
 
 def _check_user_is_project_admin(project: DendroProject, user_id: Union[str, None]):
     if not _get_project_role(project, user_id) == 'admin':
-        raise AuthException('User does not have admin permission for this project')
+        raise Exception('User does not have admin permission for this project')

@@ -15,9 +15,6 @@ class GetJobResponse(BaseModel):
     job: DendroJob
     success: bool
 
-class AuthException(Exception):
-    pass
-
 class JobNotFoundException(Exception):
     pass
 
