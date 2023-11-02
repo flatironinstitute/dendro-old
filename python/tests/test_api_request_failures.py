@@ -3,6 +3,7 @@ from dendro.common._api_request import _processor_get_api_request, _processor_pu
 from dendro.common._api_request import _client_get_api_request
 from dendro.common._api_request import _gui_get_api_request, _gui_put_api_request, _gui_post_api_request, _gui_delete_api_request
 
+@pytest.mark.api
 def test_api_request_failures():
     from dendro.common._api_request import _use_api_test_client
     from dendro.mock import set_use_mock
