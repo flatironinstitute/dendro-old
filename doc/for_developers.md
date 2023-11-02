@@ -4,6 +4,7 @@ Here are some notes for developers. This is not a complete guide, but it should 
 
 * [Developing the Python package](#developing-the-python-package)
 * [Developing the frontend](#developing-the-frontend)
+* [About the API](#about-the-api)
 
 # Developing the Python package
 
@@ -111,3 +112,7 @@ For this, you will need to
 # Run the development server with the API
 vercel dev
 ```
+
+## About the API
+
+See [./about_the_api.md](./about_the_api.md).

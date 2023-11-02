@@ -33,7 +33,7 @@ app = App(
 )
 
 description = """
-This is the a processor in the letter_count app. It counts the number of times a particular letter appears in a text file and produces and JSON file with the result.
+This is the a processor in the letter_count app. It counts the number of times a particular letter appears in a text file and produces a JSON file with the result.
 """
 
 class LetterCountProcessorContext(BaseModel):
@@ -82,7 +82,7 @@ dendro make-app-spec-file --app-dir . --spec-output-file spec.json
 
 This will create a spec.json file in the app directory. You can take a look at the contents of this file. It should look something like this:
 
-```json
+```text
 {
     "name": "letter_count",
     "description": "Example Dendro processing app for tutorial",
