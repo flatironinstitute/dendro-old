@@ -24,14 +24,14 @@ def _set_job_status_to_starting(*,
         'status': 'starting'
     }
     if os.environ.get('DENDRO_FORCE_STATUS_UPDATES', None) == '1':
-        data['force_update'] = True
+        data['force_update'] = True # pragma: no cover
     resp = _processor_put_api_request(
         url_path=url_path,
         headers=headers,
         data=data
     )
     if not resp['success']:
-        raise JobException(f'Error setting job status to starting: {resp["error"]}')
+        raise JobException(f'Error setting job status to starting: {resp["error"]}') # pragma: no cover
 
 def _start_job(*,
     job_id: str,
