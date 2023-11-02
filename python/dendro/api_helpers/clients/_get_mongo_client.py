@@ -29,6 +29,7 @@ def _get_mongo_client() -> Union['AsyncIOMotorClient', MockMongoClient]:
     else:
         # Otherwise, create a new client and store it in the global variable
         assert mongo_uri is not None, 'MONGO_URI environment variable not set' # pragma: no cover
+        from motor.motor_asyncio import AsyncIOMotorClient
         client = AsyncIOMotorClient(mongo_uri) # pragma: no cover
 
     setattr(loop, '_mongo_client', client)
