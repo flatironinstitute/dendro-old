@@ -174,7 +174,27 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
 
 def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
-    if using_mock():
+    if not using_mock(): # pragma: no cover
+        # Set the appropriate environment variables and launch the job in a background process
+        cmd = app_executable
+        env = os.environ.copy()
+        env = {
+            **env,
+            'JOB_ID': job_id,
+            'JOB_PRIVATE_KEY': job_private_key,
+            'JOB_INTERNAL': '1',
+            'PYTHONUNBUFFERED': '1'
+        }
+        print(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
+        _debug_log('Opening subprocess')
+        proc = subprocess.Popen(
+            cmd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT
+        )
+        return proc
+    else:
         # it's not going to work to run the mock job in a separate proecess because the mock environment will not exist
         # so instead we are going to run a dummy mock jub, and then for test coverage,
         # we are also going to do execute _run_job on the app
@@ -186,34 +206,17 @@ def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
 
         # here's where we execute _run_job for test coverage
         from ..compute_resource._start_job import _load_app_from_main
+        old_working_dir = os.getcwd()
+        os.chdir(os.path.dirname(app_executable))
         app_instance = _load_app_from_main(app_executable)
         try:
             app_instance._run_job(job_id=job_id, job_private_key=job_private_key)
 
             return proc
         finally:
+            os.chdir(old_working_dir)
             if 'main' in sys.modules:
                 del sys.modules['main'] # important to do this so that at a later time we can load a different main.py
-
-    # Set the appropriate environment variables and launch the job in a background process
-    cmd = app_executable
-    env = os.environ.copy()
-    env = {
-        **env,
-        'JOB_ID': job_id,
-        'JOB_PRIVATE_KEY': job_private_key,
-        'JOB_INTERNAL': '1',
-        'PYTHONUNBUFFERED': '1'
-    }
-    print(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
-    _debug_log('Opening subprocess')
-    proc = subprocess.Popen(
-        cmd,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-    )
-    return proc
 
 def _output_reader(proc, outq: queue.Queue):
     """This is a thread that reads the output of the job and puts it into a queue"""

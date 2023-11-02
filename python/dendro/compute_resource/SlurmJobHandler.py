@@ -24,11 +24,14 @@ class SlurmJobHandler:
     def do_work(self):
         if len(self._jobs) == 0:
             return
+
+        time_scale_factor = 1 if not using_mock() else 10000
+
         elapsed_since_last_job_added = time.time() - self._time_of_last_job_added
         # wait a bit before starting jobs because maybe more will be added, and we want to start them all at once
-        if elapsed_since_last_job_added < 5:
-            if not using_mock():
-                return
+        if elapsed_since_last_job_added < 5 / time_scale_factor:
+            return
+
         max_jobs_in_batch = 20
         num_jobs_to_start = min(max_jobs_in_batch, len(self._jobs))
         if num_jobs_to_start > 0:
@@ -51,10 +54,14 @@ class SlurmJobHandler:
             for ii, job in enumerate(jobs):
                 cmd = self._daemon._start_job(job, run_process=False, return_shell_command=True)
                 if cmd:
-                    f.write(f'if [ "$SLURM_PROCID" == "{ii}" ]; then\n')
-                    f.write(f'    {cmd}\n')
-                    f.write('fi\n')
-                    f.write('\n')
+                    if not using_mock():
+                        f.write(f'if [ "$SLURM_PROCID" == "{ii}" ]; then\n')
+                        f.write(f'    {cmd}\n')
+                        f.write('fi\n')
+                        f.write('\n')
+                    else:
+                        f.write(f'{cmd}\n')
+                        f.write('\n')
                     script_has_at_least_one_job = True
             f.write('\n')
         if script_has_at_least_one_job:
@@ -74,12 +81,14 @@ class SlurmJobHandler:
                 for opt in slurm_other_opts.split(' '):
                     oo.append(opt)
             slurm_opts_str = ' '.join(oo)
-            cmd = f'srun -n {len(jobs)} {slurm_opts_str} bash {slurm_script_fname}'
-            print(f'Running slurm batch: {cmd}')
             if not using_mock():
-                subprocess.Popen(
-                    cmd.split(' '),
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True
-                )
+                cmd = f'srun -n {len(jobs)} {slurm_opts_str} bash {slurm_script_fname}'
+            else:
+                cmd = f'bash {slurm_script_fname}'
+            print(f'Running slurm batch: {cmd}')
+            subprocess.Popen(
+                cmd.split(' '),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )

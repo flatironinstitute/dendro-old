@@ -11,6 +11,7 @@ from ..sdk.App import App
 from ..sdk._run_job import _set_job_status
 from .PubsubClient import PubsubClient
 from ..common.dendro_types import DendroComputeResourceApp, DendroJob
+from ..mock import using_mock
 
 
 max_simultaneous_local_jobs = 2
@@ -87,6 +88,8 @@ class Daemon:
     def start(self, *, timeout: Optional[float] = None, cleanup_old_jobs=True): # timeout is used for testing
         timer_handle_jobs = 0
 
+        time_scale_factor = 1 if not using_mock() else 10000
+
         # Start cleaning up old job directories
         # It's important to do this in a separate process
         # because it can take a long time to delete all the files in the tmp directories (remfile is the culprit)
@@ -98,7 +101,7 @@ class Daemon:
         overall_timer = time.time()
         while True:
             elapsed_handle_jobs = time.time() - timer_handle_jobs
-            need_to_handle_jobs = elapsed_handle_jobs > 60 * 10 # normally we will get pubsub messages for updates, but if we don't, we should check every 10 minutes
+            need_to_handle_jobs = elapsed_handle_jobs > (60 * 10) / time_scale_factor # normally we will get pubsub messages for updates, but if we don't, we should check every 10 minutes
             messages = self._pubsub_client.take_messages() if self._pubsub_client is not None else []
             for msg in messages:
                 if msg['type'] == 'newPendingJob':
@@ -116,10 +119,10 @@ class Daemon:
             if timeout is not None and overall_elapsed > timeout:
                 print(f'Compute resource timed out after {timeout} seconds')
                 return
-            if overall_elapsed < 5:
-                time.sleep(0.01) # for the first few seconds we can sleep for a short time (useful for testing)
+            if overall_elapsed < 5 / time_scale_factor:
+                time.sleep(0.01 / time_scale_factor) # for the first few seconds we can sleep for a short time (useful for testing)
             else:
-                time.sleep(2)
+                time.sleep(2 / time_scale_factor)
 
     def _handle_jobs(self):
         url_path = f'/api/compute_resource/compute_resources/{self._compute_resource_id}/unfinished_jobs'

@@ -34,7 +34,7 @@ def make_app_spec_file(app_dir: str, spec_output_file: str):
 @click.command(help='Run a mock job')
 def run_mock_job():
     print('Running mock job')
-    time.sleep(0.5)
+    time.sleep(0.001) # don't pause too long
     print('Mock job completed')
 
 

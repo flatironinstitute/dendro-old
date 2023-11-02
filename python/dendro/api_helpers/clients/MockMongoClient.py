@@ -39,7 +39,12 @@ class MockMongoCollection:
                 document.update(update_val)
                 return
         if upsert:
-            self._documents[str(uuid.uuid4())] = update_val
+            # create a random ID
+            update_val_2 = {
+                **update_val,
+                '_id': str(uuid.uuid4())
+            }
+            self._documents[update_val_2['_id']] = update_val_2
             return
         raise KeyError("No document matches query") # pragma: no cover
     async def insert_one(self, document: Dict):

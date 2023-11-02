@@ -329,59 +329,69 @@ async def test_integration(tmp_path):
         assert len(resp.files) == 1
 
         # gui: Create job
+        job_id_1 = ''
+        job_id_1_with_error = ''
         processor_name = 'mock-processor1'
         processor_spec = compute_resource_spec_app.processors[0]
-        req = CreateJobRequest(
-            projectId=project2_id,
-            processorName=processor_name,
-            inputFiles=[
-                CreateJobRequestInputFile(
-                    name='input_file',
-                    fileName='mock-input'
-                ),
-                CreateJobRequestInputFile(
-                    name='input_list[0]',
-                    fileName='mock-input'
-                ),
-            ],
-            outputFiles=[
-                CreateJobRequestOutputFile(
-                    name='output_file',
-                    fileName='mock-output'
-                )
-            ],
-            inputParameters=[
-                CreateJobRequestInputParameter(
-                    name='text1',
-                    value='this is text1'
-                ),
-                CreateJobRequestInputParameter(
-                    name='text2',
-                    value='this is text2'
-                ),
-                # text3 has a default
-                CreateJobRequestInputParameter(
-                    name='val1',
-                    value=12
-                ),
-                CreateJobRequestInputParameter(
-                    name='group.num',
-                    value=3
-                ),
-                CreateJobRequestInputParameter(
-                    name='group.secret_param',
-                    value='456'
-                )
-            ],
-            processorSpec=processor_spec,
-            batchId=None,
-            dandiApiKey=None,
-        )
-        resp = _gui_post_api_request(url_path='/api/gui/jobs', data=req.model_dump(), github_access_token=github_access_token)
-        resp = CreateJobResponse(**resp)
-        assert resp.success
-        job_id_1 = resp.jobId
-        assert job_id_1
+        for intentional_error in [False, True]:
+            req = CreateJobRequest(
+                projectId=project2_id,
+                processorName=processor_name,
+                inputFiles=[
+                    CreateJobRequestInputFile(
+                        name='input_file',
+                        fileName='mock-input'
+                    ),
+                    CreateJobRequestInputFile(
+                        name='input_list[0]',
+                        fileName='mock-input'
+                    ),
+                ],
+                outputFiles=[
+                    CreateJobRequestOutputFile(
+                        name='output_file',
+                        fileName='mock-output' if not intentional_error else 'mock-output-err'
+                    )
+                ],
+                inputParameters=[
+                    CreateJobRequestInputParameter(
+                        name='text1',
+                        value='this is text1'
+                    ),
+                    CreateJobRequestInputParameter(
+                        name='text2',
+                        value='this is text2'
+                    ),
+                    # text3 has a default
+                    CreateJobRequestInputParameter(
+                        name='val1',
+                        value=12
+                    ),
+                    CreateJobRequestInputParameter(
+                        name='group.num',
+                        value=3
+                    ),
+                    CreateJobRequestInputParameter(
+                        name='group.secret_param',
+                        value='456'
+                    ),
+                    CreateJobRequestInputParameter(
+                        name='intentional_error',
+                        value=intentional_error
+                    )
+                ],
+                processorSpec=processor_spec,
+                batchId=None,
+                dandiApiKey=None,
+            )
+            resp = _gui_post_api_request(url_path='/api/gui/jobs', data=req.model_dump(), github_access_token=github_access_token)
+            resp = CreateJobResponse(**resp)
+            assert resp.success
+            assert resp.jobId
+            if not intentional_error:
+                job_id_1 = resp.jobId
+            else:
+                job_id_1_with_error = resp.jobId
 
         # gui: Create job for app 2
         processor_name_2 = 'mock-processor2'
@@ -434,23 +444,22 @@ async def test_integration(tmp_path):
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/jobs', github_access_token=github_access_token)
         resp = GetJobsResponse(**resp)
         jobs = resp.jobs
-        assert len(jobs) == 2
+        assert len(jobs) == 3
 
         # gui: Get compute resource jobs
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/jobs', github_access_token=github_access_token)
         resp = GetJobsForComputeResourceResponse(**resp)
         assert resp.success
-        assert len(resp.jobs) == 2
+        assert len(resp.jobs) == 3
 
         # client: Get project jobs
         resp = _client_get_api_request(url_path=f'/api/client/projects/{project2_id}/jobs')
         resp = ClientGetProjectJobsResponse(**resp)
         assert resp.success
-        assert len(resp.jobs) == 2
+        assert len(resp.jobs) == 3
 
         # Run the compute resource briefly
-        start_compute_resource(dir=tmpdir, timeout=1, cleanup_old_jobs=False)
-        start_compute_resource(dir=tmpdir, timeout=1, cleanup_old_jobs=False)
+        start_compute_resource(dir=tmpdir, timeout=3, cleanup_old_jobs=False)
 
         # gui: Get job
         resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id_1}', github_access_token=github_access_token)
@@ -460,11 +469,25 @@ async def test_integration(tmp_path):
             raise Exception(f'Job failed: {job.error}')
         assert job.status == 'completed'
 
+        # gui: Get job (with error)
+        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id_1_with_error}', github_access_token=github_access_token)
+        resp = GetJobResponse(**resp)
+        job = resp.job
+        assert job.status == 'failed'
+
         # gui: Get output file
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files/mock-output', github_access_token=github_access_token)
         resp = GetFileResponse(**resp)
         assert resp.success
         assert resp.file.fileName == 'mock-output'
+
+        # gui: Get job from slurm app
+        resp = _gui_get_api_request(url_path=f'/api/gui/jobs/{job_id_2}', github_access_token=github_access_token)
+        resp = GetJobResponse(**resp)
+        job = resp.job
+        if job.status == 'failed':
+            raise Exception(f'Job failed: {job.error}')
+        assert job.status == 'completed'
 
         # Check whether the appropriate compute resource spec was uploaded to the api
         resp = _gui_get_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}', github_access_token=github_access_token)
@@ -487,7 +510,7 @@ async def test_integration(tmp_path):
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/jobs', github_access_token=github_access_token)
         resp = GetJobsResponse(**resp)
         jobs = resp.jobs
-        assert len(jobs) == 1
+        assert len(jobs) == 2
 
         # gui: Get files
         resp = _gui_get_api_request(url_path=f'/api/gui/projects/{project2_id}/files', github_access_token=github_access_token)

@@ -190,7 +190,7 @@ class App:
         for output in processor._outputs:
             output_file = next((o for o in job.outputs if o._name == output.name), None)
             assert output_file is not None, f'Output not found: {output.name}'
-            assert output_file._was_set, f'Output was not set: {output.name}'
+            assert output_file._was_uploaded, f'Output was not uploaded: {output.name}'
 
 # An empty object that we can set attributes on
 class ContextObject:

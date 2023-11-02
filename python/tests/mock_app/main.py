@@ -20,6 +20,7 @@ class MockProcessor1Context(BaseModel):
     text3: str = Field(description='Text 3', default='xyz', json_schema_extra={'options': ['abc', 'xyz']})
     val1: float = Field(description='Value 1', default=1.0)
     group: MockParameterGroup = Field(description='Group', default=MockParameterGroup())
+    intentional_error: bool = Field(description='Intentional error', default=False)
 
 class MockProcessor1(ProcessorBase):
     name = 'mock-processor1'
@@ -30,6 +31,9 @@ class MockProcessor1(ProcessorBase):
 
     @staticmethod
     def run(context: MockProcessor1Context):
+        if context.intentional_error:
+            raise Exception('Received intentional error parameter')
+
         print('Start mock processor1 in mock app')
         assert context.text1 != ''
         assert context.input_file.get_url()
@@ -41,7 +45,7 @@ class MockProcessor1(ProcessorBase):
         print(f'text3: {context.text3}')
         print(f'val1: {context.val1}')
         print(f'group.num: {context.group.num}')
-        time.sleep(1)
+        time.sleep(0.001) # important not to wait too long because we are calling this synchronously during testing
         with open('mock-output-file.txt', 'w') as f:
             f.write('mock output')
         context.output_file.set('mock-output-file.txt')

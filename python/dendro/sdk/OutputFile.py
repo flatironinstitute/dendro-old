@@ -13,8 +13,11 @@ class OutputFile:
     def __init__(self, *, name: str, job: 'Job') -> None:
         self._name = name
         self._job = job
-        self._was_set = False
+        self._was_uploaded = False
     def set(self, local_file_path: str):
+        print('output.set() is deprecated. Please use output.upload() instead.')
+        self.upload(local_file_path)
+    def upload(self, local_file_path: str):
         upload_url = self._job._get_upload_url_for_output_file(name=self._name)
 
         # Upload the file to the URL
@@ -25,4 +28,4 @@ class OutputFile:
                     print(upload_url)
                     raise SetOutputFileException(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
 
-        self._was_set = True
+        self._was_uploaded = True

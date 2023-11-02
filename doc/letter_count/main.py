@@ -44,7 +44,7 @@ class LetterCountProcessor(ProcessorBase):
         }
         with open(output_fname, 'w') as f:
             f.write(json.dumps(output))
-        context.output.set(output_fname)
+        context.output.upload(output_fname)
 
 app.add_processor(LetterCountProcessor)
 

@@ -166,12 +166,13 @@ def _run_local_job(*,
                     del os.environ[k]
                 else:
                     os.environ[k] = v
-            return ''
         finally:
             if 'main' in sys.modules:
                 del sys.modules['main'] # important to do this so that at a later time we can load a different main.py
 
     if run_process:
+        if using_mock():
+            return
         print(f'Running: {app_executable}')
         subprocess.Popen(
             [app_executable],
