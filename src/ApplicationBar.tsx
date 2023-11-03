@@ -37,7 +37,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
             <AppBar position="static" style={{height: applicationBarHeight - 10, color: 'black', background: applicationBarColor}}>
                 <Toolbar style={{minHeight: applicationBarHeight - 10}}>
                     <img src="/dendro.png" alt="logo" height={30} style={{paddingBottom: 3, cursor: 'pointer'}} onClick={onHome} />
-                    <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;dendro (prototype v3)</div>
+                    <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;dendro (alpha)</div>
                     <span style={{marginLeft: 'auto'}} />
                     <span>
                         <SmallIconButton

@@ -2,11 +2,11 @@
 [![testing](https://github.com/flatironinstitute/dendro/actions/workflows/tests.yml/badge.svg)](https://github.com/flatironinstitute/dendro/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/flatironinstitute/dendro/graph/badge.svg?token=B2DUYR34RZ)](https://codecov.io/gh/flatironinstitute/dendro)
 
-# Dendro (prototype v4)
+# Dendro (alpha)
 
-Dendro is a web application and compute framework aimed at researchers who want to manage and analyze neurophysiological data. It is designed to be used in conjunction with the [DANDI Archive](https://dandiarchive.org/), a public repository for neurophysiology data. For now we are focusing on supporting spike sorting of electrophysiology data, but we plan to expand the capabilities in the future.
+Dendro is a web application and compute framework aimed at researchers who want to manage and analyze neurophysiology data. It is designed to be used in conjunction with the [DANDI Archive](https://dandiarchive.org/), a public repository for neurophysiology data. For now we are focusing on supporting spike sorting, but we plan to expand the capabilities in the future.
 
-:warning: Currently, this software is in the prototype stage, so it is not recommended for production use.
+:warning: Currently, this software is at a very early stage and is not recommended for production use.
 
 Reach out to the authors if you are interested in **beta testing** Dendro. You can use it in the cloud *or* with your local resources.
 
