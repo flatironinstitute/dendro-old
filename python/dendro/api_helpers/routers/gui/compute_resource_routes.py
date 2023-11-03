@@ -9,6 +9,7 @@ from ...clients.db import fetch_compute_resource, fetch_compute_resources_for_us
 from ...clients.db import register_compute_resource as db_register_compute_resource
 from ...clients.db import delete_compute_resource as db_delete_compute_resource
 from ...core.settings import get_settings
+from ...core._model_dump import _model_dump
 from ....mock import using_mock
 from ..common import api_route_wrapper, AuthException
 
@@ -68,7 +69,7 @@ async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourc
         raise AuthException('User does not have permission to admin this compute resource')
 
     await update_compute_resource(compute_resource_id, update={
-        'apps': [app.model_dump(exclude_none=True) for app in apps],
+        'apps': [_model_dump(app, exclude_none=True) for app in apps],
         'timestampModified': time.time()
     })
 

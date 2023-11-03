@@ -1,32 +1,34 @@
 from typing import Union
 import requests
 import h5py
+from pydantic import BaseModel
 import remfile
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .Job import Job
 
 
 class InputFileDownloadError(Exception):
     pass
 
 
-class InputFile:
-    def __init__(self, *, name: str, job: Union['Job', None] = None, url: Union[str, None] = None) -> None:
-        self._name = name
-        self._job = job
-        self._direct_url = url
-
-        if self._job is None and self._direct_url is None:
-            raise Exception('Either job or url must be specified in InputFile')
+class InputFile(BaseModel):
+    name: str
+    url: Union[str, None] = None
+    job_id: Union[str, None] = None
+    job_private_key: Union[str, None] = None
 
     def get_url(self) -> str:
-        if self._direct_url is not None:
-            return self._direct_url
-        elif self._job is not None:
-            return self._job._get_download_url_for_input_file(name=self._name)
+        if self.url is not None:
+            if self.job_id is not None:
+                raise Exception('Cannot specify both url and job_id in InputFile')
+            if self.job_private_key is not None:
+                raise Exception('Cannot specify both url and job_private_key in InputFile')
+            return self.url
         else:
-            raise Exception('Unexpected: both direct_url and job are None')
+            if self.job_id is None:
+                raise Exception('Unexpected: job_id is None')
+            if self.job_private_key is None:
+                raise Exception('Unexpected: job_private_key is None')
+            from .Job import _get_download_url_for_input_file # avoid circular import
+            return _get_download_url_for_input_file(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
 
     def download(self, dest_file_path: str):
         url = self.get_url()
@@ -45,3 +47,15 @@ class InputFile:
         # It's important to do it this way so that the url can renew as needed
         remf = remfile.File(self)
         return h5py.File(remf, 'r')
+
+    # validator is needed to be an allowed pydantic type
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if isinstance(v, cls):
+            return v
+        else:
+            raise ValueError(f'Unexpected type for InputFile: {type(v)}')
