@@ -226,10 +226,18 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
         else:
             secret = None
             options = None
+        # support both pydantic v1 and v2
+        annotation = field.annotation if hasattr(field, 'annotation') else None # type: ignore
+        if annotation is None:
+            # support pydantic v1
+            annotation = _get_annotation_for_field_using_python_type_hints(context_class, name)
+        if annotation is None:
+            # Note: in pydantic < 1.10.0, the field.type_ picks up List[InputFile] as just InputFile, so that's why we are not using field.type_
+            raise Exception(f'No type annotation for field: {name}')
         context_fields.append({
             'name': name,
             'description': field.description if hasattr(field, 'description') else '', # type: ignore
-            'annotation': field.annotation if hasattr(field, 'annotation') else None,
+            'annotation': annotation,
             'default': field.default if hasattr(field, 'default') else PydanticUndefined,
             'options': options,
             'secret': secret,
@@ -323,3 +331,9 @@ def _type_from_string(type: str):
 
 def _is_valid_parameter_type(type: Any):
     return type in _type_map.values()
+
+def _get_annotation_for_field_using_python_type_hints(model_class: Type[BaseModel], field_name: str):
+    # This is a workaround for pydantic v1 where field.annotation is not set and field.type_ doesn't cut it for List[InputFile] when pydantic version is < 1.10.0
+    from typing import get_type_hints
+    type_hints = get_type_hints(model_class)
+    return type_hints.get(field_name, None)

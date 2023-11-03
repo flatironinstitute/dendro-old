@@ -31,8 +31,8 @@ jobs:
 
     # Try with pydantic v1 (no coverage this time)
     - name: Try with pydantic v1
-      run: pip install pydantic==1.9.1
-    - name: Run tests and collect coverage
+      run: pip install pydantic==1.9.2 # support versions >= 1.9.2
+    - name: Run tests
       run: cd python && pytest tests/
     
     - uses: codecov/codecov-action@v3
