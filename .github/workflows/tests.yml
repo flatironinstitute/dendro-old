@@ -8,18 +8,33 @@ jobs:
     name: Tests
     steps:
     - uses: actions/checkout@v1
+
+    # Install dendro and packages needed for tests
     - name: Install
       run: cd python && pip install -e .[compute_resource]
     - name: Install packages needed for tests
       run: pip install pytest pytest-asyncio pytest-cov boto3 kachery_cloud
+
+    # Run non-api tests
     - name: Run non-api tests
       run: cd python && pytest -m "not api" tests/ # make sure we are not depending on any of the additional packages in requirements.txt
     - name: Install packages needed for api tests
+
+    # Install packages needed for api tests
       run: cd python && pip install -e .[api]
     - name: Install other packages needed for api tests
       run: pip install httpx
+    
+    # Run full tests and collect coverage
     - name: Run tests and collect coverage
       run: cd python && pytest --cov dendro --cov-report=xml --cov-report=term tests/
+
+    # Try with pydantic v1 (no coverage this time)
+    - name: Try with pydantic v1
+      run: pip install pydantic==1.9.1
+    - name: Run tests and collect coverage
+      run: cd python && pytest tests/
+    
     - uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
