@@ -1,14 +1,4 @@
-from pydantic import BaseModel as PydanticBaseModel, ConfigDict, VERSION as pydantic_version
-from pydantic import Field # noqa
+from pydantic import VERSION as pydantic_version # noqa
 
-class BaseModel(PydanticBaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-if pydantic_version.startswith('1.'): # pragma: no cover
-    # Handle the case where the installed pydantic is version 1.x.x
-    class V2CompatiblePydanticBaseModel(BaseModel):
-        def model_dump(self, *, exclude_none=False):
-            return self.dict(exclude_none=exclude_none)
-        class Config:
-            arbitrary_types_allowed = True
-    BaseModel = V2CompatiblePydanticBaseModel
+# In the future we may want to intercept and override the pydantic BaseModel
+from pydantic import BaseModel, Field # noqa

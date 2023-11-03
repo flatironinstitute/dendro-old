@@ -209,7 +209,7 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
     context_fields = []
     try:
         # This works in pydantic v2
-        model_fields = context_class.model_fields
+        model_fields = context_class.model_fields # type: ignore
     except AttributeError:
         # This is the alternative for pydantic v1
         model_fields = context_class.__fields__
@@ -220,7 +220,7 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
             # necessary to skip for our version of pydantic BaseModel
             continue
         if hasattr(field, 'json_schema_extra'):
-            json_schema_extra = field.json_schema_extra
+            json_schema_extra = field.json_schema_extra # type: ignore
             secret = json_schema_extra.get('secret', None) if json_schema_extra is not None else None
             options = json_schema_extra.get('options', None) if json_schema_extra is not None else None
         else:
@@ -228,7 +228,7 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
             options = None
         context_fields.append({
             'name': name,
-            'description': field.description if hasattr(field, 'description') else '',
+            'description': field.description if hasattr(field, 'description') else '', # type: ignore
             'annotation': field.annotation if hasattr(field, 'annotation') else None,
             'default': field.default if hasattr(field, 'default') else PydanticUndefined,
             'options': options,

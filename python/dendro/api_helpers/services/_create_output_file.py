@@ -4,6 +4,7 @@ from ..clients._get_mongo_client import _get_mongo_client
 from ..core._create_random_id import _create_random_id
 from ._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 from ...common.dendro_types import DendroFile
+from ..core._model_dump import _model_dump
 from ...mock import using_mock
 
 
@@ -47,7 +48,7 @@ async def _create_output_file(*,
         metadata={},
         jobId=job_id
     )
-    await files_collection.insert_one(new_file.model_dump(exclude_none=True))
+    await files_collection.insert_one(_model_dump(new_file, exclude_none=True))
 
     if deleted_old_file:
         await _remove_detached_files_and_jobs(project_id)

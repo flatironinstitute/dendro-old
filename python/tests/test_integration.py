@@ -242,7 +242,7 @@ async def test_integration(tmp_path):
                 batchId=None,
                 dandiApiKey=None,
             )
-            resp = _gui_post_api_request(url_path='/api/gui/jobs', data=req.model_dump(), github_access_token=github_access_token)
+            resp = _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)
             resp = CreateJobResponse(**resp)
             assert resp.success
             assert resp.jobId
@@ -269,7 +269,7 @@ async def test_integration(tmp_path):
             batchId=None,
             dandiApiKey=None,
         )
-        resp = _gui_post_api_request(url_path='/api/gui/jobs', data=req.model_dump(), github_access_token=github_access_token)
+        resp = _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)
         resp = CreateJobResponse(**resp)
         assert resp.success
         job_id_2 = resp.jobId
@@ -458,7 +458,7 @@ def _register_compute_resource(compute_resource_id: str, compute_resource_privat
         computeResourceId=compute_resource_id,
         resourceCode=resource_code
     )
-    resp = _gui_post_api_request(url_path='/api/gui/compute_resources/register', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_post_api_request(url_path='/api/gui/compute_resources/register', data=_model_dump(req), github_access_token=github_access_token)
     resp = RegisterComputeResourceResponse(**resp)
     assert resp.success
 
@@ -469,7 +469,7 @@ def _set_compute_resource_apps(compute_resource_id: str, apps: list, github_acce
     req = SetComputeResourceAppsRequest(
         apps=apps
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/apps', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/apps', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetComputeResourceAppsResponse(**resp)
     assert resp.success
 
@@ -504,7 +504,7 @@ def _create_project(name: str, github_access_token: str):
     req = CreateProjectRequest(
         name='project1'
     )
-    resp = _gui_post_api_request(url_path='/api/gui/projects', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_post_api_request(url_path='/api/gui/projects', data=_model_dump(req), github_access_token=github_access_token)
     resp = CreateProjectResponse(**resp)
     assert resp.success
     project1_id = resp.projectId
@@ -517,7 +517,7 @@ def _set_project_name(project_id: str, name: str, github_access_token: str):
     req = SetProjectNameRequest(
         name='project1_renamed'
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/name', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/name', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetProjectNameResponse(**resp)
     assert resp.success
 
@@ -527,7 +527,7 @@ def _set_project_description(project_id: str, description: str, github_access_to
     req = SetProjectDescriptionRequest(
         description='project1_description'
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/description', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/description', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetProjectDescriptionResponse(**resp)
     assert resp.success
 
@@ -537,7 +537,7 @@ def _set_project_tags(project_id: str, tags: list, github_access_token: str):
     req = SetProjectTagsRequest(
         tags=['tag1', 'tag2']
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/tags', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/tags', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetProjectTagsResponse(**resp)
     assert resp.success
 
@@ -564,7 +564,7 @@ def _set_project_publicly_readable(project_id: str, publicly_readable: bool, git
     req = SetProjectPubliclyReadableRequest(
         publiclyReadable=publicly_readable
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/publicly_readable', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/publicly_readable', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetProjectPubliclyReadableResponse(**resp)
     assert resp.success
 
@@ -574,7 +574,7 @@ def _set_project_compute_resource_id(project_id: str, compute_resource_id: str, 
     req = SetProjectComputeResourceIdRequest(
         computeResourceId=compute_resource_id
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/compute_resource_id', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/compute_resource_id', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetProjectComputeResourceIdResponse(**resp)
     assert resp.success
 
@@ -584,7 +584,7 @@ def _set_project_users(project_id: str, users: list, github_access_token: str):
     req = SetProjectUsersRequest(
         users=users
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/users', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/users', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetProjectUsersResponse(**resp)
     assert resp.success
 
@@ -618,7 +618,7 @@ def _create_project_file(project_id: str, file_name: str, content: str, github_a
         content=content,
         size=1
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/files/{file_name}', data=req.model_dump(), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/projects/{project_id}/files/{file_name}', data=_model_dump(req), github_access_token=github_access_token)
     resp = SetFileResponse(**resp)
     assert resp.success
 
@@ -735,3 +735,10 @@ def _get_job_output_upload_url(job_id: str, job_private_key: str, output_name: s
     resp = _processor_get_api_request(url_path=f'/api/processor/jobs/{job_id}/outputs/{output_name}/upload_url', headers=headers)
     resp = ProcessorGetJobOutputUploadUrlResponse(**resp)
     return resp.uploadUrl
+
+def _model_dump(model, exclude_none=False):
+    # handle both pydantic v1 and v2
+    if hasattr(model, 'model_dump'):
+        return model.model_dump(exclude_none=exclude_none)
+    else:
+        return model.dict(exclude_none=exclude_none)

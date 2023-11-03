@@ -158,7 +158,7 @@ class App:
         for input in processor._inputs:
             if not input.list:
                 # this input is not a list
-                input_file = next((i for i in job.inputs if i._name == input.name), None)
+                input_file = next((i for i in job.inputs if i.name == input.name), None)
                 assert input_file, f'Input not found: {input.name}'
                 setattr(context, input.name, input_file)
             else:
@@ -167,7 +167,7 @@ class App:
                 ii = 0
                 while True:
                     # find a job input of the form <input_name>[ii]
-                    input_file = next((i for i in job.inputs if i._name == f'{input.name}[{ii}]'), None)
+                    input_file = next((i for i in job.inputs if i.name == f'{input.name}[{ii}]'), None)
                     if input_file is None:
                         # if not found, we must be at the end of the list
                         break
@@ -175,7 +175,7 @@ class App:
                     ii += 1
                 setattr(context, input.name, the_list)
         for output in processor._outputs:
-            output_file = next((o for o in job.outputs if o._name == output.name), None)
+            output_file = next((o for o in job.outputs if o.name == output.name), None)
             assert output_file is not None, f'Output not found: {output.name}'
             setattr(context, output.name, output_file)
         for parameter in processor._parameters:
@@ -188,9 +188,9 @@ class App:
 
         # Check that all outputs were set
         for output in processor._outputs:
-            output_file = next((o for o in job.outputs if o._name == output.name), None)
+            output_file = next((o for o in job.outputs if o.name == output.name), None)
             assert output_file is not None, f'Output not found: {output.name}'
-            assert output_file._was_uploaded, f'Output was not uploaded: {output.name}'
+            assert output_file.was_uploaded, f'Output was not uploaded: {output.name}'
 
 # An empty object that we can set attributes on
 class ContextObject:

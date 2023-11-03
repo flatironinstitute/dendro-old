@@ -4,6 +4,7 @@ from typing import Union
 from dendro.mock import using_mock
 from ....common.dendro_types import DendroJob
 from ...core.settings import get_settings
+from ...core._model_dump import _model_dump
 from .._create_output_file import _create_output_file
 from ...clients.db import update_job
 from ...clients.pubsub import publish_pubsub_message
@@ -53,7 +54,7 @@ async def update_job_status(job: DendroJob, status: str, error: Union[str, None]
             output_file_ids.append(output_file_id)
             output_file.fileId = output_file_id
         update['outputFileIds'] = output_file_ids
-        update['outputFiles'] = [f.model_dump(exclude_none=True) for f in job.outputFiles]
+        update['outputFiles'] = [_model_dump(f, exclude_none=True) for f in job.outputFiles]
 
     update['status'] = new_status
     if new_error:
