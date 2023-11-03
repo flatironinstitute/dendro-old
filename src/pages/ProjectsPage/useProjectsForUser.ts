@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
-import { fetchProjectsForUser } from "../../dbInterface/dbInterface";
+import { fetchAdminAllProjects, fetchProjectsForUser } from "../../dbInterface/dbInterface";
 import { DendroProject } from "../../types/dendro-types";
 
-const useProjectsForUser = (): DendroProject[] | undefined => {
+const useProjectsForUser = (o: {admin?: boolean} = {}): DendroProject[] | undefined => {
     const [projects, setProjects] = useState<DendroProject[] | undefined>(undefined)
     const auth = useGithubAuth()
     useEffect(() => {
@@ -17,7 +17,13 @@ const useProjectsForUser = (): DendroProject[] | undefined => {
         setProjects(undefined)
 
         ; (async () => {
-            const projects = await fetchProjectsForUser(auth)
+            let projects
+            if (!o.admin) {
+                projects = await fetchProjectsForUser(auth)
+            }
+            else {
+                projects = await fetchAdminAllProjects(auth)
+            }
             if (canceled) return
             setProjects(projects)
         })()

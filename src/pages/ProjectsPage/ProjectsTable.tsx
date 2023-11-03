@@ -6,11 +6,11 @@ import useRoute from "../../useRoute"
 import useProjectsForUser from './useProjectsForUser'
 
 type Props = {
-    // none
+    admin?: boolean
 }
 
-const ProjectsTable: FunctionComponent<Props> = () => {
-    const projects = useProjectsForUser()
+const ProjectsTable: FunctionComponent<Props> = ({admin}) => {
+    const projects = useProjectsForUser({admin})
 
     const { setRoute } = useRoute()
 

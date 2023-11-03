@@ -89,6 +89,13 @@ export const fetchProjectsForUser = async (auth: Auth): Promise<DendroProject[]>
     return response.projects
 }
 
+export const fetchAdminAllProjects = async (auth: Auth): Promise<DendroProject[]> => {
+    const url = `${apiBase}/api/gui/projects/admin/get_all_projects`
+    const response = await getRequest(url, auth)
+    if (!response.success) throw Error(`Error in fetchProjects: ${response.error}`)
+    return response.projects
+}
+
 export const createProject = async (projectName: string, auth: Auth): Promise<string> => {
     const url = `${apiBase}/api/gui/projects`
     const response = await postRequest(url, {name: projectName}, auth)

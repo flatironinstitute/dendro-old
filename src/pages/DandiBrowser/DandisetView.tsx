@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { applicationBarColorDarkened } from "../../ApplicationBar"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth"
 import Hyperlink from "../../components/Hyperlink"
@@ -143,24 +143,44 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
     }, [auth, dandisetId, useStaging, setRoute])
 
     const [importing, setImporting] = useState(false)
+    const [importingStatus, setImportingStatus] = useState('')
+
+    const importCanceled = useRef(false)
 
     const handleImport = useCallback(async () => {
         if (!onImportItems) return
         const assetsToImport = allAssets.filter(assetItem => selectedAssets.assetPaths.includes(assetItem.path))
         setImporting(true)
 
+        importCanceled.current = false
+
         const dandisetVersion = most_recent_published_version?.version || draft_version?.version || ''
         const items = assetsToImport.map(assetItem => ({dandisetId, dandisetVersion, assetItem}))
 
         try {
-            await onImportItems(items)
-            // deselect all assets
-            selectedAssetsDispatch({type: 'set-multiple', assetPaths: selectedAssets.assetPaths, selected: false})
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i]
+                setImportingStatus(`Importing file ${i + 1} of ${items.length}...`)
+                await onImportItems([item])
+                // deselect this asset
+                selectedAssetsDispatch({type: 'set-multiple', assetPaths: [item.assetItem.path], selected: false})
+                if (importCanceled.current) {
+                    throw Error('Import canceled')
+                }
+            }
+            setImportingStatus(`Import of ${items.length} files complete`)
+        }
+        catch (e: any) {
+            setImportingStatus(`Error importing files: ${e.message}`)
         }
         finally {
             setImporting(false)
         }
     }, [allAssets, dandisetId, draft_version, most_recent_published_version, onImportItems, selectedAssets])
+
+    const handleCancelImport = useCallback(() => {
+        importCanceled.current = true
+    }, [])
 
     if (!dandisetResponse) return <div>Loading dandiset...</div>
     if (!dandisetVersionInfo) return <div>Loading dandiset info...</div>
@@ -185,6 +205,17 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
                         ) : (
                             <span style={{color: 'red'}}>You are not authorized to import DANDI assets into this project.</span>
                         )
+                    )
+                }
+                {
+                    importingStatus && (
+                        <span style={{fontSize: 14, color: 'gray', marginLeft: 20}}>{importingStatus}</span>
+                    )
+                }
+                &nbsp;&nbsp;
+                {
+                    importing && (
+                        <Hyperlink onClick={handleCancelImport}>cancel import</Hyperlink>
                     )
                 }
             </div>

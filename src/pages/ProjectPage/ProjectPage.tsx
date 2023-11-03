@@ -150,11 +150,11 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             await setUrlFile(project.projectId, file.fileName, file.url, file.metadata, auth)
         }
         refreshFiles()
-        if (files.length === 1) {
-            openTab(`file:${files[0].fileName}`)
-        }
-        setRoute({page: 'project', projectId: project.projectId, tab: 'project-files'})
-    }, [project, openTab, auth, refreshFiles, setRoute])
+        // if (files.length === 1) {
+        //     openTab(`file:${files[0].fileName}`)
+        // }
+        // setRoute({page: 'project', projectId: project.projectId, tab: 'project-files'})
+    }, [project, refreshFiles, auth])
 
     const handleImportDandiNwbFiles = useCallback(async (files: {nwbUrl: string, dandisetId: string, dandisetVersion: string, assetId: string, assetPath: string, staging: boolean}[]) => {
         const files2: {

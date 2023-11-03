@@ -25,6 +25,8 @@ export type Route = {
     page: 'github-auth'
 } | {
     page: 'about'
+} | {
+    page: 'admin'
 }
 
 const useRoute = () => {
@@ -76,6 +78,11 @@ const useRoute = () => {
         else if (p === '/projects') {
             return {
                 page: 'projects'
+            }
+        }
+        else if (p === '/admin') {
+            return {
+                page: 'admin'
             }
         }
         else if (p.startsWith('/register-compute-resource/')) {
@@ -145,6 +152,9 @@ const useRoute = () => {
         }
         else if (r.page === 'about') {
             navigate('/about' + queryString)
+        }
+        else if (r.page === 'admin') {
+            navigate('/admin' + queryString)
         }
     }, [navigate, staging, deployedApi])
 

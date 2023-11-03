@@ -21,6 +21,15 @@ async def fetch_projects_for_user(user_id: Union[str, None]) -> List[DendroProje
             projects2.append(project)
     return projects2
 
+async def fetch_all_projects() -> List[DendroProject]:
+    client = _get_mongo_client()
+    projects_collection = client['dendro']['projects']
+    projects = await projects_collection.find({}).to_list(length=None) # type: ignore
+    for project in projects:
+        _remove_id_field(project)
+    projects = [DendroProject(**project) for project in projects] # validate projects
+    return projects
+
 async def fetch_projects_with_tag(tag: str) -> List[DendroProject]:
     client = _get_mongo_client()
     projects_collection = client['dendro']['projects']

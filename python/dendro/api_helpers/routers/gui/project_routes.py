@@ -1,3 +1,5 @@
+import os
+import json
 from typing import List, Optional
 import time
 from fastapi import APIRouter, Header
@@ -6,7 +8,7 @@ from ...core._create_random_id import _create_random_id
 from ....common.dendro_types import DendroJob, DendroProject, DendroProjectUser
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project, _check_user_is_project_admin
-from ...clients.db import fetch_project, insert_project, update_project, fetch_project_jobs, fetch_projects_for_user, fetch_projects_with_tag
+from ...clients.db import fetch_project, insert_project, update_project, fetch_project_jobs, fetch_projects_for_user, fetch_all_projects, fetch_projects_with_tag
 from ...services.gui.delete_project import delete_project as service_delete_project
 from ..common import api_route_wrapper
 
@@ -281,3 +283,24 @@ async def set_project_users(project_id, data: SetProjectUsersRequest, github_acc
     })
 
     return SetProjectUsersResponse(success=True)
+
+# Admin get all projects
+class AdminGetAllProjectsResponse(BaseModel):
+    projects: List[DendroProject]
+    success: bool
+
+@router.get("/admin/get_all_projects")
+@api_route_wrapper
+async def admin_get_all_projects(github_access_token: str = Header(...)):
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    assert user_id
+
+    ADMIN_USER_IDS_JSON = os.getenv('ADMIN_USER_IDS', '[]')
+    ADMIN_USER_IDS = json.loads(ADMIN_USER_IDS_JSON)
+
+    if user_id not in ADMIN_USER_IDS:
+        raise Exception('User is not admin')
+
+    projects = await fetch_all_projects()
+    return AdminGetAllProjectsResponse(projects=projects, success=True)

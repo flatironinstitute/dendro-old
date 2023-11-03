@@ -4,6 +4,9 @@ import { useGithubAuth } from '../../GithubAuth/useGithubAuth';
 import { onPubsubMessage, setPubNubListenChannel } from '../../pubnub/pubnub';
 import { DendroComputeResource, DendroFile, DendroJob, DendroProject } from '../../types/dendro-types';
 
+const queryParameters = new URLSearchParams(window.location.search)
+const adminMode = queryParameters.get('admin') === '1'
+
 type Props = {
     projectId: string
 }
@@ -324,7 +327,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         if (!project) return undefined
         const userId = auth.userId || undefined
         if (userId) {
-            if (userId.startsWith('admin|')) return 'admin'
+            if (adminMode) return 'admin'
             if (project.ownerId === userId) return 'admin'
             const user = project.users.find(user => user.userId === userId)
             if (user) {

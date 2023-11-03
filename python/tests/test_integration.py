@@ -1,5 +1,4 @@
 import os
-
 import pytest
 import time
 import tempfile
@@ -31,8 +30,13 @@ async def test_integration(tmp_path):
     set_use_mock(True)
     github_access_token = _create_mock_github_access_token()
     github_access_token_for_other_user = _create_mock_github_access_token()
+    github_access_token_for_admin_user = _create_mock_github_access_token()
+    admin_user_id = 'github|' + github_access_token_for_admin_user[len('mock:'):]
 
     this_dir = os.path.dirname(os.path.realpath(__file__))
+
+    old_env = os.environ.copy()
+    os.environ['ADMIN_USER_IDS'] = f'["{admin_user_id}"]'
 
     try:
         # Copy mock app source code
@@ -172,6 +176,10 @@ async def test_integration(tmp_path):
         assert len(projects) == 2
         assert project1_id in [p.projectId for p in projects]
         assert project2_id in [p.projectId for p in projects]
+
+        # gui: Admin get all projects
+        projects = _admin_get_all_projects(github_access_token=github_access_token_for_admin_user)
+        assert len(projects) == 2
 
         # gui: Get projects with tag
         projects = _get_projects_with_tag(tag='tag1', github_access_token=github_access_token)
@@ -389,6 +397,7 @@ async def test_integration(tmp_path):
         _use_api_test_client(None)
         set_use_mock(False)
         _clear_mock_mongo_databases()
+        os.environ = old_env
 
 def _get_fastapi_app():
     from fastapi import FastAPI
@@ -593,6 +602,14 @@ def _get_all_projects_for_user(github_access_token: str):
     from dendro.common._api_request import _gui_get_api_request
     resp = _gui_get_api_request(url_path='/api/gui/projects', github_access_token=github_access_token)
     resp = GetProjectsResponse(**resp)
+    projects = resp.projects
+    return projects
+
+def _admin_get_all_projects(github_access_token: str):
+    from dendro.api_helpers.routers.gui.project_routes import AdminGetAllProjectsResponse
+    from dendro.common._api_request import _gui_get_api_request
+    resp = _gui_get_api_request(url_path='/api/gui/projects/admin/get_all_projects', github_access_token=github_access_token)
+    resp = AdminGetAllProjectsResponse(**resp)
     projects = resp.projects
     return projects
 

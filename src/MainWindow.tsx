@@ -14,6 +14,7 @@ import ProjectsPage from "./pages/ProjectsPage/ProjectsPage";
 import VBoxLayout from "./components/VBoxLayout";
 import HBoxLayout from "./components/HBoxLayout";
 import HelpPanel from "./HelpPanel/HelpPanel";
+import AdminPage from "./pages/AdminPage/AdminPage";
 
 type Props = {
     // none
@@ -93,6 +94,8 @@ const MainContent2: FunctionComponent<MainContent2Props> = ({width, height}) => 
             <RegisterComputeResourcePage />
         ) : route.page === 'github-auth' ? (
             <GitHubAuthPage />
+        ) : route.page === 'admin' ? (
+            <AdminPage width={width} height={height} />
         ) : (
             <div>404</div>
         )

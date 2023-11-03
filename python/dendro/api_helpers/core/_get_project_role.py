@@ -1,10 +1,14 @@
+import os
+import json
 from typing import Union
 from ...common.dendro_types import DendroProject
 
 
 def _get_project_role(project: DendroProject, user_id: Union[str, None]) -> str:
+    ADMIN_USER_IDS_JSON = os.getenv('ADMIN_USER_IDS', '[]')
+    ADMIN_USER_IDS = json.loads(ADMIN_USER_IDS_JSON)
     if user_id:
-        if user_id.startswith('admin|'):
+        if user_id in ADMIN_USER_IDS:
             return 'admin'
         if project.ownerId == user_id:
             return 'admin'
