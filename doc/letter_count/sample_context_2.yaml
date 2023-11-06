@@ -1,0 +1,5 @@
+input:
+  local_file_name: sample_input.txt
+output:
+  output_file_name: sample_output_2.json
+letter: "d"
