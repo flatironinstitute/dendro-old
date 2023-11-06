@@ -1,4 +1,4 @@
-from typing import List, Union, Type
+from typing import List, Union, Type, get_type_hints
 import os
 import json
 import shutil
@@ -57,18 +57,18 @@ class App:
 
     def run(self):
         """This function should be called once in main.py"""
-        JOB_ID = os.environ.get('JOB_ID', None)
-        JOB_PRIVATE_KEY = os.environ.get('JOB_PRIVATE_KEY', None)
-        JOB_INTERNAL = os.environ.get('JOB_INTERNAL', None)
-        APP_EXECUTABLE = os.environ.get('APP_EXECUTABLE', None)
         SPEC_OUTPUT_FILE = os.environ.get('SPEC_OUTPUT_FILE', None)
         if SPEC_OUTPUT_FILE is not None:
-            if JOB_ID is not None:
+            if os.environ.get('JOB_ID', None) is not None:
                 raise Exception('Cannot set both JOB_ID and SPEC_OUTPUT_FILE')
             with open(SPEC_OUTPUT_FILE, 'w') as f:
                 json.dump(self.get_spec(), f, indent=4)
             return
+        JOB_ID = os.environ.get('JOB_ID', None)
         if JOB_ID is not None:
+            JOB_PRIVATE_KEY = os.environ.get('JOB_PRIVATE_KEY', None)
+            JOB_INTERNAL = os.environ.get('JOB_INTERNAL', None)
+            APP_EXECUTABLE = os.environ.get('APP_EXECUTABLE', None)
             if JOB_PRIVATE_KEY is None:
                 raise KeyError('JOB_PRIVATE_KEY is not set')
             if JOB_INTERNAL == '1':
@@ -84,6 +84,33 @@ class App:
                 job_private_key=JOB_PRIVATE_KEY,
                 app_executable=APP_EXECUTABLE
             )
+        TEST_APP_PROCESSOR = os.environ.get('TEST_APP_PROCESSOR', None)
+        if TEST_APP_PROCESSOR is not None:
+            PROCESSOR_NAME = os.environ.get('PROCESSOR_NAME', None)
+            CONTEXT_FILE = os.environ.get('CONTEXT_FILE', None)
+            if PROCESSOR_NAME is None:
+                raise KeyError('PROCESSOR_NAME is not set')
+            if CONTEXT_FILE is None:
+                raise KeyError('CONTEXT_FILE is not set')
+            if CONTEXT_FILE.endswith('.json'):
+                with open(CONTEXT_FILE, 'r') as f:
+                    context = json.load(f)
+            elif CONTEXT_FILE.endswith('.yml') or CONTEXT_FILE.endswith('.yaml'):
+                import yaml
+                with open(CONTEXT_FILE, 'r') as f:
+                    context = yaml.safe_load(f)
+            else:
+                raise Exception(f'Unrecognized file extension: {CONTEXT_FILE}')
+            processor = next((p for p in self._processors if p._name == PROCESSOR_NAME), None)
+            if not processor:
+                raise Exception(f'Processor not found: {PROCESSOR_NAME}')
+            processor_class = processor._processor_class
+            assert processor_class, f'Processor does not have a processor_class: {PROCESSOR_NAME}'
+            context_type = _get_type_of_context_in_processor_class(processor_class)
+            assert context_type, f'Processor does not have a context type: {PROCESSOR_NAME}'
+            context = context_type(**context)
+            processor_class.run(context)
+            return
         raise KeyError('You must set JOB_ID as an environment variable to run a job')
 
     def make_spec_file(self, spec_output_file: str = 'spec.json'):
@@ -226,3 +253,13 @@ def _setattr_where_name_may_have_dots(obj, name, value):
             setattr(obj, part, ContextObject())
         obj = getattr(obj, part)
     setattr(obj, parts[-1], value)
+
+def _get_type_of_context_in_processor_class(processor_class):
+    # Retrieve the 'run' method from the processor class
+    run_method = getattr(processor_class, 'run', None)
+    if not run_method:
+        raise Exception(f'Processor class does not have a run method: {processor_class}')
+    # Get the type hints of the 'run' method
+    type_hints = get_type_hints(run_method)
+    # Return the type hint for the 'context' parameter
+    return type_hints.get('context')

@@ -3,6 +3,7 @@ import click
 from .compute_resource.register_compute_resource import register_compute_resource as register_compute_resource_function
 from .compute_resource.start_compute_resource import start_compute_resource as start_compute_resource_function
 from .sdk._make_spec_file import make_app_spec_file_function
+from .sdk._test_app_processor import test_app_processor_function
 
 # ------------------------------------------------------------
 # Compute resource cli
@@ -31,16 +32,22 @@ def make_app_spec_file(app_dir: str, spec_output_file: str):
 # ------------------------------------------------------------
 # Mock job cli
 # ------------------------------------------------------------
-@click.command(help='Run a mock job')
+@click.command(help='Run a mock job (used during testing)')
 def run_mock_job():
     print('Running mock job')
     time.sleep(0.001) # don't pause too long
     print('Mock job completed')
 
 
-@click.command(help='Run an app')
-def run_app():
-    pass
+# ------------------------------------------------------------
+# Test app processor
+# ------------------------------------------------------------
+@click.command(help='Run an app processor (used for testing)')
+@click.option('--app-dir', default='.', help='Path to the app directory')
+@click.option('--processor', default=None, help='Name of the processor to run')
+@click.option('--context', default=None, help='Path to the context file (.json or .yaml)')
+def test_app_processor(app_dir: str, processor: str, context: str):
+    test_app_processor_function(app_dir=app_dir, processor=processor, context=context)
 
 # ------------------------------------------------------------
 # Main cli
@@ -52,5 +59,5 @@ def main():
 main.add_command(register_compute_resource)
 main.add_command(start_compute_resource)
 main.add_command(make_app_spec_file)
-main.add_command(run_app)
+main.add_command(test_app_processor)
 main.add_command(run_mock_job)
