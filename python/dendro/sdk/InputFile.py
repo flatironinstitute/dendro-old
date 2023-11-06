@@ -10,7 +10,7 @@ class InputFileDownloadError(Exception):
 
 
 class InputFile(BaseModel):
-    name: str
+    name: Union[str, None] = None # the name of the input within the context of the processor (not needed when url is specified directly)
     url: Union[str, None] = None
     job_id: Union[str, None] = None
     job_private_key: Union[str, None] = None
@@ -28,6 +28,8 @@ class InputFile(BaseModel):
             if self.job_private_key is None:
                 raise Exception('Unexpected: job_private_key is None')
             from .Job import _get_download_url_for_input_file # avoid circular import
+            if self.name is None:
+                raise Exception('Unexpected: name is None in InputFile')
             return _get_download_url_for_input_file(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
 
     def download(self, dest_file_path: str):

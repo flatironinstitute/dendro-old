@@ -1,6 +1,6 @@
-# Creating and Dendro Processing App
+# Creating a Custom Dendro Processing App
 
-If you want to learn by example you can take a look at the [source code for the currently-available processing apps](https://github.com/scratchrealm/pc-spike-sorting).
+Here we will walk through the steps of creating a simple Dendro processing app. Alternatively, you can view some more complicated WIP apps [here](https://github.com/scratchrealm/pc-spike-sorting).
 
 
 # Tutorial: Creating a Letter Counting Processing App in Dendro
@@ -109,4 +109,39 @@ letter_count/
 ├── spec.json
 ```
 
-You can now test the app...
+Before connecting it to the web framework, it's best to test things locally first. Create a sample context file called `sample_context.yaml` with the following content
+
+```yaml
+input:
+  url: https://filesamples.com/samples/document/txt/sample3.txt
+output:
+  output_file_name: sample_output.json
+letter: "d"
+```
+
+This specifies that the input is coming from the internet, and the output should go to a local file.
+
+```text
+letter_count/
+├── README.md
+├── main.py (with executable permissions)
+├── spec.json
+├── sample_context.yaml
+```
+
+Now run the app locally
+
+```bash
+cd letter_count
+dendro test-app-processor --app-dir . --processor letter_count --context sample_context.yaml
+```
+
+This should produce a file called `sample_output.json` with the following content
+
+```json
+{"count": 110}
+```
+
+because presumably the letter "d" appears 110 times in the text file.
+
+TODO: Explain how to prepare a docker image and make the app available on the Dendro system.
