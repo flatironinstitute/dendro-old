@@ -109,13 +109,13 @@ letter_count/
 ├── spec.json
 ```
 
-Before connecting it to the web framework, it's best to test things locally first. Create a sample context file called `sample_context.yaml` with the following content
+Before connecting it to the web framework, it's best to test things locally first. Create a sample context file called `sample_context_1.yaml` with the following content
 
 ```yaml
 input:
   url: https://filesamples.com/samples/document/txt/sample3.txt
 output:
-  output_file_name: sample_output.json
+  output_file_name: sample_output_1.json
 letter: "d"
 ```
 
@@ -126,7 +126,7 @@ letter_count/
 ├── README.md
 ├── main.py (with executable permissions)
 ├── spec.json
-├── sample_context.yaml
+├── sample_context_1.yaml
 ```
 
 Now run the app locally
@@ -136,12 +136,19 @@ cd letter_count
 dendro test-app-processor --app-dir . --processor letter_count --context sample_context.yaml
 ```
 
-This should produce a file called `sample_output.json` with the following content
+This should produce a file called `sample_output_1.json` with the following content
 
 ```json
 {"count": 110}
 ```
 
 because presumably the letter "d" appears 110 times in the text file.
+
+To use a local file as input instead, you can use the following context file
+
+```yaml
+input:
+  local_file_name: sample_input_1.txt
+```
 
 TODO: Explain how to prepare a docker image and make the app available on the Dendro system.
