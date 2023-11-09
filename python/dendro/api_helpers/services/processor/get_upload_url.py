@@ -23,7 +23,7 @@ async def _get_upload_url_for_object_key(object_key: str, size: Optional[int] = 
     settings = get_settings()
 
     if using_mock():
-        return f"https://mock-bucket.s3.amazonaws.com/{object_key}?mock-signature"
+        return f"https://mock-bucket.s3.amazonaws.com/{object_key}?mock-signature", f"https://mock-bucket/{object_key}"
 
     OUTPUT_BUCKET_URI = settings.OUTPUT_BUCKET_URI
     if OUTPUT_BUCKET_URI is None:
