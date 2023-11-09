@@ -314,7 +314,9 @@ _type_map = {
     'List[str]': List[str],
     'List[int]': List[int],
     'List[float]': List[float],
-    'List[bool]': List[bool]
+    'List[bool]': List[bool],
+    'Optional[int]': Union[int, None],
+    'Optional[float]': Union[float, None],
 }
 
 def _type_to_string(type: Any):

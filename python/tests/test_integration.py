@@ -283,6 +283,23 @@ async def test_integration(tmp_path):
         job_id_2 = resp.jobId
         assert job_id_2
 
+        # gui: Test not providing a required parameter
+        processor_name_2 = 'mock-processor2'
+        processor_spec_2 = compute_resource_spec_app_2.processors[0]
+        req = CreateJobRequest(
+            projectId=project2_id,
+            processorName=processor_name_2,
+            inputFiles=[],
+            outputFiles=[],
+            inputParameters=[
+            ],
+            processorSpec=processor_spec_2,
+            batchId=None,
+            dandiApiKey=None,
+        )
+        with pytest.raises(Exception):
+            _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)
+
         # gui: Get job
         job = _get_job(job_id=job_id_1, github_access_token=github_access_token)
         assert job.projectId == project2_id

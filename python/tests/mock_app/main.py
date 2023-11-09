@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from typing import List
+from typing import List, Optional
 import time
 import os
 from dendro import BaseModel, Field
@@ -19,6 +19,7 @@ class MockProcessor1Context(BaseModel):
     text2: str = Field(description='Text 2')
     text3: str = Field(description='Text 3', default='xyz', json_schema_extra={'options': ['abc', 'xyz']})
     val1: float = Field(description='Value 1', default=1.0)
+    val2: Optional[float] = Field(description='Value 2 could be a float or it could be None')
     group: MockParameterGroup = Field(description='Group', default=MockParameterGroup())
     intentional_error: bool = Field(description='Intentional error', default=False)
 
