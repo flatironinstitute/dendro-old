@@ -4,6 +4,7 @@ import { createJob, DendroProcessingJobDefinition } from "../../../../dbInterfac
 import { useGithubAuth } from "../../../../GithubAuth/useGithubAuth";
 import { DendroJob } from "../../../../types/dendro-types";
 import { useProject } from "../../ProjectPageContext";
+import { isElectricalSeriesPathParameter } from "../../EditJobDefinitionWindow/EditJobDefinitionWindow";
 
 type SpikeSortingOutputSectionProps = {
     spikeSortingJob: DendroJob
@@ -20,7 +21,7 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
     }, [spikeSortingJob])
 
     const electricalSeriesPath = useMemo(() => {
-        const pp = spikeSortingJob.inputParameters.find(p => (p.name === 'electrical_series_path'))
+        const pp = spikeSortingJob.inputParameters.find(p => (isElectricalSeriesPathParameter(p.name)))
         if (!pp) return undefined
         return pp.value
     }, [spikeSortingJob])

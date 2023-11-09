@@ -1,3 +1,4 @@
+from typing import Optional, Dict, Any
 import boto3
 from boto3.session import Config
 import json
@@ -6,7 +7,8 @@ import json
 async def _get_signed_upload_url(*,
     bucket_uri: str,
     bucket_credentials: str,
-    object_key: str
+    object_key: str,
+    size: Optional[int] = None
 ):
     creds = json.loads(bucket_credentials)
     access_key_id = creds['accessKeyId']
@@ -25,12 +27,16 @@ async def _get_signed_upload_url(*,
         config=Config(signature_version='s3v4')
     )
 
+    params: Dict[str, Any] = {
+        'Bucket': bucket_name,
+        'Key': object_key
+    }
+    if size is not None:
+        params['ContentLength'] = size
+
     return s3_client.generate_presigned_url(
         'put_object',
-        Params={
-            'Bucket': bucket_name,
-            'Key': object_key
-        },
+        Params=params,
         ExpiresIn=30 * 60 # 30 minutes
     )
 
