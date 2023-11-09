@@ -2,8 +2,9 @@ import { Delete, Refresh, Settings } from "@mui/icons-material"
 import { FunctionComponent, useCallback, useMemo, useState } from "react"
 import SmallIconButton from "../../../components/SmallIconButton"
 import { confirm } from "../../../confirm_prompt_alert"
-import { useProject } from "../ProjectPageContext"
 import prepareDandiUploadTask, { DandiUploadTask } from "../DandiUpload/prepareDandiUploadTask"
+import { useProject } from "../ProjectPageContext"
+import DropdownMenu from "./DropdownMenu"
 
 type FileBrowserMenuBarProps = {
     width: number
@@ -12,9 +13,10 @@ type FileBrowserMenuBarProps = {
     onResetSelection: () => void
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
+    onUploadSmallFile?: () => void
 }
 
-const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload }) => {
+const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {
@@ -42,7 +44,7 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
     ), [selectedFileNames])
 
     return (
-        <div>
+        <div style={{display: 'flex'}}>
             {/* <SmallIconButton
                 icon={<Add />}
                 disabled={operating}
@@ -86,6 +88,14 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
                         label="Upload to DANDI"
                     />
                 )
+            }
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {
+                <DropdownMenu
+                    options={[
+                        {label: 'Upload small file', onClick: onUploadSmallFile}
+                    ]}
+                />
             }
         </div>
     )

@@ -6,7 +6,9 @@ import { ComputeResourceSpecProcessor, ComputeResourceSpecProcessorParameter } f
 import useRoute from "../../../useRoute";
 import { useProject } from "../ProjectPageContext";
 import { useElectricalSeriesPaths } from "../FileEditor/NwbFileEditor";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCaretDown, faCaretRight } from "@fortawesome/free-solid-svg-icons";
+import { expandedFoldersReducer } from "../FileBrowser/FileBrowser2";
 
 
 type EditJobDefinitionWindowProps = {
@@ -43,6 +45,16 @@ const validParametersReducer = (state: validParametersState, action: validParame
     else return state
 }
 
+type RowNode = {
+    type: 'leaf'
+    fieldType: 'input' | 'output' | 'parameter'
+    name: string
+    description: string
+} | {
+    type: 'group'
+    name: string
+}
+
 const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> = ({jobDefinition, jobDefinitionDispatch, secretParameterNames, processor, nwbFile, setValid, readOnly, show='all', fileLinks}) => {
     const setParameterValue = useCallback((name: string, value: any) => {
         jobDefinitionDispatch && jobDefinitionDispatch({
@@ -66,58 +78,147 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
         setValid && setValid(allParametersAreValid)
     }, [allParametersAreValid, setValid])
 
+    const nodes: RowNode[] = useMemo(() => {
+        const nodes: RowNode[] = []
+        const addGroupNodes = (name: string) => {
+            const aa = name.split('.')
+            if (aa.length > 1) {
+                for (let i = 0; i < aa.length - 1; i++) {
+                    const group = aa.slice(0, i + 1).join('.')
+                    if (!nodes.find(n => (n.type === 'group') && (n.name === group))) {
+                        nodes.push({
+                            type: 'group',
+                            name: group
+                        })
+                    }
+                }
+            }
+        }
+        processor.inputs.forEach(input => {
+            addGroupNodes(input.name)
+            nodes.push({
+                type: 'leaf',
+                fieldType: 'input',
+                name: input.name,
+                description: input.description
+            })
+        })
+        processor.outputs.forEach(output => {
+            addGroupNodes(output.name)
+            nodes.push({
+                type: 'leaf',
+                fieldType: 'output',
+                name: output.name,
+                description: output.description
+            })
+        })
+        processor.parameters.forEach(parameter => {
+            addGroupNodes(parameter.name)
+            nodes.push({
+                type: 'leaf',
+                fieldType: 'parameter',
+                name: parameter.name,
+                description: parameter.description
+            })
+        })
+        return nodes
+    }, [processor])
+
+    const [expandedGroups, expandedGroupsDispatch] = useReducer(expandedFoldersReducer, new Set<string>())
+
+    useEffect(() => {
+        // initialize the expanded groups
+        const numInitialLevelsExpanded = 1
+        const groupNames = nodes.filter(n => (n.type === 'group')).map(n => n.name)
+        const eg = new Set<string>()
+        for (const name of groupNames) {
+            const aa = name.split('.')
+            if (aa.length <= numInitialLevelsExpanded) {
+                eg.add(name)
+            }
+        }
+        expandedGroupsDispatch({
+            type: 'set',
+            paths: eg
+        })
+    }, [nodes])
+
     const rows = useMemo(() => {
         const ret: any[] = []
         const showInputs = show === 'all' || show === 'inputs' || show === 'inputs+outputs'
         const showOutputs = show === 'all' || show === 'outputs' || show === 'inputs+outputs'
         const showParameters = show === 'all' || show === 'parameters'
-        if (showInputs) {
-            processor.inputs.forEach(input => {
+
+        nodes.forEach(node => {
+            const aa = node.name.split('.')
+            for (let i = 0; i < aa.length - 1; i++) {
+                const group = aa.slice(0, i + 1).join('.')
+                if (!expandedGroups.has(group)) return
+            }
+            if (node.type === 'group') {
                 ret.push(
-                    <InputRow
-                        key={input.name}
-                        name={input.name}
-                        description={input.description}
-                        value={jobDefinition?.inputFiles.find(f => (f.name === input.name))?.fileName}
+                    <GroupRow
+                        key={node.name}
+                        name={node.name}
+                        expanded={expandedGroups.has(node.name)}
+                        toggleExpanded={() => {
+                            expandedGroupsDispatch({
+                                type: 'toggle',
+                                path: node.name
+                            })
+                        }}
+                    />
+                )
+            }
+            else if (node.type === 'leaf') {
+                if (node.fieldType === 'input') {
+                    if (!showInputs) return
+                    const value = jobDefinition?.inputFiles.find(f => (f.name === node.name))?.fileName
+                    ret.push(<InputRow
+                        key={node.name}
+                        name={node.name}
+                        description={node.description}
+                        value={value}
                         setValid={valid => {
                             validParametersDispatch({
                                 type: 'setValid',
-                                name: input.name,
+                                name: node.name,
                                 valid
                             })
                         }}
                         fileLinks={fileLinks}
-                    />
-                )
-            })
-        }
-        if (showOutputs) {
-            processor.outputs.forEach(output => {
-                ret.push(
-                    <OutputRow
-                        key={output.name}
-                        name={output.name}
-                        description={output.description}
-                        value={jobDefinition?.outputFiles.find(f => (f.name === output.name))?.fileName}
+                    />)
+                }
+                else if (node.fieldType === 'output') {
+                    if (!showOutputs) return
+                    const value = jobDefinition?.outputFiles.find(f => (f.name === node.name))?.fileName
+                    ret.push(<OutputRow
+                        key={node.name}
+                        name={node.name}
+                        description={node.description}
+                        value={value}
                         setValid={valid => {
                             validParametersDispatch({
                                 type: 'setValid',
-                                name: output.name,
+                                name: node.name,
                                 valid
                             })
                         }}
                         fileLinks={fileLinks}
-                    />
-                )
-            })
-        }
-        if (showParameters) {
-            processor.parameters.forEach(parameter => {
-                ret.push(
-                    <ParameterRow
-                        key={parameter.name}
+                    />)
+                }
+                else if (node.fieldType === 'parameter') {
+                    if (!showParameters) return
+                    const value = jobDefinition?.inputParameters.find(f => (f.name === node.name))?.value
+                    const parameter = processor.parameters.find(p => (p.name === node.name))
+                    if (!parameter) {
+                        console.warn(`Unexpected: processor parameter not found: ${node.name}`)
+                        return
+                    }
+                    ret.push(<ParameterRow
+                        key={node.name}
                         parameter={parameter}
-                        value={jobDefinition?.inputParameters.find(f => (f.name === parameter.name))?.value}
+                        value={value}
                         nwbFile={nwbFile}
                         secret={secretParameterNames?.includes(parameter.name)}
                         setValue={value => {
@@ -131,12 +232,21 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                             })
                         }}
                         readOnly={readOnly}
-                    />
+                    />)
+                }
+                else {
+                    throw Error('Unexpected field type')
+                }
+                ret.push(
+                    
                 )
-            })
-        }
+            }
+            else {
+                throw Error('Unexpected node type')
+            }
+        })
         return ret
-    }, [jobDefinition, processor, nwbFile, setParameterValue, readOnly, show, secretParameterNames, fileLinks])
+    }, [jobDefinition, processor, nwbFile, setParameterValue, readOnly, show, secretParameterNames, fileLinks, nodes, expandedGroups])
     return (
         <div>
             <table className="table1">
@@ -145,6 +255,39 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                 </tbody>
             </table>
         </div>
+    )
+}
+
+// minimum width that fits the content
+const nameColumnStyle: React.CSSProperties = {
+    width: '1%',
+    whiteSpace: 'nowrap'
+}
+
+type GroupRowProps = {
+    name: string
+    expanded: boolean
+    toggleExpanded: () => void
+}
+
+const GroupRow: FunctionComponent<GroupRowProps> = ({name, expanded, toggleExpanded}) => {
+    return (
+        <tr>
+            <td style={{width: 14}}></td>
+            <td colSpan={3} style={{fontWeight: 'bold'}}>
+                <span onClick={toggleExpanded} style={{cursor: 'pointer'}}>
+                    {indentForName(name)}
+                    {
+                        expanded ? (
+                            <span><FontAwesomeIcon icon={faCaretDown} style={{color: 'gray'}} /> </span>
+                        ) : (
+                            <span><FontAwesomeIcon icon={faCaretRight} style={{color: 'gray'}} /> </span>
+                        )
+                    }
+                    {baseName(name)}
+                </span>
+            </td>
+        </tr>
     )
 }
 
@@ -172,7 +315,8 @@ const InputRow: FunctionComponent<InputRowProps> = ({name, description, value, s
     }, [openTab, setRoute, projectId])
     return (
         <tr>
-            <td>{name}</td>
+            <td></td>
+            <td style={nameColumnStyle}>{indentForName(name)}{baseName(name)}</td>
             <td>{
                 fileLinks && value ? (
                     <Hyperlink
@@ -213,7 +357,8 @@ const OutputRow: FunctionComponent<OutputRowProps> = ({name, description, value,
     }, [openTab, setRoute, projectId])
     return (
         <tr>
-            <td>{name}</td>
+            <td></td>
+            <td style={nameColumnStyle}>{indentForName(name)}{baseName(name)}</td>
             <td>{
                 fileLinks && value ? (
                     <Hyperlink
@@ -245,10 +390,11 @@ const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, n
     const [isValid, setIsValid] = useState<boolean>(false)
     return (
         <tr>
-            <td title={`${name} (${type})`}>
+            <td></td>
+            <td title={`${name} (${type})`} style={nameColumnStyle}>
                 <span
                     style={{color: readOnly || isValid ? 'black' : 'red'}}
-                >{name}</span>
+                >{indentForName(name)}{baseName(name)}</span>
             </td>
             <td>
                 {
@@ -295,14 +441,21 @@ type EditParameterValueProps = {
     setValid: (valid: boolean) => void
 }
 
+export const isElectricalSeriesPathParameter = (name: string) => {
+    const aa = name.split('.')
+    if (aa.length === 0) return false
+    const last = aa[aa.length - 1]
+    return (last === 'electrical_series_path')
+}
+
 const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({parameter, value, nwbFile, setValue, setValid}) => {
     const {type, name} = parameter
-    if (name === 'electrical_series_path') {
+    if (isElectricalSeriesPathParameter(name)) {
         return <ElectricalSeriesPathSelector value={value} nwbFile={nwbFile} setValue={setValue} setValid={setValid} />
     }
     else if (type === 'str') {
         setValid(true)
-        return <input type="text" value={value || ''} onChange={evt => {setValue(evt.target.value)}} />
+        return <input type="text" value={value || ''} onChange={evt => {setValue(evt.target.value)}} style={{width: 250}} />
     }
     else if (type === 'int') {
         return <IntEdit value={value} setValue={setValue} setValid={setValid} />
@@ -313,6 +466,9 @@ const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({paramet
     else if (type === 'bool') {
         setValid(true)
         return <input type="checkbox" checked={value || false} onChange={evt => {setValue(evt.target.checked ? true : false)}} />
+    }
+    else if (type === 'List[int]') {
+        return <IntListEdit value={value} setValue={setValue} setValid={setValid} />
     }
     else if (type === 'List[float]') {
         return <FloatListEdit value={value} setValue={setValue} setValid={setValid} />
@@ -359,8 +515,8 @@ const FloatEdit: FunctionComponent<FloatEditProps> = ({value, setValue, setValid
     }, [internalValue])
 
     return (
-        <span>
-            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} />
+        <span className="FloatEdit">
+            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} style={numInputStyle} />
             {
                 isValid ? null : <span style={{color: 'red'}}>x</span>
             }
@@ -411,8 +567,11 @@ const IntEdit: FunctionComponent<IntEditProps> = ({value, setValue, setValid}) =
     }, [internalValue])
 
     return (
-        <span>
-            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} />
+        <span className="IntEdit">
+            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} style={numInputStyle} />
+            {
+                isValid ? null : <span style={{color: 'red'}}>x</span>
+            }
             {
                 isValid ? null : <span style={{color: 'red'}}>x</span>
             }
@@ -458,13 +617,81 @@ const ElectricalSeriesPathSelector: FunctionComponent<ElectricalSeriesPathSelect
     if (!electricalSeriesPaths) return <div>Loading...</div>
     if (electricalSeriesPaths.length === 0) return <div>No electrical series found.</div>
     return (
-        <select value={value} onChange={evt => {setValue(evt.target.value)}}>
+        <select value={value || ''} onChange={evt => {setValue(evt.target.value)}}>
             {
                 [...electricalSeriesPaths].map(path => (
                     <option key={path} value={path}>{path}</option>
                 ))
             }
         </select>
+    )
+}
+
+const numInputStyle = {
+    width: 60
+}
+
+type IntListEditProps = {
+    value: any
+    setValue: (value: any) => void
+    setValid: (valid: boolean) => void
+}
+
+const isIntListType = (x: any) => {
+    if (!Array.isArray(x)) return false
+    for (let i=0; i<x.length; i++) {
+        if (!isIntType(x[i])) return false
+    }
+    return true
+}
+
+function intListToString(x: number[]) {
+    return x.join(', ')
+}
+
+function stringToIntList(s: string) {
+    return s.split(',').map(x => parseInt(x.trim()))
+}
+
+function stringIsValidIntList(s: string) {
+    const intListRegex = /^[-+]?[0-9]+(,\s*[-+]?[0-9]+)*$/;
+    return intListRegex.test(s);
+}
+
+const IntListEdit: FunctionComponent<IntListEditProps> = ({value, setValue, setValid}) => {
+    const [internalValue, setInternalValue] = useState<string | undefined>(undefined)
+    useEffect(() => {
+        if (isIntListType(value)) {
+            setInternalValue(old => {
+                if ((old !== undefined) && (stringIsValidIntList(old)) && (intListToString(value) === old)) return old
+                return intListToString(value)
+            })
+        }
+    }, [value])
+
+    useEffect(() => {
+        if (internalValue === undefined) return
+        if (stringIsValidIntList(internalValue)) {
+            setValue(stringToIntList(internalValue))
+            setValid(true)
+        }
+        else {
+            setValid(false)
+        }
+    }, [internalValue, setValue, setValid])
+
+    const isValid = useMemo(() => {
+        if (internalValue === undefined) return false
+        return stringIsValidIntList(internalValue)
+    }, [internalValue])
+
+    return (
+        <span>
+            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} />
+            {
+                isValid ? null : <span style={{color: 'red'}}>x</span>
+            }
+        </span>
     )
 }
 
@@ -621,6 +848,26 @@ const DisplayParameterValue: FunctionComponent<DisplayParameterValueProps> = ({p
     else {
         return <div>Unsupported type: {type}</div>
     }
+}
+
+const indentForName = (name: string) => {
+    const aa = name.split('.')
+    return (
+        <span>
+            {
+                aa.map((part, index) => (
+                    <span key={index}>
+                        &nbsp;&nbsp;&nbsp;
+                    </span>
+                ))
+            }
+        </span>
+    )
+}
+
+const baseName = (name: string) => {
+    const aa = name.split('.')
+    return aa[aa.length - 1]
 }
 
 export default EditJobDefinitionWindow

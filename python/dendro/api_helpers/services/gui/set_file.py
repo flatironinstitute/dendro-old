@@ -10,7 +10,7 @@ async def set_file(
     user_id: str,
     project_id: str,
     file_name: str,
-    content: str,
+    content: str, # for example, url:https://...
     job_id: Union[str, None],
     size: int,
     metadata: dict
