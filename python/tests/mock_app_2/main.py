@@ -6,7 +6,7 @@ from dendro.sdk import App, ProcessorBase
 
 
 class MockProcessor2Context(BaseModel):
-    text1: str = Field(description='Text 1', default='abc')
+    text1: str = Field(description='Text 1')
 
 class MockProcessor2(ProcessorBase):
     name = 'mock-processor2'
