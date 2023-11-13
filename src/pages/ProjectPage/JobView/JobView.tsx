@@ -159,7 +159,7 @@ type ExpandableSectionProps = {
     defaultExpanded?: boolean
 }
 
-const ExpandableSection: FunctionComponent<PropsWithChildren<ExpandableSectionProps>> = ({ title, children, defaultExpanded }) => {
+export const ExpandableSection: FunctionComponent<PropsWithChildren<ExpandableSectionProps>> = ({ title, children, defaultExpanded }) => {
     const [expanded, setExpanded] = useState(false)
     useEffect(() => {
         if (defaultExpanded) setExpanded(true)

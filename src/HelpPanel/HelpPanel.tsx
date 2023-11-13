@@ -48,9 +48,6 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, helpExpand
             else if (tab === 'processors') {
                 sourcePath = '/help/project-processors.md'
             }
-            else if (tab === 'compute-resource') {
-                sourcePath = '/help/project-compute-resource.md'
-            }
         }
         (async () => {
             if (!sourcePath) return
@@ -75,7 +72,7 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, helpExpand
     }, [markdownSource, staging, route, signedIn, commonMarkdownSource])
 
     return (
-        <>
+        <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
             <TopBar
                 helpExpanded={helpExpanded}
                 setHelpExpanded={setHelpExpanded}
@@ -89,7 +86,7 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, helpExpand
                     </div>
                 )
             }
-        </>
+        </div>
     )
 }
 

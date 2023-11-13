@@ -42,7 +42,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height}) => {
     )
 }
 
-export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'dandi-import' /*| 'manual-import'*/ | 'processors' | 'compute-resource'
+export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
 
 type ProjectPageView = {
     type: ProjectPageViewType
@@ -64,7 +64,7 @@ const projectPageViews: ProjectPageView[] = [
     },
     {
         type: 'dandi-import',
-        label: 'DANDI import'
+        label: 'DANDI Import'
     },
     // {
     //     type: 'manual-import',
@@ -73,10 +73,6 @@ const projectPageViews: ProjectPageView[] = [
     {
         type: 'processors',
         label: 'Processors'
-    },
-    {
-        type: 'compute-resource',
-        label: 'Compute resource'
     }
 ]
 
@@ -298,17 +294,6 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     width={width}
                     height={height}
                 />
-            </div>
-            <div style={{position: 'absolute', width, height, visibility: currentView === 'compute-resource' ? undefined : 'hidden'}}>
-                {
-                    computeResourceId && (
-                        <ComputeResourcePage
-                            width={width}
-                            height={height}
-                            computeResourceId={computeResourceId}
-                        />
-                    )
-                }
             </div>
             <ModalWindow
                 open={runSpikeSortingWindowVisible}
