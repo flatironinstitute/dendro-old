@@ -221,10 +221,11 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
             continue
         if hasattr(field, 'json_schema_extra'):
             json_schema_extra = field.json_schema_extra # type: ignore
-            secret = json_schema_extra.get('secret', None) if json_schema_extra is not None else None
-            options = json_schema_extra.get('options', None) if json_schema_extra is not None else None
+            secret = json_schema_extra.get('secret', None) if json_schema_extra is not None else None # type: ignore
+            assert isinstance(secret, bool) or secret is None
+            options = json_schema_extra.get('options', None) if json_schema_extra is not None else None # type: ignore
         else:
-            secret = None
+            secret: Union[bool, None] = None
             options = None
         # support both pydantic v1 and v2
         annotation = field.annotation if hasattr(field, 'annotation') else None # type: ignore
