@@ -1,10 +1,11 @@
-import { Delete, Refresh, Settings } from "@mui/icons-material"
+import { Add, Delete, Refresh, Settings } from "@mui/icons-material"
 import { FunctionComponent, useCallback, useMemo, useState } from "react"
 import SmallIconButton from "../../../components/SmallIconButton"
 import { confirm } from "../../../confirm_prompt_alert"
 import prepareDandiUploadTask, { DandiUploadTask } from "../DandiUpload/prepareDandiUploadTask"
 import { useProject } from "../ProjectPageContext"
 import DropdownMenu from "./DropdownMenu"
+import useRoute from "../../../useRoute"
 
 type FileBrowserMenuBarProps = {
     width: number
@@ -18,6 +19,7 @@ type FileBrowserMenuBarProps = {
 
 const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
+    const {route, setRoute} = useRoute()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {
         if (!['admin', 'editor'].includes(projectRole || '')) {
@@ -43,6 +45,14 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
         prepareDandiUploadTask(selectedFileNames)
     ), [selectedFileNames])
 
+    const okayToRunSpikeSorting = useMemo(() => (
+        selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.startsWith('imported/'))
+    ), [selectedFileNames])
+
+    if (route.page !== 'project') {
+        throw Error(`Unexpected route page: ${route.page}`)
+    }
+
     return (
         <div style={{display: 'flex'}}>
             {/* <SmallIconButton
@@ -66,30 +76,44 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
                 title={selectedFileNames.length > 0 ? `Delete these ${selectedFileNames.length} files` : ''}
                 onClick={handleDelete}
             />
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            
             {
-                onRunBatchSpikeSorting && (
-                    <SmallIconButton
-                        icon={<Settings />}
-                        disabled={(selectedFileNames.length === 0) || operating}
-                        title={selectedFileNames.length > 0 ? `Run spike sorting on these ${selectedFileNames.length} files` : ''}
-                        onClick={() => onRunBatchSpikeSorting(selectedFileNames)}
-                        label="Run spike sorting"
-                    />
+                okayToRunSpikeSorting && onRunBatchSpikeSorting && (
+                    <>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <SmallIconButton
+                            icon={<Settings />}
+                            disabled={(selectedFileNames.length === 0) || operating}
+                            title={selectedFileNames.length > 0 ? `Run spike sorting on these ${selectedFileNames.length} files` : ''}
+                            onClick={() => onRunBatchSpikeSorting(selectedFileNames)}
+                            label="Run spike sorting"
+                        />
+                    </>
                 )
             }
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             {
                 dandiUploadTask && onDandiUpload && (
-                    <SmallIconButton
-                        icon={<Settings />}
-                        title={selectedFileNames.length > 0 ? `Upload these ${selectedFileNames.length} files to DANDI` : ''}
-                        onClick={() => onDandiUpload(dandiUploadTask)}
-                        label="Upload to DANDI"
-                    />
+                    <>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <SmallIconButton
+                            icon={<Settings />}
+                            title={selectedFileNames.length > 0 ? `Upload these ${selectedFileNames.length} files to DANDI` : ''}
+                            onClick={() => onDandiUpload(dandiUploadTask)}
+                            label="Upload to DANDI"
+                        />
+                    </>
                 )
             }
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <SmallIconButton
+                    icon={<Add />}
+                    title="Import files from DANDI"
+                    onClick={() => {setRoute({page: 'project', projectId: route.projectId, tab: 'dandi-import'})}}
+                    label="DANDI Import"
+                />
+            </>
+            &nbsp;&nbsp;&nbsp;
             {
                 <DropdownMenu
                     options={[

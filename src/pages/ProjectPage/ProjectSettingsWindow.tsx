@@ -4,7 +4,6 @@ import SmallIconButton from "../../components/SmallIconButton";
 import { confirm } from "../../confirm_prompt_alert";
 import useRoute from "../../useRoute";
 import { useProject } from "./ProjectPageContext";
-import ProjectComputeResourceComponent from "./ProjectComputeResourceComponent";
 
 type Props = {
     // none
@@ -33,7 +32,7 @@ const ProjectSettingsWindow: FunctionComponent<Props> = () => {
                 </tbody>
             </table>
             <hr />
-            <ProjectComputeResourceComponent />
+            In the future, this page will allow you to change the users for the project.
             <hr />
             {
                 (projectRole === 'admin') ? (
