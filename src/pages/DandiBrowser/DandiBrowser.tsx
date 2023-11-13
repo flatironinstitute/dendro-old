@@ -5,6 +5,7 @@ import { AssetResponse, AssetsResponseItem, DandisetSearchResultItem, DandisetsR
 import SmallIconButton from "../../components/SmallIconButton"
 import useRoute from "../../useRoute"
 import Hyperlink from "../../components/Hyperlink"
+import VBoxLayout from "../../components/VBoxLayout"
 
 type Props = {
     width: number
@@ -54,28 +55,31 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
     }, [searchText, stagingStr, staging])
 
     return (
-        <div style={{position: 'absolute', width, height, background: 'white'}}>
-            <div style={{position: 'absolute', width, height: topBarHeight, top: 0, overflow: 'hidden', background: 'white', display: 'flex', justifyContent: 'right'}}>
+        <VBoxLayout
+            width={width}
+            heights={[topBarHeight, searchBarHeight, height - topBarHeight - searchBarHeight]}
+        >
+            <div style={{position: 'absolute', width, display: 'flex', justifyContent: 'right'}}>
                 {/* <Checkbox checked={staging} onClick={toggleStaging} label="use staging site" /> */}
-                <span style={{fontSize: 10}}><Hyperlink onClick={toggleStaging}>use {staging ? 'production' : 'staging'}</Hyperlink></span>
+                <span style={{fontSize: 10}}><Hyperlink onClick={toggleStaging}>use {staging ? 'main site' : 'staging site'}</Hyperlink></span>
                 <div style={{width: 50}} />
             </div>
-            <div style={{position: 'absolute', width, height: searchBarHeight, top: topBarHeight, overflow: 'hidden', background: 'white'}}>
+            <>
                 <SearchBar
                     width={width}
                     height={searchBarHeight}
                     onSearch={setSearchText}
                 />
-            </div>
-            <div style={{position: 'absolute', width, height: height - searchBarHeight - topBarHeight, top: searchBarHeight + topBarHeight, overflow: 'hidden'}}>
+            </>
+            <>
                 <SearchResults
                     width={width}
                     height={height - searchBarHeight}
                     searchResults={searchResult}
                     useStaging={staging}
                 />
-            </div>
-        </div>
+            </>
+        </VBoxLayout>
     )
 }
 

@@ -19,6 +19,7 @@ import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpi
 import { getDandiApiHeaders } from "../DandiBrowser/DandiBrowser";
 import DandisetView from "../DandiBrowser/DandisetView";
 import { AssetResponse, AssetsResponseItem } from "../DandiBrowser/types";
+import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
 
 type Props = {
     width: number
@@ -150,11 +151,11 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             await setUrlFile(project.projectId, file.fileName, file.url, file.metadata, auth)
         }
         refreshFiles()
-        if (files.length === 1) {
-            openTab(`file:${files[0].fileName}`)
-        }
-        setRoute({page: 'project', projectId: project.projectId, tab: 'project-files'})
-    }, [project, openTab, auth, refreshFiles, setRoute])
+        // if (files.length === 1) {
+        //     openTab(`file:${files[0].fileName}`)
+        // }
+        // setRoute({page: 'project', projectId: project.projectId, tab: 'project-files'})
+    }, [project, refreshFiles, auth])
 
     const handleImportDandiNwbFiles = useCallback(async (files: {nwbUrl: string, dandisetId: string, dandisetVersion: string, assetId: string, assetPath: string, staging: boolean}[]) => {
         const files2: {
@@ -201,6 +202,11 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         setDandiUploadTask(dandiUploadTask)
         openDandiUploadWindow()
     }, [openDandiUploadWindow])
+
+    const {visible: uploadSmallFileWindowVisible, handleOpen: openUploadSmallFileWindow, handleClose: closeUploadSmallFileWindow} = useModalDialog()
+    const handleUploadSmallFile = useCallback(() => {
+        openUploadSmallFileWindow()
+    }, [openUploadSmallFileWindow])
 
     const dandisetId = useMemo(() => {
         if (!project) return undefined
@@ -260,6 +266,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     height={height}
                     onRunBatchSpikeSorting={handleRunSpikeSorting}
                     onDandiUpload={handleDandiUpload}
+                    onUploadSmallFile={handleUploadSmallFile}
                 />
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
@@ -324,6 +331,14 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                         />
                     )
                 }
+            </ModalWindow>
+            <ModalWindow
+                open={uploadSmallFileWindowVisible}
+                onClose={closeUploadSmallFileWindow}
+            >
+                <UploadSmallFileWindow
+                    onClose={closeUploadSmallFileWindow}
+                />
             </ModalWindow>
         </div>
     )

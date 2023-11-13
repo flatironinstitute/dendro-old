@@ -1,19 +1,19 @@
 import { FunctionComponent, useMemo } from "react"
 import Markdown from "../../../Markdown/Markdown"
-import { ProtocaasProject } from "../../../types/protocaas-types"
+import { DendroProject } from "../../../types/dendro-types"
 
 type LoadNwbInPythonWindowProps = {
     onClose: () => void
-    project: ProtocaasProject
+    project: DendroProject
     fileName: string
 }
 
-const getMdSource = (project: ProtocaasProject, fileName: string) => {
+const getMdSource = (project: DendroProject, fileName: string) => {
     const source = `
 \`\`\`python
 import h5py
 import pynwb
-import protocaas.client as prc
+import dendro.client as prc
 import remfile
 
 
@@ -22,8 +22,7 @@ project = prc.load_project('${project.projectId}')
 
 # Lazy load ${fileName}
 nwb_file = project.get_file('${fileName}')
-nwb_url = nwb_file.get_url()
-nwb_remf = remfile.File(nwb_url)
+nwb_remf = remfile.File(nwb_file)
 io = pynwb.NWBHDF5IO(file=h5py.File(nwb_remf, 'r'), mode='r')
 nwb = io.read()
 

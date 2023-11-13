@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react";
 import Hyperlink from '../../../components/Hyperlink';
 import { timeAgoString } from '../../../timeStrings';
-import { ProtocaasFile } from '../../../types/protocaas-types';
+import { DendroFile } from '../../../types/dendro-types';
 import { useProject } from '../ProjectPageContext';
 import './file-browser-table.css';
 import FileBrowserMenuBar from './FileBrowserMenuBar';
@@ -14,12 +14,13 @@ import { DandiUploadTask } from '../DandiUpload/prepareDandiUploadTask';
 type Props = {
     width: number
     height: number
-    files: ProtocaasFile[] | undefined
+    files: DendroFile[] | undefined
     onOpenFile: (path: string) => void
     onDeleteFile: (path: string) => void
     hideSizeColumn?: boolean
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
+    onUploadSmallFile?: () => void
 }
 
 type FileItem = {
@@ -114,10 +115,10 @@ type TreeNode = {
     type: 'file' | 'folder'
     name: string
     subNodes: TreeNode[]
-    file?: ProtocaasFile
+    file?: DendroFile
 }
 
-const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload}) => {
+const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile}) => {
     const {currentTabName} = useProject()
 
     const rootNode = useMemo(() => {
@@ -278,6 +279,7 @@ const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, file
                     onResetSelection={() => selectedFileNamesDispatch({type: 'set', values: new Set()})}
                     onRunBatchSpikeSorting={onRunBatchSpikeSorting}
                     onDandiUpload={onDandiUpload}
+                    onUploadSmallFile={onUploadSmallFile}
                 />
             </div>
             <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
@@ -363,7 +365,7 @@ export const FileIcon: FunctionComponent<{fileName: string}> = ({fileName}) => {
     }
     else if (ext === 'stan') {
         // return <FontAwesomeIcon icon={faFile as any} style={{color: 'darkorange'}} />
-        return <img src="/protocaas-logo.png" alt="logo" height={14} style={{paddingBottom: 0, cursor: 'pointer'}} />
+        return <img src="/dendro-logo.png" alt="logo" height={14} style={{paddingBottom: 0, cursor: 'pointer'}} />
     }
     else if (ext === 'nwb') {
         return <FontAwesomeIcon icon={faFile as any} style={{color: 'red'}} />

@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { applicationBarColorDarkened } from "../../ApplicationBar"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth"
 import Hyperlink from "../../components/Hyperlink"
@@ -143,24 +143,44 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
     }, [auth, dandisetId, useStaging, setRoute])
 
     const [importing, setImporting] = useState(false)
+    const [importingStatus, setImportingStatus] = useState('')
+
+    const importCanceled = useRef(false)
 
     const handleImport = useCallback(async () => {
         if (!onImportItems) return
         const assetsToImport = allAssets.filter(assetItem => selectedAssets.assetPaths.includes(assetItem.path))
         setImporting(true)
 
+        importCanceled.current = false
+
         const dandisetVersion = most_recent_published_version?.version || draft_version?.version || ''
         const items = assetsToImport.map(assetItem => ({dandisetId, dandisetVersion, assetItem}))
 
         try {
-            await onImportItems(items)
-            // deselect all assets
-            selectedAssetsDispatch({type: 'set-multiple', assetPaths: selectedAssets.assetPaths, selected: false})
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i]
+                setImportingStatus(`Importing file ${i + 1} of ${items.length}...`)
+                await onImportItems([item])
+                // deselect this asset
+                selectedAssetsDispatch({type: 'set-multiple', assetPaths: [item.assetItem.path], selected: false})
+                if (importCanceled.current) {
+                    throw Error('Import canceled')
+                }
+            }
+            setImportingStatus(`Import of ${items.length} files complete`)
+        }
+        catch (e: any) {
+            setImportingStatus(`Error importing files: ${e.message}`)
         }
         finally {
             setImporting(false)
         }
     }, [allAssets, dandisetId, draft_version, most_recent_published_version, onImportItems, selectedAssets])
+
+    const handleCancelImport = useCallback(() => {
+        importCanceled.current = true
+    }, [])
 
     if (!dandisetResponse) return <div>Loading dandiset...</div>
     if (!dandisetVersionInfo) return <div>Loading dandiset info...</div>
@@ -187,6 +207,17 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
                         )
                     )
                 }
+                {
+                    importingStatus && (
+                        <span style={{fontSize: 14, color: 'gray', marginLeft: 20}}>{importingStatus}</span>
+                    )
+                }
+                &nbsp;&nbsp;
+                {
+                    importing && (
+                        <Hyperlink onClick={handleCancelImport}>cancel import</Hyperlink>
+                    )
+                }
             </div>
             <div style={{position: 'absolute', top: topBarHeight, width, height: height - topBarHeight, overflowY: 'auto'}}>
                 <div style={{fontSize: 20, fontWeight: 'bold', padding: 5}}>
@@ -195,14 +226,16 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
                 <div>
                     <span>PROJECTS:&nbsp;</span>
                     {
-                        projects && projects.map((project) => (
+                        projects ? projects.map((project) => (
                             <span key={project.projectId}>
                                 <Hyperlink onClick={() => setRoute({page: 'project', projectId: project.projectId})}>{project.name}</Hyperlink>
                                 <span> | </span>
                             </span>
-                        ))
+                        )) : (
+                            <span style={{color: 'gray'}}>Loading projects...</span>
+                        )
                     }
-                    <Hyperlink onClick={handleCreateProject}>Create a new protocaas project for this dandiset</Hyperlink>
+                    <Hyperlink onClick={handleCreateProject}>Create a new dendro project for this dandiset</Hyperlink>
                 </div>
                 <div style={{fontSize: 14, padding: 5}}>
                     {

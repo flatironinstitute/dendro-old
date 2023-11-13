@@ -1,14 +1,14 @@
 import React, { FunctionComponent, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 import { deleteComputeResource, fetchComputeResources } from '../../dbInterface/dbInterface';
 import { useGithubAuth } from '../../GithubAuth/useGithubAuth';
-import { ProtocaasComputeResource } from '../../types/protocaas-types';
+import { DendroComputeResource } from '../../types/dendro-types';
 
 type Props = {
     // none
 }
 
 type ComputeResourcesContextType = {
-    computeResources: ProtocaasComputeResource[]
+    computeResources: DendroComputeResource[]
     refreshComputeResources: () => void
     deleteComputeResource: (computeResourceId: string) => void
 }
@@ -20,7 +20,7 @@ const ComputeResourcesContext = React.createContext<ComputeResourcesContextType>
 })
 
 export const SetupComputeResources: FunctionComponent<PropsWithChildren<Props>> = ({children}) => {
-    const [computeResources, setComputeResources] = useState<ProtocaasComputeResource[]>([])
+    const [computeResources, setComputeResources] = useState<DendroComputeResource[]>([])
     const [refreshComputeResourcesCode, setRefreshComputeResourcesCode] = useState(0)
     const refreshComputeResources = useCallback(() => setRefreshComputeResourcesCode(rc => rc + 1), [])
 

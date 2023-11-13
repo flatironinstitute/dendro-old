@@ -1,0 +1,44 @@
+name: PyPI release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - python/**
+
+jobs:
+  pypi-release:
+    name: PyPI release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install
+        run: cd python && pip install -e .[compute_resource]
+      - name: Install packages needed for tests
+        run: pip install pytest pytest-asyncio pytest-cov boto3 kachery_cloud
+      - name: Run non-api tests
+        run: cd python && pytest -m "not api" tests/ # make sure we are not depending on any of the additional packages in requirements.txt
+      - name: Install packages needed for api tests
+        run: cd python && pip install -e .[api]
+      - name: Install other packages needed for api tests
+        run: pip install httpx
+      - name: Run tests and collect coverage
+        run: cd python && pytest --cov dendro --cov-report=xml --cov-report=term tests/
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+          pip install twine
+      - name: Build and publish to PyPI
+        run: |
+          cd python
+          python -m build
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}

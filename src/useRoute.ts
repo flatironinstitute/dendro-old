@@ -2,8 +2,6 @@ import { useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 export type Route = {
-    page: 'home'
-} | {
     page: 'dandisets'
 } | {
     page: 'dandiset'
@@ -18,6 +16,8 @@ export type Route = {
 } | {
     page: 'compute-resources'
 } | {
+    page: 'projects'
+} | {
     page: 'register-compute-resource'
     computeResourceId: string
     resourceCode: string
@@ -25,6 +25,8 @@ export type Route = {
     page: 'github-auth'
 } | {
     page: 'about'
+} | {
+    page: 'admin'
 }
 
 const useRoute = () => {
@@ -34,6 +36,7 @@ const useRoute = () => {
     const search = location.search
     const searchParams = useMemo(() => new URLSearchParams(search), [search])
     const staging = searchParams.get('staging') === '1'
+    const deployedApi = searchParams.get('deployed-api') === '1'
     const route: Route = useMemo(() => {
         if (p === '/about') {
             return {
@@ -72,6 +75,16 @@ const useRoute = () => {
                 page: 'compute-resources'
             }
         }
+        else if (p === '/projects') {
+            return {
+                page: 'projects'
+            }
+        }
+        else if (p === '/admin') {
+            return {
+                page: 'admin'
+            }
+        }
         else if (p.startsWith('/register-compute-resource/')) {
             const a = p.split('/')
             const computeResourceId = a[2]
@@ -89,22 +102,29 @@ const useRoute = () => {
         }
         else {
             return {
-                page: 'home'
+                page: 'dandisets'
             }
         }
     }, [p, searchParams])
 
-    const setRoute = useCallback((r: Route) => {
+    const setRoute = useCallback((r: Route, useStaging?: boolean) => {
         const queries = []
-        if (staging) queries.push(`staging=1`)
+        if (useStaging !== undefined) {
+            if (useStaging) {
+                queries.push(`staging=1`)
+            }
+        }
+        else if (staging) {
+            queries.push(`staging=1`)
+        }
+        if (deployedApi) {
+            queries.push(`deployed-api=1`)
+        }
         if (r.page === 'project') {
             if (r.tab) queries.push(`tab=${r.tab}`)
         }
         const queryString = queries.length > 0 ? `?${queries.join('&')}` : ''
-        if (r.page === 'home') {
-            navigate('/' + queryString)
-        }
-        else if (r.page === 'dandisets') {
+        if (r.page === 'dandisets') {
             navigate('/dandisets' + queryString)
         }
         else if (r.page === 'dandiset') {
@@ -119,23 +139,24 @@ const useRoute = () => {
             navigate(`/compute-resource/${r.computeResourceId}` + queryString)
         }
         else if (r.page === 'compute-resources') {
-            navigate('/compute-resources')
+            navigate('/compute-resources' + queryString)
+        }
+        else if (r.page === 'projects') {
+            navigate('/projects' + queryString)
         }
         else if (r.page === 'register-compute-resource') {
-            navigate(`/register-compute-resource/${r.computeResourceId}/${r.resourceCode}`)
+            navigate(`/register-compute-resource/${r.computeResourceId}/${r.resourceCode}` + queryString)
         }
         else if (r.page === 'github-auth') {
-            navigate('/github/auth')
+            navigate('/github/auth' + queryString)
         }
         else if (r.page === 'about') {
-            if (staging) {
-                navigate('/about?staging=1')
-            }
-            else {
-                navigate('/about')
-            }
+            navigate('/about' + queryString)
         }
-    }, [navigate, staging])
+        else if (r.page === 'admin') {
+            navigate('/admin' + queryString)
+        }
+    }, [navigate, staging, deployedApi])
 
     const toggleStaging = useCallback(() => {
         if (staging) {

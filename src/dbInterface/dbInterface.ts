@@ -1,8 +1,11 @@
 import { GithubAuthData } from "../GithubAuth/GithubAuthContext";
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, ProtocaasComputeResource, ProtocaasFile, ProtocaasJob, ProtocaasProject, isProtocaasFile, isProtocaasProject } from "../types/protocaas-types";
+import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, DendroComputeResource, DendroFile, DendroJob, DendroProject, isDendroFile, isDendroProject } from "../types/dendro-types";
 import getAuthorizationHeaderForUrl from "./getAuthorizationHeaderForUrl";
 
 type Auth = GithubAuthData
+
+const queryParams = new URLSearchParams(window.location.search)
+export const apiBase = queryParams.get('deployed-api') == '1' ? `https://dendro.vercel.app` : ''
 
 export const getRequest = async (url: string, auth: Auth | undefined): Promise<any> => {
     const response = await fetch(url, {
@@ -63,15 +66,15 @@ export const deleteRequest = async (url: string, auth: Auth): Promise<any> => {
     return json
 }
 
-export const fetchProjectsForTag = async (tag: string, auth: Auth): Promise<ProtocaasProject[]> => {
-    const url = `/api/gui/projects?tag=${tag}`
+export const fetchProjectsForTag = async (tag: string, auth: Auth): Promise<DendroProject[]> => {
+    const url = `${apiBase}/api/gui/projects?tag=${tag}`
     const json = await getRequest(url, auth)
     if (!json.success) {
         throw Error(`Error in fetchProjectsForTag: ${json.error}`)
     }
     const projects = json.projects
     for (const p of projects) {
-        if (!isProtocaasProject(p)) {
+        if (!isDendroProject(p)) {
             console.warn(p)
             throw Error('Invalid project.')
         }
@@ -79,15 +82,22 @@ export const fetchProjectsForTag = async (tag: string, auth: Auth): Promise<Prot
     return projects
 }
 
-export const fetchProjectsForUser = async (projectId: string, auth: Auth): Promise<ProtocaasProject[]> => {
-    const url = `/api/gui/projects`
+export const fetchProjectsForUser = async (auth: Auth): Promise<DendroProject[]> => {
+    const url = `${apiBase}/api/gui/projects`
+    const response = await getRequest(url, auth)
+    if (!response.success) throw Error(`Error in fetchProjects: ${response.error}`)
+    return response.projects
+}
+
+export const fetchAdminAllProjects = async (auth: Auth): Promise<DendroProject[]> => {
+    const url = `${apiBase}/api/gui/projects/admin/get_all_projects`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchProjects: ${response.error}`)
     return response.projects
 }
 
 export const createProject = async (projectName: string, auth: Auth): Promise<string> => {
-    const url = `/api/gui/projects`
+    const url = `${apiBase}/api/gui/projects`
     const response = await postRequest(url, {name: projectName}, auth)
     if (!response.success) throw Error(`Error in createProject: ${response.error}`)
     return response.projectId
@@ -95,7 +105,7 @@ export const createProject = async (projectName: string, auth: Auth): Promise<st
 
 export const setProjectTags = async (projectId: string, tags: string[], auth: GithubAuthData) => {
     if (!auth.accessToken) return
-    const url = `/api/gui/projects/${projectId}/tags`
+    const url = `${apiBase}/api/gui/projects/${projectId}/tags`
     const data = {
         tags
     }
@@ -104,40 +114,40 @@ export const setProjectTags = async (projectId: string, tags: string[], auth: Gi
 }
 
 export const setProjectUsers = async (projectId: string, users: {userId: string, role: 'admin' | 'editor' | 'viewer'}[], auth: Auth): Promise<void> => {
-    const url = `/api/gui/projects/${projectId}/users`
+    const url = `${apiBase}/api/gui/projects/${projectId}/users`
     const response = await putRequest(url, {users}, auth)
     if (!response.success) throw Error(`Error in setProjectUsers: ${response.error}`)
 }
 
 export const setProjectPubliclyReadable = async (projectId: string, publiclyReadable: boolean, auth: Auth): Promise<void> => {
-    const url = `/api/gui/projects/${projectId}/publicly_readable`
+    const url = `${apiBase}/api/gui/projects/${projectId}/publicly_readable`
     const response = await putRequest(url, {publiclyReadable}, auth)
     if (!response.success) throw Error(`Error in setProjectPubliclyReadable: ${response.error}`)
 }
 
 export const setProjectComputeResourceId = async (projectId: string, computeResourceId: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/projects/${projectId}/compute_resource_id`
+    const url = `${apiBase}/api/gui/projects/${projectId}/compute_resource_id`
     const response = await putRequest(url, {computeResourceId}, auth)
     if (!response.success) throw Error(`Error in setProjectComputeResourceId: ${response.error}`)
 }
 
-export const fetchProject = async (projectId: string, auth: Auth): Promise<ProtocaasProject | undefined> => {
-    const url = `/api/gui/projects/${projectId}`
+export const fetchProject = async (projectId: string, auth: Auth): Promise<DendroProject | undefined> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchProject: ${response.error}`)
-    if (!isProtocaasProject(response.project)) {
+    if (!isDendroProject(response.project)) {
         console.warn(response.project)
         throw Error('Invalid project.')
     }
     return response.project
 }
 
-export const fetchFiles = async (projectId: string, auth: Auth): Promise<ProtocaasFile[]> => {
-    const url = `/api/gui/projects/${projectId}/files`
+export const fetchFiles = async (projectId: string, auth: Auth): Promise<DendroFile[]> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}/files`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchFiles: ${response.error}`)
     for (const f of response.files) {
-        if (!isProtocaasFile(f)) {
+        if (!isDendroFile(f)) {
             console.warn(f)
             throw Error('Invalid file.')
         }
@@ -145,11 +155,11 @@ export const fetchFiles = async (projectId: string, auth: Auth): Promise<Protoca
     return response.files
 }
 
-export const fetchFile = async (projectId: string, fileName: string, auth: Auth): Promise<ProtocaasFile | undefined> => {
-    const url = `/api/gui/projects/${projectId}/files/${fileName}`
+export const fetchFile = async (projectId: string, fileName: string, auth: Auth): Promise<DendroFile | undefined> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}/files/${fileName}`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchFile: ${response.error}`)
-    if (!isProtocaasFile(response.file)) {
+    if (!isDendroFile(response.file)) {
         console.warn(response.file)
         throw Error('Invalid file.')
     }
@@ -205,7 +215,7 @@ const getSizeForRemoteFile = async (url: string): Promise<number> => {
 }
 
 export const setUrlFile = async (projectId: string, fileName: string, url: string, metadata: any, auth: Auth): Promise<void> => {
-    const reqUrl = `/api/gui/projects/${projectId}/files/${fileName}`
+    const reqUrl = `${apiBase}/api/gui/projects/${projectId}/files/${fileName}`
     const size = await getSizeForRemoteFile(url)
     const body = {
         content: `url:${url}`,
@@ -217,51 +227,51 @@ export const setUrlFile = async (projectId: string, fileName: string, url: strin
 }
 
 export const deleteFile = async (projectId: string, fileName: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/projects/${projectId}/files/${fileName}`
+    const url = `${apiBase}/api/gui/projects/${projectId}/files/${fileName}`
     const resp = await deleteRequest(url, auth)
     if (!resp.success) throw Error(`Error in deleteFile: ${resp.error}`)
 }
 
 export const deleteProject = async (projectId: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/projects/${projectId}`
+    const url = `${apiBase}/api/gui/projects/${projectId}`
     const resp = await deleteRequest(url, auth)
     if (!resp.success) throw Error(`Error in deleteProject: ${resp.error}`)
 }
 
 export const setProjectName = async (projectId: string, name: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/projects/${projectId}/name`
+    const url = `${apiBase}/api/gui/projects/${projectId}/name`
     const response = await putRequest(url, {name}, auth)
     if (!response.success) throw Error(`Error in setProjectName: ${response.error}`)
 }
 
 export const setProjectDescription = async (projectId: string, description: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/projects/${projectId}/description`
+    const url = `${apiBase}/api/gui/projects/${projectId}/description`
     const response = await putRequest(url, {description}, auth)
     if (!response.success) throw Error(`Error in setProjectDescription: ${response.error}`)
 }
 
-export const fetchComputeResources = async (auth: Auth): Promise<ProtocaasComputeResource[]> => {
-    const url = `/api/gui/compute_resources`
+export const fetchComputeResources = async (auth: Auth): Promise<DendroComputeResource[]> => {
+    const url = `${apiBase}/api/gui/compute_resources`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchComputeResources: ${response.error}`)
     return response.computeResources
 }
 
-export const fetchComputeResource = async (computeResourceId: string, auth: Auth): Promise<ProtocaasComputeResource | undefined> => {
-    const url = `/api/gui/compute_resources/${computeResourceId}`
+export const fetchComputeResource = async (computeResourceId: string, auth: Auth): Promise<DendroComputeResource | undefined> => {
+    const url = `${apiBase}/api/gui/compute_resources/${computeResourceId}`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchComputeResource: ${response.error}`)
     return response.computeResource
 }
 
 export const registerComputeResource = async (computeResourceId: string, resourceCode: string, name: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/compute_resources/register`
+    const url = `${apiBase}/api/gui/compute_resources/register`
     const response = await postRequest(url, {computeResourceId, resourceCode, name}, auth)
     if (!response.success) throw Error(`Error in registerComputeResource: ${response.error}`)
 }
 
 export const deleteComputeResource = async (computeResourceId: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/compute_resources/${computeResourceId}`
+    const url = `${apiBase}/api/gui/compute_resources/${computeResourceId}`
     const resp = await deleteRequest(url, auth)
     if (!resp.success) throw Error(`Error in deleteComputeResource: ${resp.error}`)
 }
@@ -276,12 +286,12 @@ export type App = {
 }
 
 export const setComputeResourceApps = async (computeResourceId: string, apps: App[], auth: Auth): Promise<void> => {
-    const url = `/api/gui/compute_resources/${computeResourceId}/apps`
+    const url = `${apiBase}/api/gui/compute_resources/${computeResourceId}/apps`
     const response = await putRequest(url, {apps}, auth)
     if (!response.success) throw Error(`Error in setComputeResourceApps: ${response.error}`)
 }
 
-export type ProtocaasProcessingJobDefinition = {
+export type DendroProcessingJobDefinition = {
     processorName: string,
     inputFiles: {
         name: string
@@ -297,7 +307,7 @@ export type ProtocaasProcessingJobDefinition = {
     }[]
 }
 
-export type ProtocaasProcessingJobDefinitionAction = {
+export type DendroProcessingJobDefinitionAction = {
     type: 'setInputFile'
     name: string
     fileName: string
@@ -314,17 +324,17 @@ export type ProtocaasProcessingJobDefinitionAction = {
     processorName: string
 } | {
     type: 'setJobDefinition'
-    jobDefinition: ProtocaasProcessingJobDefinition
+    jobDefinition: DendroProcessingJobDefinition
 }
 
-export const defaultJobDefinition: ProtocaasProcessingJobDefinition = {
+export const defaultJobDefinition: DendroProcessingJobDefinition = {
     processorName: '',
     inputFiles: [],
     inputParameters: [],
     outputFiles: []
 }
 
-export const protocaasJobDefinitionReducer = (state: ProtocaasProcessingJobDefinition, action: ProtocaasProcessingJobDefinitionAction): ProtocaasProcessingJobDefinition => {
+export const dendroJobDefinitionReducer = (state: DendroProcessingJobDefinition, action: DendroProcessingJobDefinitionAction): DendroProcessingJobDefinition => {
 
     switch (action.type) {
         case 'setInputFile':
@@ -373,9 +383,9 @@ export const protocaasJobDefinitionReducer = (state: ProtocaasProcessingJobDefin
 export const createJob = async (
     a: {
         projectId: string,
-        jobDefinition: ProtocaasProcessingJobDefinition,
+        jobDefinition: DendroProcessingJobDefinition,
         processorSpec: ComputeResourceSpecProcessor,
-        files: ProtocaasFile[],
+        files: DendroFile[],
         batchId?: string
     },
     auth: Auth
@@ -385,7 +395,7 @@ export const createJob = async (
     const inputFiles = jobDefinition.inputFiles
     const inputParameters = jobDefinition.inputParameters
     const outputFiles = jobDefinition.outputFiles
-    const url = `/api/gui/jobs`
+    const url = `${apiBase}/api/gui/jobs`
     let needToSendDandiApiKey = false
     let needToSendDandiStagingApiKey = false
     for (const inputFile of inputFiles) {
@@ -427,34 +437,34 @@ export const createJob = async (
 }
 
 export const deleteJob = async (jobId: string, auth: Auth): Promise<void> => {
-    const url = `/api/gui/jobs/${jobId}`
+    const url = `${apiBase}/api/gui/jobs/${jobId}`
     const resp = await deleteRequest(url, auth)
     if (!resp.success) throw Error(`Error in deleteJob: ${resp.error}`)
 }
 
-export const fetchJobsForProject = async (projectId: string, auth: Auth): Promise<ProtocaasJob[]> => {
-    const url = `/api/gui/projects/${projectId}/jobs`
+export const fetchJobsForProject = async (projectId: string, auth: Auth): Promise<DendroJob[]> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}/jobs`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchJobsForProject: ${response.error}`)
     return response.jobs
 }
 
-export const fetchJobsForComputeResource = async (computeResourceId: string, auth: Auth): Promise<ProtocaasJob[]> => {
-    const url = `/api/gui/compute_resources/${computeResourceId}/jobs`
+export const fetchJobsForComputeResource = async (computeResourceId: string, auth: Auth): Promise<DendroJob[]> => {
+    const url = `${apiBase}/api/gui/compute_resources/${computeResourceId}/jobs`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchJobsForComputeResource: ${response.error}`)
     return response.jobs
 }
 
-export const fetchJob = async (jobId: string, auth: Auth): Promise<ProtocaasJob | undefined> => {
-    const url = `/api/gui/jobs/${jobId}`
+export const fetchJob = async (jobId: string, auth: Auth): Promise<DendroJob | undefined> => {
+    const url = `${apiBase}/api/gui/jobs/${jobId}`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchJob: ${response.error}`)
     return response.job
 }
 
 export const getComputeResource = async (computeResourceId: string): Promise<any> => {
-    const url = `/api/gui/compute_resources/${computeResourceId}`
+    const url = `${apiBase}/api/gui/compute_resources/${computeResourceId}`
     const response = await getRequest(url, undefined)
     if (!response.success) throw Error(`Error in getComputeResource: ${response.error}`)
     return response.computeResource

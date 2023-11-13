@@ -1,13 +1,13 @@
+import { Computer, Help, Key, Login, Logout, Work } from "@mui/icons-material";
 import { AppBar, Toolbar } from "@mui/material";
 import { FunctionComponent, useCallback, useMemo, useState } from "react";
-import useRoute from "./useRoute";
-import SmallIconButton from "./components/SmallIconButton";
-import { useGithubAuth } from "./GithubAuth/useGithubAuth";
-import { Computer, Help, Key, Login, Logout } from "@mui/icons-material";
-import ModalWindow from "./components/ModalWindow/ModalWindow";
-import GitHubLoginWindow from "./GitHub/GitHubLoginWindow";
 import ApiKeysWindow from "./ApiKeysWindow/ApiKeysWindow";
+import GitHubLoginWindow from "./GitHub/GitHubLoginWindow";
+import { useGithubAuth } from "./GithubAuth/useGithubAuth";
 import UserIdComponent from "./UserIdComponent";
+import ModalWindow from "./components/ModalWindow/ModalWindow";
+import SmallIconButton from "./components/SmallIconButton";
+import useRoute from "./useRoute";
 
 type Props = {
     // none
@@ -25,19 +25,19 @@ const ApplicationBar: FunctionComponent<Props> = () => {
     const {visible: apiKeysWindowVisible, handleOpen: openApiKeysWindow, handleClose: closeApiKeysWindow} = useModalDialog()
 
     const onHome = useCallback(() => {
-        setRoute({page: 'home'})
+        setRoute({page: 'dandisets'})
     }, [setRoute])
 
     const onHelp = useCallback(() => {
-        window.open('https://github.com/scratchrealm/protocaas/blob/main/README.md', '_blank')
+        window.open('https://github.com/flatironinstitute/dendro/blob/main/README.md', '_blank')
     }, [])
 
     return (
         <span>
             <AppBar position="static" style={{height: applicationBarHeight - 10, color: 'black', background: applicationBarColor}}>
                 <Toolbar style={{minHeight: applicationBarHeight - 10}}>
-                    <img src="/protocaas.png" alt="logo" height={30} style={{paddingBottom: 3, cursor: 'pointer'}} onClick={onHome} />
-                    <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;protocaas (prototype v3)</div>
+                    <img src="/dendro.png" alt="logo" height={30} style={{paddingBottom: 3, cursor: 'pointer'}} onClick={onHome} />
+                    <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;dendro (alpha)</div>
                     <span style={{marginLeft: 'auto'}} />
                     <span>
                         <SmallIconButton
@@ -52,6 +52,14 @@ const ApplicationBar: FunctionComponent<Props> = () => {
                             icon={<Computer />}
                             onClick={() => setRoute({page: 'compute-resources'})}
                             title={`Configure compute resources`}
+                        />
+                    </span>
+                    &nbsp;&nbsp;
+                    <span>
+                        <SmallIconButton
+                            icon={<Work />}
+                            onClick={() => setRoute({page: 'projects'})}
+                            title={`Manage projects`}
                         />
                     </span>
                     &nbsp;&nbsp;
@@ -79,7 +87,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
                         &nbsp;
                         {
                             !signedIn && (
-                                <span style={{position: 'relative', top: -5}}>Log in</span>
+                                <span style={{position: 'relative', top: -5}}>Sign in</span>
                             )
                         }
                     </span>

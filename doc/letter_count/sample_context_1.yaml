@@ -1,0 +1,5 @@
+input:
+  url: https://filesamples.com/samples/document/txt/sample3.txt
+output:
+  output_file_name: sample_output_1.json
+letter: "d"

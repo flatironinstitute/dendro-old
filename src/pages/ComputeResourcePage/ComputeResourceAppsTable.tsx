@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useMemo, useReducer } from "react"
 import { useModalDialog } from "../../ApplicationBar"
 import Hyperlink from "../../components/Hyperlink"
 import ModalWindow from "../../components/ModalWindow/ModalWindow"
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ProtocaasComputeResource } from "../../types/protocaas-types"
+import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, DendroComputeResource } from "../../types/dendro-types"
 import { Checkbox, selectedStringsReducer } from "../ProjectPage/FileBrowser/FileBrowser2"
 import ComputeResourceAppsTableMenuBar from "./ComputeResourceAppsTableMenuBar"
 import NewAppWindow from "./NewAppWindow"
@@ -10,7 +10,7 @@ import NewAppWindow from "./NewAppWindow"
 type Props = {
     width: number
     height: number
-    computeResource: ProtocaasComputeResource
+    computeResource: DendroComputeResource
     onNewApp: (name: string, specUri: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
     onEditApp: (name: string, specUri: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
     onDeleteApps: (appNames: string[]) => void

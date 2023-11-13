@@ -18,9 +18,6 @@ export const initialGithubAuth = {
 	accessToken: initialLoginStatus.accessToken
 }
 
-const queryParams = parseQuery(window.location.href)
-const adminMode = queryParams['admin'] === '1'
-
 const useSetupGithubAuth = (): GithubAuthData => {
     const [loginStatus, setLoginStatus] = useState<GithubLoginStatus>(initialLoginStatus)
     const [userName, setUserName] = useState(initialUserName)
@@ -100,7 +97,7 @@ const useSetupGithubAuth = (): GithubAuthData => {
 
     return useMemo(() => ({
         signedIn: loginStatus.status === 'logged-in',
-        userId: adminMode ? `admin|${userName}` : userName,
+        userId: userName,
         accessToken: loginStatus.accessToken,
         isPersonalAccessToken: loginStatus.isPersonalAccessToken,
         loginStatus: loginStatus.status,

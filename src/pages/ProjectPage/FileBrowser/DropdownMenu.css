@@ -1,0 +1,4 @@
+.DropdownMenu li.enabled:hover {
+    /* background-color:rgb(212, 210, 210); */
+    color: rgb(131, 129, 129);
+}

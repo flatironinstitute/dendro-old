@@ -1,36 +1,41 @@
 from setuptools import setup, find_packages
 
-# read the contents of README.md
-from pathlib import Path
-this_directory = Path(__file__).parent
-long_description = (this_directory / "README.md").read_text()
-
-__version__ = '0.3.0'
+__version__ = '0.1.8'
 
 setup(
-    name='protocaas',
+    name='dendro',
     version=__version__,
-    author="Jeremy Magland",
+    author="Jeremy Magland, Luiz Tauffer",
     author_email="jmagland@flatironinstitute.org",
-    url="https://github.com/scratchrealm/protocaas",
-    description="Create, run, and share neuroscience analyses in the browser",
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    packages=find_packages(include=['protocaas', 'protocaas_sdk']),
+    url="https://github.com/flatironinstitute/dendro",
+    description="Web framework for neurophysiology data analysis",
+    packages=find_packages(include=['dendro']),
     include_package_data=True,
     install_requires=[
         'click',
         'simplejson',
         'numpy',
         'PyYAML',
-        'remfile>=0.1.8',
-        'pubnub>=7.2.0',
-        'pydantic',
-        'cryptography'
+        'remfile',
+        'pydantic', # intentionally do not specify version 1 or 2 since we support both
+        'cryptography',
+        'h5py>=3.10.0'
     ],
+    extras_require={
+        'compute_resource': [
+            'pubnub>=7.2.0'
+        ],
+        'api': [
+            'fastapi',
+            'motor',
+            'simplejson',
+            'pydantic',
+            'aiohttp'
+        ]
+    },
     entry_points={
         "console_scripts": [
-            "protocaas=protocaas.cli:main",
+            "dendro=dendro.cli:main",
         ],
     }
 )

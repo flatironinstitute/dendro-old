@@ -1,9 +1,9 @@
 import { FunctionComponent, useCallback, useMemo } from "react";
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";
-import { ProtocaasProcessingJobDefinition, createJob } from "../../../dbInterface/dbInterface";
+import { DendroProcessingJobDefinition, createJob } from "../../../dbInterface/dbInterface";
 import { useProject } from "../ProjectPageContext";
 import { DandiUploadTask } from "./prepareDandiUploadTask";
-import { ProtocaasFile, ProtocaasJob } from "../../../types/protocaas-types";
+import { DendroFile, DendroJob } from "../../../types/dendro-types";
 
 type DandiUploadWindowProps = {
     dandiUploadTask: DandiUploadTask
@@ -48,7 +48,7 @@ const DandiUploadWindow: FunctionComponent<DandiUploadWindowProps> = ({ dandiUpl
             const job = file.jobId ? jobs.find(j => j.jobId === file.jobId) : undefined
             wasGeneratedByList.push(createWasGeneratedByForFile(file, job, files))
         }
-        const jobDef: ProtocaasProcessingJobDefinition = {
+        const jobDef: DendroProcessingJobDefinition = {
             processorName: processor.name,
             inputFiles: dandiUploadTask.fileNames.map((fileName, ii) => ({
                 name: `inputs[${ii}]`,
@@ -149,9 +149,9 @@ const DandiUploadWindow: FunctionComponent<DandiUploadWindowProps> = ({ dandiUpl
     )
 }
 
-const createWasGeneratedByForFile = (file: ProtocaasFile, job: ProtocaasJob | undefined, files: ProtocaasFile[]) => {
+const createWasGeneratedByForFile = (file: DendroFile, job: DendroJob | undefined, files: DendroFile[]) => {
     return {
-        name: "protocaas",
+        name: "dendro",
         projectId: file.projectId,
         jobId: job?.jobId,
         processorName: job?.processorName,

@@ -1,5 +1,5 @@
 {
-  "name": "protocaas",
+  "name": "dendro",
   "private": true,
   "version": "0.0.0",
   "scripts": {
@@ -19,6 +19,7 @@
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.0",
     "github-markdown-css": "^5.2.0",
+    "nunjucks": "^3.2.4",
     "pubnub": "^7.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.6.1",
+    "@types/nunjucks": "^3.2.5",
     "@types/pubnub": "^7.3.4",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",

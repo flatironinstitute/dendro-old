@@ -10,11 +10,11 @@ const HBoxLayout: React.FunctionComponent<PropsWithChildren<HBoxLayoutProps>> = 
     const totalWidth = widths.reduce((a, b) => (a + b), 0)
     const children2 = React.Children.toArray(children).map(ch => (ch as any as ReactElement))
     return (
-        <div style={{position: 'relative', width: totalWidth, height}}>
+        <div className="HBoxLayout" style={{position: 'relative', width: totalWidth, height}}>
             {
                 children2.map((child: ReactElement, i) => {
                     return child ? (
-                        <div key={i} style={{position: 'absolute', left: widths.slice(0, i).reduce((a, b) => (a + b), 0), top: 0, width: widths[i], height}}>
+                        <div key={i} style={{position: 'absolute', overflow: 'hidden', background: 'white', left: widths.slice(0, i).reduce((a, b) => (a + b), 0), top: 0, width: widths[i], height}}>
                             <child.type {...child.props} width={widths[i]} height={height} />
                         </div>
                     ) : <span />

@@ -1,12 +1,13 @@
 import { FunctionComponent, useCallback, useMemo } from "react";
 import Hyperlink from "../../../../components/Hyperlink";
-import { createJob, ProtocaasProcessingJobDefinition } from "../../../../dbInterface/dbInterface";
+import { createJob, DendroProcessingJobDefinition } from "../../../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../../../GithubAuth/useGithubAuth";
-import { ProtocaasJob } from "../../../../types/protocaas-types";
+import { DendroJob } from "../../../../types/dendro-types";
 import { useProject } from "../../ProjectPageContext";
+import { isElectricalSeriesPathParameter } from "../../EditJobDefinitionWindow/EditJobDefinitionWindow";
 
 type SpikeSortingOutputSectionProps = {
-    spikeSortingJob: ProtocaasJob
+    spikeSortingJob: DendroJob
     fileName: string
 }
 
@@ -20,7 +21,7 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
     }, [spikeSortingJob])
 
     const electricalSeriesPath = useMemo(() => {
-        const pp = spikeSortingJob.inputParameters.find(p => (p.name === 'electrical_series_path'))
+        const pp = spikeSortingJob.inputParameters.find(p => (isElectricalSeriesPathParameter(p.name)))
         if (!pp) return undefined
         return pp.value
     }, [spikeSortingJob])
@@ -77,7 +78,7 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
         if (!recordingFileName) return
         if (!electricalSeriesPath) return
         if (!files) return
-        const jobDefinition: ProtocaasProcessingJobDefinition = {
+        const jobDefinition: DendroProcessingJobDefinition = {
             processorName: spikeSortingFigurlProcessor.name,
             inputFiles: [
                 {
