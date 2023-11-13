@@ -66,13 +66,30 @@ class AwsBatchStack(Stack):
         # Create an EFS filesystem
         create_efs = False
         if create_efs:
-            file_system = efs.FileSystem(self, "EfsFileSystem", vpc=vpc)
-
-            # Create an EFS access point
-            access_point = file_system.add_access_point("AccessPoint",
-                path="/export",
-                create_acl=efs.Acl(owner_uid="1001", owner_gid="1001", permissions="750"),
-                posix_user=efs.PosixUser(uid="1001", gid="1001")
+            file_system = efs.FileSystem(
+                scope=self,
+                id=f"{stack_id}-EfsFileSystem",
+                vpc=vpc,
+                performance_mode=efs.PerformanceMode.GENERAL_PURPOSE,
+                lifecycle_policy=efs.LifecyclePolicy.AFTER_7_DAYS,
+                out_of_infrequent_access_policy=efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS,
+            )
+            # fs_access_point = file_system.add_access_point("AccessPoint",
+            #     path="/export",
+            #     create_acl=efs.Acl(owner_uid="1001", owner_gid="1001", permissions="750"),
+            #     posix_user=efs.PosixUser(uid="1001", gid="1001")
+            # )
+            efs_volume = batch.EfsVolume(
+                container_path="containerPath",
+                file_system=file_system,
+                name="name",
+                # the properties below are optional
+                access_point_id="accessPointId",
+                enable_transit_encryption=False,
+                readonly=False,
+                root_directory="rootDirectory",
+                transit_encryption_port=123,
+                use_job_role=False
             )
 
         # Compute environment
