@@ -71,7 +71,7 @@ You will need to provide the following fields when configuring the app in the we
 * Job queue: the name of the AWS Batch job queue to use
 * Job definition: the name of the AWS Batch job definition to use
 
-You will also need to provide your AWS credentials in the `.dendro-compute-resource-node.yaml` in the directory where yur compute resource node daemon is running.
+You will also need to provide your AWS credentials in the `.dendro-compute-resource-node.yaml` in the directory where your compute resource node daemon is running.
 
 Don't forget to restart your compute resource node after making changes to the web interface.
 
