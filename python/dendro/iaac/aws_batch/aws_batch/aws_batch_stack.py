@@ -1,6 +1,7 @@
 from constructs import Construct
 from aws_cdk import (
     Stack,
+    RemovalPolicy,
     aws_iam as iam,
     aws_ec2 as ec2,
     aws_batch as batch,
@@ -9,6 +10,12 @@ from aws_cdk import (
 
 
 class AwsBatchStack(Stack):
+    """
+    References:
+    - https://aws.amazon.com/blogs/hpc/introducing-support-for-per-job-amazon-efs-volumes-in-aws-batch/
+    - https://docs.aws.amazon.com/batch/latest/userguide/efs-volumes.html
+    - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+    """
 
     def __init__(
         self,
@@ -69,28 +76,35 @@ class AwsBatchStack(Stack):
             file_system = efs.FileSystem(
                 scope=self,
                 id=f"{stack_id}-EfsFileSystem",
+                file_system_name=f"{stack_id}-EfsFileSystem",
                 vpc=vpc,
                 performance_mode=efs.PerformanceMode.GENERAL_PURPOSE,
                 lifecycle_policy=efs.LifecyclePolicy.AFTER_7_DAYS,
                 out_of_infrequent_access_policy=efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS,
+                throughput_mode=efs.ThroughputMode.BURSTING,
+                enable_automatic_backups=False,
+                allow_anonymous_access=True,
+                removal_policy=RemovalPolicy.DESTROY,
             )
             # fs_access_point = file_system.add_access_point("AccessPoint",
             #     path="/export",
             #     create_acl=efs.Acl(owner_uid="1001", owner_gid="1001", permissions="750"),
             #     posix_user=efs.PosixUser(uid="1001", gid="1001")
             # )
-            efs_volume = batch.EfsVolume(
-                container_path="containerPath",
-                file_system=file_system,
-                name="name",
-                # the properties below are optional
-                access_point_id="accessPointId",
-                enable_transit_encryption=False,
-                readonly=False,
-                root_directory="rootDirectory",
-                transit_encryption_port=123,
-                use_job_role=False
-            )
+
+            # # It might be better to create the EFS volume for each job definition
+            # efs_volume = batch.EfsVolume(
+            #     container_path="containerPath",
+            #     file_system=file_system,
+            #     name=f"{stack_id}-EfsFileSystemVolume",
+            #     # the properties below are optional
+            #     access_point_id="accessPointId",
+            #     enable_transit_encryption=False,
+            #     readonly=False,
+            #     root_directory="rootDirectory",
+            #     transit_encryption_port=123,
+            #     use_job_role=False
+            # )
 
         # Compute environment
         compute_env_1 = batch.ManagedEc2EcsComputeEnvironment(

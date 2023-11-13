@@ -8,7 +8,7 @@ from aws_batch.aws_batch_stack import AwsBatchStack
 app = cdk.App()
 AwsBatchStack(
     scope=app,
-    stack_id="dendro-batch-stack"
+    stack_id="DendroBatchStack"
 )
 
 app.synth()
