@@ -1,10 +1,11 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, TYPE_CHECKING
 from .SlurmJobHandler import SlurmJobHandler
-from .AppManager import AppManager
 from ..common.dendro_types import DendroJob
 from ..sdk.App import App
 from ..sdk._run_job import _set_job_status
 from .ComputeResourceException import ComputeResourceException
+if TYPE_CHECKING:
+    from .AppManager import AppManager
 
 
 max_simultaneous_local_jobs = 2
@@ -15,7 +16,7 @@ class JobManager:
                  compute_resource_private_key: str,
                  compute_resource_node_name: Optional[str],
                  compute_resource_node_id: Optional[str],
-                 app_manager: AppManager
+                 app_manager: 'AppManager'
                 ):
         self._compute_resource_id = compute_resource_id
         self._compute_resource_private_key = compute_resource_private_key

@@ -10,6 +10,8 @@ from .register_compute_resource import env_var_keys
 from .PubsubClient import PubsubClient
 from ..common.dendro_types import DendroJob
 from ..mock import using_mock
+from .AppManager import AppManager
+from .JobManager import JobManager
 
 
 class Daemon:
@@ -23,7 +25,6 @@ class Daemon:
         if self._compute_resource_private_key is None:
             raise ValueError('Compute resource has not been initialized in this directory, and the environment variable COMPUTE_RESOURCE_PRIVATE_KEY is not set.')
 
-        from .AppManager import AppManager # avoid circular import
         self._app_manager = AppManager(
             compute_resource_id=self._compute_resource_id,
             compute_resource_private_key=self._compute_resource_private_key,
@@ -32,7 +33,6 @@ class Daemon:
         )
         self._app_manager.update_apps()
 
-        from .JobManager import JobManager # avoid circular import
         self._job_manager = JobManager(
             compute_resource_id=self._compute_resource_id,
             compute_resource_private_key=self._compute_resource_private_key,

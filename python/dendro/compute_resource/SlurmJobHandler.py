@@ -1,15 +1,17 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 import os
 import time
 import subprocess
 
 from ..mock import using_mock
 from ..common.dendro_types import ComputeResourceSlurmOpts, DendroJob
-from .JobManager import JobManager
+
+if TYPE_CHECKING:
+    from .JobManager import JobManager
 
 
 class SlurmJobHandler:
-    def __init__(self, *, job_manager: JobManager, slurm_opts: ComputeResourceSlurmOpts):
+    def __init__(self, *, job_manager: 'JobManager', slurm_opts: ComputeResourceSlurmOpts):
         self._job_manager = job_manager
         self._slurm_opts = slurm_opts
         self._jobs: List[DendroJob] = []
