@@ -21,14 +21,6 @@ class AppManager:
         self._apps: List[App] = []
 
     def update_apps(self):
-        ...
-    def find_app_with_processor(self, processor_name: str) -> Union[App, None]:
-        for app in self._apps:
-            for p in app._processors:
-                if p._name == processor_name:
-                    return app
-        return None
-    def _load_compute_resource_apps(self):
         url_path = f'/api/compute_resource/compute_resources/{self._compute_resource_id}/apps'
         resp = _compute_resource_get_api_request(
             url_path=url_path,
@@ -73,6 +65,12 @@ class AppManager:
                     'spec': spec
                 }
             )
+    def find_app_with_processor(self, processor_name: str) -> Union[App, None]:
+        for app in self._apps:
+            for p in app._processors:
+                if p._name == processor_name:
+                    return app
+        return None
     def _unload_app(self, spec_uri: str):
         print(f'Unloading app {spec_uri}')
         self._apps = [app for app in self._apps if app._spec_uri != spec_uri]

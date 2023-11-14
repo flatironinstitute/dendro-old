@@ -31,6 +31,7 @@ class Daemon:
             compute_resource_node_name=self._node_name,
             compute_resource_node_id=self._node_id
         )
+        print('-------------------------------------------------------------------------- update_apps')
         self._app_manager.update_apps()
 
         self._job_manager = JobManager(
