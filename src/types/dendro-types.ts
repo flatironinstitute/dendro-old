@@ -188,8 +188,8 @@ export type DendroJob = {
     status: 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
     error?: string
     processorVersion?: string
-    computeResourceNodeId?: string
-    computeResourceNodeName?: string
+    computeResourceNodeId?: string // obsolete
+    computeResourceNodeName?: string // obsolete
     consoleOutputUrl?: string
     timestampQueued?: number
     timestampStarting?: number
@@ -217,8 +217,8 @@ export const isDendroJob = (x: any): x is DendroJob => {
         status: isOneOf([isEqualTo('pending'), isEqualTo('queued'), isEqualTo('starting'), isEqualTo('running'), isEqualTo('completed'), isEqualTo('failed')]),
         error: optional(isString),
         processorVersion: optional(isString),
-        computeResourceNodeId: optional(isString),
-        computeResourceNodeName: optional(isString),
+        computeResourceNodeId: optional(isString), // obsolete
+        computeResourceNodeName: optional(isString), // obsolete
         consoleOutputUrl: optional(isString),
         timestampQueued: optional(isNumber),
         timestampStarting: optional(isNumber),

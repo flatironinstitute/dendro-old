@@ -6,8 +6,7 @@ from dendro.compute_resource.register_compute_resource import register_compute_r
 def test_register_compute_resource():
     with TemporaryDirectory() as tmpdir:
         register_compute_resource(
-            dir=tmpdir,
-            node_name='test-node'
+            dir=tmpdir
         )
 
 class TemporaryDirectory:

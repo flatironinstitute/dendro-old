@@ -9,7 +9,7 @@ setup(
     author_email="jmagland@flatironinstitute.org",
     url="https://github.com/flatironinstitute/dendro",
     description="Web framework for neurophysiology data analysis",
-    packages=find_packages(include=['dendro']),
+    packages=find_packages(),
     include_package_data=True,
     install_requires=[
         'click',

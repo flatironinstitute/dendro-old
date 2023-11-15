@@ -198,21 +198,6 @@ async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[
         _hide_secret_params_in_job(job)
     return jobs
 
-async def update_compute_resource_node(compute_resource_id: str, compute_resource_node_id: str, compute_resource_node_name: str):
-    client = _get_mongo_client()
-    compute_resource_nodes_collection = client['dendro']['computeResourceNodes']
-    await compute_resource_nodes_collection.update_one({
-        'computeResourceId': compute_resource_id,
-        'nodeId': compute_resource_node_id
-    }, {
-        '$set': {
-            'timestampLastActive': time.time(),
-            'computeResourceId': compute_resource_id,
-            'nodeId': compute_resource_node_id,
-            'nodeName': compute_resource_node_name
-        }
-    }, upsert=True)
-
 class ComputeResourceNotFoundError(Exception):
     pass
 

@@ -12,7 +12,7 @@ Clone this repo, then
 ```bash
 # install
 cd dendro/python
-pip install -e .
+pip install -e .[compute_resource]
 ```
 
 ```bash

@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 import requests
 from ._crypto_keys import _sign_message_str
 
@@ -15,8 +14,6 @@ def _compute_resource_get_api_request(*,
     url_path: str,
     compute_resource_id: str,
     compute_resource_private_key: str,
-    compute_resource_node_name: Optional[str],
-    compute_resource_node_id: Optional[str],
     _wrong_payload_for_testing: bool = False,
     _wrong_signature_for_testing: bool = False
 ):
@@ -33,10 +30,6 @@ def _compute_resource_get_api_request(*,
         'compute-resource-payload': payload,
         'compute-resource-signature': signature
     }
-    if compute_resource_node_name is not None:
-        headers['compute-resource-node-name'] = compute_resource_node_name
-    if compute_resource_node_id is not None:
-        headers['compute-resource-node-id'] = compute_resource_node_id
 
     test_client = _globals['test_client']
     if test_client is None:

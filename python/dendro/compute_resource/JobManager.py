@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union, TYPE_CHECKING
+from typing import Dict, List, Union, TYPE_CHECKING
 from .SlurmJobHandler import SlurmJobHandler
 from ..common.dendro_types import DendroJob
 from ..sdk.App import App
@@ -14,14 +14,10 @@ class JobManager:
     def __init__(self, *,
                  compute_resource_id: str,
                  compute_resource_private_key: str,
-                 compute_resource_node_name: Optional[str],
-                 compute_resource_node_id: Optional[str],
                  app_manager: 'AppManager'
                 ):
         self._compute_resource_id = compute_resource_id
         self._compute_resource_private_key = compute_resource_private_key
-        self._compute_resource_node_name = compute_resource_node_name
-        self._compute_resource_node_id = compute_resource_node_id
         self._app_manager = app_manager
 
         # important to keep track of which jobs we attempted to start
