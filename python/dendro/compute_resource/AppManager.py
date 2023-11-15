@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Union
 
 from ..sdk.App import App
 from ..common.dendro_types import DendroComputeResourceApp
@@ -9,13 +9,9 @@ class AppManager:
     def __init__(self, *,
                  compute_resource_id: str,
                  compute_resource_private_key: str,
-                 compute_resource_node_name: Optional[str],
-                 compute_resource_node_id: Optional[str]
                 ):
         self._compute_resource_id = compute_resource_id
         self._compute_resource_private_key = compute_resource_private_key
-        self._compute_resource_node_name = compute_resource_node_name
-        self._compute_resource_node_id = compute_resource_node_id
 
         self._compute_resource_apps: List[DendroComputeResourceApp] = []
         self._apps: List[App] = []
@@ -25,9 +21,7 @@ class AppManager:
         resp = _compute_resource_get_api_request(
             url_path=url_path,
             compute_resource_id=self._compute_resource_id,
-            compute_resource_private_key=self._compute_resource_private_key,
-            compute_resource_node_name=self._compute_resource_node_name,
-            compute_resource_node_id=self._compute_resource_node_id
+            compute_resource_private_key=self._compute_resource_private_key
         )
 
         # It would be nice to do it this way, but we can't because we don't want to import stuff from the api here

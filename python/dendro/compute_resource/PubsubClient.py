@@ -24,9 +24,10 @@ class PubsubClient:
         pnconfig = PNConfiguration()
         pnconfig.subscribe_key = pubnub_subscribe_key # type: ignore (not sure why we need to type ignore this)
         pnconfig.user_id = pubnub_user
-        pubnub = PubNub(pnconfig)
-        pubnub.add_listener(MySubscribeCallback(message_queue=self._message_queue, compute_resource_id=compute_resource_id))
-        pubnub.subscribe().channels([pubnub_channel]).execute()
+        self._pubnub = PubNub(pnconfig)
+        self._listener = MySubscribeCallback(message_queue=self._message_queue, compute_resource_id=compute_resource_id)
+        self._pubnub.add_listener(self._listener)
+        self._pubnub.subscribe().channels([pubnub_channel]).execute()
     def take_messages(self) -> List[dict]:
         ret = []
         while True:
@@ -36,3 +37,11 @@ class PubsubClient:
             except queue.Empty:
                 break
         return ret
+    def close(self):
+        self._pubnub.unsubscribe_all()
+        self._pubnub.stop()
+        self._pubnub.remove_listener(self._listener)
+        # unfortunately this doesn't actually kill the thread
+        # I submitted a ticket to pubnub about this
+        # and they acknowledged that it's a problem
+        # but they don't seem to be fixing it

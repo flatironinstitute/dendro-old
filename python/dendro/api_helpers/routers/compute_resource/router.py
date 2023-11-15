@@ -3,7 +3,7 @@ from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature_str
 from ....common.dendro_types import DendroComputeResourceApp, DendroJob, ComputeResourceSpec, PubsubSubscription
-from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, update_compute_resource_node, set_compute_resource_spec
+from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, set_compute_resource_spec
 from ...core.settings import get_settings
 from ....mock import using_mock
 from ..common import api_route_wrapper
@@ -91,8 +91,6 @@ async def compute_resource_get_unfinished_jobs(
     compute_resource_id: str,
     compute_resource_payload: str = Header(...),
     compute_resource_signature: str = Header(...),
-    compute_resource_node_id: str = Header(...),
-    compute_resource_node_name: str = Header(...)
 ) -> GetUnfinishedJobsResponse:
     # authenticate the request
     expected_payload = f'/api/compute_resource/compute_resources/{compute_resource_id}/unfinished_jobs'
@@ -104,12 +102,6 @@ async def compute_resource_get_unfinished_jobs(
     )
 
     jobs = await fetch_compute_resource_jobs(compute_resource_id, statuses=['pending', 'queued', 'starting', 'running'], include_private_keys=True)
-
-    await update_compute_resource_node(
-        compute_resource_id=compute_resource_id,
-        compute_resource_node_id=compute_resource_node_id,
-        compute_resource_node_name=compute_resource_node_name
-    )
 
     return GetUnfinishedJobsResponse(jobs=jobs, success=True)
 

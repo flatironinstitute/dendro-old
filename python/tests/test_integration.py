@@ -50,7 +50,7 @@ async def test_integration(tmp_path):
         # Create compute resource in a directory
         compute_resource_dir = tmpdir + '/compute_resource'
         os.mkdir(compute_resource_dir)
-        compute_resource_id, compute_resource_private_key = register_compute_resource(dir=compute_resource_dir, node_name='test_node')
+        compute_resource_id, compute_resource_private_key = register_compute_resource(dir=compute_resource_dir)
 
         # gui: Register compute resource
         _register_compute_resource(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, github_access_token=github_access_token, name='test-cr')
@@ -750,8 +750,6 @@ def _compute_resource_get_unfinished_jobs(compute_resource_id: str, compute_reso
         url_path=url_path,
         compute_resource_id=compute_resource_id,
         compute_resource_private_key=compute_resource_private_key,
-        compute_resource_node_name='test_node',
-        compute_resource_node_id='test_node_id',
         _wrong_payload_for_testing=wrong_payload,
         _wrong_signature_for_testing=wrong_signature
     )
