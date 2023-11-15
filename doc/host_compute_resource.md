@@ -39,7 +39,7 @@ In order to run jobs with your compute resource, you will need to configure apps
 
 In the web interface, click on the appropriate link to manage your compute resource. You will then be able to add apps to your compute resource by entering the information (see below for available apps).
 
-:warning: After you make changes to your compute resource on the web interface, you will need to restart your compute resource node in the terminal.
+:warning: After you make changes to your compute resource on the web interface, reload the page so that your changes will take effect.
 
 The following are available apps that you can configure
 
@@ -60,7 +60,7 @@ If you have access to a Slurm cluster, you can configure apps to use it. This is
 * Time: the maximum time to allow for a single job (impacts job scheduling) (e.g., `5:00:00` for 5 hours)
 * Other options: any other options to pass to the `srun` command (e.g., `--gpus=1`)
 
-Don't forget to restart your compute resource node after making changes to the web interface.
+Don't forget to reload the page after making changes to the web interface.
 
 ## Configuring apps to use AWS Batch
 
@@ -73,7 +73,7 @@ You will need to provide the following fields when configuring the app in the we
 
 You will also need to provide your AWS credentials in the `.dendro-compute-resource-node.yaml` in the directory where your compute resource node daemon is running.
 
-Don't forget to restart your compute resource node after making changes to the web interface.
+Don't forget to reload the page after making changes to the web interface.
 
 ## Configuring apps to use a local machine
 
