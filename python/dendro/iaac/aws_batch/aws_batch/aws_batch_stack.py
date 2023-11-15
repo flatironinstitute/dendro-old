@@ -12,6 +12,7 @@ from aws_cdk import (
 class AwsBatchStack(Stack):
     """
     References:
+    - https://constructs.dev/packages/@aws-cdk/aws-batch-alpha/v/2.95.1-alpha.0?lang=python
     - https://aws.amazon.com/blogs/hpc/introducing-support-for-per-job-amazon-efs-volumes-in-aws-batch/
     - https://docs.aws.amazon.com/batch/latest/userguide/efs-volumes.html
     - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
@@ -21,7 +22,7 @@ class AwsBatchStack(Stack):
         self,
         scope: Construct,
         stack_id: str,
-        use_efs: bool = False,
+        create_efs: bool = False,
         **kwargs
     ) -> None:
         super().__init__(scope, stack_id, **kwargs)
@@ -71,7 +72,6 @@ class AwsBatchStack(Stack):
         )
 
         # Create an EFS filesystem
-        create_efs = False
         if create_efs:
             file_system = efs.FileSystem(
                 scope=self,
