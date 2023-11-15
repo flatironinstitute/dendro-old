@@ -51,8 +51,8 @@ def _start_job(*,
     assert hasattr(app, '_app_executable'), 'App does not have an executable path'
     app_executable: Union[str, None] = app._app_executable
     app_image: Union[str, None] = app._app_image
-    aws_batch_job_queue: Union[str, None] = app._aws_batch_job_queue
-    aws_batch_job_definition: Union[str, None] = app._aws_batch_job_definition
+    aws_batch_job_queue: Union[str, None] = app._aws_batch_opts.jobQueue if app._aws_batch_opts else None
+    aws_batch_job_definition: Union[str, None] = app._aws_batch_opts.jobDefinition if app._aws_batch_opts else None
     slurm_opts: Union[ComputeResourceSlurmOpts, None] = app._slurm_opts
 
     # default for app_executable

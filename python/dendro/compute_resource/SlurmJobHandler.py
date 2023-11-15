@@ -1,16 +1,18 @@
-from typing import List
+from typing import List, TYPE_CHECKING
 import os
 import time
 import subprocess
 
 from ..mock import using_mock
 from ..common.dendro_types import ComputeResourceSlurmOpts, DendroJob
-from .start_compute_resource import Daemon
+
+if TYPE_CHECKING:
+    from .JobManager import JobManager
 
 
 class SlurmJobHandler:
-    def __init__(self, daemon: Daemon, slurm_opts: ComputeResourceSlurmOpts):
-        self._daemon = daemon
+    def __init__(self, *, job_manager: 'JobManager', slurm_opts: ComputeResourceSlurmOpts):
+        self._job_manager = job_manager
         self._slurm_opts = slurm_opts
         self._jobs: List[DendroJob] = []
         self._job_ids = set()
@@ -52,7 +54,7 @@ class SlurmJobHandler:
             f.write('set -e\n')
             f.write('\n')
             for ii, job in enumerate(jobs):
-                cmd = self._daemon._start_job(job, run_process=False, return_shell_command=True)
+                cmd = self._job_manager._start_job(job, run_process=False, return_shell_command=True)
                 if cmd:
                     if not using_mock():
                         f.write(f'if [ "$SLURM_PROCID" == "{ii}" ]; then\n')
