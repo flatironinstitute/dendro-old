@@ -5,12 +5,11 @@ def create_job_definition(
     dendro_app_name: str,
     dendro_app_image_uri: str,
     job_role_arn: str,
-    job_definition_parameters: dict,
     efs_fs_id: str,
     environment_variables: list | None = None,
     container_command_override: list | None = None,
-    container_required_memory: int | None = None,  # Memory in MiB
-    container_required_vcpu: int | None = None,    # Number of vCPUs
+    container_required_memory: int = 8192,  # Memory in MiB
+    container_required_vcpu: int = 4,    # Number of vCPUs
     container_requires_gpu: bool = False,
 ):
     """
@@ -37,10 +36,8 @@ def create_job_definition(
 
     # Container Resource requirements
     resource_requirements = []
-    if container_required_memory:
-        resource_requirements.append({'type': 'MEMORY', 'value': str(container_required_memory)})
-    if container_required_vcpu:
-        resource_requirements.append({'type': 'VCPU', 'value': str(container_required_vcpu)})
+    resource_requirements.append({'type': 'MEMORY', 'value': str(container_required_memory)})
+    resource_requirements.append({'type': 'VCPU', 'value': str(container_required_vcpu)})
     if container_requires_gpu:
         resource_requirements.append({'type': 'GPU', 'value': '1'})
 
@@ -50,7 +47,7 @@ def create_job_definition(
             'name': f'{job_definition_name}-EfsVolume',
             'efsVolumeConfiguration': {
                 'fileSystemId': efs_fs_id,
-                'rootDirectory': f'/{dendro_app_name}',
+                'rootDirectory': "/", # f'/{dendro_app_name}',
                 # 'transitEncryption': 'ENABLED'|'DISABLED',
                 # 'transitEncryptionPort': 123,
                 # 'authorizationConfig': {
@@ -70,19 +67,20 @@ def create_job_definition(
     ]
 
     # Container Command
-    container_command = ["python", "main.py"]
+    container_command = ["python", "/app/main.py"]
     if container_command_override:
         container_command = container_command_override
 
     # Container properties
     container_properties = {
         "image": dendro_app_image_uri,
-        # "command": container_command,
-        "command": ["ls", "-l", "-a", "/mount/efs/"],
+        "command": container_command,
+        # "command": ["ls", "-l", "-a", "/mount/efs/"],
         "resourceRequirements": resource_requirements,
         "volumes": volumes,
         "mountPoints": mount_points,
         "environment": environment_variables,
+        "jobRoleArn": job_role_arn,
     }
 
     try:
@@ -90,11 +88,9 @@ def create_job_definition(
         response = client.register_job_definition(
             jobDefinitionName=job_definition_name,
             type='container',
-            parameters=job_definition_parameters,
             retryStrategy={"attempts": 1},
             containerProperties=container_properties,
             timeout={"attemptDurationSeconds": 10800},
-            jobRoleArn=job_role_arn,
             platformCapabilities=['EC2'],
             tags={'CloudFormationStack': "DendroBatchStack"}
         )
