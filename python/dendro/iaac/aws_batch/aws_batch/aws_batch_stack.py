@@ -16,6 +16,7 @@ class AwsBatchStack(Stack):
     - https://aws.amazon.com/blogs/hpc/introducing-support-for-per-job-amazon-efs-volumes-in-aws-batch/
     - https://docs.aws.amazon.com/batch/latest/userguide/efs-volumes.html
     - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html
+    - https://docs.aws.amazon.com/efs/latest/ug/accessing-fs-create-security-groups.html
     """
 
     def __init__(
@@ -78,6 +79,7 @@ class AwsBatchStack(Stack):
                 id=f"{stack_id}-EfsFileSystem",
                 file_system_name=f"{stack_id}-EfsFileSystem",
                 vpc=vpc,
+                security_group=security_group,
                 performance_mode=efs.PerformanceMode.GENERAL_PURPOSE,
                 lifecycle_policy=efs.LifecyclePolicy.AFTER_7_DAYS,
                 out_of_infrequent_access_policy=efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS,

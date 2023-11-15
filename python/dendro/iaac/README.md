@@ -39,3 +39,8 @@ Other useful CDK commands:
 ## Provision App-specific infrastructure with Boto3
 
 TODO
+
+
+## Extra - Simple File Manager for Amazon EFS
+
+ref: https://aws.amazon.com/solutions/implementations/simple-file-manager-for-amazon-efs/
