@@ -105,10 +105,6 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
                         <td><ComputeResourceNameDisplay computeResourceId={job.computeResourceId} link={true} /></td>
                     </tr>
                     <tr>
-                        <td>Node:</td>
-                        <td>{job.computeResourceNodeId ? `${job.computeResourceNodeName} (${job.computeResourceNodeId})`: ''}</td>
-                    </tr>
-                    <tr>
                         <td>Job status:</td>
                         <td>{job.status}</td>
                     </tr>
@@ -159,7 +155,7 @@ type ExpandableSectionProps = {
     defaultExpanded?: boolean
 }
 
-const ExpandableSection: FunctionComponent<PropsWithChildren<ExpandableSectionProps>> = ({ title, children, defaultExpanded }) => {
+export const ExpandableSection: FunctionComponent<PropsWithChildren<ExpandableSectionProps>> = ({ title, children, defaultExpanded }) => {
     const [expanded, setExpanded] = useState(false)
     useEffect(() => {
         if (defaultExpanded) setExpanded(true)

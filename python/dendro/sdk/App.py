@@ -7,7 +7,7 @@ from .InputFile import InputFile
 from .AppProcessor import AppProcessor
 from .Job import Job
 from ._run_job import _run_job
-from ..common.dendro_types import ComputeResourceSlurmOpts
+from ..common.dendro_types import ComputeResourceSlurmOpts, ComputeResourceAwsBatchOpts
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
 
@@ -42,9 +42,11 @@ class App:
         self._app_image = app_image
         self._app_executable = app_executable
         self._processors: List[AppProcessor] = []
-        self._aws_batch_job_queue: Union[str, None] = None
-        self._aws_batch_job_definition: Union[str, None] = None
-        self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
+
+        self._spec_dict: Union[dict, None] = None # this is set when the app is loaded from a spec (internal use only)
+        self._spec_uri: Union[str, None] = None # this is set when the app is loaded from a spec_uri (internal use only)
+        self._aws_batch_opts: Union[ComputeResourceAwsBatchOpts, None] = None # this is set when the app is loaded from a spec_uri (internal use only)
+        self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None # this is set when the app is loaded from a spec_uri (internal use only)
 
     def add_processor(self, processor_class: Type[ProcessorBase]):
         """Add a processor to the app
@@ -144,6 +146,7 @@ class App:
             app_image=spec.get('appImage', None),
             app_executable=spec.get('appExecutable', None)
         )
+        app._spec_dict = spec
         for processor_spec in spec['processors']:
             processor = AppProcessor.from_spec(processor_spec)
             app._processors.append(processor)
@@ -152,16 +155,15 @@ class App:
     @staticmethod
     def from_spec_uri(
         spec_uri: str,
-        aws_batch_job_queue: Union[str, None] = None,
-        aws_batch_job_definition: Union[str, None] = None,
+        aws_batch_opts: Union[ComputeResourceAwsBatchOpts, None] = None,
         slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
     ):
         """Define an app from a spec URI (e.g., a gh url to the spec.json blob). This is called internally."""
         spec: dict = _load_spec_from_uri(spec_uri)
         a = App.from_spec(spec)
-        setattr(a, "_aws_batch_job_queue", aws_batch_job_queue)
-        setattr(a, "_aws_batch_job_definition", aws_batch_job_definition)
-        setattr(a, "_slurm_opts", slurm_opts)
+        a._spec_uri = spec_uri
+        a._aws_batch_opts = aws_batch_opts
+        a._slurm_opts = slurm_opts
         return a
 
     def _run_job(self, *, job_id: str, job_private_key: str):

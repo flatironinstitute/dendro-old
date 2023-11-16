@@ -81,8 +81,8 @@ class DendroJob(BaseModel):
     batchId: Union[str, None] = None
     error: Union[str, None] = None
     processorVersion: Union[str, None] = None
-    computeResourceNodeId: Union[str, None] = None
-    computeResourceNodeName: Union[str, None] = None
+    computeResourceNodeId: Union[str, None] = None # obsolete
+    computeResourceNodeName: Union[str, None] = None # obsolete
     consoleOutputUrl: Union[str, None] = None
     timestampQueued: Union[float, None] = None
     timestampStarting: Union[float, None] = None

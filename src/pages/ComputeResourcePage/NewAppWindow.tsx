@@ -126,7 +126,7 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
             }
             <hr />
             <p style={{fontWeight: 'bold'}}>
-                Important: for any changes to take effect, you must restart the compute resource daemon after saving the changes.
+                Important: for any changes to take effect, you must reload this page after saving the changes.
             </p>
             <div>&nbsp;</div>
             {/* Button to create the app */}

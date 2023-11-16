@@ -45,7 +45,8 @@ const ProcessorView: FunctionComponent<ProcessorViewProps> = ({processor, width}
     processor.attributes.forEach((attr) => {
         attrs[attr.name] = attr.value
     })
-    const wipElmt = attrs.wip ? <span style={{color: 'darkblue'}}> (WIP)</span> : null
+    // const wipElmt = attrs.wip ? <span style={{color: 'darkblue'}}> (WIP)</span> : null
+    const wipElmt = <></>
     return (
         <div className="Processor" style={{position: 'relative', width: width - 20, padding: 10, overflowY: 'auto'}}>
             <div style={{display: 'flex', flexDirection: 'row'}}>
@@ -59,7 +60,7 @@ const ProcessorView: FunctionComponent<ProcessorViewProps> = ({processor, width}
                     }
                 </div>
                 <div className="ProcessorSecondColumn" style={{flex: 1}}>
-                    <div className="ProcessorTitle">{attrs.label || attrs.name}{wipElmt}</div>
+                    <div className="ProcessorTitle">{attrs.label || processor.name}{wipElmt}</div>
                     <div className="ProcessorDescription">{processor.description}</div>
                     <div>&nbsp;</div>
                     <div className="ProcessorParameters">

@@ -1,5 +1,4 @@
 import os
-import socket
 import time
 import yaml
 from typing import Optional, Tuple
@@ -9,8 +8,6 @@ from ..common._crypto_keys import sign_message, generate_keypair
 env_var_keys = [
     'COMPUTE_RESOURCE_ID',
     'COMPUTE_RESOURCE_PRIVATE_KEY',
-    'NODE_ID',
-    'NODE_NAME',
     'CONTAINER_METHOD',
     'SINGLETON_JOB_ID',
     'BATCH_AWS_ACCESS_KEY_ID',
@@ -18,12 +15,19 @@ env_var_keys = [
     'BATCH_AWS_REGION'
 ]
 
-def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = None, compute_resource_private_key: Optional[str] = None, node_name: Optional[str] = None) -> Tuple[str, str]:
+def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = None, compute_resource_private_key: Optional[str] = None) -> Tuple[str, str]:
     """Initialize a Dendro compute resource node.
 
     Args:
         dir: The directory associated with the compute resource node.
     """
+
+    # Let's make sure pubnub is installed, because it's required for the daemon
+    try:
+        import pubnub # noqa
+    except ImportError:
+        raise ImportError('The pubnub package is not installed. You should use "pip install dendro[compute_resource]".')
+
     env_fname = os.path.join(dir, '.dendro-compute-resource-node.yaml')
 
     the_env = {}
@@ -41,13 +45,7 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
                 raise ValueError('Cannot specify compute_resource_id without specifying compute_resource_private_key.')
         the_env['COMPUTE_RESOURCE_ID'] = compute_resource_id
         the_env['COMPUTE_RESOURCE_PRIVATE_KEY'] = compute_resource_private_key
-        the_env['NODE_ID'] = _random_string(10)
         the_env['CONTAINER_METHOD'] = os.getenv('CONTAINER_METHOD', '')
-        # prompt for user input of the node name with a default of the host name
-        if node_name is None:
-            host_name = socket.gethostname()
-            node_name = input(f'Enter a name for this compute resource node (default: {host_name}): ') or host_name
-        the_env['NODE_NAME'] = node_name
 
         with open(env_fname, 'w', encoding='utf8') as f:
             yaml.dump(the_env, f)
@@ -67,9 +65,9 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
     signature = sign_message(msg, COMPUTE_RESOURCE_ID, COMPUTE_RESOURCE_PRIVATE_KEY)
     resource_code = f'{timestamp}-{signature}'
 
-    url = f'https://dendro.vercel.app/register-compute-resource/{COMPUTE_RESOURCE_ID}/{resource_code}?node_name={the_env["NODE_NAME"]}'
+    url = f'https://dendro.vercel.app/register-compute-resource/{COMPUTE_RESOURCE_ID}/{resource_code}'
     print('')
-    print('Please visit the following URL in your browser to register your compute resource node:')
+    print('Please visit the following URL in your browser to register your compute resource:')
     print('')
     print(url)
     print('')

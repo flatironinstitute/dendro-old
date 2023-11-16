@@ -1,5 +1,7 @@
 from typing import List
 import time
+
+from ...clients.pubsub import publish_pubsub_message
 from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature
@@ -72,6 +74,14 @@ async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourc
         'apps': [_model_dump(app, exclude_none=True) for app in apps],
         'timestampModified': time.time()
     })
+
+    await publish_pubsub_message(
+        channel=compute_resource_id,
+        message={
+            'type': 'computeResourceAppsChanaged',
+            'computeResourceId': compute_resource_id
+        }
+    )
 
     return SetComputeResourceAppsResponse(success=True)
 

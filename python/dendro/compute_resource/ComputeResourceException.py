@@ -1,0 +1,2 @@
+class ComputeResourceException(Exception):
+    pass
