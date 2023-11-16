@@ -22,10 +22,34 @@ def get_efs_fs_id(efs_fs_name: str):
         raise Exception(f"Error getting EFS file system ID: {e}")
 
 
+def get_role_arn(role_name: str):
+    """
+    Get the role ARN from its name.
+    References:
+    - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/iam/client/list_roles.html#list-roles
+    - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/iam/client/list_role_tags.html#list-role-tags
+    """
+    try:
+        iam_client = boto3.client('iam')
+        required_tag_key = "DendroName"
+        required_tag_value = role_name
+        response = iam_client.list_roles()
+        for role in response['Roles']:
+            # Get the tags for each role
+            role_name = role['RoleName']
+            tags = iam_client.list_role_tags(RoleName=role_name)
+            # Check if the role has the specific tag
+            for tag in tags['Tags']:
+                if tag['Key'] == required_tag_key and tag['Value'] == required_tag_value:
+                    return role['Arn']
+    except Exception as e:
+        raise Exception(f"Error getting role ARN: {e}")
+
+
 def create_job_definition(
     dendro_app_name: str,
     dendro_app_image_uri: str,
-    job_role_arn: str,
+    job_role_name: str,
     efs_fs_name: str | None = None,
     environment_variables: list | None = None,
     container_command_override: list | None = None,
@@ -91,6 +115,9 @@ def create_job_definition(
                     'sourceVolume': f'{job_definition_name}-EfsVolume'
                 },
             ]
+
+    # Get job role ARN
+    job_role_arn = get_role_arn(job_role_name)
 
     # Container Command
     container_command = ["python", "/app/main.py"]

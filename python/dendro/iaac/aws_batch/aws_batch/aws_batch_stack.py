@@ -5,6 +5,7 @@ from constructs import Construct
 from aws_cdk import (
     Stack,
     RemovalPolicy,
+    Tags,
     aws_iam as iam,
     aws_ec2 as ec2,
     aws_batch as batch,
@@ -40,6 +41,8 @@ class AwsBatchStack(Stack):
                 iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSBatchServiceRole")
             ]
         )
+        Tags.of(batch_service_role).add("DendroName", f"{stack_id}-BatchServiceRole")
+
         ecs_instance_role = iam.Role(
             scope=self,
             id=f"{stack_id}-EcsInstanceRole",
@@ -49,6 +52,8 @@ class AwsBatchStack(Stack):
                 iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchLogsFullAccess")
             ]
         )
+        Tags.of(ecs_instance_role).add("DendroName", f"{stack_id}-EcsInstanceRole")
+
         batch_jobs_access_role = iam.Role(
             scope=self,
             id=f"{stack_id}-BatchJobsAccessRole",
@@ -57,9 +62,10 @@ class AwsBatchStack(Stack):
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3FullAccess"),
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryFullAccess"),
                 iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchLogsFullAccess"),
-                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEFSCSIDriverPolicy"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEFSCSIDriverPolicy"),
             ]
         )
+        Tags.of(batch_jobs_access_role).add("DendroName", f"{stack_id}-BatchJobsAccessRole")
 
         # VPC
         vpc = ec2.Vpc(
@@ -67,6 +73,7 @@ class AwsBatchStack(Stack):
             id=f"{stack_id}-vpc",
             max_azs=3,
         )
+        Tags.of(vpc).add("DendroName", f"{stack_id}-vpc")
 
         # Security group
         security_group = ec2.SecurityGroup(
@@ -76,6 +83,7 @@ class AwsBatchStack(Stack):
             allow_all_ipv6_outbound=True,
             allow_all_outbound=True,
         )
+        Tags.of(security_group).add("DendroName", f"{stack_id}-security-group")
 
         # Create an EFS filesystem
         if create_efs:
@@ -93,24 +101,12 @@ class AwsBatchStack(Stack):
                 allow_anonymous_access=True,
                 removal_policy=RemovalPolicy.DESTROY,
             )
+            Tags.of(file_system).add("DendroName", f"{stack_id}-EfsFileSystem")
+
             # fs_access_point = file_system.add_access_point("AccessPoint",
             #     path="/export",
             #     create_acl=efs.Acl(owner_uid="1001", owner_gid="1001", permissions="750"),
             #     posix_user=efs.PosixUser(uid="1001", gid="1001")
-            # )
-
-            # # It might be better to create the EFS volume for each job definition
-            # efs_volume = batch.EfsVolume(
-            #     container_path="containerPath",
-            #     file_system=file_system,
-            #     name=f"{stack_id}-EfsFileSystemVolume",
-            #     # the properties below are optional
-            #     access_point_id="accessPointId",
-            #     enable_transit_encryption=False,
-            #     readonly=False,
-            #     root_directory="rootDirectory",
-            #     transit_encryption_port=123,
-            #     use_job_role=False
             # )
 
         # Compute environment
@@ -127,6 +123,7 @@ class AwsBatchStack(Stack):
             service_role=batch_service_role,
             instance_role=ecs_instance_role,
         )
+        Tags.of(compute_env_1).add("DendroName", f"{stack_id}-compute-env")
 
         # Job queue
         job_queue = batch.JobQueue(
@@ -139,6 +136,7 @@ class AwsBatchStack(Stack):
                 # batch.OrderedComputeEnvironment(compute_environment=compute_env_2, order=2)
             ],
         )
+        Tags.of(job_queue).add("DendroName", f"{stack_id}-job-queue")
 
         # Store basic info of created resources in local file
         created_resources = {

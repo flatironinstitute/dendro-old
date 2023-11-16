@@ -34,11 +34,12 @@ If deployment is successful, you will eb able to see the stacks in the CloudForm
 Other useful CDK commands:
 - `cdk ls` - list all stacks in the app.
 - `cdk diff` - compare deployed stack with current state.
+- `cdk destroy` - destroy the stack.
 - `cdk docs` - open CDK documentation.
 
 ## Provision App-specific infrastructure with Boto3
 
-TODO
+For every Dendro App installed on a Dendro Compute Resource, an AWS Batch Job Defintion must be created. This is done automatically by the Dendro Daemon.
 
 
 ## Extra - Simple File Manager for Amazon EFS
