@@ -11,6 +11,7 @@ import SpikeSortingOutputSection from "./SpikeSortingOutputSection/SpikeSortingO
 import { DendroJob } from "../../../types/dendro-types";
 import { AssetResponse } from "../../DandiBrowser/types";
 import { getDandiApiHeaders } from "../../DandiBrowser/DandiBrowser";
+import ElectricalSeriesSection from "./ElectricalSeriesSection/ElectricalSeriesSection";
 
 
 type Props = {
@@ -41,7 +42,7 @@ const NwbFileEditor: FunctionComponent<Props> = ({fileName, width, height}) => {
     )
 }
 
-export const useNwbFile = (nwbUrl: string) => {
+export const useNwbFile = (nwbUrl?: string) => {
     const [nwbFile, setNwbFile] = useState<RemoteH5File | undefined>(undefined)
     useEffect(() => {
         let canceled = false
@@ -230,6 +231,12 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
                 )
             }
             </ul>
+            {
+                <ElectricalSeriesSection
+                    fileName={fileName}
+                    nwbUrl={nwbUrl}
+                />
+            }
             {
                 spikeSortingJob && (
                     <SpikeSortingOutputSection
