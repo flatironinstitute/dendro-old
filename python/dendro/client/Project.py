@@ -1,4 +1,7 @@
-from typing import List
+from typing import List, Union
+import os
+import time
+import requests
 from ..common.dendro_types import DendroProject, DendroFile, DendroJob
 from ..common._api_request import _client_get_api_request
 
@@ -36,11 +39,35 @@ class Project:
 class ProjectFile:
     def __init__(self, file_data: DendroFile) -> None:
         self._file_data = file_data
+        self._resolved_url: Union[str, None] = None
+        self._resolved_url_timestamp: Union[float, None] = None
     def get_url(self) -> str:
         a = self._file_data.content
         if not a.startswith('url:'):
             raise ProjectException(f'Unexpected content for file {self._file_data.fileName}: {a}')
-        return a[len('url:'):]
+        url = a[len('url:'):]
+        resolved_url = self._get_resolved_url(url=url)
+        return resolved_url
+    def _get_resolved_url(self, url: str) -> str:
+        if self._resolved_url is not None and self._resolved_url_timestamp is not None:
+            if time.time() - self._resolved_url_timestamp < 120:
+                return self._resolved_url
+        resolve_with_dandi_api_key = None
+        if url.startswith('https://api.dandiarchive.org/api/'):
+            dandi_api_key = os.environ.get('DANDI_API_KEY', None)
+            if dandi_api_key is not None:
+                resolve_with_dandi_api_key = dandi_api_key
+        elif url.startswith('https://staging-api.dandiarchive.org/'):
+            dandi_api_key = os.environ.get('DANDI_STAGING_API_KEY', None)
+            if dandi_api_key is not None:
+                resolve_with_dandi_api_key = dandi_api_key
+        if resolve_with_dandi_api_key is not None:
+            url0 = _resolve_dandi_url(url=url, dandi_api_key=resolve_with_dandi_api_key)
+        else:
+            url0 = url
+        self._resolved_url = url0
+        self._resolved_url_timestamp = time.time()
+        return self._resolved_url
 
 class ProjectFolder:
     def __init__(self, project: Project, path: str) -> None:
@@ -100,3 +127,11 @@ def load_project(project_id: str) -> Project:
     jobs: List[DendroJob] = [DendroJob(**j) for j in jobs_resp['jobs']]
 
     return Project(project, files, jobs)
+
+def _resolve_dandi_url(*, url: str, dandi_api_key: str):
+    headers = {
+        'Authorization': f'token {dandi_api_key}'
+    }
+    # do it synchronously here
+    resp = requests.head(url, allow_redirects=True, headers=headers)
+    return str(resp.url)
