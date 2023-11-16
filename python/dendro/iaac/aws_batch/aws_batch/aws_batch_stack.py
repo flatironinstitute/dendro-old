@@ -1,3 +1,6 @@
+import os
+import json
+from pathlib import Path
 from constructs import Construct
 from aws_cdk import (
     Stack,
@@ -69,6 +72,7 @@ class AwsBatchStack(Stack):
             scope=self,
             id=f"{stack_id}-security-group",
             vpc=vpc,
+            allow_all_ipv6_outbound=True,
             allow_all_outbound=True,
         )
 
@@ -134,3 +138,22 @@ class AwsBatchStack(Stack):
                 # batch.OrderedComputeEnvironment(compute_environment=compute_env_2, order=2)
             ],
         )
+
+        # Store basic info of created resources in local file
+        created_resources = {
+            "batch_service_role_name": f"{stack_id}-BatchServiceRole",
+            "ecs_instance_role_name": f"{stack_id}-EcsInstanceRole",
+            "batch_jobs_access_role_name": f"{stack_id}-BatchJobsAccessRole",
+            "vpc_name": f"{stack_id}-vpc",
+            "security_group_name": f"{stack_id}-security-group",
+            "efs_file_system_name": f"{stack_id}-EfsFileSystem",
+            "compute_env_name": f"{stack_id}-compute-env",
+            "job_queue_name": f"{stack_id}-job-queue",
+        }
+
+        dendro_home_path = os.environ.get("DENDRO_CR_HOME_PATH", None)
+        if dendro_home_path is None:
+            dendro_home_path = Path().home() / ".dendro"
+        save_file_path = str(dendro_home_path / f"{stack_id}-created-resources.json")
+        with open(save_file_path, "w") as f:
+            json.dump(created_resources, f, indent=4)
