@@ -98,7 +98,7 @@ def create_job_definition(
                     'name': f'{job_definition_name}-EfsVolume',
                     'efsVolumeConfiguration': {
                         'fileSystemId': efs_fs_id,
-                        'rootDirectory': "/", # f'/{dendro_app_name}',
+                        'rootDirectory': "/mount/efs", # f'/mount/efs/{dendro_app_name}',
                         # 'transitEncryption': 'ENABLED'|'DISABLED',
                         # 'transitEncryptionPort': 123,
                         # 'authorizationConfig': {
@@ -128,7 +128,6 @@ def create_job_definition(
     container_properties = {
         "image": dendro_app_image_uri,
         "command": container_command,
-        # "command": ["ls", "-l", "-a", "/mount/efs/"],
         "resourceRequirements": resource_requirements,
         "volumes": volumes,
         "mountPoints": mount_points,
