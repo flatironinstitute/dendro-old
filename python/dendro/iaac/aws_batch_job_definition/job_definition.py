@@ -1,11 +1,32 @@
 import boto3
 
 
+def get_efs_fs_id(efs_fs_name: str):
+    """
+    Get the EFS file system ID from its name.
+    References:
+    - https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/efs.html#EFS.Client.describe_file_systems
+    """
+    try:
+        client = boto3.client('efs')
+        efs_fs_id = None
+        response = client.describe_file_systems()
+        for fs in response['FileSystems']:
+            if fs.get("Name", "") == efs_fs_name:
+                efs_fs_id = fs.get("FileSystemId")
+        if efs_fs_id:
+            return efs_fs_id
+        else:
+            raise Exception(f"EFS file system ID not found for name: {efs_fs_name}")
+    except Exception as e:
+        raise Exception(f"Error getting EFS file system ID: {e}")
+
+
 def create_job_definition(
     dendro_app_name: str,
     dendro_app_image_uri: str,
     job_role_arn: str,
-    efs_fs_id: str,
+    efs_fs_name: str | None = None,
     environment_variables: list | None = None,
     container_command_override: list | None = None,
     container_required_memory: int = 8192,  # Memory in MiB
@@ -41,30 +62,35 @@ def create_job_definition(
     if container_requires_gpu:
         resource_requirements.append({'type': 'GPU', 'value': '1'})
 
-    # Container Volumes and Mount Points configuration
-    volumes = [
-        {
-            'name': f'{job_definition_name}-EfsVolume',
-            'efsVolumeConfiguration': {
-                'fileSystemId': efs_fs_id,
-                'rootDirectory': "/", # f'/{dendro_app_name}',
-                # 'transitEncryption': 'ENABLED'|'DISABLED',
-                # 'transitEncryptionPort': 123,
-                # 'authorizationConfig': {
-                #     'accessPointId': 'string',
-                #     'iam': 'ENABLED'|'DISABLED'
-                # }
-            }
-        },
-    ]
-
-    mount_points = [
-        {
-            'containerPath': '/mount/efs',
-            'readOnly': False,
-            'sourceVolume': f'{job_definition_name}-EfsVolume'
-        },
-    ]
+    # Get EFS file system ID and set container volumes and mount points
+    volumes = []
+    mount_points = []
+    if efs_fs_name:
+        efs_fs_id = get_efs_fs_id(efs_fs_name)
+        if efs_fs_id:
+            # Container Volumes and Mount Points configuration
+            volumes = [
+                {
+                    'name': f'{job_definition_name}-EfsVolume',
+                    'efsVolumeConfiguration': {
+                        'fileSystemId': efs_fs_id,
+                        'rootDirectory': "/", # f'/{dendro_app_name}',
+                        # 'transitEncryption': 'ENABLED'|'DISABLED',
+                        # 'transitEncryptionPort': 123,
+                        # 'authorizationConfig': {
+                        #     'accessPointId': 'string',
+                        #     'iam': 'ENABLED'|'DISABLED'
+                        # }
+                    }
+                },
+            ]
+            mount_points = [
+                {
+                    'containerPath': '/mount/efs',
+                    'readOnly': False,
+                    'sourceVolume': f'{job_definition_name}-EfsVolume'
+                },
+            ]
 
     # Container Command
     container_command = ["python", "/app/main.py"]
