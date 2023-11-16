@@ -56,7 +56,8 @@ class AwsBatchStack(Stack):
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3FullAccess"),
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryFullAccess"),
-                iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchLogsFullAccess")
+                iam.ManagedPolicy.from_aws_managed_policy_name("CloudWatchLogsFullAccess"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEFSCSIDriverPolicy"),
             ]
         )
 
