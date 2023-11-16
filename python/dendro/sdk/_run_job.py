@@ -166,6 +166,30 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             proc.terminate()
         except Exception: # pylint: disable=broad-except
             pass
+
+        dendro_job_cleanup_dir = os.environ.get('DENDRO_JOB_CLEANUP_DIR', None)
+        if dendro_job_cleanup_dir is not None:
+            print(f'Cleaning up DENDRO_JOB_CLEANUP_DIR: {dendro_job_cleanup_dir}')
+            _debug_log(f'Cleaning up DENDRO_JOB_CLEANUP_DIR: {dendro_job_cleanup_dir}')
+            try:
+                # delete files in the cleanup dir but do not delete the cleanup dir itself
+                def _delete_files_in_dir(dir: str):
+                    for fname in os.listdir(dir):
+                        if fname == 'denro-job.log':
+                            # don't delete the log file
+                            continue
+                        fpath = os.path.join(dir, fname)
+                        if os.path.isdir(fpath):
+                            _delete_files_in_dir(fpath)
+                        else:
+                            print(f'Deleting {fpath}')
+                            os.remove(fpath)
+                _delete_files_in_dir(dendro_job_cleanup_dir)
+            except Exception as e:
+                print(f'WARNING: problem cleaning up DENDRO_JOB_CLEANUP_DIR: {str(e)}')
+        else:
+            print('No DENDRO_JOB_CLEANUP_DIR environment variable set. Not cleaning up.')
+
         output_reader_thread.join()
 
     check_for_new_console_output()
@@ -179,6 +203,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             print('WARNING: problem setting final console output: ' + str(e))
 
     # Set the final job status
+    _debug_log('Finalizing job')
     _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
 
 def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
