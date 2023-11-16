@@ -67,8 +67,7 @@ class InputFile(BaseModel):
             return f
 
         if download:
-            tmp_fname = f'/tmp/_download_input_{self.name}'
-            print(f'Downloading {self.get_url()} to {tmp_fname}')
+            tmp_fname = f'_download_input_{self.name}'
             self.download(tmp_fname)
             f = open(tmp_fname, 'rb')
             # An issue here is that this file is never closed. Not sure how to fix that.
