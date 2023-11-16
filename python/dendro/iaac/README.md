@@ -27,7 +27,7 @@ Follow these steps if you're running Dendro CDK stack for the first time:
 - run `cdk deploy` to deploy the stack to your default AWS account/region.
 - you will be prompted to confirm the deployment. Review the changes, then type `y` and hit enter.
 
-If deployment is successful, you will eb able to see the stacks in the CloudFormation page in AWS console.
+If deployment is successful, you will be able to see the stacks in the CloudFormation page in AWS console.
 
 ![CloudFormation stacks](./media/cloudformation_page.jpg)
 
