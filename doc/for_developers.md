@@ -5,6 +5,7 @@ Here are some notes for developers. This is not a complete guide, but it should 
 * [Developing the Python package](#developing-the-python-package)
 * [Developing the frontend](#developing-the-frontend)
 * [About the API](#about-the-api)
+* [Release strategy](#release-strategy)
 
 # Developing the Python package
 
@@ -113,6 +114,22 @@ For this, you will need to
 vercel dev
 ```
 
-## About the API
+# About the API
 
 See [./about_the_api.md](./about_the_api.md).
+
+# Release strategy
+
+This repo consists of two main components: the frontend and the Python package. The frontend may undergo frequent updates to enhance user experience and fix issues, while the Python package is expected to remain more stable.
+
+**Frontend deployment:**
+
+Generally speaking the main branch should always correspond to the currently deployed frontend. However, deployment is triggered in a GitHub action whenever changes are made to package.json, which usually results from manually bumping the frontend version. This should be performed regularly as changes are made to the frontend.
+
+I followed this guide to set up the GitHub action: https://vercel.com/guides/how-can-i-use-github-actions-with-vercel
+
+The repository secrets are: VERCEL_ORG_ID, VERCEL_PROJECT_ID, VERCEL_TOKEN
+
+**Python package release:**
+
+The main branch should also generally correspond to the currently deployed Python package on PyPI. However, deployment is triggered in a GitHub action whenever changes are made to python/dendro/version.txt, which results from manually bumping the version in this file. This should be performed regularly as changes are made within the python directory. Deployment will only occur if all CI tests pass. The GitHub action also adds a tag to the commit with the version number.

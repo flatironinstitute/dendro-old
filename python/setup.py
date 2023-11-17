@@ -1,6 +1,8 @@
 from setuptools import setup, find_packages
 
-__version__ = '0.1.11'
+# read version from dendro/version.txt
+with open('dendro/version.txt') as f:
+    __version__ = f.read().strip()
 
 setup(
     name='dendro',
@@ -11,6 +13,7 @@ setup(
     description="Web framework for neurophysiology data analysis",
     packages=find_packages(),
     include_package_data=True,
+    package_data={'dendro': ['version.txt']},
     install_requires=[
         'click',
         'simplejson',
