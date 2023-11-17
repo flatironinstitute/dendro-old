@@ -39,7 +39,7 @@ jobs:
         run: pip install httpx
       -
         name: Run tests and collect coverage
-        run: cd python && pytest --cov dendro --cov-report=xml --cov-report=term tests/
+        run: cd python && pytest tests/
       -
         name: Install dependencies
         run: |
