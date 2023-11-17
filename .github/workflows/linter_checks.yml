@@ -1,6 +1,13 @@
 name: testing
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - 'python/**'
+  pull_request:
+    paths:
+      - 'python/**'
+  workflow_dispatch:
 
 jobs:
   build:
