@@ -6,7 +6,7 @@ on:
       - main
     paths:
       # only run on changes to python/dendro/version.txt
-      - python/version.txt
+      - python/dendro/version.txt
 
 jobs:
   pypi-release:
