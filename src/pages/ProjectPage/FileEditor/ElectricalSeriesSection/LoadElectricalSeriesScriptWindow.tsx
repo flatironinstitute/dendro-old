@@ -10,7 +10,7 @@ type LoadElectricalSeriesScriptWindowProps = {
     electricalSeriesPath: string
 }
 
-const useScript = (url: string) => {
+export const useScript = (url: string) => {
     const [script, setScript] = useState(`# Loading script from ${url}...`)
     useEffect(() => {
         let canceled = false

@@ -15,12 +15,12 @@ const ElectricalSeriesSection: FunctionComponent<ElectricalSeriesSectionProps> =
     const nwbFile = useNwbFile(nwbUrl)
     const electricalSeriesPaths = useElectricalSeriesPaths(nwbFile)
     const [selectedElectricalSeriesPath, setSelectedElectricalSeriesPath] = useState<string>('')
-    const {visible: loadInScriptVisible, handleOpen: openLoadInScriptVisible, handleClose: closeLoadInScriptVisible} = useModalDialog()
+    const {visible: loadInScriptVisible, handleOpen: openLoadInScriptWindow, handleClose: closeLoadInScriptWindow} = useModalDialog()
     const {project} = useProject()
     const loadInScript = useCallback((path: string) => {
         setSelectedElectricalSeriesPath(path)
-        openLoadInScriptVisible()
-    }, [openLoadInScriptVisible])
+        openLoadInScriptWindow()
+    }, [openLoadInScriptWindow])
     if ((!electricalSeriesPaths) || (electricalSeriesPaths.length === 0)) return (
         <></>
     )
@@ -40,14 +40,14 @@ const ElectricalSeriesSection: FunctionComponent<ElectricalSeriesSectionProps> =
             </ul>
             <ModalWindow
                 open={loadInScriptVisible}
-                onClose={closeLoadInScriptVisible}
+                onClose={closeLoadInScriptWindow}
             >
                 {selectedElectricalSeriesPath && project && fileName && (
                     <LoadElectricalSeriesScriptWindow
                         project={project}
                         electricalSeriesPath={selectedElectricalSeriesPath}
                         fileName={fileName}
-                        onClose={closeLoadInScriptVisible}
+                        onClose={closeLoadInScriptWindow}
                     />
                 )}
             </ModalWindow>
