@@ -57,3 +57,7 @@ jobs:
         name: Tag the release using version from python/dendro/version.txt
         run: |
           git tag -a v$(cat python/dendro/version.txt | tr -d '[:space:]') -m "v$(cat python/dendro/version.txt | tr -d '[:space:]')"
+          git push origin --tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

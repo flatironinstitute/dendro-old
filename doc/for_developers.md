@@ -132,4 +132,4 @@ The repository secrets are: VERCEL_ORG_ID, VERCEL_PROJECT_ID, VERCEL_TOKEN
 
 **Python package release:**
 
-The main branch should also generally correspond to the currently deployed Python package on PyPI. However, deployment is triggered in a GitHub action whenever changes are made to python/dendro/version.txt, which results from manually bumping the version in this file. This should be performed regularly as changes are made within the python directory. Deployment will only occur if all CI tests pass.
+The main branch should also generally correspond to the currently deployed Python package on PyPI. However, deployment is triggered in a GitHub action whenever changes are made to python/dendro/version.txt, which results from manually bumping the version in this file. This should be performed regularly as changes are made within the python directory. Deployment will only occur if all CI tests pass. The GitHub action also adds a tag to the commit with the version number.
