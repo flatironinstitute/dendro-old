@@ -5,7 +5,10 @@ on:
     branches:
       - main
     paths:
+      # only run workflow when changes are made to these files
       - package.json
+  # manual trigger
+  workflow_dispatch:
 
 jobs:
   vercel-deploy:

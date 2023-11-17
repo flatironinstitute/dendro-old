@@ -7,6 +7,8 @@ on:
     paths:
       # only run on changes to python/dendro/version.txt
       - python/dendro/version.txt
+  # manual trigger
+  workflow_dispatch:
 
 jobs:
   pypi-release:
