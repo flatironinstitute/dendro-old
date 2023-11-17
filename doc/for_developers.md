@@ -126,7 +126,9 @@ This repo consists of two main components: the frontend and the Python package. 
 
 Generally speaking the main branch should always correspond to the currently deployed frontend. However, deployment is triggered in a GitHub action whenever changes are made to package.json, which usually results from manually bumping the frontend version. This should be performed regularly as changes are made to the frontend.
 
-I followed this guide to set up the GitHub action: https://vercel.com/guides/how-can-i-use-github-actions-with-vercel
+I followed this guide with some modifications to set up the GitHub action: https://vercel.com/guides/how-can-i-use-github-actions-with-vercel
+
+A couple notes on creating the vercel_deploy.yaml. I found I needed to create the .vercel/project.json even though this step wasn't included in the guide. I had to trigger the build on vercel servers rather than building locally (as in the guide) in order to get the api to work.
 
 The repository secrets are: VERCEL_ORG_ID, VERCEL_PROJECT_ID, VERCEL_TOKEN
 
