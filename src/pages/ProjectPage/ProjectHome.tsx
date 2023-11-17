@@ -1,5 +1,5 @@
 import { Settings } from "@mui/icons-material";
-import { FunctionComponent } from "react";
+import { FunctionComponent, useMemo } from "react";
 import { useModalDialog } from "../../ApplicationBar";
 import Hyperlink from "../../components/Hyperlink";
 import ModalWindow from "../../components/ModalWindow/ModalWindow";
@@ -27,6 +27,35 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
 
     const {visible: settingsWindowVisible, handleOpen: openSettingsWindow, handleClose: closeSettingsWindow} = useModalDialog()
 
+    const associatedDandisetElements = useMemo(() => {
+        if (!project) return undefined
+        return project.tags.map(tag => {
+            if (tag.startsWith('dandiset.')) {
+                const dandisetId = tag.slice('dandiset.'.length)
+                return (
+                    <>
+                        <a key={dandisetId} href={`https://dandiarchive.org/dandiset/${dandisetId}`} target="_blank" rel="noreferrer">
+                            {dandisetId}
+                        </a>
+                        &nbsp;&nbsp;
+                    </>
+                )
+            }
+            else if (tag.startsWith('dandiset-staging.')) {
+                const dandisetId = tag.slice('dandiset-staging.'.length)
+                return (
+                    <>
+                        <a key={dandisetId} href={`https://gui-staging.dandiarchive.org/dandiset/${dandisetId}`} target="_blank" rel="noreferrer">
+                            staging-{dandisetId}
+                        </a>
+                        &nbsp;&nbsp;
+                    </>
+                )
+            }
+            else return undefined
+        }).filter(tag => tag !== undefined)
+    }, [project])
+
     return (
         <div className="ProjectHome" style={{position: 'absolute', width, height, overflowY: 'auto', padding: 10, background: 'white'}}>
             <div style={headingStyle}>Project: {project?.name}</div>
@@ -40,6 +69,14 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
                     <tr>
                         <td>Project ID:</td>
                         <td>{project?.projectId}</td>
+                    </tr>
+                    <tr>
+                        <td>Associated dandisets</td>
+                        <td>{
+                            associatedDandisetElements?.length
+                                ? associatedDandisetElements
+                                : 'None'
+                        }</td>
                     </tr>
                     <tr>
                         <td>Compute resource:</td>
