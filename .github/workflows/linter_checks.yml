@@ -22,4 +22,4 @@ jobs:
     - name: Install additional packages used by api_helpers
       run: cd python && pip install -e .[api]
     - name: Run linter checks
-      run: flake8 --config ../.flake8 && pyright
+      run: cd python && flake8 --config ../.flake8 && pyright
