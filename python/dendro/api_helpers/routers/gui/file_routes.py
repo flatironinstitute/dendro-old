@@ -52,6 +52,7 @@ class SetFileResponse(BaseModel):
 async def set_file(project_id, file_name, data: SetFileRequest, github_access_token: str = Header(...)):
     # authenticate the request
     user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    assert user_id
 
     # parse the request
     content = data.content
@@ -79,6 +80,7 @@ class DeleteFileResponse(BaseModel):
 async def delete_file(project_id, file_name, github_access_token: str = Header(...)):
     # authenticate the request
     user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    assert user_id
 
     project = await fetch_project(project_id)
     assert project is not None, f"No project with ID {project_id}"
@@ -109,6 +111,7 @@ async def create_file_and_initiate_upload(project_id, data: CreateFileAndInitiat
     # Generate a signed URL for uploading a file to the output bucket and set the file in the project.
     # authenticate the request
     user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    assert user_id
 
     # parse the request
     file_name = data.file_name
