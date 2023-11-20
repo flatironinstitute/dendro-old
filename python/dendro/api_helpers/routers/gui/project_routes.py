@@ -37,6 +37,7 @@ class GetProjectsResponse(BaseModel):
 async def get_projects(github_access_token: str = Header(...), tag: Optional[str] = None):
     if tag is None:
         user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=False)
+        # note: user may be None if they are not authenticated
         projects = await fetch_projects_for_user(user_id)
         return GetProjectsResponse(projects=projects, success=True)
     else:

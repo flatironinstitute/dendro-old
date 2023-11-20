@@ -30,6 +30,7 @@ class CreateJobResponse(BaseModel):
 async def create_job_handler(data: CreateJobRequest, github_access_token: str = Header(...)) -> CreateJobResponse:
     # authenticate the request
     user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    assert user_id
 
     # parse the request
     project_id = data.projectId
