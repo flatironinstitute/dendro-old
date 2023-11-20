@@ -1,3 +1,4 @@
+from typing import Union
 import os
 import requests
 from ._crypto_keys import _sign_message_str
@@ -223,11 +224,14 @@ def _gui_post_api_request(*,
 def _gui_put_api_request(*,
     url_path: str,
     github_access_token: str,
-    data: dict
+    data: dict,
+    compute_resource_api_key: Union[str, None] = None
 ):
     headers = {
         'github-access-token': github_access_token
     }
+    if compute_resource_api_key is not None:
+        headers['compute-resource-api-key'] = compute_resource_api_key
     test_client = _globals['test_client']
     if test_client is None:
         url = f'{dendro_url}{url_path}'

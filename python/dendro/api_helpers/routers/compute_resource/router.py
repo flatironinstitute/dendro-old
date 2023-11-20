@@ -1,9 +1,10 @@
 from typing import List
+
 from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature_str
 from ....common.dendro_types import DendroComputeResourceApp, DendroJob, ComputeResourceSpec, PubsubSubscription
-from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, set_compute_resource_spec
+from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, set_compute_resource_spec, set_compute_resource_api_key
 from ...core.settings import get_settings
 from ....mock import using_mock
 from ..common import api_route_wrapper
@@ -34,7 +35,7 @@ async def compute_resource_get_apps(
         expected_payload=expected_payload
     )
 
-    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True, include_api_key=False)
     assert compute_resource
     apps = compute_resource.apps
     return GetAppsResponse(apps=apps, success=True)
@@ -60,7 +61,7 @@ async def compute_resource_get_pubsub_subscription(
         expected_payload=expected_payload
     )
 
-    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True, include_api_key=False)
     assert compute_resource
     if using_mock():
         subscription = PubsubSubscription(
@@ -134,6 +135,36 @@ async def compute_resource_set_spec(
     await set_compute_resource_spec(compute_resource_id, spec)
 
     return SetSpecResponse(success=True)
+
+# set api key
+class SetApiKeyRequest(BaseModel):
+    api_key: str
+
+class SetApiKeyResponse(BaseModel):
+    success: bool
+
+@router.put("/compute_resources/{compute_resource_id}/api_key")
+@api_route_wrapper
+async def compute_resource_set_api_key(
+    compute_resource_id,
+    data: SetApiKeyRequest,
+    compute_resource_payload: str = Header(...),
+    compute_resource_signature: str = Header(...)
+) -> SetApiKeyResponse:
+    # authenticate the request
+    expected_payload = f'/api/compute_resource/compute_resources/{compute_resource_id}/api_key'
+    _authenticate_compute_resource_request(
+        compute_resource_id=compute_resource_id,
+        compute_resource_payload=compute_resource_payload,
+        compute_resource_signature=compute_resource_signature,
+        expected_payload=expected_payload
+    )
+
+    api_key = data.api_key
+
+    await set_compute_resource_api_key(compute_resource_id, api_key)
+
+    return SetApiKeyResponse(success=True)
 
 class UnexpectedException(Exception):
     pass

@@ -114,7 +114,7 @@ async def insert_project(project: DendroProject):
     projects_collection = client['dendro']['projects']
     await projects_collection.insert_one(_model_dump(project, exclude_none=True))
 
-async def fetch_compute_resource(compute_resource_id: str, raise_on_not_found=False):
+async def fetch_compute_resource(compute_resource_id: str, *, include_api_key: bool, raise_on_not_found=False):
     client = _get_mongo_client()
     compute_resources_collection = client['dendro']['computeResources']
     compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
@@ -124,6 +124,8 @@ async def fetch_compute_resource(compute_resource_id: str, raise_on_not_found=Fa
         else:
             return None # pragma: no cover (not ever run with raise_on_not_found=False)
     _remove_id_field(compute_resource)
+    if not include_api_key:
+        compute_resource['apiKey'] = None
     compute_resource = DendroComputeResource(**compute_resource) # validate compute resource
     return compute_resource
 
@@ -209,6 +211,17 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
     await compute_resources_collection.update_one({'computeResourceId': compute_resource_id}, {
         '$set': {
             'spec': _model_dump(spec, exclude_none=True)
+        }
+    })
+
+async def set_compute_resource_api_key(compute_resource_id: str, api_key: str):
+    client = _get_mongo_client()
+    compute_resources_collection = client['dendro']['computeResources']
+    compute_resource = await compute_resources_collection.find_one({'computeResourceId': compute_resource_id})
+    assert compute_resource is not None, f"No compute resource with ID {compute_resource_id}"
+    await compute_resources_collection.update_one({'computeResourceId': compute_resource_id}, {
+        '$set': {
+            'apiKey': api_key
         }
     })
 

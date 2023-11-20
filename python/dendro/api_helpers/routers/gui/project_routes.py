@@ -55,8 +55,8 @@ class CreateProjectResponse(BaseModel):
 @api_route_wrapper
 async def create_project(data: CreateProjectRequest, github_access_token: str = Header(...)) -> CreateProjectResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     # parse the request
     name = data.name
@@ -90,8 +90,8 @@ class SetProjectNameResponse(BaseModel):
 @api_route_wrapper
 async def set_project_name(project_id, data: SetProjectNameRequest, github_access_token: str = Header(...)) -> SetProjectNameResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     project = await fetch_project(project_id, raise_on_not_found=True)
     assert project
@@ -119,8 +119,8 @@ class SetProjectDescriptionResponse(BaseModel):
 @api_route_wrapper
 async def set_project_description(project_id, data: SetProjectDescriptionRequest, github_access_token: str = Header(...)) -> SetProjectDescriptionResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     project = await fetch_project(project_id, raise_on_not_found=True)
     assert project
@@ -148,8 +148,8 @@ class SetProjectTagsResponse(BaseModel):
 @api_route_wrapper
 async def set_project_tags(project_id, data: SetProjectTagsRequest, github_access_token: str = Header(...)) -> SetProjectTagsResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     project = await fetch_project(project_id, raise_on_not_found=True)
     assert project
@@ -174,8 +174,8 @@ class DeleteProjectResponse(BaseModel):
 @api_route_wrapper
 async def delete_project(project_id, github_access_token: str = Header(...)) -> DeleteProjectResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     project = await fetch_project(project_id, raise_on_not_found=True)
     assert project
@@ -208,8 +208,8 @@ class SetProjectPubliclyReadableResponse(BaseModel):
 @api_route_wrapper
 async def set_project_public(project_id, data: SetProjectPubliclyReadableRequest, github_access_token: str = Header(...)):
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     project = await fetch_project(project_id, raise_on_not_found=True)
     assert project
@@ -237,8 +237,8 @@ class SetProjectComputeResourceIdResponse(BaseModel):
 @api_route_wrapper
 async def set_project_compute_resource_id(project_id, data: SetProjectComputeResourceIdRequest, github_access_token: str = Header(...)):
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     project = await fetch_project(project_id, raise_on_not_found=True)
     assert project
@@ -266,8 +266,8 @@ class SetProjectUsersResponse(BaseModel):
 @api_route_wrapper
 async def set_project_users(project_id, data: SetProjectUsersRequest, github_access_token: str = Header(...)):
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     project = await fetch_project(project_id, raise_on_not_found=True)
     assert project
@@ -293,8 +293,8 @@ class AdminGetAllProjectsResponse(BaseModel):
 @api_route_wrapper
 async def admin_get_all_projects(github_access_token: str = Header(...)):
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
-    assert user_id
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     ADMIN_USER_IDS_JSON = os.getenv('ADMIN_USER_IDS', '[]')
     ADMIN_USER_IDS = json.loads(ADMIN_USER_IDS_JSON)

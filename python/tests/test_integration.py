@@ -20,6 +20,7 @@ async def test_integration(tmp_path):
     from dendro.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
     from dendro.common._api_request import _gui_post_api_request, _client_get_api_request
     from dendro.common.dendro_types import ComputeResourceSlurmOpts
+    from dendro.compute_resource.create_compute_resource_api_key import create_compute_resource_api_key
 
     tmpdir = str(tmp_path)
 
@@ -51,6 +52,9 @@ async def test_integration(tmp_path):
         compute_resource_dir = tmpdir + '/compute_resource'
         os.mkdir(compute_resource_dir)
         compute_resource_id, compute_resource_private_key = register_compute_resource(dir=compute_resource_dir)
+
+        # create an api key for the compute_resource
+        compute_resource_api_key = create_compute_resource_api_key(dir=compute_resource_dir)
 
         # gui: Register compute resource
         _register_compute_resource(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, github_access_token=github_access_token, name='test-cr')
@@ -86,7 +90,8 @@ async def test_integration(tmp_path):
         _set_compute_resource_apps(
             compute_resource_id=compute_resource_id,
             apps=apps,
-            github_access_token=github_access_token
+            github_access_token=github_access_token,
+            compute_resource_api_key=compute_resource_api_key
         )
 
         # gui: Fail at setting apps by other user
@@ -94,7 +99,8 @@ async def test_integration(tmp_path):
             _set_compute_resource_apps(
                 compute_resource_id=compute_resource_id,
                 apps=apps,
-                github_access_token=github_access_token_for_other_user
+                github_access_token=github_access_token_for_other_user,
+                compute_resource_api_key=compute_resource_api_key
             )
 
         # gui: Get compute resources for user
@@ -488,14 +494,14 @@ def _register_compute_resource(compute_resource_id: str, compute_resource_privat
     resp = RegisterComputeResourceResponse(**resp)
     assert resp.success
 
-def _set_compute_resource_apps(compute_resource_id: str, apps: list, github_access_token: str):
+def _set_compute_resource_apps(compute_resource_id: str, apps: list, github_access_token: str, compute_resource_api_key: str):
     from dendro.api_helpers.routers.gui.compute_resource_routes import SetComputeResourceAppsRequest, SetComputeResourceAppsResponse
     from dendro.common._api_request import _gui_put_api_request
 
     req = SetComputeResourceAppsRequest(
         apps=apps
     )
-    resp = _gui_put_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/apps', data=_model_dump(req), github_access_token=github_access_token)
+    resp = _gui_put_api_request(url_path=f'/api/gui/compute_resources/{compute_resource_id}/apps', data=_model_dump(req), github_access_token=github_access_token, compute_resource_api_key=compute_resource_api_key)
     resp = SetComputeResourceAppsResponse(**resp)
     assert resp.success
 

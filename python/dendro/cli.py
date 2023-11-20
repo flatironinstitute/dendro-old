@@ -4,6 +4,7 @@ import time
 import click
 from .compute_resource.register_compute_resource import register_compute_resource as register_compute_resource_function
 from .compute_resource.start_compute_resource import start_compute_resource as start_compute_resource_function
+from .compute_resource.create_compute_resource_api_key import create_compute_resource_api_key as create_compute_resource_api_key_function
 from .sdk._make_spec_file import make_app_spec_file_function
 from .sdk._test_app_processor import test_app_processor_function
 
@@ -24,6 +25,12 @@ def start_compute_resource(timeout: Optional[float] = None):
     # unfortunately, the pubnub background thread cannot be terminated, so we have to force-exit the process
     # I opened a ticket with pubnub about this, and they acknowledged that it's a problem, but they don't seem to be fixing it
     os._exit(0)
+
+@click.command(help="Create an API key for the compute resource")
+def create_compute_resource_api_key():
+    api_key = create_compute_resource_api_key_function(dir='.')
+    print('Here is the new API key. Store it somewhere safe. Any old API keys have been revoked.')
+    print(api_key)
 
 
 # ------------------------------------------------------------

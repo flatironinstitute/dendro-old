@@ -138,6 +138,7 @@ class DendroComputeResource(BaseModel):
     timestampCreated: float
     apps: List[DendroComputeResourceApp]
     spec: Union[ComputeResourceSpec, None] = None
+    apiKey: Union[str, None] = None
 
 class PubsubSubscription(BaseModel):
     pubnubSubscribeKey: str

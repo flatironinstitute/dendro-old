@@ -14,6 +14,7 @@ from ...core.settings import get_settings
 from ...core._model_dump import _model_dump
 from ....mock import using_mock
 from ..common import api_route_wrapper, AuthException
+from ._verify_compute_resource_api_key import _verify_compute_resource_api_key
 
 
 router = APIRouter()
@@ -29,7 +30,7 @@ class ComputeResourceNotFoundException(Exception):
 @router.get("/{compute_resource_id}")
 @api_route_wrapper
 async def get_compute_resource(compute_resource_id) -> GetComputeResourceResponse:
-    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True, include_api_key=False)
     assert compute_resource
     return GetComputeResourceResponse(computeResource=compute_resource, success=True)
 
@@ -42,7 +43,8 @@ class GetComputeResourcesResponse(BaseModel):
 @api_route_wrapper
 async def get_compute_resources(github_access_token: str = Header(...)):
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     compute_resources = await fetch_compute_resources_for_user(user_id)
 
@@ -57,14 +59,23 @@ class SetComputeResourceAppsResponse(BaseModel):
 
 @router.put("/{compute_resource_id}/apps")
 @api_route_wrapper
-async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourceAppsRequest, github_access_token: str = Header(...)) -> SetComputeResourceAppsResponse:
+async def set_compute_resource_apps(
+    compute_resource_id, data: SetComputeResourceAppsRequest,
+    github_access_token: str = Header(...),
+    compute_resource_api_key: str = Header(...)
+) -> SetComputeResourceAppsResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
+
+    # Setting the compute resource apps is a sensitive operation, so we require the compute resource API key
+    # in addition to the github access token
+    await _verify_compute_resource_api_key(compute_resource_id=compute_resource_id, compute_resource_api_key=compute_resource_api_key)
 
     # parse the request
     apps = data.apps
 
-    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True, include_api_key=False)
     assert compute_resource
 
     if compute_resource.ownerId != user_id:
@@ -93,9 +104,10 @@ class DeleteComputeResourceResponse(BaseModel):
 @api_route_wrapper
 async def delete_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> DeleteComputeResourceResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
-    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True, include_api_key=False)
     assert compute_resource
     if compute_resource.ownerId != user_id:
         raise AuthException('User does not have permission to delete this compute resource')
@@ -112,7 +124,7 @@ class GetPubsubSubscriptionResponse(BaseModel):
 @router.get("/{compute_resource_id}/pubsub_subscription")
 @api_route_wrapper
 async def get_pubsub_subscription(compute_resource_id):
-    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True, include_api_key=False)
     assert compute_resource
 
     if using_mock():
@@ -145,7 +157,8 @@ class RegisterComputeResourceResponse(BaseModel):
 @api_route_wrapper
 async def register_compute_resource(data: RegisterComputeResourceRequest, github_access_token: str = Header(...)) -> RegisterComputeResourceResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
     # parse the request
     compute_resource_id = data.computeResourceId
@@ -169,9 +182,10 @@ class GetJobsForComputeResourceResponse(BaseModel):
 @api_route_wrapper
 async def get_jobs_for_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> GetJobsForComputeResourceResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token)
+    assert user_id is not None
 
-    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True, include_api_key=False)
     assert compute_resource
     if compute_resource.ownerId != user_id:
         raise AuthException('User does not have permission to view jobs for this compute resource')

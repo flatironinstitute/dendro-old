@@ -13,28 +13,38 @@ def _create_mock_github_access_token():
     _mock_github_access_tokens.append(token)
     return token
 
-async def _authenticate_gui_request(github_access_token: str, raise_on_not_authenticated=False):
-    if not github_access_token:
-        raise AuthException('User is not authenticated')
-    if github_access_token in _user_ids_for_access_tokens:
-        a = _user_ids_for_access_tokens[github_access_token]
-        elapsed = time.time() - a['timestamp']
-        if elapsed > 60 * 60: # one hour
-            del _user_ids_for_access_tokens[github_access_token] # pragma: no cover
+async def _authenticate_gui_request(github_access_token: str, raise_on_not_authenticated: bool = True):
+    try:
+        if not github_access_token:
+            raise AuthException('User is not authenticated')
+        if github_access_token in _user_ids_for_access_tokens:
+            a = _user_ids_for_access_tokens[github_access_token]
+            elapsed = time.time() - a['timestamp']
+            if elapsed > 60 * 60: # one hour
+                del _user_ids_for_access_tokens[github_access_token] # pragma: no cover
+            else:
+                if not a['user_id']:
+                    raise Exception('Unexpected: no user_id field') # pragma: no cover
+                return a['user_id']
+        if not github_access_token.startswith('mock:'):
+            user_id = await _get_user_id_for_access_token(github_access_token)
+            user_id = 'github|' + user_id # pragma: no cover
         else:
-            return a['user_id']
-    if not github_access_token.startswith('mock:'):
-        user_id = await _get_user_id_for_access_token(github_access_token)
-        user_id = 'github|' + user_id # pragma: no cover
-    else:
-        if github_access_token not in _mock_github_access_tokens:
-            raise AuthException('Invalid mock github access token')
-        user_id = 'github|' + github_access_token[len('mock:'):]
-    _user_ids_for_access_tokens[github_access_token] = {
-        'user_id': user_id,
-        'timestamp': time.time()
-    }
-    return user_id
+            if github_access_token not in _mock_github_access_tokens:
+                raise AuthException('Invalid mock github access token')
+            user_id = 'github|' + github_access_token[len('mock:'):]
+        _user_ids_for_access_tokens[github_access_token] = {
+            'user_id': user_id,
+            'timestamp': time.time()
+        }
+        if not user_id:
+            raise AuthException('Unexpected, no user_id') # pragma: no cover
+        return user_id
+    except AuthException as e:
+        if raise_on_not_authenticated:
+            raise e
+        else:
+            return None
 
 async def _get_user_id_for_access_token(github_access_token: str):
     url = 'https://api.github.com/user'
