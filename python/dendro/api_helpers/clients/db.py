@@ -2,7 +2,7 @@ import time
 from typing import List, Union
 from ._get_mongo_client import _get_mongo_client
 from ._remove_id_field import _remove_id_field
-from ...common.dendro_types import DendroProject, DendroFile, DendroJob, DendroComputeResource, ComputeResourceSpec
+from ...common.dendro_types import DendroProject, DendroFile, DendroJob, DendroComputeResource, ComputeResourceSpec, DendroUser
 from ..core._get_project_role import _project_has_user
 from ..core._model_dump import _model_dump
 from ..core._hide_secret_params_in_job import _hide_secret_params_in_job
@@ -280,3 +280,29 @@ async def insert_file(file: DendroFile):
     client = _get_mongo_client()
     files_collection = client['dendro']['files']
     await files_collection.insert_one(_model_dump(file, exclude_none=True))
+
+class UserNotFoundError(Exception):
+    pass
+
+async def fetch_user_for_dendro_api_key(dendro_api_key: str):
+    client = _get_mongo_client()
+    users_collection = client['dendro']['users']
+    user = await users_collection.find_one({
+        'dendroApiKey': dendro_api_key
+    })
+    _remove_id_field(user)
+    if user is None:
+        raise UserNotFoundError(f"No user with dendro API key {dendro_api_key}")
+    user = DendroUser(**user) # validate user
+    return user
+
+async def set_dendro_api_key_for_user(user_id: str, dendro_api_key: str):
+    client = _get_mongo_client()
+    users_collection = client['dendro']['users']
+    await users_collection.update_one({
+        'userId': user_id
+    }, {
+        '$set': {
+            'dendroApiKey': dendro_api_key
+        }
+    }, upsert=True)

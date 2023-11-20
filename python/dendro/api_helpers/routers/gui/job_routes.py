@@ -33,7 +33,7 @@ class DeleteJobResponse(BaseModel):
 @api_route_wrapper
 async def delete_job(job_id, github_access_token: str = Header(...)) -> DeleteJobResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
     assert user_id
 
     job = await fetch_job(job_id, raise_on_not_found=True)

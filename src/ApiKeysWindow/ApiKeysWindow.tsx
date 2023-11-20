@@ -1,4 +1,9 @@
-import { FunctionComponent, useCallback, useEffect, useReducer } from "react"
+import { FunctionComponent, useCallback, useEffect, useReducer, useState } from "react"
+import { useGithubAuth } from "../GithubAuth/useGithubAuth"
+import { createDendroApiKeyForUser } from "../dbInterface/dbInterface"
+import UserIdComponent from "../UserIdComponent"
+import Hyperlink from "../components/Hyperlink"
+import { confirm } from "../confirm_prompt_alert"
 
 type ApiKeysWindowProps = {
     onClose: () => void
@@ -39,32 +44,55 @@ const ApiKeysWindow: FunctionComponent<ApiKeysWindowProps> = ({onClose}) => {
         keysDispatch({type: 'setDandiApiKey', value: dandiApiKey})
         keysDispatch({type: 'setDandiStagingApiKey', value: dandiStagingApiKey})
     }, [])
-    const handleSave = useCallback(() => {
+    const auth = useGithubAuth()
+
+    const handleSaveDandiApiKey = useCallback(() => {
         localStorage.setItem('dandiApiKey', keys.dandiApiKey)
+    }, [keys.dandiApiKey])
+
+    const handleSaveDandiStagingApiKey = useCallback(() => {
         localStorage.setItem('dandiStagingApiKey', keys.dandiStagingApiKey)
-        onClose()
-    }, [keys, onClose])
+    }, [keys.dandiStagingApiKey])
+
+    const [newDendroApiKey, setNewDendroApiKey] = useState<string>('')
+    const handleGenerateDendroApiKey = useCallback(async () => {
+        const okay = await confirm('Are you sure you want to generate a new Dendro API key? Any previously generated keys will be revoked.')
+        if (!okay) return
+        const apiKey = await createDendroApiKeyForUser(auth)
+        setNewDendroApiKey(apiKey)
+    }, [auth])
+
     return (
         <div style={{padding: 30}}>
             <h3>Set API Keys</h3>
             <hr />
-            <table className="table-1" style={{maxWidth: 300}}>
+            <table className="table-1" style={{maxWidth: 500}}>
                 <tbody>
                     <tr>
                         <td>DANDI API Key: </td>
                         <td><input type="password" value={keys.dandiApiKey} onChange={e => keysDispatch({type: 'setDandiApiKey', value: e.target.value})} /></td>
+                        <td><button onClick={handleSaveDandiApiKey}>Save</button></td>
                     </tr>
                     <tr>
                         <td>DANDI Staging API Key: </td>
                         <td><input type="password" value={keys.dandiStagingApiKey} onChange={e => keysDispatch({type: 'setDandiStagingApiKey', value: e.target.value})} /></td>
+                        <td><button onClick={handleSaveDandiStagingApiKey}>Save</button></td>
                     </tr>
                 </tbody>
             </table>
             <hr />
+            {auth.userId && !newDendroApiKey && (
+                <Hyperlink onClick={handleGenerateDendroApiKey}>Re-generate Dendro API key for user <UserIdComponent userId={auth.userId} /></Hyperlink>
+            )}
+            {newDendroApiKey && (
+                <div>
+                    <p>Here is the new Dendro API key for your user. Save it somewhere safe. Any previously generated keys have been revoked.</p>
+                    <p>{newDendroApiKey}</p>
+                </div>
+            )}
+            <hr />
             <div>
-                <button onClick={handleSave}>Save</button>
-                &nbsp;
-                <button onClick={onClose}>Cancel</button>
+                <button onClick={onClose}>Close</button>
             </div>
         </div>
     )

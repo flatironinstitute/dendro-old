@@ -162,3 +162,7 @@ class ProcessorGetJobResponse(BaseModel):
     inputs: List[ProcessorGetJobResponseInput]
     outputs: List[ProcessorGetJobResponseOutput]
     parameters: List[ProcessorGetJobResponseParameter]
+
+class DendroUser(BaseModel):
+    userId: str
+    dendroApiKey: Union[str, None] = None
