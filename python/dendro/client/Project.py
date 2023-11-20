@@ -14,7 +14,7 @@ class Project:
         project_data: DendroProject,
         files_data: List[DendroFile],
         jobs_data: List[DendroJob],
-        compute_resource: DendroComputeResource
+        compute_resource: Union[DendroComputeResource, None]
     ) -> None:
         self._project_id = project_data.projectId
         self._name = project_data.name
@@ -133,9 +133,12 @@ def load_project(project_id: str) -> Project:
     jobs_resp = _client_get_api_request(url_path=url_path)
     jobs: List[DendroJob] = [DendroJob(**j) for j in jobs_resp['jobs']]
 
-    url_path = f'/api/client/compute-resources/{project.computeResourceId}'
-    compute_resource_resp = _client_get_api_request(url_path=url_path)
-    compute_resource = DendroComputeResource(**compute_resource_resp['compute_resource'])
+    if project.computeResourceId:
+        url_path = f'/api/client/compute_resources/{project.computeResourceId}'
+        compute_resource_resp = _client_get_api_request(url_path=url_path)
+        compute_resource = DendroComputeResource(**compute_resource_resp['computeResource'])
+    else:
+        compute_resource = None
 
     return Project(project_data=project, files_data=files, jobs_data=jobs, compute_resource=compute_resource)
 

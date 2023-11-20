@@ -14,7 +14,7 @@ class SubmitJobOutputFile(BaseModel):
     name: str
     file_name: str
 
-class SubmitJobInputParameter(BaseModel):
+class SubmitJobParameter(BaseModel):
     name: str
     value: Any
 
@@ -23,7 +23,7 @@ def submit_job(*,
     processor_name: str,
     input_files: List[SubmitJobInputFile],
     output_files: List[SubmitJobOutputFile],
-    input_parameters: List[SubmitJobInputParameter],
+    parameters: List[SubmitJobParameter],
     batch_id: Union[str, None] = None,
     rerun_policy: str = 'never' # always | never | if_failed
 ):
@@ -34,7 +34,7 @@ def submit_job(*,
         processor_name (str): The name of the processor to use.
         input_files (List[SubmitJobInputFile]): The input files for the job.
         output_files (List[SubmitJobOutputFile]): The output files for the job.
-        input_parameters (List[SubmitJobInputParameter]): The input parameters for the job.
+        parameters (List[SubmitJobParameter]): The input parameters for the job.
         batch_id (Union[str, None], optional): The batch ID to use. Defaults to None.
         rerun_policy (str, optional): The rerun policy to use. One of: 'always', 'never', 'if_failed'. Defaults to 'never'.
 
@@ -44,6 +44,8 @@ def submit_job(*,
     if rerun_policy not in ['always', 'never', 'if_failed']:
         raise ValueError(f'Invalid rerun policy: {rerun_policy}')
     compute_resource = project._compute_resource
+    if not compute_resource:
+        raise KeyError(f'No compute resource found for project {project._name} ({project._project_id})')
     processor_spec = None
     if compute_resource.spec is None:
         raise KeyError(f'No spec found for compute resource {compute_resource.name} for project {project._name} ({project._project_id})')
@@ -56,14 +58,14 @@ def submit_job(*,
             break
     if not processor_spec:
         raise KeyError(f'No processor with name {processor_name} found in compute resource {compute_resource.name} for project {project._name} ({project._project_id})')
-    default_parameters = _create_default_parameters(processor_spec, input_parameters)
-    input_parameters = input_parameters + default_parameters
+    default_parameters = _create_default_parameters(processor_spec, parameters)
+    parameters = parameters + default_parameters
     _check_consistency_with_processor_spec(
         processor_spec=processor_spec,
         processor_name=processor_name,
         input_files=input_files,
         output_files=output_files,
-        input_parameters=input_parameters
+        parameters=parameters
     )
     request_input_files = [
         CreateJobRequestInputFile(
@@ -79,12 +81,12 @@ def submit_job(*,
         )
         for x in output_files
     ]
-    request_input_parameters = [
+    request_parameters = [
         CreateJobRequestInputParameter(
             name=x.name,
             value=x.value
         )
-        for x in input_parameters
+        for x in parameters
     ]
     matching_job = None
     for job in project._jobs:
@@ -93,7 +95,7 @@ def submit_job(*,
             processor_name=processor_name,
             input_files=input_files,
             output_files=output_files,
-            input_parameters=input_parameters
+            parameters=parameters
         ):
             matching_job = job
             break
@@ -111,35 +113,44 @@ def submit_job(*,
         else:
             raise ValueError(f'Invalid rerun policy: {rerun_policy}')
         if not rerun:
+            print(f'Skipping job submission because a matching job was found: {matching_job.jobId}')
             return matching_job.jobId
     req = CreateJobRequest(
         projectId=project._project_id,
         processorName=processor_name,
         inputFiles=request_input_files,
         outputFiles=request_output_files,
-        inputParameters=request_input_parameters,
+        inputParameters=request_parameters,
         processorSpec=processor_spec,
         batchId=batch_id,
         dandiApiKey=os.environ.get('DANDI_API_KEY', None)
     )
+
+    dendro_api_key = os.environ.get('DENDRO_API_KEY', None)
+    if not dendro_api_key:
+        raise ValueError('DENDRO_API_KEY environment variable is not set')
+
+    url_path = '/api/client/jobs'
     resp = _client_post_api_request(
-        url_path='/jobs',
-        data=_model_dump(req)
+        url_path=url_path,
+        data=_model_dump(req),
+        dendro_api_key=dendro_api_key
     )
     resp = CreateJobResponse(**resp)
+    print(f'Submitted job: {resp.jobId}')
     return resp.jobId
 
 def _create_default_parameters(
     processor_spec: ComputeResourceSpecProcessor,
-    input_parameters: List[SubmitJobInputParameter]
-) -> List[SubmitJobInputParameter]:
+    parameters: List[SubmitJobParameter]
+) -> List[SubmitJobParameter]:
     default_parameters = []
     for pp in processor_spec.parameters:
-        if not any(x.name == pp.name for x in input_parameters):
+        if not any(x.name == pp.name for x in parameters):
             # need to wait for the model to be updated to include the "required" flag to do this
             # if pp.required:
             #     raise KeyError(f"Required parameter not found: {pp.name}")
-            default_parameters.append(SubmitJobInputParameter(name=pp.name, value=pp.default))
+            default_parameters.append(SubmitJobParameter(name=pp.name, value=pp.default))
     return default_parameters
 
 def _check_consistency_with_processor_spec(
@@ -147,7 +158,7 @@ def _check_consistency_with_processor_spec(
     processor_name: str,
     input_files: List[SubmitJobInputFile],
     output_files: List[SubmitJobOutputFile],
-    input_parameters: List[SubmitJobInputParameter]
+    parameters: List[SubmitJobParameter]
 ):
     # check that the processor name matches
     if processor_spec.name != processor_name:
@@ -171,7 +182,7 @@ def _check_consistency_with_processor_spec(
         if not any(x.name == output.name for x in output_files):
             raise KeyError(f"Required output not found: {output.name}")
     # check that the input parameters are consistent with the spec
-    for input_parameter in input_parameters:
+    for input_parameter in parameters:
         pp = next((x for x in processor_spec.parameters if x.name == input_parameter.name), None)
         if not pp:
             raise KeyError(f"Processor parameter not found: {input_parameter.name}")
@@ -180,7 +191,7 @@ def _check_consistency_with_processor_spec(
     # # check that no required parameters are missing
     # for pp in processor_spec.parameters:
     #     if pp.required:
-    #         input_parameter = next((x for x in input_parameters if x.name == pp.name), None)
+    #         input_parameter = next((x for x in parameters if x.name == pp.name), None)
     #         if not input_parameter:
     #             raise KeyError(f"Required parameter not found: {pp.name}")
 
@@ -196,7 +207,7 @@ def _job_matches(*,
     processor_name: str,
     input_files: List[SubmitJobInputFile],
     output_files: List[SubmitJobOutputFile],
-    input_parameters: List[SubmitJobInputParameter]
+    parameters: List[SubmitJobParameter]
 ):
     if job.processorName != processor_name:
         return False
@@ -222,9 +233,9 @@ def _job_matches(*,
             return False
 
     # input parameters
-    if len(job.inputParameters) != len(input_parameters):
+    if len(job.inputParameters) != len(parameters):
         return False
-    for input_parameter in input_parameters:
+    for input_parameter in parameters:
         x = next((x for x in job.inputParameters if x.name == input_parameter.name), None)
         if not x:
             return False

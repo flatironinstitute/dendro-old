@@ -6,6 +6,7 @@ from ...clients.db import fetch_project, fetch_project_files, fetch_project_jobs
 from ..common import api_route_wrapper
 from ....common.dendro_types import CreateJobRequest, CreateJobResponse, DendroComputeResource
 from ..gui.create_job_route import create_job_handler
+from ...core.settings import get_settings
 
 router = APIRouter()
 
@@ -23,6 +24,8 @@ async def get_project(project_id) -> GetProjectResponse:
     project = await fetch_project(project_id)
     if project is None:
         raise ProjectError(f"No project with ID {project_id}")
+    if not project.computeResourceId:
+        project.computeResourceId = get_settings().DEFAULT_COMPUTE_RESOURCE_ID
     return GetProjectResponse(project=project, success=True)
 
 # get project files
@@ -55,7 +58,8 @@ async def create_job(
 ) -> CreateJobResponse:
     return await create_job_handler(
         data=data,
-        dendro_api_key=dendro_api_key
+        dendro_api_key=dendro_api_key,
+        github_access_token=None
     )
 
 # get compute resource

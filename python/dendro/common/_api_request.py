@@ -172,8 +172,12 @@ def _client_get_api_request(*,
 
 def _client_post_api_request(*,
     url_path: str,
-    data: dict
+    data: dict,
+    dendro_api_key: str
 ):
+    headers = {
+        'dendro-api-key': dendro_api_key
+    }
     test_client = _globals['test_client']
     if test_client is None:
         url = f'{dendro_url}{url_path}'
@@ -183,7 +187,7 @@ def _client_post_api_request(*,
         url = url_path
         client = test_client
     try:
-        resp = client.post(url, json=data, timeout=60)
+        resp = client.post(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
     except Exception as e:
         print(f'Error in client post api request for {url}; {e}')
