@@ -29,8 +29,8 @@ class CreateJobResponse(BaseModel):
 @api_route_wrapper
 async def create_job_handler(
     data: CreateJobRequest,
-    github_access_token: Union[str, None] = Header(...),
-    dendro_api_key: Union[str, None] = Header(...)
+    github_access_token: Union[str, None] = Header(None),
+    dendro_api_key: Union[str, None] = Header(None)
 ) -> CreateJobResponse:
     # authenticate the request
     user_id = await _authenticate_gui_request(
