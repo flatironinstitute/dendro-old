@@ -2,7 +2,7 @@ from typing import List, Union
 import os
 import time
 import requests
-from ..common.dendro_types import DendroProject, DendroFile, DendroJob
+from ..common.dendro_types import DendroComputeResource, DendroProject, DendroFile, DendroJob
 from ..common._api_request import _client_get_api_request
 
 
@@ -10,7 +10,12 @@ class ProjectException(Exception):
     pass
 
 class Project:
-    def __init__(self, project_data: DendroProject, files_data: List[DendroFile], jobs_data: List[DendroJob]) -> None:
+    def __init__(self, *,
+        project_data: DendroProject,
+        files_data: List[DendroFile],
+        jobs_data: List[DendroJob],
+        compute_resource: DendroComputeResource
+    ) -> None:
         self._project_id = project_data.projectId
         self._name = project_data.name
         self._description = project_data.description
@@ -25,9 +30,11 @@ class Project:
         ]
 
         self._jobs = [
-            ProjectJob(j)
+            j # DendroJob
             for j in jobs_data
         ]
+
+        self._compute_resource = compute_resource
     def get_file(self, file_name: str) -> 'ProjectFile':
         for f in self._files:
             if f._file_data.fileName == file_name:
@@ -69,6 +76,10 @@ class ProjectFile:
         self._resolved_url_timestamp = time.time()
         return self._resolved_url
 
+class ProjectJob:
+    def __init__(self, job_data: DendroJob) -> None:
+        self._job_data = job_data
+
 class ProjectFolder:
     def __init__(self, project: Project, path: str) -> None:
         self._project = project
@@ -109,10 +120,6 @@ class ProjectFolder:
             for p in sorted_folder_paths
         ]
 
-class ProjectJob:
-    def __init__(self, job_data: DendroJob) -> None:
-        self._job_data = job_data
-
 def load_project(project_id: str) -> Project:
     url_path = f'/api/client/projects/{project_id}'
     project_resp = _client_get_api_request(url_path=url_path)
@@ -126,7 +133,11 @@ def load_project(project_id: str) -> Project:
     jobs_resp = _client_get_api_request(url_path=url_path)
     jobs: List[DendroJob] = [DendroJob(**j) for j in jobs_resp['jobs']]
 
-    return Project(project, files, jobs)
+    url_path = f'/api/client/compute-resources/{project.computeResourceId}'
+    compute_resource_resp = _client_get_api_request(url_path=url_path)
+    compute_resource = DendroComputeResource(**compute_resource_resp['compute_resource'])
+
+    return Project(project_data=project, files_data=files, jobs_data=jobs, compute_resource=compute_resource)
 
 def _resolve_dandi_url(*, url: str, dandi_api_key: str):
     headers = {

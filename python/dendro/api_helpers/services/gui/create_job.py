@@ -1,6 +1,5 @@
 import time
 from typing import Union, List, Any
-from .... import BaseModel
 from ....common.dendro_types import ComputeResourceSpecProcessor, DendroJobInputFile, DendroJobOutputFile, DendroJob, DendroJobInputParameter
 from ...clients.db import fetch_project, fetch_file, delete_file, fetch_project_jobs, delete_job, insert_job
 from ...core._get_project_role import _check_user_can_edit_project
@@ -8,18 +7,7 @@ from ...core._create_random_id import _create_random_id
 from ...clients.pubsub import publish_pubsub_message
 from .._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 from ...core.settings import get_settings
-
-class CreateJobRequestInputFile(BaseModel):
-    name: str
-    fileName: str
-
-class CreateJobRequestOutputFile(BaseModel):
-    name: str
-    fileName: str
-
-class CreateJobRequestInputParameter(BaseModel):
-    name: str
-    value: Union[Any, None]
+from ....common.dendro_types import CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter
 
 class CreateJobException(Exception):
     pass

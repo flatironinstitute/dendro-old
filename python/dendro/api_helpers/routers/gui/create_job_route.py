@@ -1,29 +1,16 @@
-from typing import Union, List
-from .... import BaseModel
+from typing import Union
 from fastapi import APIRouter, Header
 
 from ._authenticate_gui_request import _authenticate_gui_request
-from ...services.gui.create_job import create_job, CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter
-from ....common.dendro_types import ComputeResourceSpecProcessor
+from ...services.gui.create_job import create_job
 from ..common import api_route_wrapper
+
+from ....common.dendro_types import CreateJobRequest, CreateJobResponse
 
 
 router = APIRouter()
 
 # create job
-class CreateJobRequest(BaseModel):
-    projectId: str
-    processorName: str
-    inputFiles: List[CreateJobRequestInputFile]
-    outputFiles: List[CreateJobRequestOutputFile]
-    inputParameters: List[CreateJobRequestInputParameter]
-    processorSpec: ComputeResourceSpecProcessor
-    batchId: Union[str, None] = None
-    dandiApiKey: Union[str, None] = None
-
-class CreateJobResponse(BaseModel):
-    jobId: str
-    success: bool
 
 @router.post("/jobs")
 @api_route_wrapper
