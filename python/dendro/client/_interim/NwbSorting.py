@@ -26,7 +26,7 @@ def NwbSorting(file):
     return sorting
 
 def _numpy_sorting_from_dict(units_dict_list, *, sampling_frequency):
-    import spikeinterface as si
+    import spikeinterface as si # type: ignore
     try:
         # different versions of spikeinterface
         # see: https://github.com/SpikeInterface/spikeinterface/issues/2083
