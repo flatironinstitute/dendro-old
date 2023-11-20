@@ -1,6 +1,5 @@
 import numpy as np
 import h5py
-import spikeinterface as si
 
 
 def NwbSorting(file):
@@ -27,6 +26,7 @@ def NwbSorting(file):
     return sorting
 
 def _numpy_sorting_from_dict(units_dict_list, *, sampling_frequency):
+    import spikeinterface as si
     try:
         # different versions of spikeinterface
         # see: https://github.com/SpikeInterface/spikeinterface/issues/2083
