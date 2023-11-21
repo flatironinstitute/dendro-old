@@ -103,7 +103,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
             </ModalWindow>
             <ModalWindow
                 open={apiKeysWindowVisible}
-                // onClose={closeApiKeysWindow}
+                onClose={closeApiKeysWindow}
             >
                 <ApiKeysWindow
                     onClose={() => closeApiKeysWindow()}

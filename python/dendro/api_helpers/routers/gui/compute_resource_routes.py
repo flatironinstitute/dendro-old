@@ -42,7 +42,7 @@ class GetComputeResourcesResponse(BaseModel):
 @api_route_wrapper
 async def get_compute_resources(github_access_token: str = Header(...)):
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
     assert user_id
 
     compute_resources = await fetch_compute_resources_for_user(user_id)
@@ -60,7 +60,7 @@ class SetComputeResourceAppsResponse(BaseModel):
 @api_route_wrapper
 async def set_compute_resource_apps(compute_resource_id, data: SetComputeResourceAppsRequest, github_access_token: str = Header(...)) -> SetComputeResourceAppsResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
     assert user_id
 
     # parse the request
@@ -95,7 +95,7 @@ class DeleteComputeResourceResponse(BaseModel):
 @api_route_wrapper
 async def delete_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> DeleteComputeResourceResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
     assert user_id
 
     compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
@@ -148,7 +148,7 @@ class RegisterComputeResourceResponse(BaseModel):
 @api_route_wrapper
 async def register_compute_resource(data: RegisterComputeResourceRequest, github_access_token: str = Header(...)) -> RegisterComputeResourceResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
     assert user_id
 
     # parse the request
@@ -173,7 +173,7 @@ class GetJobsForComputeResourceResponse(BaseModel):
 @api_route_wrapper
 async def get_jobs_for_compute_resource(compute_resource_id, github_access_token: str = Header(...)) -> GetJobsForComputeResourceResponse:
     # authenticate the request
-    user_id = await _authenticate_gui_request(github_access_token, raise_on_not_authenticated=True)
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
     assert user_id
 
     compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)

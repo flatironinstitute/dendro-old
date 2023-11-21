@@ -470,6 +470,14 @@ export const getComputeResource = async (computeResourceId: string): Promise<any
     return response.computeResource
 }
 
+export const createDendroApiKeyForUser = async (auth: Auth): Promise<string> => {
+    if (!auth.userId) throw Error('No userId')
+    const url = `${apiBase}/api/gui/users/${auth.userId}/dendro_api_key`
+    const response = await postRequest(url, {}, auth)
+    if (!response.success) throw Error(`Error in createDendroApiKeyForUser: ${response.error}`)
+    return response.dendroApiKey
+}
+
 const deepEqual = (a: any, b: any): boolean => {
     if (typeof a !== typeof b) {
         return false
