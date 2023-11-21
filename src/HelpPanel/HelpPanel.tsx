@@ -71,6 +71,9 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, 
         return x
     }, [markdownSource, staging, route, signedIn, commonMarkdownSource])
 
+    // if not expanded, we don't show the main content (because it looks bad if only a small portion is showing)
+    // but we do render the component so that it can show the top bar
+
     return (
         <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
             <TopBar

@@ -7,6 +7,7 @@ import Hyperlink from "../components/Hyperlink"
 type RecentProjectsPanelProps = {
     width: number
     height: number
+    expanded: boolean
 }
 
 const initialRecentProjects = (): DendroProject[] => {
@@ -44,7 +45,7 @@ const useRecentProjects = () => {
     }
 }
 
-const RecentProjectsPanel: FunctionComponent<RecentProjectsPanelProps> = ({width, height}) => {
+const RecentProjectsPanel: FunctionComponent<RecentProjectsPanelProps> = ({width, height, expanded}) => {
     const {recentProjects, addRecentProject} = useRecentProjects()
     const {route, setRoute} = useRoute()
 
@@ -56,6 +57,10 @@ const RecentProjectsPanel: FunctionComponent<RecentProjectsPanelProps> = ({width
         if (!project) return
         addRecentProject(project)
     }, [route, loadedProjects, addRecentProject])
+
+    // if not expanded, we don't show the content (because it looks bad if only a small portion is showing)
+    // but we do render the component so that it can update the recent projects
+    if (!expanded) return <div />
 
     return (
         <div

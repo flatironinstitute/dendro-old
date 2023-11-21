@@ -92,6 +92,7 @@ const RightPanel: FunctionComponent<RightPanelProps> = ({width, height, expanded
             <RecentProjectsPanel
                 width={0}
                 height={0}
+                expanded={expanded}
             />
         </Splitter>
     )
