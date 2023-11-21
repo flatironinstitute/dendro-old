@@ -64,21 +64,21 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
                 <span style={{fontSize: 10}}><Hyperlink onClick={toggleStaging}>use {staging ? 'main site' : 'staging site'}</Hyperlink></span>
                 <div style={{width: 50}} />
             </div>
-            <>
+            <div>
                 <SearchBar
                     width={width}
                     height={searchBarHeight}
                     onSearch={setSearchText}
                 />
-            </>
-            <>
+            </div>
+            <div>
                 <SearchResults
                     width={width}
                     height={height - searchBarHeight}
                     searchResults={searchResult}
                     useStaging={staging}
                 />
-            </>
+            </div>
         </VBoxLayout>
     )
 }

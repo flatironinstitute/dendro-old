@@ -3,6 +3,7 @@ import { deleteFile, deleteJob, deleteProject, fetchFiles, fetchJobsForProject, 
 import { useGithubAuth } from '../../GithubAuth/useGithubAuth';
 import { onPubsubMessage, setPubNubListenChannel } from '../../pubnub/pubnub';
 import { DendroComputeResource, DendroFile, DendroJob, DendroProject } from '../../types/dendro-types';
+import { useDendro } from '../../DendroContext/DendroContext';
 
 const queryParameters = new URLSearchParams(window.location.search)
 const adminMode = queryParameters.get('admin') === '1'
@@ -336,6 +337,13 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         }
         return project.publiclyReadable ? 'viewer' : 'none'
     }, [project, auth])
+
+    const {reportLoadedProject} = useDendro()
+
+    useEffect(() => {
+        if (!project) return
+        reportLoadedProject(project)
+    }, [project, reportLoadedProject])
 
     const value: ProjectPageContextType = React.useMemo(() => ({
         projectId,

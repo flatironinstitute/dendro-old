@@ -10,11 +10,11 @@ nunjucks.configure({ autoescape: true })
 type HelpPanelProps = {
     width: number
     height: number
-    helpExpanded: boolean
-    setHelpExpanded: (helpExpanded: boolean) => void
+    expanded: boolean
+    setExpanded: (helpExpanded: boolean) => void
 }
 
-const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, helpExpanded, setHelpExpanded}) => {
+const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, setExpanded}) => {
     const {route, staging} = useRoute()
     const [markdownSource, setMarkdownSource] = useState('')
     const [commonMarkdownSource, setCommonMarkdownSource] = useState('')
@@ -74,11 +74,11 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, helpExpand
     return (
         <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
             <TopBar
-                helpExpanded={helpExpanded}
-                setHelpExpanded={setHelpExpanded}
+                helpExpanded={expanded}
+                setHelpExpanded={setExpanded}
             />
             {
-                helpExpanded && (
+                expanded && (
                     <div style={{padding: 15}}>
                         <Markdown
                             source={processedMarkdownSource}
