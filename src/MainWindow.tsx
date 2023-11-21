@@ -15,6 +15,8 @@ import VBoxLayout from "./components/VBoxLayout";
 import HBoxLayout from "./components/HBoxLayout";
 import HelpPanel from "./HelpPanel/HelpPanel";
 import AdminPage from "./pages/AdminPage/AdminPage";
+import Splitter from "./components/Splitter";
+import RecentProjectsPanel from "./RecentProjectsPanel/RecentProjectsPanel";
 
 type Props = {
     // none
@@ -44,25 +46,54 @@ type MainContentProps = {
 }
 
 const MainContent: FunctionComponent<MainContentProps> = ({width, height}) => {
-    const [helpExpanded, setHelpExpanded] = useState(true)
-    const helpWidth = helpExpanded ? calculateHelpWidth(width) : 30
+    const [rightPanelExpanded, setRightPanelExpanded] = useState(true)
+    const rightPanelWidth = rightPanelExpanded ? calculateRightPanelWidth(width) : 30
 
     return (
         <HBoxLayout
-            widths={[width - helpWidth, helpWidth]}
+            widths={[width - rightPanelWidth, rightPanelWidth]}
             height={height}
         >
             <MainContent2
                 width={0}
                 height={0}
             />
+            <RightPanel
+                width={0}
+                height={0}
+                expanded={rightPanelExpanded}
+                setExpanded={setRightPanelExpanded}
+            />
+        </HBoxLayout>
+    )
+}
+
+type RightPanelProps = {
+    width: number
+    height: number
+    expanded: boolean
+    setExpanded: (expanded: boolean) => void
+}
+
+const RightPanel: FunctionComponent<RightPanelProps> = ({width, height, expanded, setExpanded}) => {
+    return (
+        <Splitter
+            direction="vertical"
+            width={width}
+            height={height}
+            initialPosition={2 * height / 3}
+        >
             <HelpPanel
                 width={0}
                 height={0}
-                helpExpanded={helpExpanded}
-                setHelpExpanded={setHelpExpanded}
+                expanded={expanded}
+                setExpanded={setExpanded}
             />
-        </HBoxLayout>
+            <RecentProjectsPanel
+                width={0}
+                height={0}
+            />
+        </Splitter>
     )
 }
 
@@ -102,7 +133,7 @@ const MainContent2: FunctionComponent<MainContent2Props> = ({width, height}) => 
     )
 }
 
-const calculateHelpWidth = (width: number) => {
+const calculateRightPanelWidth = (width: number) => {
     if (width < 800) {
         return 0
     }
