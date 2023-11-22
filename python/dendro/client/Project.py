@@ -64,7 +64,7 @@ class ProjectFile:
             dandi_api_key = os.environ.get('DANDI_API_KEY', None)
             if dandi_api_key is not None:
                 resolve_with_dandi_api_key = dandi_api_key
-        elif url.startswith('https://staging-api.dandiarchive.org/'):
+        elif url.startswith('https://api-staging.dandiarchive.org/'):
             dandi_api_key = os.environ.get('DANDI_STAGING_API_KEY', None)
             if dandi_api_key is not None:
                 resolve_with_dandi_api_key = dandi_api_key

@@ -56,13 +56,15 @@ def _run_job_in_aws_batch(
         'JOB_PRIVATE_KEY': job_private_key,
         'APP_EXECUTABLE': command
     }
-    from ._start_job import _get_kachery_cloud_credentials # avoid circular import
-    kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
-    if kachery_cloud_client_id is not None:
-        env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
-        if not kachery_cloud_private_key:
-            raise KeyError('kachery_cloud_private key is not set even though kachery_cloud_client_id is set')
-        env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
+
+    # Not doing this any more -- instead we are setting a custom backend for kachery uploads
+    # from ._start_job import _get_kachery_cloud_credentials # avoid circular import
+    # kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
+    # if kachery_cloud_client_id is not None:
+    #     env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
+    #     if not kachery_cloud_private_key:
+    #         raise KeyError('kachery_cloud_private key is not set even though kachery_cloud_client_id is set')
+    #     env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     response = client.submit_job(
         jobName=job_name,

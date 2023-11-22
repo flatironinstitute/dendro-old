@@ -98,11 +98,13 @@ def _start_job(*,
         'DENDRO_URL': 'https://dendro.vercel.app',
         'DENDRO_JOB_CLEANUP_DIR': dendro_job_cleanup_dir # see the warning above
     }
-    kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
-    if kachery_cloud_client_id is not None:
-        env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
-        assert kachery_cloud_private_key, 'Unexpected: kachery_cloud_private_key is not set even though kachery_cloud_client_id is set'
-        env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
+
+    # Not doing this any more -- instead we are setting a custom backend for kachery uploads
+    # kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
+    # if kachery_cloud_client_id is not None:
+    #     env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
+    #     assert kachery_cloud_private_key, 'Unexpected: kachery_cloud_private_key is not set even though kachery_cloud_client_id is set'
+    #     env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     if not app_image:
         return _run_local_job(

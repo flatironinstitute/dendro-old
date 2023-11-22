@@ -8,6 +8,7 @@ from .AppProcessor import AppProcessor
 from .Job import Job
 from ._run_job import _run_job
 from ..common.dendro_types import ComputeResourceSlurmOpts, ComputeResourceAwsBatchOpts
+from ..common._api_request import _processor_get_api_request
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
 
@@ -212,6 +213,8 @@ class App:
             parameter_value = parameter.default if job_parameter is None else job_parameter.value
             _setattr_where_name_may_have_dots(context, parameter.name, parameter_value)
 
+        _set_custom_kachery_storage_backend(job_id=job_id, job_private_key=job_private_key)
+
         # Run the processor function
         processor_class.run(context)
 
@@ -265,3 +268,53 @@ def _get_type_of_context_in_processor_class(processor_class):
     type_hints = get_type_hints(run_method)
     # Return the type hint for the 'context' parameter
     return type_hints.get('context')
+
+class CustomKacheryStorageBackend:
+    def __init__(self, *, job_id: str, job_private_key: str):
+        self._job_id = job_id
+        self._job_private_key = job_private_key
+    def store_file(self, file_path: str, *, label: str):
+        sha1 = _compute_sha1_of_file(file_path)
+
+        url_path = f'/api/processor/jobs/{self._job_id}/additional_uploads/sha1/{sha1}/upload_url'
+        headers = {
+            'job-private-key': self._job_private_key
+        }
+        res = _processor_get_api_request(
+            url_path=url_path,
+            headers=headers
+        )
+        upload_url = res['uploadUrl']
+        download_url = res['downloadUrl']
+
+        import requests
+        with open(file_path, 'rb') as f:
+            resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
+        if resp_upload.status_code != 200:
+            raise Exception(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
+        return download_url
+
+def _set_custom_kachery_storage_backend(*, job_id: str, job_private_key: str):
+    try:
+        import kachery_cloud as kcl
+    except ImportError:
+        # if we don't have kachery installed, then let's not worry about it
+        return
+
+    try:
+        custom_storage_backend = CustomKacheryStorageBackend(job_id=job_id, job_private_key=job_private_key)
+        kcl.set_custom_storage_backend(custom_storage_backend)
+    except Exception as e:
+        print('WARNING: Problem setting custom kachery storage backend:', e)
+        return
+
+def _compute_sha1_of_file(file_path: str):
+    import hashlib
+    sha1 = hashlib.sha1()
+    with open(file_path, 'rb') as f:
+        while True:
+            chunk = f.read(2**16)
+            if not chunk:
+                break
+            sha1.update(chunk)
+    return sha1.hexdigest()

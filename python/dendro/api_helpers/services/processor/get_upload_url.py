@@ -19,6 +19,15 @@ async def get_upload_url(job: DendroJob, output_name: str):
     upload_url, download_url = await _get_upload_url_for_object_key(object_key)
     return upload_url
 
+async def get_additional_upload_url(*, job: DendroJob, sha1: str):
+    if not _is_valid_sha1(sha1):
+        raise Exception('Invalid sha1 string')
+
+    object_key = f"dendro-outputs/{job.jobId}/sha1/{sha1}"
+
+    upload_url, download_url = await _get_upload_url_for_object_key(object_key)
+    return upload_url, download_url
+
 async def _get_upload_url_for_object_key(object_key: str, size: Optional[int] = None):
     settings = get_settings()
 
@@ -49,3 +58,11 @@ async def _get_upload_url_for_object_key(object_key: str, size: Optional[int] = 
     download_url = f'{output_bucket_base_url}/{object_key}'
 
     return signed_upload_url, download_url
+
+def _is_valid_sha1(sha1: str):
+    if len(sha1) != 40:
+        return False
+    for c in sha1:
+        if c not in '0123456789abcdef':
+            return False
+    return True
