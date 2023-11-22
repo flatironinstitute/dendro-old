@@ -96,7 +96,7 @@ async def delete_file(project_id, file_name, github_access_token: str = Header(.
 
 # initiate file upload
 class CreateFileAndInitiateUploadRequest(BaseModel):
-    file_name: str # file name within the project
+    fileName: str # file name within the project
     size: int
     metadata: dict = {}
 
@@ -114,7 +114,7 @@ async def create_file_and_initiate_upload(project_id, data: CreateFileAndInitiat
     assert user_id
 
     # parse the request
-    file_name = data.file_name
+    file_name = data.fileName
     size = data.size
     metadata = data.metadata
 

@@ -33,12 +33,12 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
             if (tag.startsWith('dandiset.')) {
                 const dandisetId = tag.slice('dandiset.'.length)
                 return (
-                    <>
-                        <a key={dandisetId} href={`https://dandiarchive.org/dandiset/${dandisetId}`} target="_blank" rel="noreferrer">
+                    <span key={dandisetId}>
+                        <a href={`https://dandiarchive.org/dandiset/${dandisetId}`} target="_blank" rel="noreferrer">
                             {dandisetId}
                         </a>
                         &nbsp;&nbsp;
-                    </>
+                    </span>
                 )
             }
             else if (tag.startsWith('dandiset-staging.')) {
@@ -62,15 +62,15 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
             &nbsp;
             <table className="table1" style={{maxWidth: 500}}>
                 <tbody>
-                    <tr>
+                    <tr key="project-name">
                         <td>Project name:</td>
                         <td>{project?.name}</td>
                     </tr>
-                    <tr>
+                    <tr key="project-id">
                         <td>Project ID:</td>
                         <td>{project?.projectId}</td>
                     </tr>
-                    <tr>
+                    <tr key="associated-dandisets">
                         <td>Associated dandisets</td>
                         <td>{
                             associatedDandisetElements?.length
@@ -78,23 +78,23 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
                                 : 'None'
                         }</td>
                     </tr>
-                    <tr>
+                    <tr key="compute-resource">
                         <td>Compute resource:</td>
                         <td>{project ? <ComputeResourceNameDisplay computeResourceId={project.computeResourceId || undefined} link={true} /> : ''}</td>
                     </tr>
-                    <tr>
+                    <tr key="created">
                         <td>Created:</td>
                         <td>{timeAgoString(project?.timestampCreated)}</td>
                     </tr>
-                    <tr>
+                    <tr key="modified">
                         <td>Modified:</td>
                         <td>{timeAgoString(project?.timestampModified)}</td>
                     </tr>
-                    <tr>
+                    <tr key="num-files">
                         <td>Num. files:</td>
                         <td>{files?.length} (<Hyperlink onClick={() => setRoute({page: 'project', projectId, tab: 'project-files'})}>view files</Hyperlink>)</td>
                     </tr>
-                    <tr>
+                    <tr key="num-jobs">
                         <td>Num. jobs:</td>
                         <td>{jobs?.length} (<Hyperlink onClick={() => setRoute({page: 'project', projectId, tab: 'project-jobs'})}>view jobs</Hyperlink>)</td>
                     </tr>
