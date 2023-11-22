@@ -1,6 +1,7 @@
 import { FunctionComponent } from "react";
 import FigurlFileEditor from "./FigurlFileEditor";
 import NwbFileEditor from "./NwbFileEditor";
+import OtherFileEditor from "./OtherFileEditor";
 
 type Props = {
     fileName: string
@@ -29,7 +30,11 @@ const FileEditor: FunctionComponent<Props> = ({fileName, width, height}) => {
     }
     else {
         return (
-            <div>Unsupported file type: {fileName}</div>
+            <OtherFileEditor
+                fileName={fileName}
+                width={width}
+                height={height}
+            />
         )
     }
 }
