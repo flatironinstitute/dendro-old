@@ -83,6 +83,18 @@ class AwsBatchStack(Stack):
             allow_all_ipv6_outbound=True,
             allow_all_outbound=True,
         )
+        # Allow inbound traffic from the same security group
+        security_group.add_ingress_rule(
+            peer=ec2.Peer.ipv4(vpc.vpc_cidr_block),
+            connection=ec2.Port.all_traffic(),
+            description="Allow inbound traffic from the same security group"
+        )
+        # Additional inbound rules for EFS access
+        security_group.add_ingress_rule(
+            peer=ec2.Peer.ipv4('0.0.0.0/0'),
+            connection=ec2.Port.tcp(2049),  # NFS port
+            description="Allow NFS traffic for EFS access"
+        )
         Tags.of(security_group).add("DendroName", f"{stack_id}-security-group")
 
         # Create an EFS filesystem
