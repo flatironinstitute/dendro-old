@@ -1,5 +1,5 @@
 // import "katex/dist/katex.min.css";
-import { FunctionComponent, useMemo } from "react";
+import { FunctionComponent, useCallback, useMemo } from "react";
 import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { darcula as highlighterStyle } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -11,12 +11,25 @@ import rehypeMathJaxSvg from "rehype-mathjax";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from 'remark-gfm';
 import remarkMathPlugin from 'remark-math';
+import Hyperlink from "../components/Hyperlink";
+import { on } from "events";
 
 type Props ={
 	source: string
+	onLinkClick?: (href: string) => void
 }
 
-const Markdown: FunctionComponent<Props> = ({source}) => {
+const Markdown: FunctionComponent<Props> = ({source, onLinkClick}) => {
+	const a = useCallback(
+		({node, children, href, ...props}: any) => {
+			if ((href) && (href.startsWith('#')) && (onLinkClick)) {
+				return <Hyperlink onClick={() => onLinkClick(href)}>{children}</Hyperlink>
+			}
+			else {
+				return <a href={href} target="_blank" rel="noreferrer" {...props}>{children}</a>
+			}
+		}
+	, [onLinkClick])
 	const components: Partial<Omit<NormalComponents, keyof SpecialComponents> & SpecialComponents> = useMemo(() => (
 		{
 			code: ({inline, className, children, ...props}) => {
@@ -36,6 +49,7 @@ const Markdown: FunctionComponent<Props> = ({source}) => {
 				</code>
 				)
 			},
+			a
 			// div: ({node, className, children, ...props}) => {
 			// 	if (className === 'figurl-figure') {
 			// 		if (internalFigureMode) {
@@ -69,7 +83,7 @@ const Markdown: FunctionComponent<Props> = ({source}) => {
 				
 			// }
 		}
-	), [])
+	), [a])
 	return (
 		<div className="markdown-body">
 			<ReactMarkdown

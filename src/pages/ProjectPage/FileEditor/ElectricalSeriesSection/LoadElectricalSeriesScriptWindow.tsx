@@ -1,6 +1,7 @@
-import { FunctionComponent, useMemo } from "react"
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react"
 import { DendroProject } from "../../../../types/dendro-types"
 import Markdown from "../../../../Markdown/Markdown"
+import nunjucks from "nunjucks"
 
 type LoadElectricalSeriesScriptWindowProps = {
     onClose: () => void
@@ -9,47 +10,49 @@ type LoadElectricalSeriesScriptWindowProps = {
     electricalSeriesPath: string
 }
 
-const getMdSource = (project: DendroProject, fileName: string, electricalSeriesPath: string) => {
-    const source = `
-\`\`\`python
-import h5py
-import dendro.client as prc
-from dendro.client._interim import NwbRecording
-import remfile
-
-
-# Load project ${project.name}
-project = prc.load_project('${project.projectId}')
-
-# Lazy load ${fileName}
-nwb_file = remfile.File(project.get_file('${fileName}'))
-h5_file = h5py.File(nwb_file, 'r')
-
-recording = NwbRecording(h5_file, electrical_series_path='${electricalSeriesPath}')
-
-duration_sec = recording.get_duration()
-sampling_frequency = recording.get_sampling_frequency()
-num_channels = recording.get_num_channels()
-
-print(f'Duration (sec): {duration_sec}')
-print(f'Sampling frequency (Hz): {sampling_frequency}')
-print(f'Number of channels: {num_channels}')
-
-# Load the first 1000 frames of the recording
-traces = recording.get_traces(start_frame=0, end_frame=1000)
-
-print(f'Traces shape for first 1000 frames: {traces.shape}')
-\`\`\`
-
-If this is an embargoed dandiset, then be sure to set the DANDI_API_KEY environment variable.
-`
-    return source
+export const useScript = (url: string) => {
+    const [script, setScript] = useState(`# Loading script from ${url}...`)
+    useEffect(() => {
+        let canceled = false
+        ;(async () => {
+            const resp = await fetch(url)
+            const text = await resp.text()
+            if (canceled) return
+            setScript(text)
+        })()
+        return () => {canceled = true}
+    }, [url])
+    return script
 }
 
 const LoadElectricalSeriesScriptWindow: FunctionComponent<LoadElectricalSeriesScriptWindowProps> = ({project, fileName, electricalSeriesPath}) => {
-    const source = useMemo(() => (getMdSource(project, fileName, electricalSeriesPath)), [project, fileName, electricalSeriesPath])
+    const [copied, setCopied] = useState(false)
+    const script = useScript('/scripts/load_electrical_series.py')
+    const processedScript = useMemo(() => {
+        return nunjucks.renderString(script, {project, fileName, electricalSeriesPath})
+    }, [script, project, fileName, electricalSeriesPath])
+    const markdownSource = `
+Use this script to load this electrical series into a SpikeInterface recording object. If this is an embargoed dandiset, then be sure to set the DANDI_API_KEY environment variable prior to running the script.
+
+You first need install dendro and spikeinterface via pip: \`pip install --upgrade dendro spikeinterface\`
+
+${copied ? '*Copied to clipboard*' : '[Copy](#copy)'}
+
+\`\`\`python
+${processedScript}
+\`\`\`
+    `
+    const processedMarkdownSource = useMemo(() => {
+        return nunjucks.renderString(markdownSource, {project, fileName, electricalSeriesPath})
+    }, [markdownSource, project, fileName, electricalSeriesPath])
+    const handleLinkClick = useCallback((href: string) => {
+        if (href === '#copy') {
+            navigator.clipboard.writeText(processedScript)
+            setCopied(true)
+        }
+    }, [processedScript])
     return (
-        <Markdown source={source} />
+        <Markdown source={processedMarkdownSource} onLinkClick={handleLinkClick} />
     )
 }
 

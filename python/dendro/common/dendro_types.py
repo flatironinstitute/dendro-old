@@ -162,3 +162,33 @@ class ProcessorGetJobResponse(BaseModel):
     inputs: List[ProcessorGetJobResponseInput]
     outputs: List[ProcessorGetJobResponseOutput]
     parameters: List[ProcessorGetJobResponseParameter]
+
+class DendroUser(BaseModel):
+    userId: str
+    dendroApiKey: Union[str, None] = None
+
+class CreateJobRequestInputFile(BaseModel):
+    name: str
+    fileName: str
+
+class CreateJobRequestOutputFile(BaseModel):
+    name: str
+    fileName: str
+
+class CreateJobRequestInputParameter(BaseModel):
+    name: str
+    value: Union[Any, None]
+
+class CreateJobRequest(BaseModel):
+    projectId: str
+    processorName: str
+    inputFiles: List[CreateJobRequestInputFile]
+    outputFiles: List[CreateJobRequestOutputFile]
+    inputParameters: List[CreateJobRequestInputParameter]
+    processorSpec: ComputeResourceSpecProcessor
+    batchId: Union[str, None] = None
+    dandiApiKey: Union[str, None] = None
+
+class CreateJobResponse(BaseModel):
+    jobId: str
+    success: bool

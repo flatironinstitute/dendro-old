@@ -10,9 +10,9 @@ import json
 @pytest.mark.api
 async def test_integration(tmp_path):
     # important to put the imports inside so we don't get an import error when running the non-api tests
-    from dendro.common.dendro_types import DendroProjectUser, DendroComputeResourceApp
+    from dendro.common.dendro_types import DendroProjectUser, DendroComputeResourceApp, CreateJobRequestInputParameter, CreateJobRequestInputFile, CreateJobRequestOutputFile
     from dendro.api_helpers.routers.gui._authenticate_gui_request import _create_mock_github_access_token
-    from dendro.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse, CreateJobRequestInputParameter, CreateJobRequestInputFile, CreateJobRequestOutputFile
+    from dendro.api_helpers.routers.gui.create_job_route import CreateJobRequest, CreateJobResponse
     from dendro.compute_resource.register_compute_resource import register_compute_resource
     from dendro.compute_resource.start_compute_resource import start_compute_resource
     from dendro.common._api_request import _use_api_test_client

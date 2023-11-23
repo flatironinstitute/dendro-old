@@ -81,22 +81,30 @@ def _start_job(*,
             raise JobException(f'Error running job in AWS Batch: {e}') from e
         return ''
 
-    # Note for future: it is not necessary to use a working dir if the job is to run in a container
+    # WARNING!!! The working_dir is going to get cleaned up after the job is finished
+    # so it's very important to not set the working directory to a directory that is
+    # used for other purposes
     working_dir = os.getcwd() + '/jobs/' + job_id
     os.makedirs(working_dir, exist_ok=True)
 
+    # for safety, verify that cleanup directory is as expected
+    dendro_job_cleanup_dir = working_dir
+    assert dendro_job_cleanup_dir.endswith('/jobs/' + job_id), f'Unexpected dendro_job_cleanup_dir: {dendro_job_cleanup_dir}'
     env_vars = {
         'PYTHONUNBUFFERED': '1',
         'JOB_ID': job_id,
         'JOB_PRIVATE_KEY': job_private_key,
         'APP_EXECUTABLE': app_executable,
-        'DENDRO_URL': 'https://dendro.vercel.app'
+        'DENDRO_URL': 'https://dendro.vercel.app',
+        'DENDRO_JOB_CLEANUP_DIR': dendro_job_cleanup_dir # see the warning above
     }
-    kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
-    if kachery_cloud_client_id is not None:
-        env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
-        assert kachery_cloud_private_key, 'Unexpected: kachery_cloud_private_key is not set even though kachery_cloud_client_id is set'
-        env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
+
+    # Not doing this any more -- instead we are setting a custom backend for kachery uploads
+    # kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
+    # if kachery_cloud_client_id is not None:
+    #     env_vars['KACHERY_CLOUD_CLIENT_ID'] = kachery_cloud_client_id
+    #     assert kachery_cloud_private_key, 'Unexpected: kachery_cloud_private_key is not set even though kachery_cloud_client_id is set'
+    #     env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     if not app_image:
         return _run_local_job(

@@ -1,4 +1,5 @@
 from typing import Union
+import os
 import requests
 import h5py
 from pydantic import BaseModel
@@ -59,10 +60,19 @@ class InputFile(BaseModel):
                 if chunk:
                     f.write(chunk)
 
-    def get_file(self):
+    def get_file(self, *, download: bool = False):
         if self.local_file_name is not None:
             # In the case of a local file, we just return a file object
             f = open(self.local_file_name, 'rb')
+            # An issue here is that this file is never closed. Not sure how to fix that.
+            return f
+
+        if download:
+            if not os.path.exists('_download_inputs'):
+                os.mkdir('_download_inputs')
+            tmp_fname = f'_download_inputs/{self.name}'
+            self.download(tmp_fname)
+            f = open(tmp_fname, 'rb')
             # An issue here is that this file is never closed. Not sure how to fix that.
             return f
 

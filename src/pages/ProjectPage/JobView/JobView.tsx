@@ -76,6 +76,12 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
         }
         return ret
     }, [job])
+
+    const exportJson = useCallback(() => {
+        if (!job) return
+        downloadJson(JSON.stringify(job, null, 2), `dendro-job-${job.jobId}.json`)
+    }, [job])
+
     if (!job) {
         return (
             <p>Loading job {jobId}</p>
@@ -85,6 +91,8 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
         <div style={{position: 'absolute', width, height, background: 'white', overflowY: 'auto'}}>
             <hr />
             <button onClick={refreshJob}>Refresh</button>
+            &nbsp;
+            <button onClick={exportJson}>Export job as JSON</button>
             <hr />
             <table className="table1">
                 <tbody>
@@ -172,6 +180,16 @@ export const ExpandableSection: FunctionComponent<PropsWithChildren<ExpandableSe
             }
         </div>
     )
+}
+
+const downloadJson = (json: string, fileName: string) => {
+    const blob = new Blob([json], {type: 'application/json'})
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    a.click()
+    URL.revokeObjectURL(url)
 }
 
 export default JobView

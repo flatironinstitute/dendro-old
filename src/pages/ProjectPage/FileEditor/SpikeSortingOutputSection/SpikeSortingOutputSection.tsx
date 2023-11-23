@@ -5,6 +5,9 @@ import { useGithubAuth } from "../../../../GithubAuth/useGithubAuth";
 import { DendroJob } from "../../../../types/dendro-types";
 import { useProject } from "../../ProjectPageContext";
 import { isElectricalSeriesPathParameter } from "../../EditJobDefinitionWindow/EditJobDefinitionWindow";
+import { useModalDialog } from "../../../../ApplicationBar";
+import ModalWindow from "../../../../components/ModalWindow/ModalWindow";
+import LoadSpikeSortingInScriptWindow from "./LoadSpikeSortingInScriptWindow";
 
 type SpikeSortingOutputSectionProps = {
     spikeSortingJob: DendroJob
@@ -12,7 +15,7 @@ type SpikeSortingOutputSectionProps = {
 }
 
 const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProps> = ({spikeSortingJob, fileName}) => {
-    const {jobs, files, projectId, computeResource} = useProject()
+    const {project, jobs, files, projectId, computeResource} = useProject()
 
     const recordingFileName = useMemo(() => {
         const output = spikeSortingJob.inputFiles.find(f => f.name === 'input')
@@ -126,33 +129,62 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
 
     const status = spikeSortingFigurlJob ? spikeSortingFigurlJob.status : undefined
 
+    const {visible: loadInScriptVisible, handleOpen: openLoadInScriptWindow, handleClose: closeLoadInScriptWindow} = useModalDialog()
+
     if (!recordingFile) return <div>Recording file not found</div>
     if (!sortingFile) return <div>Sorting file not found</div>
 
+    let openSpikeSortingViewElement: JSX.Element | undefined = undefined
+
     if (status === 'completed') {
-        return (
+        openSpikeSortingViewElement = (
             <div>
                 <Hyperlink onClick={handleOpenSpikeSortingView}>Open spike sorting view</Hyperlink>
             </div>
         )
     }
-
-    if (['pending', 'queued', 'starting', 'running'].includes(status || '')) {
-        return <div>Spike sorting view: {status}</div>
+    else if (['pending', 'queued', 'starting', 'running'].includes(status || '')) {
+        openSpikeSortingViewElement = <div>Spike sorting view: {status}</div>
     }
-
-    if (status === 'failed') {
-        return <div>Error creating spike sorting view</div>
+    else if (status === 'failed') {
+        openSpikeSortingViewElement = <div>Error creating spike sorting view</div>
     }
-
-    if (!spikeSortingFigurlProcessor) return <div>No spike_sorting_figurl processor found</div>
+    else if (!spikeSortingFigurlProcessor) {
+        openSpikeSortingViewElement = <div>No spike_sorting_figurl processor found</div>
+    }
+    else {
+        openSpikeSortingViewElement = (
+            <Hyperlink
+                onClick={handlePrepareSpikeSortingView}
+            >
+                Prepare spike sorting view
+            </Hyperlink>
+        )
+    }
 
     return (
-        <Hyperlink
-            onClick={handlePrepareSpikeSortingView}
-        >
-            Prepare spike sorting view
-        </Hyperlink>
+        <>
+            <div>
+                {openSpikeSortingViewElement}
+            </div>
+            <div>
+                <Hyperlink
+                    onClick={openLoadInScriptWindow}
+                >
+                    Load sorting object in script
+                </Hyperlink>
+            </div>
+            <ModalWindow
+                open={loadInScriptVisible}
+                onClose={closeLoadInScriptWindow}
+            >
+                {project && <LoadSpikeSortingInScriptWindow
+                    fileName={fileName}
+                    project={project}
+                    onClose={closeLoadInScriptWindow}
+                />}
+            </ModalWindow>
+        </>
     )
 }
 

@@ -470,6 +470,28 @@ export const getComputeResource = async (computeResourceId: string): Promise<any
     return response.computeResource
 }
 
+export const createDendroApiKeyForUser = async (auth: Auth): Promise<string> => {
+    if (!auth.userId) throw Error('No userId')
+    const url = `${apiBase}/api/gui/users/${auth.userId}/dendro_api_key`
+    const response = await postRequest(url, {}, auth)
+    if (!response.success) throw Error(`Error in createDendroApiKeyForUser: ${response.error}`)
+    return response.dendroApiKey
+}
+
+export const createFileAndInitiateUpload = async (projectId: string, fileName: string, size: number, auth: Auth): Promise<{uploadUrl: string}> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}/create_file_and_initiate_upload`
+    const dd = {
+        fileName,
+        size,
+        metadata: {}
+    }
+    const response = await postRequest(url, dd, auth)
+    if (!response.success) throw Error(`Error in createFileAndInitiateUpload: ${response.error}`)
+    return {
+        uploadUrl: response.uploadUrl
+    }
+}
+
 const deepEqual = (a: any, b: any): boolean => {
     if (typeof a !== typeof b) {
         return false
