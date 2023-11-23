@@ -1,4 +1,5 @@
 from typing import List
+from warnings import warn
 import os
 
 
@@ -47,7 +48,8 @@ def _run_job_in_aws_batch(
         raise JobDefinitionException(f'Job definition container does not match: {job_def_container} != {container}')
     job_def_command = job_def['containerProperties']['command']
     if not _command_matches(job_def_command, command):
-        raise JobDefinitionException(f'Job definition command does not match: {job_def_command} != {command}')
+        warn(f'Warning: Job definition command does not match: {job_def_command} != {command}')
+        # raise JobDefinitionException(f'Job definition command does not match: {job_def_command} != {command}')
 
     job_name = f'dendro-job-{job_id}'
 
@@ -86,7 +88,11 @@ def _run_job_in_aws_batch(
                 {
                     'type': 'MEMORY',
                     'value': '16384'
-                }
+                },
+                # {
+                #     'type': 'GPU',
+                #     'value': '1'
+                # }
             ]
         }
     )
