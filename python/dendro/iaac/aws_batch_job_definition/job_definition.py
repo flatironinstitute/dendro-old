@@ -98,7 +98,7 @@ def create_job_definition(
                     'name': f'{job_definition_name}-EfsVolume',
                     'efsVolumeConfiguration': {
                         'fileSystemId': efs_fs_id,
-                        'rootDirectory': "/mount/efs", # f'/mount/efs/{dendro_app_name}',
+                        'rootDirectory': "/",
                         # 'transitEncryption': 'ENABLED'|'DISABLED',
                         # 'transitEncryptionPort': 123,
                         # 'authorizationConfig': {
@@ -110,7 +110,7 @@ def create_job_definition(
             ]
             mount_points = [
                 {
-                    'containerPath': '/mount/efs',
+                    'containerPath': '/mnt',
                     'readOnly': False,
                     'sourceVolume': f'{job_definition_name}-EfsVolume'
                 },
