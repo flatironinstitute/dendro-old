@@ -122,6 +122,16 @@ class AwsBatchStack(Stack):
             # )
 
         # Compute environment
+        machine_image = ec2.MachineImage.generic_linux(
+            ami_map={
+                "us-east-2": "ami-0d625ab7e92ab3a43",
+            }
+        )
+        ecs_machine_image = batch.EcsMachineImage(
+            image=machine_image,
+            image_type=batch.EcsMachineImageType.ECS_AL2_NVIDIA
+        )
+
         compute_env_1 = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
             id=f"{stack_id}-compute-env",
@@ -129,6 +139,7 @@ class AwsBatchStack(Stack):
             instance_types=[
                 ec2.InstanceType("g4dn.2xlarge"),
             ],
+            images=[ecs_machine_image],
             maxv_cpus=32,
             minv_cpus=0,
             security_groups=[security_group],

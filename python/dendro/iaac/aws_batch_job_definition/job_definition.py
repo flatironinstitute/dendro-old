@@ -66,7 +66,7 @@ def create_job_definition(
     - https://aws.amazon.com/blogs/hpc/introducing-support-for-per-job-amazon-efs-volumes-in-aws-batch/
     """
 
-    job_definition_name = f"{dendro_app_name}_job_definition"
+    job_definition_name = f"{dendro_app_name}-dendro-jd"
 
     # Container Environment variables
     # e.g.: environment_variables = [{'name': 'string', 'value': 'string'}]
@@ -110,7 +110,7 @@ def create_job_definition(
             ]
             mount_points = [
                 {
-                    'containerPath': '/mnt',
+                    'containerPath': '/tmp',
                     'readOnly': False,
                     'sourceVolume': f'{job_definition_name}-EfsVolume'
                 },
