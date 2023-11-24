@@ -143,8 +143,8 @@ class AwsBatchStack(Stack):
             maxv_cpus=32,
             minv_cpus=0,
             security_groups=[security_group],
-            service_role=batch_service_role,
-            instance_role=ecs_instance_role,
+            service_role=batch_service_role, # type: ignore because Role implements IRole
+            instance_role=ecs_instance_role, # type: ignore because Role implements IRole
         )
         Tags.of(compute_env_1).add("DendroName", f"{stack_id}-compute-env")
 
@@ -176,6 +176,6 @@ class AwsBatchStack(Stack):
         dendro_home_path = os.environ.get("DENDRO_CR_HOME_PATH", None)
         if dendro_home_path is None:
             dendro_home_path = Path().home() / ".dendro"
-        save_file_path = str(dendro_home_path / f"{stack_id}-created-resources.json")
+        save_file_path = str(Path(dendro_home_path) / f"{stack_id}-created-resources.json")
         with open(save_file_path, "w") as f:
             json.dump(created_resources, f, indent=4)
