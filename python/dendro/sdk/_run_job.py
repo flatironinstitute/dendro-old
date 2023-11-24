@@ -219,12 +219,22 @@ def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
             'PYTHONUNBUFFERED': '1'
         }
         print(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
+        working_dir = os.environ.get('DENDRO_JOB_WORKING_DIR', None)
+        if working_dir is not None:
+            if not os.path.exists(working_dir):
+                os.mkdir(working_dir)
+            if not os.path.isdir(working_dir + '/tmp'):
+                os.mkdir(working_dir + '/tmp')
+            env['DENDRO_JOB_WORKING_DIR'] = working_dir
+            env['TMPDIR'] = working_dir + '/tmp'
+            print(f'Using working directory {working_dir}')
         _debug_log('Opening subprocess')
         proc = subprocess.Popen(
             cmd,
             env=env,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
+            stderr=subprocess.STDOUT,
+            cwd=working_dir
         )
         return proc
     else:
