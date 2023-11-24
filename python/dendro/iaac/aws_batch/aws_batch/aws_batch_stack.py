@@ -128,39 +128,73 @@ class AwsBatchStack(Stack):
                 "us-east-2": "ami-0d625ab7e92ab3a43",
             }
         )
-        ecs_machine_image = batch.EcsMachineImage(
+        ecs_machine_image_gpu = batch.EcsMachineImage(
             image=machine_image,
             image_type=batch.EcsMachineImageType.ECS_AL2_NVIDIA
         )
 
-        compute_env_1 = batch.ManagedEc2EcsComputeEnvironment(
+        ecs_machine_image_cpu = batch.EcsMachineImage(
+            image=machine_image,
+            image_type=batch.EcsMachineImageType.ECS_AL2
+        )
+
+        compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
-            id=f"{stack_id}-compute-env",
+            id=f"{stack_id}-compute-env-gpu-1",
             vpc=vpc,
             instance_types=[
-                ec2.InstanceType("g4dn.2xlarge"),
+                ec2.InstanceType("g4dn.2xlarge"), # 8 vCPUs, 32 GiB
             ],
-            images=[ecs_machine_image],
+            images=[ecs_machine_image_gpu],
             maxv_cpus=32,
             minv_cpus=0,
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
             instance_role=ecs_instance_role, # type: ignore because Role implements IRole
         )
-        Tags.of(compute_env_1).add("DendroName", f"{stack_id}-compute-env")
+        Tags.of(compute_env_gpu).add("DendroName", f"{stack_id}-compute-env")
+
+        compute_env_cpu = batch.ManagedEc2EcsComputeEnvironment(
+            scope=self,
+            id=f"{stack_id}-compute-env-cpu-1",
+            vpc=vpc,
+            instance_types=[
+                ec2.InstanceType("t4g.small"), # 2 vCPUs, 2 GiB
+                ec2.InstanceType("t4g.medium"), # 2 vCPUs, 4 GiB
+                ec2.InstanceType("t4g.large"), # 2 vCPUs, 8 GiB
+                ec2.InstanceType("t4g.xlarge"), # 4 vCPUs, 16 GiB
+                ec2.InstanceType("t4g.2xlarge"), # 8 vCPUs, 32 GiB
+            ],
+            images=[ecs_machine_image_cpu],
+            maxv_cpus=32,
+            minv_cpus=0,
+            security_groups=[security_group],
+            service_role=batch_service_role, # type: ignore because Role implements IRole
+            instance_role=ecs_instance_role, # type: ignore because Role implements IRole
+        )
 
         # Job queue
-        job_queue = batch.JobQueue(
+        job_queue_gpu = batch.JobQueue(
             scope=self,
-            id=f"{stack_id}-job-queue",
-            job_queue_name=f"{stack_id}-job-queue",
+            id=f"{stack_id}-job-queue-gpu",
+            job_queue_name=f"{stack_id}-job-queue-gpu",
             priority=1,
             compute_environments=[
-                batch.OrderedComputeEnvironment(compute_environment=compute_env_1, order=1)
-                # batch.OrderedComputeEnvironment(compute_environment=compute_env_2, order=2)
+                batch.OrderedComputeEnvironment(compute_environment=compute_env_gpu, order=1)
             ],
         )
-        Tags.of(job_queue).add("DendroName", f"{stack_id}-job-queue")
+        Tags.of(job_queue_gpu).add("DendroName", f"{stack_id}-job-queue")
+
+        job_queue_cpu = batch.JobQueue(
+            scope=self,
+            id=f"{stack_id}-job-queue-cpu",
+            job_queue_name=f"{stack_id}-job-queue-cpu",
+            priority=1,
+            compute_environments=[
+                batch.OrderedComputeEnvironment(compute_environment=compute_env_cpu, order=1)
+            ],
+        )
+        Tags.of(job_queue_cpu).add("DendroName", f"{stack_id}-job-queue")
 
         # Store basic info of created resources in local file
         created_resources = {
@@ -170,8 +204,10 @@ class AwsBatchStack(Stack):
             "vpc_name": f"{stack_id}-vpc",
             "security_group_name": f"{stack_id}-security-group",
             "efs_file_system_name": f"{stack_id}-EfsFileSystem",
-            "compute_env_name": f"{stack_id}-compute-env",
-            "job_queue_name": f"{stack_id}-job-queue",
+            "compute_env_gpu_name": f"{stack_id}-compute-env-gpu-1",
+            "compute_env_cpu_name": f"{stack_id}-compute-env-cpu-1",
+            "job_queue_gpu_name": f"{stack_id}-job-queue-gpu",
+            "job_queue_cpu_name": f"{stack_id}-job-queue-cpu"
         }
 
         dendro_home_path = os.environ.get("DENDRO_CR_HOME_PATH", None)

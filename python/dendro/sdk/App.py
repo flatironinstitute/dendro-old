@@ -24,7 +24,8 @@ class App:
         *,
         description: str,
         app_image: Union[str, None] = None,
-        app_executable: Union[str, None] = None
+        app_executable: Union[str, None] = None,
+        requires_gpu: bool = False
     ) -> None:
         """Construct a new Dendro App
 
@@ -33,6 +34,7 @@ class App:
             description (str): A description of the app
             app_image (Union[str, None], optional): The URI for the docker image, or None if no image is to be used. Defaults to None.
             app_executable (Union[str, None], optional): The app executable within the docker image, or on the local file system if app_image=None. If app_image is set, this will default to /app/main.py. If app_image is not set, then an exception with be thrown if this is not set.
+            requires_gpu (bool, optional): Whether the app requires a GPU. Defaults to False.
         """
         if not app_image:
             if not app_executable:
@@ -42,6 +44,7 @@ class App:
         self._description = description
         self._app_image = app_image
         self._app_executable = app_executable
+        self._requires_gpu = requires_gpu
         self._processors: List[AppProcessor] = []
 
         self._spec_dict: Union[dict, None] = None # this is set when the app is loaded from a spec (internal use only)

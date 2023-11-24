@@ -257,14 +257,16 @@ export const isDendroFile = (x: any): x is DendroFile => {
 }
 
 export type ComputeResourceAwsBatchOpts = {
-    jobQueue: string
-    jobDefinition: string
+    jobQueue?: string // obsolete
+    jobDefinition?: string
+    useAwsBatch?: boolean
 }
 
 export const isComputeResourceAwsBatchOpts = (x: any): x is ComputeResourceAwsBatchOpts => {
     return validateObject(x, {
-        jobQueue: isString,
-        jobDefinition: isString
+        jobQueue: optional(isString), // obsolete
+        jobDefinition: optional(isString),
+        useAwsBatch: optional(isBoolean)
     })
 }
 

@@ -62,7 +62,9 @@ class JobManager:
         app: Union[App, None] = self._app_manager.find_app_with_processor(processor_name)
         if app is None:
             return None
-        if app._aws_batch_opts is not None and app._aws_batch_opts.jobQueue is not None:
+        # if app._aws_batch_opts is not None and app._aws_batch_opts.jobQueue is not None:
+        #     return 'aws_batch'
+        if app._aws_batch_opts and app._aws_batch_opts.useAwsBatch:
             return 'aws_batch'
         if app._slurm_opts is not None:
             return 'slurm'

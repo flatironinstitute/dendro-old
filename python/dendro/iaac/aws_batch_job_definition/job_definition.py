@@ -1,3 +1,4 @@
+from typing import Union
 import boto3
 
 
@@ -50,9 +51,9 @@ def create_job_definition(
     dendro_app_name: str,
     dendro_app_image_uri: str,
     job_role_name: str,
-    efs_fs_name: str | None = None,
-    environment_variables: list | None = None,
-    container_command_override: list | None = None,
+    efs_fs_name: Union[str, None] = None,
+    environment_variables: Union[list, None] = None,
+    container_command_override: Union[list, None] = None,
     container_required_memory: int = 8192,  # Memory in MiB
     container_required_vcpu: int = 4,    # Number of vCPUs
     container_requires_gpu: bool = False,

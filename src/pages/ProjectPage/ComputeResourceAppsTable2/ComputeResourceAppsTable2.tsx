@@ -115,7 +115,7 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
                                         {app.specUri || ''}
                                     </td>
                                     <td>
-                                        {app.awsBatch ? `Job queue: ${app.awsBatch.jobQueue} | Job definition: ${app.awsBatch.jobDefinition}` : ''}
+                                        {app.awsBatch ? `Using AWS Batch: ${app.awsBatch.useAwsBatch ? "true" : "false"}` : ''}
                                     </td>
                                     <td>
                                         {app.slurm ? (
