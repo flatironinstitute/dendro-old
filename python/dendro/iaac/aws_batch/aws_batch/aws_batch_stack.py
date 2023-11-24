@@ -32,7 +32,7 @@ class AwsBatchStack(Stack):
     ) -> None:
         super().__init__(scope, stack_id, **kwargs)
 
-        # Create IAM Roles
+        # AWS Batch service role
         batch_service_role = iam.Role(
             scope=self,
             id=f"{stack_id}-BatchServiceRole",
@@ -43,6 +43,7 @@ class AwsBatchStack(Stack):
         )
         Tags.of(batch_service_role).add("DendroName", f"{stack_id}-BatchServiceRole")
 
+        # ECS instance role
         ecs_instance_role = iam.Role(
             scope=self,
             id=f"{stack_id}-EcsInstanceRole",
@@ -54,6 +55,7 @@ class AwsBatchStack(Stack):
         )
         Tags.of(ecs_instance_role).add("DendroName", f"{stack_id}-EcsInstanceRole")
 
+        # Batch jobs access role
         batch_jobs_access_role = iam.Role(
             scope=self,
             id=f"{stack_id}-BatchJobsAccessRole",
@@ -67,11 +69,11 @@ class AwsBatchStack(Stack):
         )
         Tags.of(batch_jobs_access_role).add("DendroName", f"{stack_id}-BatchJobsAccessRole")
 
-        # VPC
+        # Virtual Private Cloud (VPC)
         vpc = ec2.Vpc(
             scope=self,
             id=f"{stack_id}-vpc",
-            max_azs=3,
+            max_azs=3, # Availability Zones
         )
         Tags.of(vpc).add("DendroName", f"{stack_id}-vpc")
 
@@ -121,22 +123,24 @@ class AwsBatchStack(Stack):
             #     posix_user=efs.PosixUser(uid="1001", gid="1001")
             # )
 
-        # Compute environment
-        machine_image = ec2.MachineImage.generic_linux(
+        # Machine image for the GPU compute environment
+        machine_image_gpu = ec2.MachineImage.generic_linux(
             ami_map={
                 "us-east-1": "ami-0d625ab7e92ab3a43",
                 "us-east-2": "ami-0d625ab7e92ab3a43",
             }
         )
         ecs_machine_image_gpu = batch.EcsMachineImage(
-            image=machine_image,
+            image=machine_image_gpu,
             image_type=batch.EcsMachineImageType.ECS_AL2_NVIDIA
         )
 
+        # Machine image for the CPU compute environment
         ecs_machine_image_cpu = batch.EcsMachineImage(
             image_type=batch.EcsMachineImageType.ECS_AL2
         )
 
+        # Compute environment for GPU
         compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
             id=f"{stack_id}-compute-env-gpu-1",
@@ -153,6 +157,7 @@ class AwsBatchStack(Stack):
         )
         Tags.of(compute_env_gpu).add("DendroName", f"{stack_id}-compute-env")
 
+        # Compute environment for CPU
         compute_env_cpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
             id=f"{stack_id}-compute-env-cpu-1",
@@ -170,7 +175,7 @@ class AwsBatchStack(Stack):
         )
         Tags.of(compute_env_cpu).add("DendroName", f"{stack_id}-compute-env")
 
-        # Job queue
+        # Job queue for GPU
         job_queue_gpu = batch.JobQueue(
             scope=self,
             id=f"{stack_id}-job-queue-gpu",
@@ -182,6 +187,7 @@ class AwsBatchStack(Stack):
         )
         Tags.of(job_queue_gpu).add("DendroName", f"{stack_id}-job-queue")
 
+        # Job queue for CPU
         job_queue_cpu = batch.JobQueue(
             scope=self,
             id=f"{stack_id}-job-queue-cpu",
