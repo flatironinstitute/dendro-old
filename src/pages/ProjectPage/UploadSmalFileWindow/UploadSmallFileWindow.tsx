@@ -53,7 +53,7 @@ const UploadSmallFileWindow: FunctionComponent<UploadSmallFileWindowProps> = ({ 
     return (
         <div>
             <button onClick={handleSelectFile}>
-                Select a small from from your computer
+                Select a small file from from your computer
             </button>
         </div>
     )
