@@ -89,6 +89,7 @@ This will create a spec.json file in the app directory. You can take a look at t
     "appImage": "",
     "appExecutable": ...,
     "executable": ...,
+    "requiresGpu": false,
     "processors": [
         {
             "name": "letter_count",

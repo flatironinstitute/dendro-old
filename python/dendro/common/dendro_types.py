@@ -129,6 +129,7 @@ class ComputeResourceSpecApp(BaseModel):
     processors: List[ComputeResourceSpecProcessor]
     appImage: Union[str, None] = None
     appExecutable: Union[str, None] = None
+    requiresGpu: Union[bool, None] = None
 
 class ComputeResourceSpec(BaseModel):
     apps: List[ComputeResourceSpecApp]

@@ -137,6 +137,7 @@ class App:
             'appImage': self._app_image,
             'appExecutable': self._app_executable,
             'executable': self._app_executable,
+            'requiresGpu': self._requires_gpu,
             'processors': processors
         }
         return spec
@@ -148,7 +149,8 @@ class App:
             name=spec['name'],
             description=spec['description'],
             app_image=spec.get('appImage', None),
-            app_executable=spec.get('appExecutable', None)
+            app_executable=spec.get('appExecutable', None),
+            requires_gpu=spec.get('requiresGpu', False)
         )
         app._spec_dict = spec
         for processor_spec in spec['processors']:
