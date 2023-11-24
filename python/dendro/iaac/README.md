@@ -39,7 +39,7 @@ Other useful CDK commands:
 
 ## Provision App-specific infrastructure with Boto3
 
-For every Dendro App installed on a Dendro Compute Resource, an AWS Batch Job Defintion must be created. This is done automatically by the Dendro Daemon.
+For every Dendro App installed on a Dendro Compute Resource, an AWS Batch Job Definition must be created. This is done automatically by the Dendro Daemon.
 
 
 ## Extra - Simple File Manager for Amazon EFS
