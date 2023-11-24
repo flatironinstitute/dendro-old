@@ -126,7 +126,7 @@ class AwsBatchStack(Stack):
         # Machine image for the GPU compute environment
         machine_image_gpu = ec2.MachineImage.generic_linux(
             ami_map={
-                "us-east-1": "ami-0d625ab7e92ab3a43",
+                "us-east-1": "ami-06cb3eee472508700",
                 "us-east-2": "ami-0d625ab7e92ab3a43",
             }
         )

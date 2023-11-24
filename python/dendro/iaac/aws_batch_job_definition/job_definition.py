@@ -138,6 +138,19 @@ def create_job_definition(
 
     try:
         client = boto3.client('batch')
+
+        # deregister job definitions if they already exists
+        response = client.describe_job_definitions(
+            jobDefinitionName=job_definition_name,
+            status='ACTIVE',
+        )
+        if len(response['jobDefinitions']) > 0:
+            for job_definition in response['jobDefinitions']:
+                print(f'Deregistering job definition: {job_definition["jobDefinitionArn"]}')
+                client.deregister_job_definition(
+                    jobDefinition=job_definition['jobDefinitionArn']
+                )
+        print(f'Regisering job definition: {job_definition_name}')
         response = client.register_job_definition(
             jobDefinitionName=job_definition_name,
             type='container',
