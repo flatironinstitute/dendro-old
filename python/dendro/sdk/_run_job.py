@@ -222,7 +222,8 @@ def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
         working_dir = os.environ.get('DENDRO_JOB_WORKING_DIR', None)
         if working_dir is not None:
             if not os.path.exists(working_dir):
-                os.mkdir(working_dir)
+                # make directory including parent directories
+                os.makedirs(working_dir)
             if not os.path.isdir(working_dir + '/tmp'):
                 os.mkdir(working_dir + '/tmp')
             env['DENDRO_JOB_WORKING_DIR'] = working_dir
