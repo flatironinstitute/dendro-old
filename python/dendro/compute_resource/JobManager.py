@@ -39,7 +39,8 @@ class JobManager:
 
         # AWS Batch jobs
         aws_batch_jobs = [job for job in jobs if self._is_aws_batch_job(job)]
-        for job in aws_batch_jobs:
+        pending_aws_batch_jobs = [job for job in aws_batch_jobs if self._job_is_pending(job)]
+        for job in pending_aws_batch_jobs:
             self._start_job(job)
 
         # SLURM jobs
