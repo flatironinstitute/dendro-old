@@ -133,11 +133,6 @@ class AwsBatchStack(Stack):
             image_type=batch.EcsMachineImageType.ECS_AL2_NVIDIA
         )
 
-        ecs_machine_image_cpu = batch.EcsMachineImage(
-            image=machine_image,
-            image_type=batch.EcsMachineImageType.ECS_AL2
-        )
-
         compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
             id=f"{stack_id}-compute-env-gpu-1",
@@ -159,13 +154,10 @@ class AwsBatchStack(Stack):
             id=f"{stack_id}-compute-env-cpu-1",
             vpc=vpc,
             instance_types=[
-                ec2.InstanceType("t4g.small"), # 2 vCPUs, 2 GiB
-                ec2.InstanceType("t4g.medium"), # 2 vCPUs, 4 GiB
-                ec2.InstanceType("t4g.large"), # 2 vCPUs, 8 GiB
-                ec2.InstanceType("t4g.xlarge"), # 4 vCPUs, 16 GiB
-                ec2.InstanceType("t4g.2xlarge"), # 8 vCPUs, 32 GiB
+                # tried using t4g.* instance types but there was an error during cdk deploy
+                ec2.InstanceType("optimal")
             ],
-            images=[ecs_machine_image_cpu],
+            images=None,
             maxv_cpus=32,
             minv_cpus=0,
             security_groups=[security_group],
