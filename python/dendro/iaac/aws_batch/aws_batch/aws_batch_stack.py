@@ -133,6 +133,10 @@ class AwsBatchStack(Stack):
             image_type=batch.EcsMachineImageType.ECS_AL2_NVIDIA
         )
 
+        ecs_machine_image_cpu = batch.EcsMachineImage(
+            image_type=batch.EcsMachineImageType.ECS_AL2
+        )
+
         compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
             id=f"{stack_id}-compute-env-gpu-1",
@@ -157,13 +161,14 @@ class AwsBatchStack(Stack):
                 # tried using t4g.* instance types but there was an error during cdk deploy
                 ec2.InstanceType("optimal")
             ],
-            images=None,
+            images=[ecs_machine_image_cpu],
             maxv_cpus=32,
             minv_cpus=0,
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
             instance_role=ecs_instance_role, # type: ignore because Role implements IRole
         )
+        Tags.of(compute_env_cpu).add("DendroName", f"{stack_id}-compute-env")
 
         # Job queue
         job_queue_gpu = batch.JobQueue(
