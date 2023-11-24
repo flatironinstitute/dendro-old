@@ -124,6 +124,7 @@ class AwsBatchStack(Stack):
         # Compute environment
         machine_image = ec2.MachineImage.generic_linux(
             ami_map={
+                "us-east-1": "ami-0d625ab7e92ab3a43",
                 "us-east-2": "ami-0d625ab7e92ab3a43",
             }
         )
