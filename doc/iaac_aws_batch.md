@@ -1,4 +1,4 @@
-# AWS Batch IaC
+# AWS Batch IaaC
 
 In order to run Dendro Apps as AWS Batch jobs, the infrastructure must be provisioned first. This is done in two stages:
 
@@ -19,7 +19,7 @@ In order to run Dendro Apps as AWS Batch jobs, the infrastructure must be provis
 AWS CDK is a very convenient tool, it helps automate the provisioning of AWS infrastructure and organizes all created resources in a CloudFormation stack, which can be easily updated or deleted.
 
 Follow these steps if you're running Dendro CDK stack for the first time:
-- go to `cloned_dendro_repo_path/iac/aws_batch` directory.
+- go to `cloned_dendro_repo_path/iaac/aws_batch` directory.
 - run `cdk bootstrap` to set up the CDK deployment infrastructure (CKDToolkit) in your AWS account. This only needs to be done once.
 - run `cdk synth` to synthesize the CloudFormation template.
 - run `cdk deploy` to deploy the stack to your default AWS account/region.

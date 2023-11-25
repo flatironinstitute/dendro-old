@@ -91,8 +91,8 @@ class AppManager:
             if app._app_image is None:
                 raise Exception('App with awsBatch opts has no app image')
             stack_id = 'DendroBatchStack'
-            job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iac/aws_batch/aws_batch/stack_config.py
-            efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iac/aws_batch/aws_batch/stack_config.py
+            job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iaac/aws_batch/aws_batch/stack_config.py
+            efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iaac/aws_batch/aws_batch/stack_config.py
             print(f'Creating AWS batch job definition for app {app._name}')
             environment_variables = []
             if app._requires_gpu:

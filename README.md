@@ -94,7 +94,7 @@ As the project matures, we will add more apps to this list. Users can also contr
 
 ### Using AWS Batch
 
-See [doc/iac_aws_batch.md](./doc/iac_aws_batch.md).
+See [doc/iaac_aws_batch.md](./doc/iaac_aws_batch.md).
 
 ### For developers
 
