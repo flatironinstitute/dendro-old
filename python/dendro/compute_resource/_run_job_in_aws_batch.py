@@ -63,8 +63,8 @@ def _run_job_in_aws_batch(
         'JOB_ID': job_id,
         'JOB_PRIVATE_KEY': job_private_key,
         'APP_EXECUTABLE': command,
-        'DENDRO_JOB_WORKING_DIR': f'/dendro-jobs/{job_id}',
-        'DENDRO_JOB_CLEANUP_DIR': f'/dendro-jobs/{job_id}'
+        'DENDRO_JOB_WORKING_DIR': f'/tmp/dendro-jobs/{job_id}',
+        'DENDRO_JOB_CLEANUP_DIR': f'/tmp/dendro-jobs/{job_id}'
     }
 
     # Not doing this any more -- instead we are setting a custom backend for kachery uploads

@@ -150,7 +150,7 @@ def create_job_definition(
                 client.deregister_job_definition(
                     jobDefinition=job_definition['jobDefinitionArn']
                 )
-        print(f'Regisering job definition: {job_definition_name}')
+        print(f'Registering job definition: {job_definition_name}')
         response = client.register_job_definition(
             jobDefinitionName=job_definition_name,
             type='container',
