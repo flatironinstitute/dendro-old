@@ -105,6 +105,7 @@ class AppManager:
                 dendro_app_image_uri=app._app_image,
                 job_role_name=job_role_name,
                 efs_fs_name=efs_fs_name,
+                container_requires_gpu=app._requires_gpu
             )
 
         # print info about the app so we can see what's going on

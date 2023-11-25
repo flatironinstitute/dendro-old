@@ -88,20 +88,20 @@ def _run_job_in_aws_batch(
                 }
                 for k, v in env_vars.items()
             ],
-            'resourceRequirements': [
-                {
-                    'type': 'VCPU',
-                    'value': '4'
-                },
-                {
-                    'type': 'MEMORY',
-                    'value': '16384'
-                },
-                # {
-                #     'type': 'GPU',
-                #     'value': '1'
-                # }
-            ]
+            # 'resourceRequirements': [
+            #     {
+            #         'type': 'VCPU',
+            #         'value': '4'
+            #     },
+            #     {
+            #         'type': 'MEMORY',
+            #         'value': '16384'
+            #     },
+            #     # {
+            #     #     'type': 'GPU',
+            #     #     'value': '1'
+            #     # }
+            # ]
         }
     )
 
