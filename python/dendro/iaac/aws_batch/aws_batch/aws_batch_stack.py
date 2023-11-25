@@ -126,8 +126,8 @@ class AwsBatchStack(Stack):
         # Machine image for the GPU compute environment
         machine_image_gpu = ec2.MachineImage.generic_linux(
             ami_map={
-                # "us-east-1": "ami-06cb3eee472508700",
-                "us-east-1": "ami-061dc0582f86ee66b",
+                # aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended --region us-east-1 --output json
+                "us-east-1": "ami-06cb3eee472508700",
                 "us-east-2": "ami-0d625ab7e92ab3a43",
             }
         )
