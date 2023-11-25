@@ -1,6 +1,3 @@
-import os
-import json
-from pathlib import Path
 from constructs import Construct
 from aws_cdk import (
     Stack,
@@ -10,6 +7,20 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_batch as batch,
     aws_efs as efs
+)
+
+from .stack_config import (
+    stack_id,
+    batch_service_role_id,
+    ecs_instance_role_id,
+    batch_jobs_access_role_id,
+    security_group_id,
+    vpc_id,
+    efs_file_system_id,
+    compute_env_gpu_id,
+    compute_env_cpu_id,
+    job_queue_gpu_id,
+    job_queue_cpu_id
 )
 
 
@@ -26,7 +37,6 @@ class AwsBatchStack(Stack):
     def __init__(
         self,
         scope: Construct,
-        stack_id: str,
         create_efs: bool = False,
         **kwargs
     ) -> None:
@@ -35,7 +45,7 @@ class AwsBatchStack(Stack):
         # AWS Batch service role
         batch_service_role = iam.Role(
             scope=self,
-            id=f"{stack_id}-BatchServiceRole",
+            id=batch_service_role_id,
             assumed_by=iam.ServicePrincipal("batch.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSBatchServiceRole")
@@ -46,7 +56,7 @@ class AwsBatchStack(Stack):
         # ECS instance role
         ecs_instance_role = iam.Role(
             scope=self,
-            id=f"{stack_id}-EcsInstanceRole",
+            id=ecs_instance_role_id,
             assumed_by=iam.ServicePrincipal("ec2.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AmazonEC2ContainerServiceforEC2Role"),
@@ -58,7 +68,7 @@ class AwsBatchStack(Stack):
         # Batch jobs access role
         batch_jobs_access_role = iam.Role(
             scope=self,
-            id=f"{stack_id}-BatchJobsAccessRole",
+            id=batch_jobs_access_role_id,
             assumed_by=iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3FullAccess"),
@@ -72,7 +82,7 @@ class AwsBatchStack(Stack):
         # Virtual Private Cloud (VPC)
         vpc = ec2.Vpc(
             scope=self,
-            id=f"{stack_id}-vpc",
+            id=vpc_id,
             max_azs=3, # Availability Zones
         )
         Tags.of(vpc).add("DendroName", f"{stack_id}-vpc")
@@ -80,7 +90,7 @@ class AwsBatchStack(Stack):
         # Security group
         security_group = ec2.SecurityGroup(
             scope=self,
-            id=f"{stack_id}-security-group",
+            id=security_group_id,
             vpc=vpc,
             allow_all_ipv6_outbound=True,
             allow_all_outbound=True,
@@ -103,7 +113,7 @@ class AwsBatchStack(Stack):
         if create_efs:
             file_system = efs.FileSystem(
                 scope=self,
-                id=f"{stack_id}-EfsFileSystem",
+                id=efs_file_system_id,
                 file_system_name=f"{stack_id}-EfsFileSystem",
                 vpc=vpc,
                 security_group=security_group,
@@ -144,7 +154,7 @@ class AwsBatchStack(Stack):
         # Compute environment for GPU
         compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
-            id=f"{stack_id}-compute-env-gpu-1",
+            id=compute_env_gpu_id,
             vpc=vpc,
             instance_types=[
                 ec2.InstanceType("g4dn.2xlarge"), # 8 vCPUs, 32 GiB
@@ -161,7 +171,7 @@ class AwsBatchStack(Stack):
         # Compute environment for CPU
         compute_env_cpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
-            id=f"{stack_id}-compute-env-cpu-1",
+            id=compute_env_cpu_id,
             vpc=vpc,
             instance_types=[
                 # tried using t4g.* instance types but there was an error during cdk deploy
@@ -179,8 +189,8 @@ class AwsBatchStack(Stack):
         # Job queue for GPU
         job_queue_gpu = batch.JobQueue(
             scope=self,
-            id=f"{stack_id}-job-queue-gpu",
-            job_queue_name=f"{stack_id}-job-queue-gpu",
+            id=job_queue_gpu_id,
+            job_queue_name=job_queue_gpu_id,
             priority=1,
             compute_environments=[
                 batch.OrderedComputeEnvironment(compute_environment=compute_env_gpu, order=1)
@@ -191,32 +201,11 @@ class AwsBatchStack(Stack):
         # Job queue for CPU
         job_queue_cpu = batch.JobQueue(
             scope=self,
-            id=f"{stack_id}-job-queue-cpu",
-            job_queue_name=f"{stack_id}-job-queue-cpu",
+            id=job_queue_cpu_id,
+            job_queue_name=job_queue_cpu_id,
             priority=1,
             compute_environments=[
                 batch.OrderedComputeEnvironment(compute_environment=compute_env_cpu, order=1)
             ],
         )
         Tags.of(job_queue_cpu).add("DendroName", f"{stack_id}-job-queue")
-
-        # Store basic info of created resources in local file
-        created_resources = {
-            "batch_service_role_name": f"{stack_id}-BatchServiceRole",
-            "ecs_instance_role_name": f"{stack_id}-EcsInstanceRole",
-            "batch_jobs_access_role_name": f"{stack_id}-BatchJobsAccessRole",
-            "vpc_name": f"{stack_id}-vpc",
-            "security_group_name": f"{stack_id}-security-group",
-            "efs_file_system_name": f"{stack_id}-EfsFileSystem",
-            "compute_env_gpu_name": f"{stack_id}-compute-env-gpu-1",
-            "compute_env_cpu_name": f"{stack_id}-compute-env-cpu-1",
-            "job_queue_gpu_name": f"{stack_id}-job-queue-gpu",
-            "job_queue_cpu_name": f"{stack_id}-job-queue-cpu"
-        }
-
-        dendro_home_path = os.environ.get("DENDRO_CR_HOME_PATH", None)
-        if dendro_home_path is None:
-            dendro_home_path = Path().home() / ".dendro"
-        save_file_path = str(Path(dendro_home_path) / f"{stack_id}-created-resources.json")
-        with open(save_file_path, "w") as f:
-            json.dump(created_resources, f, indent=4)

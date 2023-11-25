@@ -1,6 +1,4 @@
 from typing import List, Union
-from pathlib import Path
-import json
 
 from ..sdk.App import App
 from ..common.dendro_types import DendroComputeResourceApp
@@ -87,18 +85,14 @@ class AppManager:
         self._apps.append(app)
 
         if app._aws_batch_opts is not None:
-            from ..iaac.aws_batch_job_definition.job_definition import create_job_definition
+            from ..aws_batch.aws_batch_job_definition import create_aws_batch_job_definition
             if app._slurm_opts is not None:
                 raise Exception('App with awsBatch opts also has slurm opts')
             if app._app_image is None:
                 raise Exception('App with awsBatch opts has no app image')
             stack_id = 'DendroBatchStack'
-            dendro_home_path = Path().home() / ".dendro"
-            created_resources_path = str(Path(dendro_home_path) / f"{stack_id}-created-resources.json")
-            with open(created_resources_path, 'r') as f:
-                created_resources = json.load(f)
-            job_role_name = created_resources['batch_jobs_access_role_name']
-            efs_fs_name = created_resources['efs_file_system_name']
+            job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iac/aws_batch/aws_batch/stack_config.py
+            efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iac/aws_batch/aws_batch/stack_config.py
             print(f'Creating AWS batch job definition for app {app._name}')
             environment_variables = []
             if app._requires_gpu:
@@ -110,7 +104,7 @@ class AppManager:
                     'name': 'NVIDIA_REQUIRE_CUDA',
                     'value': 'cuda>=11.0'
                 })
-            create_job_definition(
+            create_aws_batch_job_definition(
                 dendro_app_name=app._name,
                 dendro_app_image_uri=app._app_image,
                 job_role_name=job_role_name,

@@ -92,6 +92,10 @@ Dendro processing tools are organized into plugin apps which are containerized e
 
 As the project matures, we will add more apps to this list. Users can also contribute their own processing apps.
 
+### Using AWS Batch
+
+See [doc/iac_aws_batch.md](./doc/iac_aws_batch.md).
+
 ### For developers
 
 See [doc/for_developers.md](./doc/for_developers.md).
