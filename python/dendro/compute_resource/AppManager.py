@@ -100,12 +100,23 @@ class AppManager:
             job_role_name = created_resources['batch_jobs_access_role_name']
             efs_fs_name = created_resources['efs_file_system_name']
             print(f'Creating AWS batch job definition for app {app._name}')
+            environment_variables = []
+            if app._requires_gpu:
+                environment_variables.append({
+                    'name': 'NVIDIA_DRIVER_CAPABILITIES',
+                    'value': 'all'
+                })
+                environment_variables.append({
+                    'name': 'NVIDIA_REQUIRE_CUDA',
+                    'value': 'cuda>=11.0'
+                })
             create_job_definition(
                 dendro_app_name=app._name,
                 dendro_app_image_uri=app._app_image,
                 job_role_name=job_role_name,
                 efs_fs_name=efs_fs_name,
-                container_requires_gpu=app._requires_gpu
+                container_requires_gpu=app._requires_gpu,
+                environment_variables=environment_variables
             )
 
         # print info about the app so we can see what's going on
