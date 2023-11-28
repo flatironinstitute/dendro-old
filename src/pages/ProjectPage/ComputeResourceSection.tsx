@@ -60,6 +60,9 @@ const SelectComputeResourceSubsection: FunctionComponent = () => {
 
     const auth = useGithubAuth()
 
+    // important to not show usage by default so that we don't unnecessarily load all the jobs (incl. deleted)
+    const [usageVisible, setUsageVisible] = useState(false)
+
     return (
         <div>
             {
@@ -86,10 +89,18 @@ const SelectComputeResourceSubsection: FunctionComponent = () => {
             <div>&nbsp;</div>
             <hr />
             <div>&nbsp;</div>
-            <h3>Usage for this compute resource by <UserIdComponent userId={auth.userId} /></h3>
-            {project && computeResourceId && (
-                <ComputeResourceUsageComponent computeResourceId={computeResourceId} />
-            )}
+            {
+                usageVisible ? (
+                    <>
+                        <h3>Usage for this compute resource by <UserIdComponent userId={auth.userId} /></h3>
+                        {project && computeResourceId && (
+                            <ComputeResourceUsageComponent computeResourceId={computeResourceId} />
+                        )}
+                    </>
+                ) : (
+                    <Hyperlink onClick={() => setUsageVisible(true)}>Show usage for this compute resource</Hyperlink>
+                )
+            }
         </div>
     )
 }
