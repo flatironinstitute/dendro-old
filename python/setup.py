@@ -22,7 +22,8 @@ setup(
         'remfile',
         'pydantic', # intentionally do not specify version 1 or 2 since we support both
         'cryptography',
-        'h5py>=3.10.0'
+        'h5py>=3.10.0',
+        'psutil'
     ],
     extras_require={
         'compute_resource': [
