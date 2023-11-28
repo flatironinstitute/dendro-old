@@ -8,14 +8,13 @@ from aws_cdk import (
     aws_batch as batch,
     aws_efs as efs
 )
+import boto3
 
 from .stack_config import (
     stack_id,
     batch_service_role_id,
     ecs_instance_role_id,
     batch_jobs_access_role_id,
-    security_group_id,
-    vpc_id,
     efs_file_system_id,
     compute_env_gpu_id,
     compute_env_cpu_id,
@@ -40,7 +39,22 @@ class AwsBatchStack(Stack):
         create_efs: bool = False,
         **kwargs
     ) -> None:
-        super().__init__(scope, stack_id, **kwargs)
+        # get the default aws region
+        boto_client = boto3.client("sts")
+        aws_region = boto_client.meta.region_name
+        print(f'Using default region: {aws_region}')
+        # get the aws account id
+        aws_account_id = boto_client.get_caller_identity()["Account"]
+        print(f'Using account id: {aws_account_id}')
+        super().__init__(
+            scope,
+            stack_id,
+            env={
+                "region": aws_region,
+                "account": aws_account_id
+            },
+            **kwargs
+        )
 
         # AWS Batch service role
         batch_service_role = iam.Role(
@@ -79,35 +93,44 @@ class AwsBatchStack(Stack):
         )
         Tags.of(batch_jobs_access_role).add("DendroName", f"{stack_id}-BatchJobsAccessRole")
 
-        # Virtual Private Cloud (VPC)
-        vpc = ec2.Vpc(
+        # Use the default VPC
+        ec2_client = boto3.client("ec2")
+        default_vpc_id = ec2_client.describe_vpcs(
+            Filters=[
+                {
+                    "Name": "isDefault",
+                    "Values": ["true"]
+                }
+            ]
+        )["Vpcs"][0]["VpcId"]
+        print(f'Using default vpc: {default_vpc_id}')
+        vpc = ec2.Vpc.from_lookup(
             scope=self,
-            id=vpc_id,
-            max_azs=3, # Availability Zones
+            id=default_vpc_id,
+            is_default=True
         )
-        Tags.of(vpc).add("DendroName", f"{stack_id}-vpc")
 
-        # Security group
-        security_group = ec2.SecurityGroup(
+        # Use the default Security Group
+        default_security_group_id = ec2_client.describe_security_groups(
+            Filters=[
+                {
+                    "Name": "vpc-id",
+                    "Values": [default_vpc_id]
+                },
+                {
+                    "Name": "group-name",
+                    "Values": ["default"]
+                }
+            ]
+        )["SecurityGroups"][0]["GroupId"]
+        print(f'Using default security group: {default_security_group_id}')
+        security_group = ec2.SecurityGroup.from_security_group_id(
             scope=self,
-            id=security_group_id,
-            vpc=vpc,
+            id=default_security_group_id,
+            security_group_id=default_security_group_id,
             allow_all_ipv6_outbound=True,
-            allow_all_outbound=True,
+            allow_all_outbound=True
         )
-        # Allow inbound traffic from the same security group
-        security_group.add_ingress_rule(
-            peer=ec2.Peer.ipv4(vpc.vpc_cidr_block),
-            connection=ec2.Port.all_traffic(),
-            description="Allow inbound traffic from the same security group"
-        )
-        # Additional inbound rules for EFS access
-        security_group.add_ingress_rule(
-            peer=ec2.Peer.ipv4('0.0.0.0/0'),
-            connection=ec2.Port.tcp(2049),  # NFS port
-            description="Allow NFS traffic for EFS access"
-        )
-        Tags.of(security_group).add("DendroName", f"{stack_id}-security-group")
 
         # Create an EFS filesystem
         if create_efs:
@@ -158,6 +181,7 @@ class AwsBatchStack(Stack):
             vpc=vpc,
             instance_types=[
                 ec2.InstanceType("g4dn.2xlarge"), # 8 vCPUs, 32 GiB
+                # ec2.InstanceType("g4dn.4xlarge"), # 16 vCPUs, 64 GiB
             ],
             images=[ecs_machine_image_gpu],
             maxv_cpus=32,
