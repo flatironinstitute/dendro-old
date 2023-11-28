@@ -8,6 +8,7 @@ import subprocess
 import requests
 from ..common._api_request import _processor_get_api_request, _processor_put_api_request
 from ..mock import using_mock
+from ._resource_utilization_log_reader import _resource_utilization_log_reader
 
 
 # This function is called internally by the compute resource daemon through the dendro CLI
@@ -29,36 +30,44 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     proc = _launch_job(job_id=job_id, job_private_key=job_private_key, app_executable=app_executable)
 
     # We are going to be monitoring the output of the job in a separate thread, and it will be communicated to this thread via a queue
-    outq = queue.Queue()
-    output_reader_thread = threading.Thread(target=_output_reader, args=(proc, outq))
-    output_reader_thread.start()
+    console_out_q = queue.Queue()
+    console_out_reader_thread = threading.Thread(target=_output_reader, args=(proc, console_out_q))
+    console_out_reader_thread.start()
 
-    all_output = b''
-    last_newline_index_in_output = -1
+    resource_utilization_log_q = queue.Queue()
+    resource_utilization_log_reader_thread = threading.Thread(target=_resource_utilization_log_reader, args=(resource_utilization_log_q,))
+    resource_utilization_log_reader_thread.start()
+
+    all_console_output = b''
+    last_newline_index_in_console_output = -1
     last_report_console_output_time = time.time()
     console_output_changed = False
-    last_check_job_exists_time = time.time() if not using_mock() else 0
-
-    # Create a function that will handle uploading the latest console output to the dendro system
     console_output_upload_url: Union[str, None] = None
     console_output_upload_url_timestamp = 0
 
+    all_resource_utilization_log = b''
+    last_report_resource_utilization_log_time = time.time()
+    resource_utilization_log_changed = False
+    last_check_job_exists_time = time.time() if not using_mock() else 0
+    resource_utilization_log_upload_url: Union[str, None] = None
+    resource_utilization_log_upload_url_timestamp = 0
+
     def check_for_new_console_output():
-        nonlocal outq
-        nonlocal last_newline_index_in_output
-        nonlocal all_output
+        nonlocal console_out_q
+        nonlocal last_newline_index_in_console_output
+        nonlocal all_console_output
         nonlocal console_output_changed
         while True:
             try:
                 # get the latest output from the job
-                x = outq.get(block=False)
+                x = console_out_q.get(block=False)
 
                 if x == b'\n':
-                    last_newline_index_in_output = len(all_output)
+                    last_newline_index_in_console_output = len(all_console_output)
                 if x == b'\r':
                     # handle carriage return (e.g. in progress bar)
-                    all_output = all_output[:last_newline_index_in_output + 1]
-                all_output += x
+                    all_console_output = all_console_output[:last_newline_index_in_console_output + 1]
+                all_console_output += x
                 console_output_changed = True
             except queue.Empty:
                 break
@@ -71,11 +80,38 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             # every 30 minutes, request a new upload url (the old one expires after 1 hour)
             console_output_upload_url_timestamp = time.time()
             # request a signed upload url for the console output
-            console_output_upload_url = _get_console_output_upload_url(job_id=job_id, job_private_key=job_private_key)
+            console_output_upload_url = _get_upload_url(job_id=job_id, job_private_key=job_private_key, output_name='_console_output')
         if console_output_upload_url is not None:
             _upload_console_output(console_output_upload_url=console_output_upload_url, output=output)
         if using_mock():
             print('MOCK: Console output: ' + output)
+
+    def check_for_new_resource_utilization_log():
+        nonlocal resource_utilization_log_q
+        nonlocal all_resource_utilization_log
+        nonlocal resource_utilization_log_changed
+        while True:
+            try:
+                # get the latest output from the job
+                x = resource_utilization_log_q.get(block=False)
+                all_resource_utilization_log += x
+                resource_utilization_log_changed = True
+            except queue.Empty:
+                break
+
+    def upload_resource_utilization_log(log: str):
+        nonlocal resource_utilization_log_upload_url
+        nonlocal resource_utilization_log_upload_url_timestamp
+        elapsed = time.time() - resource_utilization_log_upload_url_timestamp
+        if elapsed > 60 * 30 / time_scale_factor:
+            # every 30 minutes, request a new upload url (the old one expires after 1 hour)
+            resource_utilization_log_upload_url_timestamp = time.time()
+            # request a signed upload url for the resource utilization log
+            resource_utilization_log_upload_url = _get_upload_url(job_id=job_id, job_private_key=job_private_key, output_name='_resource_utilization_log')
+        if resource_utilization_log_upload_url is not None:
+            _upload_resource_utilization_log(resource_utilization_log_upload_url=resource_utilization_log_upload_url, log=log)
+        if using_mock():
+            print('MOCK: Resource utilization log: ' + log)
 
     num_status_check_failures = 0 # keep track of this so we don't do infinite retries
     succeeded = False # whether we succeeded in running the job without an exception
@@ -93,39 +129,66 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
             else:
                 retcode = None
             check_for_new_console_output()
+            check_for_new_resource_utilization_log()
 
-            if console_output_changed:
-                elapsed = time.time() - last_report_console_output_time
-                run_job_elapsed_time = time.time() - _run_job_timer
-                do_report = False
-                if retcode is not None:
-                    # if the job is finished, report the console output
-                    do_report = True
-                elif run_job_elapsed_time < 60 * 2 / time_scale_factor:
-                    # for the first 2 minutes, report every 10 seconds
-                    if elapsed > 10 / time_scale_factor:
-                        do_report = True
-                elif run_job_elapsed_time < 60 * 10 / time_scale_factor:
-                    # for the next 8 minutes, report every 30 seconds
-                    if elapsed > 30 / time_scale_factor:
-                        do_report = True
+            for output_name in ['console_output', 'resource_utilization_log']:
+                if output_name == 'console_output':
+                    changed = console_output_changed
+                elif output_name == 'resource_utilization_log':
+                    changed = resource_utilization_log_changed
                 else:
-                    # after that, report every 120 seconds
-                    if elapsed > 60 * 2 / time_scale_factor:
+                    raise ValueError('Invalid output name: ' + output_name)
+                if changed:
+                    if output_name == 'console_output':
+                        report_time = last_report_console_output_time
+                    elif output_name == 'resource_utilization_log':
+                        report_time = last_report_resource_utilization_log_time
+                    else:
+                        raise ValueError('Invalid output name: ' + output_name)
+                    elapsed = time.time() - report_time
+                    run_job_elapsed_time = time.time() - _run_job_timer
+                    do_report = False
+                    if retcode is not None:
+                        # if the job is finished, report the output
                         do_report = True
-                if do_report:
-                    # we are going to report the console output
-                    last_report_console_output_time = time.time()
-                    console_output_changed = False
-                    try:
-                        _debug_log('Setting job console output')
-                        # _set_job_console_output(job_id=job_id, job_private_key=job_private_key, console_output=all_output.decode('utf-8'))
-                        upload_console_output(output=all_output.decode('utf-8'))
-                    except Exception as e: # pylint: disable=broad-except
-                        _debug_log('WARNING: problem setting console output: ' + str(e))
-                        print('WARNING: problem setting console output: ' + str(e))
+                    elif run_job_elapsed_time < 60 * 2 / time_scale_factor:
+                        # for the first 2 minutes, report every 10 seconds
+                        if elapsed > 10 / time_scale_factor:
+                            do_report = True
+                    elif run_job_elapsed_time < 60 * 10 / time_scale_factor:
+                        # for the next 8 minutes, report every 30 seconds
+                        if elapsed > 30 / time_scale_factor:
+                            do_report = True
+                    else:
+                        # after that, report every 120 seconds
+                        if elapsed > 60 * 2 / time_scale_factor:
+                            do_report = True
+                    if do_report:
+                        # we are going to report the output
+                        if output_name == 'console_output':
+                            last_report_console_output_time = time.time()
+                            console_output_changed = False
+                            try:
+                                _debug_log('Setting job console output')
+                                # _set_job_console_output(job_id=job_id, job_private_key=job_private_key, console_output=all_output.decode('utf-8'))
+                                upload_console_output(output=all_console_output.decode('utf-8'))
+                            except Exception as e: # pylint: disable=broad-except
+                                _debug_log('WARNING: problem setting console output: ' + str(e))
+                                print('WARNING: problem setting console output: ' + str(e))
+                        elif output_name == 'resource_utilization_log':
+                            last_report_resource_utilization_log_time = time.time()
+                            resource_utilization_log_changed = False
+                            try:
+                                _debug_log('Setting job resource utilization log')
+                                upload_resource_utilization_log(log=all_resource_utilization_log.decode('utf-8'))
+                            except Exception as e:
+                                _debug_log('WARNING: problem setting resource utilization log: ' + str(e))
+                                print('WARNING: problem setting resource utilization log: ' + str(e))
+                        else:
+                            raise ValueError('Invalid output name: ' + output_name)
+
             if retcode is not None:
-                # now that we have set the final console output we can raise an exception if the job failed
+                # now that we have set the final console output and resource utilization log we can raise an exception if the job failed
                 if retcode != 0:
                     raise ValueError(f'Error running job: return code {retcode}')
                 break
@@ -190,17 +253,27 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
         else:
             print('No DENDRO_JOB_CLEANUP_DIR environment variable set. Not cleaning up.')
 
-        output_reader_thread.join()
+        console_out_reader_thread.join()
+        resource_utilization_log_reader_thread.join()
 
     check_for_new_console_output()
     if console_output_changed:
         _debug_log('Setting final job console output')
         try:
             # _set_job_console_output(job_id=job_id, job_private_key=job_private_key, console_output=all_output.decode('utf-8'))
-            upload_console_output(output=all_output.decode('utf-8'))
+            upload_console_output(output=all_console_output.decode('utf-8'))
         except Exception as e: # pylint: disable=broad-except
             _debug_log('WARNING: problem setting final console output: ' + str(e))
             print('WARNING: problem setting final console output: ' + str(e))
+
+    check_for_new_resource_utilization_log()
+    if resource_utilization_log_changed:
+        _debug_log('Setting final job resource utilization log')
+        try:
+            upload_resource_utilization_log(log=all_resource_utilization_log.decode('utf-8'))
+        except Exception as e:
+            _debug_log('WARNING: problem setting final resource utilization log: ' + str(e))
+            print('WARNING: problem setting final resource utilization log: ' + str(e))
 
     # Set the final job status
     _debug_log('Finalizing job')
@@ -326,9 +399,9 @@ def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Op
     if not resp['success']:
         raise SetJobStatusError(f'Error setting job status: {resp["error"]}')
 
-def _get_console_output_upload_url(*, job_id: str, job_private_key: str) -> str:
-    """Get a signed upload URL for the console output of a job"""
-    url_path = f'/api/processor/jobs/{job_id}/outputs/_console_output/upload_url'
+def _get_upload_url(*, job_id: str, job_private_key: str, output_name: str) -> str:
+    """Get a signed upload URL for the output (console or resource log) of a job"""
+    url_path = f'/api/processor/jobs/{job_id}/outputs/{output_name}/upload_url'
     headers = {
         'job-private-key': job_private_key
     }
@@ -348,6 +421,17 @@ def _upload_console_output(*, console_output_upload_url: str, output: str):
     r = requests.put(console_output_upload_url, data=output.encode('utf-8'), timeout=60)
     if r.status_code != 200:
         raise UploadConsoleOutputError(f'Error uploading console output: {r.status_code} {r.text}')
+
+class UploadResourceUtilizationLogError(Exception):
+    pass
+
+def _upload_resource_utilization_log(*, resource_utilization_log_upload_url: str, log: str):
+    """Upload the resource utilization log of a job to the cloud bucket"""
+    if using_mock():
+        return
+    r = requests.put(resource_utilization_log_upload_url, data=log.encode('utf-8'), timeout=60)
+    if r.status_code != 200:
+        raise UploadResourceUtilizationLogError(f'Error uploading resource utilization log: {r.status_code} {r.text}')
 
 # This was the old method
 # def _set_job_console_output(*, job_id: str, job_private_key: str, console_output: str):

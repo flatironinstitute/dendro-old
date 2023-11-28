@@ -22,6 +22,7 @@ const useJob = (jobId: string) => {
     }, [])
 
     const [jobConsoleOutput, setJobConsoleOutput] = useState<string | undefined>()
+    const [jobResourceUtilizationLog, setJobResourceUtilizationLog] = useState<string | undefined>()
 
     const auth = useGithubAuth()
 
@@ -43,12 +44,21 @@ const useJob = (jobId: string) => {
                     setJobConsoleOutput(text)
                 }
             }
+
+            if (job?.resourceUtilizationLogUrl) {
+                // fetch resource utilization log
+                const resp = await fetch(job.resourceUtilizationLogUrl)
+                if (resp.ok) {
+                    const text = await resp.text()
+                    setJobResourceUtilizationLog(text)
+                }
+            }
         })()
         return () => {
             canceled = true
         }
     }, [jobId, auth, refreshCode])
-    return {job, refreshJob, jobConsoleOutput}
+    return {job, refreshJob, jobConsoleOutput, jobResourceUtilizationLog}
 }
 
 const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
