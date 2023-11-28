@@ -1,5 +1,5 @@
 import { GithubAuthData } from "../GithubAuth/GithubAuthContext";
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, DendroComputeResource, DendroFile, DendroJob, DendroProject, isDendroFile, isDendroProject } from "../types/dendro-types";
+import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, DendroComputeResource, DendroFile, DendroJob, DendroProject, isDendroFile, isDendroJob, isDendroProject } from "../types/dendro-types";
 import getAuthorizationHeaderForUrl from "./getAuthorizationHeaderForUrl";
 
 type Auth = GithubAuthData
@@ -446,6 +446,12 @@ export const fetchJobsForProject = async (projectId: string, auth: Auth): Promis
     const url = `${apiBase}/api/gui/projects/${projectId}/jobs`
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchJobsForProject: ${response.error}`)
+    for (const job of response.jobs) {
+        if (!isDendroJob(job)) {
+            console.warn(job)
+            throw Error('Invalid job.')
+        }
+    }
     return response.jobs
 }
 

@@ -21,7 +21,12 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
         if (!appBeingEdited) return
         setNewAppName(appBeingEdited.name)
         setNewSpecUri(appBeingEdited.specUri || '')
-        setNewAwsBatchOpts(appBeingEdited.awsBatch)
+        if ((appBeingEdited.awsBatch) && (appBeingEdited.awsBatch.useAwsBatch)) {
+            setNewAwsBatchOpts(appBeingEdited.awsBatch)
+        }
+        else {
+            setNewAwsBatchOpts(undefined)
+        }
         setNewSlurmOpts(appBeingEdited.slurm)
     }, [appBeingEdited])
     
@@ -156,44 +161,43 @@ type EditAwsBatchOptsProps = {
 }
 
 const EditAwsBatchOpts: FunctionComponent<EditAwsBatchOptsProps> = ({value, onChange, setValid}) => {
-    const [internalJobQueue, setInternalJobQueue] = useState('')
-    const [internalJobDefinition, setInternalJobDefinition] = useState('')
+    const [internalUseAwsBatch, setInternalUseAwsBatch] = useState(false)
 
     useEffect(() => {
         if (!value) {
-            setInternalJobQueue('')
-            setInternalJobDefinition('')
+            setInternalUseAwsBatch(false)
             return
         }
-        setInternalJobQueue(value.jobQueue)
-        setInternalJobDefinition(value.jobDefinition)
+        setInternalUseAwsBatch(!!value.useAwsBatch)
     }, [value])
 
     useEffect(() => {
-        if (!internalJobQueue && !internalJobDefinition) {
-            onChange(undefined)
-            setValid(true)
-            return
-        }
-        if (!internalJobQueue || !internalJobDefinition) {
-            setValid(false)
-            return
-        }
+        // if (!internalJobQueue && !internalJobDefinition) {
+        //     onChange(undefined)
+        //     setValid(true)
+        //     return
+        // }
+        // if (!internalJobQueue || !internalJobDefinition) {
+        //     setValid(false)
+        //     return
+        // }
+        // onChange({
+        //     jobQueue: internalJobQueue,
+        //     jobDefinition: internalJobDefinition
+        // })
         onChange({
-            jobQueue: internalJobQueue,
-            jobDefinition: internalJobDefinition
+            useAwsBatch: internalUseAwsBatch
         })
         setValid(true)
-    }, [internalJobQueue, internalJobDefinition, onChange, setValid])
+    }, [setValid, onChange, internalUseAwsBatch])
 
     return (
         <div>
             <h4>AWS Batch</h4>
-            {/* Input field for the job queue */}
             <div>
                 <table>
                     <tbody>
-                        <tr>
+                        {/* <tr>
                             <td>Job queue</td>
                             <td>
                                 <input type="text" id="new-aws-batch-job-queue" value={internalJobQueue} onChange={e => setInternalJobQueue(e.target.value)} />                
@@ -203,6 +207,12 @@ const EditAwsBatchOpts: FunctionComponent<EditAwsBatchOptsProps> = ({value, onCh
                             <td>Job definition</td>
                             <td>
                                 <input type="text" id="new-aws-batch-job-definition" value={internalJobDefinition} onChange={e => setInternalJobDefinition(e.target.value)} />
+                            </td>
+                        </tr> */}
+                        <tr>
+                            <td>Use AWS Batch</td>
+                            <td>
+                                <input type="checkbox" id="new-aws-batch-use-aws-batch" checked={internalUseAwsBatch} onChange={e => setInternalUseAwsBatch(e.target.checked)} />
                             </td>
                         </tr>
                     </tbody>

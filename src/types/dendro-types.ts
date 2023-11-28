@@ -63,9 +63,9 @@ export type DendroJobInputParameter = {
 export const isDendroJobInputParameter = (x: any): x is DendroJobInputParameter => {
     return validateObject(x, {
         name: isString,
-        value: optional(isString),
+        value: optional(() => (true)),
         secret: optional(isBoolean)
-    })
+    }, {callback: (e) => {console.warn(e);}})
 }
 
 export type DendroJobOutputFile = {
@@ -96,7 +96,7 @@ export const isComputeResourceSpecProcessorParameter = (x: any): x is ComputeRes
         name: isString,
         description: isString,
         type: isString,
-        default: optional(isString),
+        default: optional(() => (true)),
         options: optional(isArrayOf(isOneOf([isString, isNumber]))),
         secret: isBoolean
     })
@@ -136,7 +136,7 @@ export type ComputeResourceSpecProcessorAttribute = {
 export const isComputeResourceSpecProcessorAttribute = (x: any): x is ComputeResourceSpecProcessorAttribute => {
     return validateObject(x, {
         name: isString,
-        value: isString
+        value: () => (true)
     })
 }
 
@@ -169,7 +169,7 @@ export const isComputeResourceSpecProcessor = (x: any): x is ComputeResourceSpec
         parameters: isArrayOf(isComputeResourceSpecProcessorParameter),
         attributes: isArrayOf(isComputeResourceSpecProcessorAttribute),
         tags: isArrayOf(isComputeResourceSpecProcessorTag)
-    })
+    }, {callback: (e) => {console.warn(e);}})
 }
 
 export type DendroJob = {
@@ -199,6 +199,7 @@ export type DendroJob = {
     outputFileIds?: string[]
     processorSpec: ComputeResourceSpecProcessor
     dandiApiKey?: string
+    deleted?: boolean
 }
 
 export const isDendroJob = (x: any): x is DendroJob => {
@@ -228,8 +229,9 @@ export const isDendroJob = (x: any): x is DendroJob => {
         timestampFinished: optional(isNumber),
         outputFileIds: optional(isArrayOf(isString)),
         processorSpec: isComputeResourceSpecProcessor,
-        dandiApiKey: optional(isString)
-    })
+        dandiApiKey: optional(isString),
+        deleted: optional(isBoolean)
+    }, {callback: (e) => {console.warn(e);}})
 }
 
 export type DendroFile = {
@@ -259,14 +261,16 @@ export const isDendroFile = (x: any): x is DendroFile => {
 }
 
 export type ComputeResourceAwsBatchOpts = {
-    jobQueue: string
-    jobDefinition: string
+    jobQueue?: string // obsolete
+    jobDefinition?: string
+    useAwsBatch?: boolean
 }
 
 export const isComputeResourceAwsBatchOpts = (x: any): x is ComputeResourceAwsBatchOpts => {
     return validateObject(x, {
-        jobQueue: isString,
-        jobDefinition: isString
+        jobQueue: optional(isString), // obsolete
+        jobDefinition: optional(isString),
+        useAwsBatch: optional(isBoolean)
     })
 }
 
@@ -312,7 +316,8 @@ export type ComputeResourceSpecApp = {
     description: string
     processors: ComputeResourceSpecProcessor[]
     appImage?: string
-    appExecutable?: string
+    appExecutable?: string,
+    requiresGpu?: boolean
 }
 
 export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp => {
@@ -321,7 +326,8 @@ export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp =>
         description: isString,
         processors: isArrayOf(isComputeResourceSpecProcessor),
         appImage: isString,
-        appExecutable: isString
+        appExecutable: isString,
+        requiresGpu: isBoolean
     })
 }
 
@@ -420,5 +426,19 @@ export const isProcessorGetJobResponse = (x: any): x is ProcessorGetJobResponse 
         inputs: isArrayOf(isProcessorGetJobResponseInput),
         outputs: isArrayOf(isProcessorGetJobResponseOutput),
         parameters: isArrayOf(isProcessorGetJobResponseParameter)
+    })
+}
+
+export type ComputeResourceUserUsage = {
+    computeResourceId: string
+    userId: string
+    jobsIncludingDeleted: DendroJob[]
+}
+
+export const isComputeResourceUserUsage = (x: any): x is ComputeResourceUserUsage => {
+    return validateObject(x, {
+        computeResourceId: isString,
+        userId: isString,
+        jobsIncludingDeleted: isArrayOf(isDendroJob)
     })
 }

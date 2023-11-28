@@ -67,7 +67,10 @@ async def fetch_project_files(project_id: str) -> List[DendroFile]:
 async def fetch_project_jobs(project_id: str, include_private_keys=False) -> List[DendroJob]:
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
-    jobs = await jobs_collection.find({'projectId': project_id}).to_list(length=None) # type: ignore
+    jobs = await jobs_collection.find({
+        'projectId': project_id,
+        'deleted': {'$ne': True}
+    }).to_list(length=None) # type: ignore
     for job in jobs:
         _remove_id_field(job)
     jobs = [DendroJob(**job) for job in jobs] # validate jobs
@@ -105,9 +108,18 @@ async def delete_all_files_in_project(project_id: str):
 async def delete_all_jobs_in_project(project_id: str):
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
-    await jobs_collection.delete_many({
-        'projectId': project_id
-    })
+    jobs = await jobs_collection.find({
+        'projectId': project_id,
+        'deleted': {'$ne': True}
+    }).to_list(length=None) # type: ignore
+    for job in jobs:
+        jobs_collection.update_one({
+            'jobId': job['jobId']
+        }, {
+            '$set': {
+                'deleted': True
+            }
+        })
 
 async def insert_project(project: DendroProject):
     client = _get_mongo_client()
@@ -181,11 +193,13 @@ async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[
     if statuses is not None:
         jobs = await jobs_collection.find({
             'computeResourceId': compute_resource_id,
-            'status': {'$in': statuses}
+            'status': {'$in': statuses},
+            'deleted': {'$ne': True}
         }).to_list(length=None) # type: ignore
     else:
         jobs = await jobs_collection.find({
-            'computeResourceId': compute_resource_id
+            'computeResourceId': compute_resource_id,
+            'deleted': {'$ne': True}
         }).to_list(length=None) # type: ignore
     for job in jobs:
         _remove_id_field(job)
@@ -246,8 +260,13 @@ async def update_job(job_id: str, update: dict):
 async def delete_job(job_id: str):
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
-    await jobs_collection.delete_one({
+
+    await jobs_collection.update_one({
         'jobId': job_id
+    }, {
+        '$set': {
+            'deleted': True
+        }
     })
 
 async def insert_job(job: DendroJob):
@@ -306,3 +325,18 @@ async def set_dendro_api_key_for_user(user_id: str, dendro_api_key: str):
             'dendroApiKey': dendro_api_key
         }
     }, upsert=True)
+
+async def fetch_jobs_including_deleted(*, compute_resource_id: str, user_id: str, include_private_keys=False):
+    client = _get_mongo_client()
+    jobs_collection = client['dendro']['jobs']
+    jobs = await jobs_collection.find({
+        'computeResourceId': compute_resource_id,
+        'userId': user_id
+    }).to_list(length=None) # type: ignore
+    for job in jobs:
+        _remove_id_field(job)
+    jobs = [DendroJob(**job) for job in jobs] # validate jobs
+    if not include_private_keys:
+        for job in jobs:
+            job.jobPrivateKey = '' # hide the private key
+    return jobs

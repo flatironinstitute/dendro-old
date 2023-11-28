@@ -4,6 +4,9 @@ import { useProject } from "./ProjectPageContext"
 import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay"
 import { useComputeResources } from "../ComputeResourcesPage/ComputeResourcesContext"
 import ComputeResourceAppsTable2 from "./ComputeResourceAppsTable2/ComputeResourceAppsTable2"
+import ComputeResourceUsageComponent from "./ComputeResourceUsageComponent/ComputeResourceUsageComponent"
+import { useGithubAuth } from "../../GithubAuth/useGithubAuth"
+import UserIdComponent from "../../UserIdComponent"
 
 type Props = {
     //
@@ -55,6 +58,11 @@ const SelectComputeResourceSubsection: FunctionComponent = () => {
 
     const computeResourceId: string | undefined = project ? (project.computeResourceId || import.meta.env.VITE_DEFAULT_COMPUTE_RESOURCE_ID) : undefined
 
+    const auth = useGithubAuth()
+
+    // important to not show usage by default so that we don't unnecessarily load all the jobs (incl. deleted)
+    const [usageVisible, setUsageVisible] = useState(false)
+
     return (
         <div>
             {
@@ -78,6 +86,21 @@ const SelectComputeResourceSubsection: FunctionComponent = () => {
             {project && computeResourceId && <ComputeResourceAppsTable2
                 computeResourceId={computeResourceId}
             />}
+            <div>&nbsp;</div>
+            <hr />
+            <div>&nbsp;</div>
+            {
+                usageVisible ? (
+                    <>
+                        <h3>Usage for this compute resource by <UserIdComponent userId={auth.userId} /></h3>
+                        {project && computeResourceId && (
+                            <ComputeResourceUsageComponent computeResourceId={computeResourceId} />
+                        )}
+                    </>
+                ) : (
+                    <Hyperlink onClick={() => setUsageVisible(true)}>Show usage for this compute resource</Hyperlink>
+                )
+            }
         </div>
     )
 }
