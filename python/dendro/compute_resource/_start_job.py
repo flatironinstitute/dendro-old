@@ -216,7 +216,7 @@ def _run_container_job(*,
         cmd2 = [
             'docker', 'run', '-it'
         ]
-        cmd2.extend(['v', f'{tmpdir}:/tmp'])
+        cmd2.extend(['-v', f'{tmpdir}:/tmp'])
         cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
         for k, v in env_vars.items():
             cmd2.extend(['-e', f'{k}={v}'])

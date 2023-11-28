@@ -35,7 +35,8 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     console_out_reader_thread.start()
 
     resource_utilization_log_q = queue.Queue()
-    resource_utilization_log_reader_thread = threading.Thread(target=_resource_utilization_log_reader, args=(resource_utilization_log_q,))
+    resource_utilization_log_exit_event = threading.Event()
+    resource_utilization_log_reader_thread = threading.Thread(target=_resource_utilization_log_reader, args=(resource_utilization_log_q, resource_utilization_log_exit_event))
     resource_utilization_log_reader_thread.start()
 
     all_console_output = b''
@@ -253,8 +254,13 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
         else:
             print('No DENDRO_JOB_CLEANUP_DIR environment variable set. Not cleaning up.')
 
-        console_out_reader_thread.join()
-        resource_utilization_log_reader_thread.join()
+        console_out_reader_thread.join(timeout=10)
+        if console_out_reader_thread.is_alive():
+            _debug_log('WARNING: console output reader thread did not exit')
+        resource_utilization_log_exit_event.set()
+        resource_utilization_log_reader_thread.join(timeout=10)
+        if resource_utilization_log_reader_thread.is_alive():
+            _debug_log('WARNING: resource utilization log reader thread did not exit')
 
     check_for_new_console_output()
     if console_output_changed:

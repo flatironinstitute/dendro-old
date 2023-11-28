@@ -21,6 +21,8 @@ jobs:
       run: pip install pytest pytest-asyncio pytest-cov pyright boto3 kachery_cloud flake8
     - name: Install additional packages used by api_helpers
       run: cd python && pip install -e .[api]
+    - name: Install additional optional packages
+      run: pip install GPUtil
     - name: Install packages needed by iaac/aws_batch
       run: cd iaac/aws_batch && pip install -r requirements.txt
     - name: Run linter checks

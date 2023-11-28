@@ -2,11 +2,20 @@ import json
 import queue
 import time
 import psutil
+import threading
 
 
-def _resource_utilization_log_reader(outq: queue.Queue):
+def _resource_utilization_log_reader(outq: queue.Queue, exit_event: threading.Event):
     """This is a thread that makes a resource utilization log and puts it into a queue"""
+    last_report_timestamp = 0
     while True:
+        if exit_event.is_set():
+            break
+        elapsed_since_report = time.time() - last_report_timestamp
+        if elapsed_since_report < 10:
+            time.sleep(0.1)
+            continue
+        last_report_timestamp = time.time()
         cpu_percent = psutil.cpu_percent()
         virtual_memory = psutil.virtual_memory()
         disk_io_counters = psutil.disk_io_counters()
@@ -52,8 +61,8 @@ def _resource_utilization_log_reader(outq: queue.Queue):
                 'loads': gpu_loads
             } if gpu_loads else None
         }
-        outq.put(json.dumps(log_record) + '\n')
-        time.sleep(10)
+        line = (json.dumps(log_record) + '\n').encode('utf-8') # important to encode this string
+        outq.put(line)
 
 def _get_gpu_loads():
     """This is a helper function for _resource_utilization_log_reader"""
