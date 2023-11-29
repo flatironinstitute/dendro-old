@@ -47,7 +47,7 @@ def get_role_arn(role_name: str):
         raise Exception(f"Error getting role ARN: {e}")
 
 
-def create_job_definition(
+def create_aws_batch_job_definition(
     dendro_app_name: str,
     dendro_app_image_uri: str,
     job_role_name: str,

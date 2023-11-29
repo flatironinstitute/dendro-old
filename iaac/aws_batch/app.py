@@ -9,7 +9,6 @@ app = cdk.App()
 
 aws_batch_stack = AwsBatchStack(
     scope=app,
-    stack_id="DendroBatchStack",
     create_efs=True,
 )
 

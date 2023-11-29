@@ -1,0 +1,10 @@
+stack_id = "DendroBatchStack"
+
+batch_service_role_id = f"{stack_id}-BatchServiceRole"
+ecs_instance_role_id = f"{stack_id}-EcsInstanceRole"
+batch_jobs_access_role_id = f"{stack_id}-BatchJobsAccessRole"
+efs_file_system_id = f"{stack_id}-EfsFileSystem"
+compute_env_gpu_id = f"{stack_id}-compute-env-gpu"
+compute_env_cpu_id = f"{stack_id}-compute-env-cpu"
+job_queue_gpu_id = f"{stack_id}-job-queue-gpu"
+job_queue_cpu_id = f"{stack_id}-job-queue-cpu"
