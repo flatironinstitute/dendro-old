@@ -128,7 +128,8 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
 
     useEffect(() => {
         // initialize the expanded groups
-        const numInitialLevelsExpanded = 1
+        // const numInitialLevelsExpanded = 1
+        const numInitialLevelsExpanded = 0
         const groupNames = nodes.filter(n => (n.type === 'group')).map(n => n.name)
         const eg = new Set<string>()
         for (const name of groupNames) {
@@ -151,9 +152,12 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
 
         nodes.forEach(node => {
             const aa = node.name.split('.')
+            let visible = true
             for (let i = 0; i < aa.length - 1; i++) {
                 const group = aa.slice(0, i + 1).join('.')
-                if (!expandedGroups.has(group)) return
+                if (!expandedGroups.has(group)) {
+                    visible = false
+                }
             }
             if (node.type === 'group') {
                 ret.push(
@@ -167,6 +171,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                                 path: node.name
                             })
                         }}
+                        visible={visible}
                     />
                 )
             }
@@ -187,6 +192,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                             })
                         }}
                         fileLinks={fileLinks}
+                        visible={visible}
                     />)
                 }
                 else if (node.fieldType === 'output') {
@@ -205,6 +211,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                             })
                         }}
                         fileLinks={fileLinks}
+                        visible={visible}
                     />)
                 }
                 else if (node.fieldType === 'parameter') {
@@ -232,6 +239,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                             })
                         }}
                         readOnly={readOnly}
+                        visible={visible}
                     />)
                 }
                 else {
@@ -268,12 +276,12 @@ type GroupRowProps = {
     name: string
     expanded: boolean
     toggleExpanded: () => void
+    visible?: boolean
 }
 
-const GroupRow: FunctionComponent<GroupRowProps> = ({name, expanded, toggleExpanded}) => {
+const GroupRow: FunctionComponent<GroupRowProps> = ({name, expanded, toggleExpanded, visible}) => {
     return (
-        <tr>
-            <td style={{width: 14}}></td>
+        <tr style={{display: visible ? undefined : 'none'}}>
             <td colSpan={3} style={{fontWeight: 'bold'}}>
                 <span onClick={toggleExpanded} style={{cursor: 'pointer'}}>
                     {indentForName(name)}
@@ -297,9 +305,10 @@ type InputRowProps = {
     value?: string
     setValid?: (valid: boolean) => void
     fileLinks?: boolean
+    visible?: boolean
 }
 
-const InputRow: FunctionComponent<InputRowProps> = ({name, description, value, setValid, fileLinks}) => {
+const InputRow: FunctionComponent<InputRowProps> = ({name, description, value, setValid, fileLinks, visible}) => {
     const {projectId, openTab} = useProject()
     const {setRoute} = useRoute()
     useEffect(() => {
@@ -314,8 +323,7 @@ const InputRow: FunctionComponent<InputRowProps> = ({name, description, value, s
         })
     }, [openTab, setRoute, projectId])
     return (
-        <tr>
-            <td></td>
+        <tr style={{display: visible ? undefined : 'none'}}>
             <td style={nameColumnStyle}>{indentForName(name)}{baseName(name)}</td>
             <td>{
                 fileLinks && value ? (
@@ -339,9 +347,10 @@ type OutputRowProps = {
     value?: string
     setValid?: (valid: boolean) => void
     fileLinks?: boolean
+    visible?: boolean
 }
 
-const OutputRow: FunctionComponent<OutputRowProps> = ({name, description, value, setValid, fileLinks}) => {
+const OutputRow: FunctionComponent<OutputRowProps> = ({name, description, value, setValid, fileLinks, visible}) => {
     const {projectId, openTab} = useProject()
     const {setRoute} = useRoute()
     useEffect(() => {
@@ -357,8 +366,7 @@ const OutputRow: FunctionComponent<OutputRowProps> = ({name, description, value,
     }, [openTab, setRoute, projectId])
     return (
         <tr>
-            <td></td>
-            <td style={nameColumnStyle}>{indentForName(name)}{baseName(name)}</td>
+            <td style={{...nameColumnStyle, display: visible ? undefined : 'none'}}>{indentForName(name)}{baseName(name)}</td>
             <td>{
                 fileLinks && value ? (
                     <Hyperlink
@@ -383,14 +391,14 @@ type ParameterRowProps = {
     setValid: (valid: boolean) => void
     readOnly?: boolean
     secret?: boolean
+    visible?: boolean
 }
 
-const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, nwbFile, setValue, setValid, readOnly, secret}) => {
+const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, nwbFile, setValue, setValid, readOnly, secret, visible}) => {
     const {type, name, description} = parameter
     const [isValid, setIsValid] = useState<boolean>(false)
     return (
-        <tr>
-            <td></td>
+        <tr style={{display: visible ? undefined : 'none'}}>
             <td title={`${name} (${type})`} style={nameColumnStyle}>
                 <span
                     style={{color: readOnly || isValid ? 'black' : 'red'}}

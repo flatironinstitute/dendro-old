@@ -123,7 +123,6 @@ const DandiUploadWindow: FunctionComponent<DandiUploadWindowProps> = ({ dandiUpl
                         <tr>
                             <td>DANDI Instance: </td>
                             <td>{dandiUploadTask.dandiInstance}</td>
-                            <td></td>
                         </tr>
                         <tr>
                             <td>Files: </td>

@@ -297,9 +297,10 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             </div>
             <ModalWindow
                 open={runSpikeSortingWindowVisible}
-                onClose={closeRunSpikeSortingWindow}
             >
                 <RunBatchSpikeSortingWindow
+                    width={0}
+                    height={0}
                     filePaths={spikeSortingFilePaths}
                     onClose={closeRunSpikeSortingWindow}
                 />
