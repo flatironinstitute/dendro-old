@@ -1,5 +1,5 @@
 import { GithubAuthData } from "../GithubAuth/GithubAuthContext";
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, DendroComputeResource, DendroFile, DendroJob, DendroProject, isDendroFile, isDendroJob, isDendroProject } from "../types/dendro-types";
+import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, DendroComputeResource, DendroFile, DendroJob, DendroJobRequiredResources, DendroProject, isDendroFile, isDendroJob, isDendroProject } from "../types/dendro-types";
 import getAuthorizationHeaderForUrl from "./getAuthorizationHeaderForUrl";
 
 type Auth = GithubAuthData
@@ -386,11 +386,12 @@ export const createJob = async (
         jobDefinition: DendroProcessingJobDefinition,
         processorSpec: ComputeResourceSpecProcessor,
         files: DendroFile[],
-        batchId?: string
+        batchId?: string,
+        requiredResources: DendroJobRequiredResources
     },
     auth: Auth
 ) : Promise<string> => {
-    const {projectId, jobDefinition, processorSpec, files, batchId} = a
+    const {projectId, jobDefinition, processorSpec, files, batchId, requiredResources} = a
     const processorName = jobDefinition.processorName
     const inputFiles = jobDefinition.inputFiles
     const inputParameters = jobDefinition.inputParameters
@@ -426,7 +427,8 @@ export const createJob = async (
         inputParameters,
         outputFiles,
         processorSpec,
-        batchId
+        batchId,
+        requiredResources
     }
     if (dandiApiKey) {
         body.dandiApiKey = dandiApiKey

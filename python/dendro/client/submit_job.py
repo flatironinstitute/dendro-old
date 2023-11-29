@@ -2,7 +2,7 @@ from typing import Any, List, Union
 import os
 from pydantic import BaseModel
 from .Project import Project
-from ..common.dendro_types import CreateJobRequest, CreateJobResponse, CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter, ComputeResourceSpecProcessor, DendroJob
+from ..common.dendro_types import CreateJobRequest, CreateJobResponse, CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter, ComputeResourceSpecProcessor, DendroJob, DendroJobRequiredResources
 from ..common._api_request import _client_post_api_request
 
 
@@ -25,7 +25,8 @@ def submit_job(*,
     output_files: List[SubmitJobOutputFile],
     parameters: List[SubmitJobParameter],
     batch_id: Union[str, None] = None,
-    rerun_policy: str = 'never' # always | never | if_failed
+    rerun_policy: str = 'never', # always | never | if_failed
+    required_resources: DendroJobRequiredResources
 ):
     """Submit a job to the Dendro compute service.
 
@@ -123,7 +124,8 @@ def submit_job(*,
         inputParameters=request_parameters,
         processorSpec=processor_spec,
         batchId=batch_id,
-        dandiApiKey=os.environ.get('DANDI_API_KEY', None)
+        dandiApiKey=os.environ.get('DANDI_API_KEY', None),
+        requiredResources=required_resources
     )
 
     dendro_api_key = os.environ.get('DENDRO_API_KEY', None)

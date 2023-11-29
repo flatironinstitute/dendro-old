@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useMemo } from "react";
 import Hyperlink from "../../../../components/Hyperlink";
 import { createJob, DendroProcessingJobDefinition } from "../../../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../../../GithubAuth/useGithubAuth";
-import { DendroJob } from "../../../../types/dendro-types";
+import { DendroJob, DendroJobRequiredResources } from "../../../../types/dendro-types";
 import { useProject } from "../../ProjectPageContext";
 import { isElectricalSeriesPathParameter } from "../../EditJobDefinitionWindow/EditJobDefinitionWindow";
 import { useModalDialog } from "../../../../ApplicationBar";
@@ -106,12 +106,19 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
                 }
             ]
         }
+        const requiredResources: DendroJobRequiredResources = {
+            numCpus: 4,
+            numGpus: 0,
+            memoryGb: 8,
+            timeSec: 3600
+        }
         await createJob({
             projectId,
             jobDefinition,
             processorSpec: spikeSortingFigurlProcessor,
             files,
-            batchId: undefined
+            batchId: undefined,
+            requiredResources
         }, auth)
     }, [spikeSortingFigurlProcessor, projectId, recordingFileName, auth, fileName, electricalSeriesPath, files])
 

@@ -97,13 +97,16 @@ class JobManager:
         try:
             print(f'Starting job {job_id} {processor_name}')
             from ._start_job import _start_job
+            if job.requiredResources is None:
+                raise Exception('Cannot start job... requiredResources is None')
             return _start_job(
                 job_id=job_id,
                 job_private_key=job_private_key,
                 processor_name=processor_name,
                 app=app,
                 run_process=run_process,
-                return_shell_command=return_shell_command
+                return_shell_command=return_shell_command,
+                required_resources=job.requiredResources
             )
         except Exception as e: # pylint: disable=broad-except
             # do a traceback

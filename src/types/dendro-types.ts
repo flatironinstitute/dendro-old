@@ -172,6 +172,38 @@ export const isComputeResourceSpecProcessor = (x: any): x is ComputeResourceSpec
     }, {callback: (e) => {console.warn(e);}})
 }
 
+export type DendroJobRequiredResources = {
+    numCpus: number
+    numGpus: number
+    memoryGb: number
+    timeSec: number
+}
+
+export const isDendroJobRequiredResources = (x: any): x is DendroJobRequiredResources => {
+    return validateObject(x, {
+        numCpus: isNumber,
+        numGpus: isNumber,
+        memoryGb: isNumber,
+        timeSec: isNumber
+    })
+}
+
+export type DendroJobUsedResources = {
+    numCpus: number
+    numGpus: number
+    memoryGb: number
+    timeSec: number
+}
+
+export const isDendroJobUsedResources = (x: any): x is DendroJobUsedResources => {
+    return validateObject(x, {
+        numCpus: isNumber,
+        numGpus: isNumber,
+        memoryGb: isNumber,
+        timeSec: isNumber
+    })
+}
+
 export type DendroJob = {
     projectId: string
     jobId: string
@@ -183,6 +215,8 @@ export type DendroJob = {
     inputFileIds: string[]
     inputParameters: DendroJobInputParameter[]
     outputFiles: DendroJobOutputFile[]
+    requiredResources?: DendroJobRequiredResources
+    usedResources?: DendroJobUsedResources
     timestampCreated: number
     computeResourceId: string
     status: 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
@@ -214,6 +248,8 @@ export const isDendroJob = (x: any): x is DendroJob => {
         inputFileIds: isArrayOf(isString),
         inputParameters: isArrayOf(isDendroJobInputParameter),
         outputFiles: isArrayOf(isDendroJobOutputFile),
+        requiredResources: optional(isDendroJobRequiredResources),
+        usedResources: optional(isDendroJobUsedResources),
         timestampCreated: isNumber,
         computeResourceId: isString,
         status: isOneOf([isEqualTo('pending'), isEqualTo('queued'), isEqualTo('starting'), isEqualTo('running'), isEqualTo('completed'), isEqualTo('failed')]),

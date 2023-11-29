@@ -1,6 +1,7 @@
 from typing import List
-from warnings import warn
 import os
+
+from ..common.dendro_types import DendroJobRequiredResources
 
 
 # You must first setup the AWS credentials
@@ -17,7 +18,8 @@ def _run_job_in_aws_batch(
     app_name: str,
     requires_gpu: bool,
     container: str, # for verifying consistent with job definition
-    command: str
+    command: str,
+    required_resources: DendroJobRequiredResources
 ):
     import boto3
 
@@ -52,10 +54,10 @@ def _run_job_in_aws_batch(
     job_def_container = job_def['containerProperties']['image']
     if job_def_container != container:
         raise JobDefinitionException(f'Job definition container does not match: {job_def_container} != {container}')
-    job_def_command = job_def['containerProperties']['command']
-    if not _command_matches(job_def_command, command):
-        warn(f'Warning: Job definition command does not match: {job_def_command} != {command}')
-        # raise JobDefinitionException(f'Job definition command does not match: {job_def_command} != {command}')
+    # job_def_command = job_def['containerProperties']['command']
+    # if not _command_matches(job_def_command, command):
+    #     warn(f'Warning: Job definition command does not match: {job_def_command} != {command}')
+    #     # raise JobDefinitionException(f'Job definition command does not match: {job_def_command} != {command}')
 
     job_name = f'dendro-job-{job_id}'
 
@@ -76,6 +78,26 @@ def _run_job_in_aws_batch(
     #         raise KeyError('kachery_cloud_private key is not set even though kachery_cloud_client_id is set')
     #     env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
+    resource_requirements_aws = [
+        {
+            'type': 'VCPU',
+            'value': str(required_resources.numCpus)
+        },
+        {
+            'type': 'MEMORY',
+            # Luiz: "we should define the max RAM always to be just slightly lower than the ram available,
+            # e.g. 63000 instead of 65536 in a ~64 Gb ram instance. This is because the actual ram available
+            # in the machine is usually slightly less than the number announced, and the Compute Environment
+            # will get stuck trying to find an instance with enough ram and never finding one..."
+            'value': str(int(required_resources.memoryGb * 1024 * 0.9))
+        }
+    ]
+    if required_resources.numGpus > 0:
+        resource_requirements_aws.append({
+            'type': 'GPU',
+            'value': str(required_resources.numGpus)
+        })
+
     response = client.submit_job(
         jobName=job_name,
         jobQueue=aws_batch_job_queue,
@@ -88,20 +110,13 @@ def _run_job_in_aws_batch(
                 }
                 for k, v in env_vars.items()
             ],
-            # 'resourceRequirements': [
-            #     {
-            #         'type': 'VCPU',
-            #         'value': '4'
-            #     },
-            #     {
-            #         'type': 'MEMORY',
-            #         'value': '16384'
-            #     },
-            #     # {
-            #     #     'type': 'GPU',
-            #     #     'value': '1'
-            #     # }
-            # ]
+            'resourceRequirements': resource_requirements_aws
+        },
+        timeout={
+            # Add a buffer because dendro will be the one to actually terminate the job and do the cleanup
+            # based on the required_resources.timeSec parameter that the job also has access to.
+            # We assume that the startup and cleanup operations take less than the buffer time.
+            'attemptDurationSeconds': int(required_resources.timeSec + 60 * 10)
         }
     )
 

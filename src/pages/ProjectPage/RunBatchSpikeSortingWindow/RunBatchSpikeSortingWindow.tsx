@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useStat
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
 import Hyperlink from "../../../components/Hyperlink"
 import { DendroProcessingJobDefinition, createJob, defaultJobDefinition, fetchFile, dendroJobDefinitionReducer } from "../../../dbInterface/dbInterface"
-import { ComputeResourceSpecProcessor, DendroFile } from "../../../types/dendro-types"
+import { ComputeResourceSpecProcessor, DendroFile, DendroJobRequiredResources } from "../../../types/dendro-types"
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow"
 import { useNwbFile } from "../FileEditor/NwbFileEditor"
 import { useProject } from "../ProjectPageContext"
@@ -110,12 +110,44 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
             setOperatingMessage(`Submitting job ${filePath} (${i + 1} of ${filePaths.length})`)
             jobDefinition2.inputFiles[0].fileName = filePath
             jobDefinition2.outputFiles[0].fileName = outputFileName
+
+            //////////////////////////////////////////////////////////////////////
+            // For the time being, the required resources are hard-coded here based on the tags of the processor
+            let requiredResources: DendroJobRequiredResources
+            const tags = processor.tags.map(t => t.tag)
+            if ((tags.includes('kilosort2_5') || tags.includes('kilosort3'))) {
+                requiredResources = {
+                    numCpus: 4,
+                    numGpus: 1,
+                    memoryGb: 16,
+                    timeSec: 3600 * 3 // todo: determine this based on the size of the recording!
+                }
+            }
+            else if (tags.includes('mountainsort5')) {
+                requiredResources = {
+                    numCpus: 8,
+                    numGpus: 0,
+                    memoryGb: 16,
+                    timeSec: 3600 * 3 // todo: determine this based on the size of the recording!
+                }
+            }
+            else {
+                requiredResources = {
+                    numCpus: 8,
+                    numGpus: 0,
+                    memoryGb: 16,
+                    timeSec: 3600 * 3 // todo: determine this based on the size of the recording!
+                }
+            }
+            //////////////////////////////////////////////////////////////////////
+
             const job = {
                 projectId,
                 jobDefinition: jobDefinition2,
                 processorSpec: processor,
                 files,
-                batchId
+                batchId,
+                requiredResources
             }
             console.log('CREATING JOB', job)
             await createJob(job, auth)

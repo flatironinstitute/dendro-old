@@ -4,7 +4,7 @@ import subprocess
 from typing import Union, Dict, Any
 from ..sdk.App import App
 from ..common._api_request import _processor_put_api_request
-from ..common.dendro_types import ComputeResourceSlurmOpts
+from ..common.dendro_types import ComputeResourceSlurmOpts, DendroJobRequiredResources
 from ._run_job_in_aws_batch import _run_job_in_aws_batch
 from ..mock import using_mock
 
@@ -39,7 +39,8 @@ def _start_job(*,
     processor_name: str,
     app: App,
     run_process: bool = True,
-    return_shell_command: bool = False
+    return_shell_command: bool = False,
+    required_resources: DendroJobRequiredResources
 ):
     assert not (return_shell_command and run_process), 'Cannot set both run_process and return_shell_command to True'
     assert return_shell_command or run_process, 'Cannot set both run_process and return_shell_command to False'
@@ -73,7 +74,8 @@ def _start_job(*,
                 app_name=app._name,
                 requires_gpu=app._requires_gpu,
                 container=app_image, # for verifying consistent with job definition
-                command=app_executable
+                command=app_executable,
+                required_resources=required_resources
             )
         except Exception as e:
             raise JobException(f'Error running job in AWS Batch: {e}') from e
