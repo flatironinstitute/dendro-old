@@ -156,32 +156,31 @@ class AwsBatchStack(Stack):
             #     posix_user=efs.PosixUser(uid="1001", gid="1001")
             # )
 
+        # generated using ../devel/create_ami_map.py
+        # not able to get image ID for some regions due to invalid security token.
+        # used this command: aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended --region us-east-1 --output json
+        ami_map = {
+            "ap-south-1": "ami-0622a76878be0b6c4",
+            "ap-southeast-1": "ami-0ab04c2c315eb61e2",
+            "ap-southeast-2": "ami-0ebb73c7ce7e9723b",
+            "ap-northeast-1": "ami-0cda4bbd18f922fed",
+            "ap-northeast-2": "ami-0714add0dc329c54a",
+            "ca-central-1": "ami-08fd9fdd5f9d1efec",
+            "eu-west-1": "ami-071c88c2c808990ac",
+            "eu-west-2": "ami-0f1aefb81f8314ab9",
+            "eu-west-3": "ami-0daf0b137875a822c",
+            "eu-north-1": "ami-0efece97c680f1431",
+            "eu-central-1": "ami-009660d5f3dda658e",
+            "sa-east-1": "ami-054639759cfa07cbc",
+            "us-east-1": "ami-06cb3eee472508700",
+            "us-east-2": "ami-0d625ab7e92ab3a43",
+            "us-west-1": "ami-0a40523920cc84619",
+            "us-west-2": "ami-00bba07182e3aeb24"
+        }
+
         # Machine image for the GPU compute environment
         machine_image_gpu = ec2.MachineImage.generic_linux(
-            ami_map={
-                # aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended --region us-east-1 --output json
-                "us-east-1": "ami-06cb3eee472508700",
-                "us-east-2": "ami-0d625ab7e92ab3a43",
-                # "us-west-1": ami_gpu_id,
-                # "us-west-2": ami_gpu_id,
-                # "eu-west-1": ami_gpu_id,
-                # "eu-west-2": ami_gpu_id,
-                # "eu-west-3": ami_gpu_id,
-                # "eu-central-1": ami_gpu_id,
-                # "ap-south-1": ami_gpu_id,
-                # "ap-southeast-1": ami_gpu_id,
-                # "ap-southeast-2": ami_gpu_id,
-                # "ap-northeast-1": ami_gpu_id,
-                # "ap-northeast-2": ami_gpu_id,
-                # "ap-south-1": ami_gpu_id,
-                # "ap-east-1": ami_gpu_id,
-                # "me-south-1": ami_gpu_id,
-                # "sa-east-1": ami_gpu_id,
-                # "ca-central-1": ami_gpu_id,
-                # "eu-north-1": ami_gpu_id,
-                # "eu-south-1": ami_gpu_id,
-                # "af-south-1": ami_gpu_id,
-            }
+            ami_map=ami_map
         )
         ecs_machine_image_gpu = batch.EcsMachineImage(
             image=machine_image_gpu,
