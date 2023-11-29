@@ -40,6 +40,9 @@ class App:
             if not app_executable:
                 raise DendroAppException('You must set app_executable if app_image is not set')
 
+        if len(description) > 1000:
+            raise Exception('Description for app must be less than 1000 characters')
+
         self._name = name
         self._description = description
         self._app_image = app_image

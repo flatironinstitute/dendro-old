@@ -129,6 +129,9 @@ class AppProcessor:
         tags: List[AppProcessorTag],
         processor_class: Union[Type[ProcessorBase], None] = None
     ) -> None:
+        if len(description) > 200:
+            raise Exception('Description for processor must be less than 200 characters')
+
         self._name = name
         self._description = description
         self._label = label
@@ -235,9 +238,14 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
         if annotation is None:
             # Note: in pydantic < 1.10.0, the field.type_ picks up List[InputFile] as just InputFile, so that's why we are not using field.type_
             raise Exception(f'No type annotation for field: {name}')
+        field_info = field.field_info if hasattr(field, 'field_info') else None
+        if field_info is not None:
+            description = field_info.description if hasattr(field_info, 'description') else '' # type: ignore
+        else:
+            description = field.description if hasattr(field, 'description') else '' # type: ignore
         context_fields.append({
             'name': name,
-            'description': field.description if hasattr(field, 'description') else '', # type: ignore
+            'description': description,
             'annotation': annotation,
             'default': field.default if hasattr(field, 'default') else PydanticUndefined,
             'options': options,
