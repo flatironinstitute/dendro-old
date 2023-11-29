@@ -27,7 +27,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
     # Launch the job in a separate process
-    proc = _launch_job(job_id=job_id, job_private_key=job_private_key, app_executable=app_executable)
+    proc = _launch_job_child_process(job_id=job_id, job_private_key=job_private_key, app_executable=app_executable)
 
     # We are going to be monitoring the output of the job in a separate thread, and it will be communicated to this thread via a queue
     console_out_q = queue.Queue()
@@ -292,7 +292,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
     _debug_log('Finalizing job')
     _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
 
-def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
+def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executable: str):
     if not using_mock(): # pragma: no cover
         # Set the appropriate environment variables and launch the job in a background process
         cmd = app_executable

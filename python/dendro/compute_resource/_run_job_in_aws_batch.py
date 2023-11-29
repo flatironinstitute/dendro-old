@@ -69,6 +69,9 @@ def _run_job_in_aws_batch(
         'DENDRO_JOB_CLEANUP_DIR': f'/tmp/dendro-jobs/{job_id}'
     }
 
+    if required_resources.timeSec is not None:
+        env_vars['JOB_TIMEOUT_SEC'] = str(int(required_resources.timeSec))
+
     # Not doing this any more -- instead we are setting a custom backend for kachery uploads
     # from ._start_job import _get_kachery_cloud_credentials # avoid circular import
     # kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
