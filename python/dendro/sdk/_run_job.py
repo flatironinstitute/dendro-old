@@ -17,7 +17,7 @@ from ._resource_utilization_log_reader import _resource_utilization_log_reader
 # * Monitors the job output, updating the database periodically via the API
 # * Sets the job status to completed or failed in the database via the API
 
-def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
+def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable: str, job_timeout_sec: Union[int, None]):
     time_scale_factor = 1 if not using_mock() else 10000
 
     _run_job_timer = time.time()
@@ -214,6 +214,13 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                 if job_status != 'running':
                     raise ValueError(f'Unexpected job status: {job_status}')
             time.sleep(5 / time_scale_factor) # wait 5 seconds before checking things again
+
+            # check job timeout
+            if job_timeout_sec is not None:
+                elapsed = time.time() - _run_job_timer
+                if elapsed > job_timeout_sec:
+                    raise Exception(f'Job timed out: {elapsed} > {job_timeout_sec} seconds')
+
             first_iteration = False
         succeeded = True # No exception
     except Exception as e: # pylint: disable=broad-except
@@ -333,7 +340,7 @@ def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
         os.chdir(os.path.dirname(app_executable))
         app_instance = _load_app_from_main(app_executable)
         try:
-            app_instance._run_job(job_id=job_id, job_private_key=job_private_key)
+            app_instance._run_job_child_process(job_id=job_id, job_private_key=job_private_key)
 
             return proc
         finally:

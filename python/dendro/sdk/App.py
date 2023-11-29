@@ -6,7 +6,7 @@ import tempfile
 from .InputFile import InputFile
 from .AppProcessor import AppProcessor
 from .Job import Job
-from ._run_job import _run_job
+from ._run_job import _run_job_parent_process
 from ..common.dendro_types import ComputeResourceSlurmOpts, ComputeResourceAwsBatchOpts
 from ..common._api_request import _processor_get_api_request
 from ._load_spec_from_uri import _load_spec_from_uri
@@ -75,20 +75,24 @@ class App:
             JOB_PRIVATE_KEY = os.environ.get('JOB_PRIVATE_KEY', None)
             JOB_INTERNAL = os.environ.get('JOB_INTERNAL', None)
             APP_EXECUTABLE = os.environ.get('APP_EXECUTABLE', None)
+            JOB_TIMEOUT_SEC = os.environ.get('JOB_TIMEOUT_SEC', None)
+            if JOB_TIMEOUT_SEC is not None:
+                JOB_TIMEOUT_SEC = int(JOB_TIMEOUT_SEC)
             if JOB_PRIVATE_KEY is None:
                 raise KeyError('JOB_PRIVATE_KEY is not set')
             if JOB_INTERNAL == '1':
                 # In this mode, we run the job directly
                 # This is called internally by the other run mode (need to explain this better)
-                return self._run_job(job_id=JOB_ID, job_private_key=JOB_PRIVATE_KEY)
+                return self._run_job_child_process(job_id=JOB_ID, job_private_key=JOB_PRIVATE_KEY)
 
             # In this mode we run the job, including the top-level interactions with the dendro API, such as setting the status and the console output, and checking whether the job has been canceled/deleted
             if APP_EXECUTABLE is None:
                 raise KeyError('APP_EXECUTABLE is not set')
-            return _run_job(
+            return _run_job_parent_process(
                 job_id=JOB_ID,
                 job_private_key=JOB_PRIVATE_KEY,
-                app_executable=APP_EXECUTABLE
+                app_executable=APP_EXECUTABLE,
+                job_timeout_sec=JOB_TIMEOUT_SEC
             )
         TEST_APP_PROCESSOR = os.environ.get('TEST_APP_PROCESSOR', None)
         if TEST_APP_PROCESSOR is not None:
@@ -172,7 +176,7 @@ class App:
         a._slurm_opts = slurm_opts
         return a
 
-    def _run_job(self, *, job_id: str, job_private_key: str):
+    def _run_job_child_process(self, *, job_id: str, job_private_key: str):
         """
         Used internally to actually run the job by calling the processor function.
         If an app image is being used, this will occur within the container.
