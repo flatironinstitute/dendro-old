@@ -14,8 +14,8 @@ def _run_job_in_aws_batch(
     *,
     job_id: str,
     job_private_key: str,
-    aws_batch_job_queue: str,
-    aws_batch_job_definition: str,
+    app_name: str,
+    requires_gpu: bool,
     container: str, # for verifying consistent with job definition
     command: str
 ):
@@ -38,6 +38,12 @@ def _run_job_in_aws_batch(
         region_name=aws_region
     )
 
+    stack_id = 'DendroBatchStack'
+    aws_batch_job_definition = f'{app_name}-dendro-jd'
+    if requires_gpu:
+        aws_batch_job_queue = f'{stack_id}-job-queue-gpu'
+    else:
+        aws_batch_job_queue = f'{stack_id}-job-queue-cpu'
     job_def_resp = client.describe_job_definitions(jobDefinitionName=aws_batch_job_definition)
     job_defs = job_def_resp['jobDefinitions']
     if len(job_defs) == 0:
@@ -57,7 +63,8 @@ def _run_job_in_aws_batch(
         'JOB_ID': job_id,
         'JOB_PRIVATE_KEY': job_private_key,
         'APP_EXECUTABLE': command,
-        'DENDRO_JOB_WORKING_DIR': f'/dendro-jobs/{job_id}'
+        'DENDRO_JOB_WORKING_DIR': f'/tmp/dendro-jobs/{job_id}',
+        'DENDRO_JOB_CLEANUP_DIR': f'/tmp/dendro-jobs/{job_id}'
     }
 
     # Not doing this any more -- instead we are setting a custom backend for kachery uploads
@@ -81,20 +88,20 @@ def _run_job_in_aws_batch(
                 }
                 for k, v in env_vars.items()
             ],
-            'resourceRequirements': [
-                {
-                    'type': 'VCPU',
-                    'value': '4'
-                },
-                {
-                    'type': 'MEMORY',
-                    'value': '16384'
-                },
-                # {
-                #     'type': 'GPU',
-                #     'value': '1'
-                # }
-            ]
+            # 'resourceRequirements': [
+            #     {
+            #         'type': 'VCPU',
+            #         'value': '4'
+            #     },
+            #     {
+            #         'type': 'MEMORY',
+            #         'value': '16384'
+            #     },
+            #     # {
+            #     #     'type': 'GPU',
+            #     #     'value': '1'
+            #     # }
+            # ]
         }
     )
 

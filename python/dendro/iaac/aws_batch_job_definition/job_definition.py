@@ -1,3 +1,4 @@
+from typing import Union
 import boto3
 
 
@@ -50,9 +51,9 @@ def create_job_definition(
     dendro_app_name: str,
     dendro_app_image_uri: str,
     job_role_name: str,
-    efs_fs_name: str | None = None,
-    environment_variables: list | None = None,
-    container_command_override: list | None = None,
+    efs_fs_name: Union[str, None] = None,
+    environment_variables: Union[list, None] = None,
+    container_command_override: Union[list, None] = None,
     container_required_memory: int = 8192,  # Memory in MiB
     container_required_vcpu: int = 4,    # Number of vCPUs
     container_requires_gpu: bool = False,
@@ -137,6 +138,19 @@ def create_job_definition(
 
     try:
         client = boto3.client('batch')
+
+        # deregister job definitions if they already exists
+        response = client.describe_job_definitions(
+            jobDefinitionName=job_definition_name,
+            status='ACTIVE',
+        )
+        if len(response['jobDefinitions']) > 0:
+            for job_definition in response['jobDefinitions']:
+                print(f'Deregistering job definition: {job_definition["jobDefinitionArn"]}')
+                client.deregister_job_definition(
+                    jobDefinition=job_definition['jobDefinitionArn']
+                )
+        print(f'Registering job definition: {job_definition_name}')
         response = client.register_job_definition(
             jobDefinitionName=job_definition_name,
             type='container',

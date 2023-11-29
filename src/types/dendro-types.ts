@@ -257,14 +257,16 @@ export const isDendroFile = (x: any): x is DendroFile => {
 }
 
 export type ComputeResourceAwsBatchOpts = {
-    jobQueue: string
-    jobDefinition: string
+    jobQueue?: string // obsolete
+    jobDefinition?: string
+    useAwsBatch?: boolean
 }
 
 export const isComputeResourceAwsBatchOpts = (x: any): x is ComputeResourceAwsBatchOpts => {
     return validateObject(x, {
-        jobQueue: isString,
-        jobDefinition: isString
+        jobQueue: optional(isString), // obsolete
+        jobDefinition: optional(isString),
+        useAwsBatch: optional(isBoolean)
     })
 }
 
@@ -310,7 +312,8 @@ export type ComputeResourceSpecApp = {
     description: string
     processors: ComputeResourceSpecProcessor[]
     appImage?: string
-    appExecutable?: string
+    appExecutable?: string,
+    requiresGpu?: boolean
 }
 
 export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp => {
@@ -319,7 +322,8 @@ export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp =>
         description: isString,
         processors: isArrayOf(isComputeResourceSpecProcessor),
         appImage: isString,
-        appExecutable: isString
+        appExecutable: isString,
+        requiresGpu: isBoolean
     })
 }
 

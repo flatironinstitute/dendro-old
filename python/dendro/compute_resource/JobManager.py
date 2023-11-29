@@ -39,7 +39,8 @@ class JobManager:
 
         # AWS Batch jobs
         aws_batch_jobs = [job for job in jobs if self._is_aws_batch_job(job)]
-        for job in aws_batch_jobs:
+        pending_aws_batch_jobs = [job for job in aws_batch_jobs if self._job_is_pending(job)]
+        for job in pending_aws_batch_jobs:
             self._start_job(job)
 
         # SLURM jobs
@@ -62,7 +63,9 @@ class JobManager:
         app: Union[App, None] = self._app_manager.find_app_with_processor(processor_name)
         if app is None:
             return None
-        if app._aws_batch_opts is not None and app._aws_batch_opts.jobQueue is not None:
+        # if app._aws_batch_opts is not None and app._aws_batch_opts.jobQueue is not None:
+        #     return 'aws_batch'
+        if app._aws_batch_opts and app._aws_batch_opts.useAwsBatch:
             return 'aws_batch'
         if app._slurm_opts is not None:
             return 'slurm'
