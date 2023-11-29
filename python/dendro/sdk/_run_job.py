@@ -17,7 +17,7 @@ from ._resource_utilization_log_reader import _resource_utilization_log_reader
 # * Monitors the job output, updating the database periodically via the API
 # * Sets the job status to completed or failed in the database via the API
 
-def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
+def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable: str, job_timeout_sec: Union[int, None]):
     time_scale_factor = 1 if not using_mock() else 10000
 
     _run_job_timer = time.time()
@@ -27,7 +27,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
     # Launch the job in a separate process
-    proc = _launch_job(job_id=job_id, job_private_key=job_private_key, app_executable=app_executable)
+    proc = _launch_job_child_process(job_id=job_id, job_private_key=job_private_key, app_executable=app_executable)
 
     # We are going to be monitoring the output of the job in a separate thread, and it will be communicated to this thread via a queue
     console_out_q = queue.Queue()
@@ -214,6 +214,13 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
                 if job_status != 'running':
                     raise ValueError(f'Unexpected job status: {job_status}')
             time.sleep(5 / time_scale_factor) # wait 5 seconds before checking things again
+
+            # check job timeout
+            if job_timeout_sec is not None:
+                elapsed = time.time() - _run_job_timer
+                if elapsed > job_timeout_sec:
+                    raise Exception(f'Job timed out: {elapsed} > {job_timeout_sec} seconds')
+
             first_iteration = False
         succeeded = True # No exception
     except Exception as e: # pylint: disable=broad-except
@@ -285,7 +292,7 @@ def _run_job(*, job_id: str, job_private_key: str, app_executable: str):
     _debug_log('Finalizing job')
     _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
 
-def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
+def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executable: str):
     if not using_mock(): # pragma: no cover
         # Set the appropriate environment variables and launch the job in a background process
         cmd = app_executable
@@ -333,7 +340,7 @@ def _launch_job(*, job_id: str, job_private_key: str, app_executable: str):
         os.chdir(os.path.dirname(app_executable))
         app_instance = _load_app_from_main(app_executable)
         try:
-            app_instance._run_job(job_id=job_id, job_private_key=job_private_key)
+            app_instance._run_job_child_process(job_id=job_id, job_private_key=job_private_key)
 
             return proc
         finally:

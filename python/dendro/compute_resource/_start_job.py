@@ -99,6 +99,9 @@ def _start_job(*,
         'DENDRO_JOB_CLEANUP_DIR': dendro_job_cleanup_dir # see the warning above
     }
 
+    if required_resources.timeSec is not None:
+        env_vars['JOB_TIMEOUT_SEC'] = str(int(required_resources.timeSec))
+
     # Not doing this any more -- instead we are setting a custom backend for kachery uploads
     # kachery_cloud_client_id, kachery_cloud_private_key = _get_kachery_cloud_credentials()
     # if kachery_cloud_client_id is not None:
@@ -196,9 +199,8 @@ def _run_local_job(*,
         )
         return ''
     elif return_shell_command:
-        job_id = env_vars['JOB_ID']
-        job_private_key = env_vars['JOB_PRIVATE_KEY']
-        return f'cd {working_dir} && PYTHONUNBUFFERED=1 JOB_ID={job_id} JOB_PRIVATE_KEY={job_private_key} APP_EXECUTABLE={app_executable} {app_executable}'
+        env_vars_str = ' '.join([f'{k}={v}' for k, v in env_vars.items()])
+        return f'cd {working_dir} && {env_vars_str} APP_EXECUTABLE={app_executable} {app_executable}'
     else:
         return ''
 
