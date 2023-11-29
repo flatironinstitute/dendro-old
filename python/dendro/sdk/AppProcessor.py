@@ -238,7 +238,7 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
         if annotation is None:
             # Note: in pydantic < 1.10.0, the field.type_ picks up List[InputFile] as just InputFile, so that's why we are not using field.type_
             raise Exception(f'No type annotation for field: {name}')
-        field_info = field.field_info if hasattr(field, 'field_info') else None
+        field_info = field.field_info if hasattr(field, 'field_info') else None # type: ignore
         if field_info is not None:
             description = field_info.description if hasattr(field_info, 'description') else '' # type: ignore
         else:
