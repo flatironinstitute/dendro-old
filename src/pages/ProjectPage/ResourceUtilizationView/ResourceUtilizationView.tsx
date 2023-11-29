@@ -130,10 +130,14 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
         a.click()
     }, [resourceUtilizationLog, job])
 
+    const [cumulative, setCumulative] = useState(false)
+
     return (
         <div>
             <div>
                 <Hyperlink onClick={refreshResourceUtilizationLog}>Refresh resource utilization for job {job.jobId} ({job.processorName})</Hyperlink>
+                &nbsp;
+                <CumulativeToggle value={cumulative} setValue={setCumulative} />
             </div>
             <hr />
             {/* CPU Percent */}
@@ -189,57 +193,142 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                 referenceTime={referenceTime}
                 yAxisLabel="GPU load"
             />
-            {/* Network IO */}
-            <LogPlot
-                series={[
-                    {
-                        label: 'Network sent',
-                        data: resourceUtilizationLog.map(l => ({
-                            x: l.timestamp,
-                            y: (l.net_io_counters?.bytes_sent || 0) / 1024 / 1024 / 1024
-                        })),
-                        color: 'blue'
-                    },
-                    {
-                        label: 'Network received',
-                        data: resourceUtilizationLog.map(l => ({
-                            x: l.timestamp,
-                            y: (l.net_io_counters?.bytes_recv || 0) / 1024 / 1024 / 1024
-                        })),
-                        color: 'darkgreen'
-                    }
-                ]}
-                referenceTime={referenceTime}
-                yAxisLabel="Network IO (GB)"
-            />
-            {/* Disk IO */}
-            <LogPlot
-                series={[
-                    {
-                        label: 'Disk read',
-                        data: resourceUtilizationLog.map(l => ({
-                            x: l.timestamp,
-                            y: (l.disk_io_counters?.read_bytes || 0) / 1024 / 1024 / 1024
-                        })),
-                        color: 'darkgreen'
-                    },
-                    {
-                        label: 'Disk write',
-                        data: resourceUtilizationLog.map(l => ({
-                            x: l.timestamp,
-                            y: (l.disk_io_counters?.write_bytes || 0) / 1024 / 1024 / 1024
-                        })),
-                        color: 'blue'
-                    }
-                ]}
-                referenceTime={referenceTime}
-                yAxisLabel="Disk IO (GB)"
-            />
+            {/* Network I/O */}
+            {cumulative ? (
+                <LogPlot
+                    series={[
+                        {
+                            label: 'Network sent',
+                            data: resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.net_io_counters?.bytes_sent || 0) / 1024 / 1024 / 1024
+                            })),
+                            color: 'blue'
+                        },
+                        {
+                            label: 'Network received',
+                            data: resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.net_io_counters?.bytes_recv || 0) / 1024 / 1024 / 1024
+                            })),
+                            color: 'darkgreen'
+                        }
+                    ]}
+                    referenceTime={referenceTime}
+                    yAxisLabel="Network IO (GB)"
+                />
+            ) : (
+                <LogPlot
+                    series={[
+                        {
+                            label: 'Network sent',
+                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.net_io_counters?.bytes_sent || 0) / 1024 / 1024
+                            }))),
+                            color: 'blue'
+                        },
+                        {
+                            label: 'Network received',
+                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.net_io_counters?.bytes_recv || 0) / 1024 / 1024
+                            }))),
+                            color: 'darkgreen'
+                        }
+                    ]}
+                    referenceTime={referenceTime}
+                    yAxisLabel="Network IO (MB / sec)"
+                />
+            )}
+            {/* Disk I/O */}
+            {cumulative ? (
+                <LogPlot
+                    series={[
+                        {
+                            label: 'Disk read',
+                            data: resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.disk_io_counters?.read_bytes || 0) / 1024 / 1024
+                            })),
+                            color: 'darkgreen'
+                        },
+                        {
+                            label: 'Disk write',
+                            data: resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.disk_io_counters?.write_bytes || 0) / 1024 / 1024
+                            })),
+                            color: 'blue'
+                        }
+                    ]}
+                    referenceTime={referenceTime}
+                    yAxisLabel="Disk IO (GB)"
+                />
+            ) : (
+                <LogPlot
+                    series={[
+                        {
+                            label: 'Disk read',
+                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.disk_io_counters?.read_bytes || 0) / 1024 / 1024
+                            }))),
+                            color: 'darkgreen'
+                        },
+                        {
+                            label: 'Disk write',
+                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                                x: l.timestamp,
+                                y: (l.disk_io_counters?.write_bytes || 0) / 1024 / 1024
+                            }))),
+                            color: 'blue'
+                        }
+                    ]}
+                    referenceTime={referenceTime}
+                    yAxisLabel="Disk IO (MB / sec)"
+                />
+            )}
             <hr />
             <button onClick={handleDownloadCsv}>Download .csv</button>
             &nbsp;
             <button onClick={handleDownloadJsonl}>Download .jsonl</button>
         </div>
+    )
+}
+
+const cumulativeToInstantaneous = (data: {x: number, y: number}[]) => {
+    const ret: {x: number, y: number}[] = []
+    for (let i = 0; i < data.length; i++) {
+        if (i === 0) {
+            ret.push({x: data[i].x, y: 0})
+        }
+        else {
+            ret.push({
+                x: data[i].x,
+                y: data[i].x > data[i - 1].x ? (data[i].y - data[i - 1].y) / (data[i].x - data[i - 1].x) : 0
+            })
+        }
+    }
+    return ret
+}
+
+type CumulativeToggleProps = {
+    value: boolean,
+    setValue: (value: boolean) => void
+}
+
+const CumulativeToggle: FunctionComponent<CumulativeToggleProps> = ({value, setValue}) => {
+    return (
+        <span>
+            <input
+                type="checkbox"
+                checked={value}
+                onChange={e => setValue(e.target.checked)}
+            />
+            &nbsp;
+            Cumulative for I/O
+        </span>
     )
 }
 
