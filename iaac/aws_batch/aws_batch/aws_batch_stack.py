@@ -128,7 +128,7 @@ class AwsBatchStack(Stack):
             scope=self,
             id=default_security_group_id,
             security_group_id=default_security_group_id,
-            allow_all_ipv6_outbound=True,
+            # allow_all_ipv6_outbound=True,
             allow_all_outbound=True
         )
 
@@ -162,6 +162,25 @@ class AwsBatchStack(Stack):
                 # aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended --region us-east-1 --output json
                 "us-east-1": "ami-06cb3eee472508700",
                 "us-east-2": "ami-0d625ab7e92ab3a43",
+                # "us-west-1": ami_gpu_id,
+                # "us-west-2": ami_gpu_id,
+                # "eu-west-1": ami_gpu_id,
+                # "eu-west-2": ami_gpu_id,
+                # "eu-west-3": ami_gpu_id,
+                # "eu-central-1": ami_gpu_id,
+                # "ap-south-1": ami_gpu_id,
+                # "ap-southeast-1": ami_gpu_id,
+                # "ap-southeast-2": ami_gpu_id,
+                # "ap-northeast-1": ami_gpu_id,
+                # "ap-northeast-2": ami_gpu_id,
+                # "ap-south-1": ami_gpu_id,
+                # "ap-east-1": ami_gpu_id,
+                # "me-south-1": ami_gpu_id,
+                # "sa-east-1": ami_gpu_id,
+                # "ca-central-1": ami_gpu_id,
+                # "eu-north-1": ami_gpu_id,
+                # "eu-south-1": ami_gpu_id,
+                # "af-south-1": ami_gpu_id,
             }
         )
         ecs_machine_image_gpu = batch.EcsMachineImage(
