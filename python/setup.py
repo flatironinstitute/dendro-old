@@ -26,7 +26,8 @@ setup(
     ],
     extras_require={
         'compute_resource': [
-            'pubnub>=7.2.0'
+            'pubnub>=7.2.0',
+            'boto3'
         ],
         'api': [
             'fastapi',

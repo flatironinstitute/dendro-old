@@ -1,4 +1,5 @@
-from typing import Union, List, Any
+from typing import Union, List, Any, Optional
+
 from .. import BaseModel
 
 class DendroProjectUser(BaseModel):
@@ -104,8 +105,9 @@ class DendroFile(BaseModel):
     jobId: Union[str, None] = None # the job that produced this file
 
 class ComputeResourceAwsBatchOpts(BaseModel):
-    jobQueue: str
-    jobDefinition: str
+    jobQueue: Optional[str] = None # obsolete
+    jobDefinition: Optional[str] = None # obsolete
+    useAwsBatch: Optional[bool] = None
 
 class ComputeResourceSlurmOpts(BaseModel):
     partition: Union[str, None] = None
@@ -127,6 +129,7 @@ class ComputeResourceSpecApp(BaseModel):
     processors: List[ComputeResourceSpecProcessor]
     appImage: Union[str, None] = None
     appExecutable: Union[str, None] = None
+    requiresGpu: Union[bool, None] = None
 
 class ComputeResourceSpec(BaseModel):
     apps: List[ComputeResourceSpecApp]
