@@ -80,6 +80,17 @@ def create_aws_batch_job_definition(
     # Container Resource requirements - these will always be provided in the submitted job
     resource_requirements = []
 
+    # but the VCPU is required to be specified
+    resource_requirements.append({
+        'type': 'VCPU',
+        'value': '1'
+    })
+    # and the MEMORY is required to be specified as well
+    resource_requirements.append({
+        'type': 'MEMORY',
+        'value': str(1024 * 8)
+    })
+
     # Get EFS file system ID and set container volumes and mount points
     volumes = []
     mount_points = []
