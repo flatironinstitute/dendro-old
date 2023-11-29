@@ -54,7 +54,7 @@ def create_aws_batch_job_definition(
     efs_fs_name: Union[str, None] = None,
     environment_variables: Union[list, None] = None,
     container_command_override: Union[list, None] = None,
-    container_required_memory: int = 8192,  # Memory in MiB
+    container_required_memory: int = 16384,  # Memory in MiB
     container_required_vcpu: int = 4,    # Number of vCPUs
     container_requires_gpu: bool = False,
 ):
