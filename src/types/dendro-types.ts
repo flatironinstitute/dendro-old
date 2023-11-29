@@ -353,7 +353,6 @@ export type ComputeResourceSpecApp = {
     processors: ComputeResourceSpecProcessor[]
     appImage?: string
     appExecutable?: string,
-    requiresGpu?: boolean
 }
 
 export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp => {
@@ -363,7 +362,6 @@ export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp =>
         processors: isArrayOf(isComputeResourceSpecProcessor),
         appImage: isString,
         appExecutable: isString,
-        requiresGpu: isBoolean
     })
 }
 

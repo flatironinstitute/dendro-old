@@ -95,21 +95,12 @@ class AppManager:
             efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iaac/aws_batch/aws_batch/stack_config.py
             print(f'Creating AWS batch job definition for app {app._name}')
             environment_variables = []
-            if app._requires_gpu:
-                environment_variables.append({
-                    'name': 'NVIDIA_DRIVER_CAPABILITIES',
-                    'value': 'all'
-                })
-                environment_variables.append({
-                    'name': 'NVIDIA_REQUIRE_CUDA',
-                    'value': 'cuda>=11.0'
-                })
+
             create_aws_batch_job_definition(
                 dendro_app_name=app._name,
                 dendro_app_image_uri=app._app_image,
                 job_role_name=job_role_name,
                 efs_fs_name=efs_fs_name,
-                container_requires_gpu=app._requires_gpu,
                 environment_variables=environment_variables
             )
 

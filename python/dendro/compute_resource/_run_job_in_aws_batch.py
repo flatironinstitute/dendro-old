@@ -16,7 +16,6 @@ def _run_job_in_aws_batch(
     job_id: str,
     job_private_key: str,
     app_name: str,
-    requires_gpu: bool,
     container: str, # for verifying consistent with job definition
     command: str,
     required_resources: DendroJobRequiredResources
@@ -42,7 +41,7 @@ def _run_job_in_aws_batch(
 
     stack_id = 'DendroBatchStack'
     aws_batch_job_definition = f'{app_name}-dendro-jd'
-    if requires_gpu:
+    if required_resources.numGpus > 0:
         aws_batch_job_queue = f'{stack_id}-job-queue-gpu'
     else:
         aws_batch_job_queue = f'{stack_id}-job-queue-cpu'
@@ -100,6 +99,8 @@ def _run_job_in_aws_batch(
             'type': 'GPU',
             'value': str(required_resources.numGpus)
         })
+        env_vars['NVIDIA_DRIVER_CAPABILITIES'] = 'all'
+        env_vars['NVIDIA_REQUIRE_CUDA'] = 'cuda>=11.0'
 
     response = client.submit_job(
         jobName=job_name,

@@ -54,9 +54,6 @@ def create_aws_batch_job_definition(
     efs_fs_name: Union[str, None] = None,
     environment_variables: Union[list, None] = None,
     container_command_override: Union[list, None] = None,
-    container_required_memory: int = 16384,  # Memory in MiB
-    container_required_vcpu: int = 4,    # Number of vCPUs
-    container_requires_gpu: bool = False,
 ):
     """
     Create a job definition in AWS Batch.
@@ -80,12 +77,8 @@ def create_aws_batch_job_definition(
             if 'name' not in env_var or 'value' not in env_var:
                 raise Exception("Environment variables must be a list of dictionaries with 'name' and 'value' keys. E.g.: [{'name': 'string', 'value': 'string'}]")
 
-    # Container Resource requirements
+    # Container Resource requirements - these will always be provided in the submitted job
     resource_requirements = []
-    resource_requirements.append({'type': 'MEMORY', 'value': str(container_required_memory)})
-    resource_requirements.append({'type': 'VCPU', 'value': str(container_required_vcpu)})
-    if container_requires_gpu:
-        resource_requirements.append({'type': 'GPU', 'value': '1'})
 
     # Get EFS file system ID and set container volumes and mount points
     volumes = []

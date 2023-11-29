@@ -72,7 +72,6 @@ def _start_job(*,
                 job_id=job_id,
                 job_private_key=job_private_key,
                 app_name=app._name,
-                requires_gpu=app._requires_gpu,
                 container=app_image, # for verifying consistent with job definition
                 command=app_executable,
                 required_resources=required_resources
