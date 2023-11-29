@@ -20,6 +20,7 @@ async def test_integration(tmp_path):
     from dendro.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
     from dendro.common._api_request import _gui_post_api_request, _client_get_api_request
     from dendro.common.dendro_types import ComputeResourceSlurmOpts
+    from dendro.common.dendro_types import DendroJobRequiredResources
 
     tmpdir = str(tmp_path)
 
@@ -249,6 +250,7 @@ async def test_integration(tmp_path):
                 processorSpec=processor_spec,
                 batchId=None,
                 dandiApiKey=None,
+                requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600)
             )
             resp = _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)
             resp = CreateJobResponse(**resp)
@@ -276,6 +278,7 @@ async def test_integration(tmp_path):
             processorSpec=processor_spec_2,
             batchId=None,
             dandiApiKey=None,
+            requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600)
         )
         resp = _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)
         resp = CreateJobResponse(**resp)
@@ -296,6 +299,7 @@ async def test_integration(tmp_path):
             processorSpec=processor_spec_2,
             batchId=None,
             dandiApiKey=None,
+            requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600)
         )
         with pytest.raises(Exception):
             _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)

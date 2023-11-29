@@ -66,6 +66,18 @@ class ComputeResourceSpecProcessor(BaseModel):
     attributes: List[ComputeResourceSpecProcessorAttribute]
     tags: List[ComputeResourceSpecProcessorTag]
 
+class DendroJobRequiredResources(BaseModel):
+    numCpus: int
+    numGpus: int
+    memoryGb: float
+    timeSec: float
+
+class DendroJobUsedResources(BaseModel):
+    numCpus: int
+    numGpus: int
+    memoryGb: float
+    timeSec: float
+
 class DendroJob(BaseModel):
     projectId: str
     jobId: str
@@ -76,6 +88,8 @@ class DendroJob(BaseModel):
     inputFileIds: List[str]
     inputParameters: List[DendroJobInputParameter]
     outputFiles: List[DendroJobOutputFile]
+    requiredResources: Union[DendroJobRequiredResources, None] = None
+    usedResources: Union[DendroJobUsedResources, None] = None
     timestampCreated: float
     computeResourceId: str
     status: str # 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
@@ -193,6 +207,7 @@ class CreateJobRequest(BaseModel):
     processorSpec: ComputeResourceSpecProcessor
     batchId: Union[str, None] = None
     dandiApiKey: Union[str, None] = None
+    requiredResources: DendroJobRequiredResources
 
 class CreateJobResponse(BaseModel):
     jobId: str

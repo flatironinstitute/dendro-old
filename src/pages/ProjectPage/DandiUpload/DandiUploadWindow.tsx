@@ -3,7 +3,7 @@ import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";
 import { DendroProcessingJobDefinition, createJob } from "../../../dbInterface/dbInterface";
 import { useProject } from "../ProjectPageContext";
 import { DandiUploadTask } from "./prepareDandiUploadTask";
-import { DendroFile, DendroJob } from "../../../types/dendro-types";
+import { DendroFile, DendroJob, DendroJobRequiredResources } from "../../../types/dendro-types";
 
 type DandiUploadWindowProps = {
     dandiUploadTask: DandiUploadTask
@@ -78,12 +78,19 @@ const DandiUploadWindow: FunctionComponent<DandiUploadWindowProps> = ({ dandiUpl
             ],
             outputFiles: []
         }
+        const requiredResources: DendroJobRequiredResources = {
+            numCpus: 2,
+            numGpus: 0,
+            memoryGb: 8,
+            timeSec: 3600 * 1
+        }
         const job = {
             projectId,
             jobDefinition: jobDef,
             processorSpec: processor,
             files,
-            batchId: undefined
+            batchId: undefined,
+            requiredResources
         }
         console.log('CREATING JOB', job)
         await createJob(job, auth)

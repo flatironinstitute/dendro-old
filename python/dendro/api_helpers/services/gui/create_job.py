@@ -1,6 +1,6 @@
 import time
 from typing import Union, List, Any
-from ....common.dendro_types import ComputeResourceSpecProcessor, DendroJobInputFile, DendroJobOutputFile, DendroJob, DendroJobInputParameter
+from ....common.dendro_types import ComputeResourceSpecProcessor, DendroJobInputFile, DendroJobOutputFile, DendroJob, DendroJobInputParameter, DendroJobRequiredResources
 from ...clients.db import fetch_project, fetch_file, delete_file, fetch_project_jobs, delete_job, insert_job
 from ...core._get_project_role import _check_user_can_edit_project
 from ...core._create_random_id import _create_random_id
@@ -12,7 +12,7 @@ from ....common.dendro_types import CreateJobRequestInputFile, CreateJobRequestO
 class CreateJobException(Exception):
     pass
 
-async def create_job(
+async def create_job(*,
     project_id: str,
     processor_name: str,
     input_files_from_request: List[CreateJobRequestInputFile],
@@ -21,14 +21,16 @@ async def create_job(
     processor_spec: ComputeResourceSpecProcessor,
     batch_id: Union[str, None],
     user_id: str,
-    dandi_api_key: Union[str, None] = None
+    dandi_api_key: Union[str, None] = None,
+    required_resources: DendroJobRequiredResources
 ):
     _check_job_is_consistent_with_processor_spec(
         processor_spec=processor_spec,
         processor_name=processor_name,
         input_files_from_request=input_files_from_request,
         output_files_from_request=output_files_from_request,
-        input_parameters=input_parameters
+        input_parameters=input_parameters,
+        required_resources=required_resources
     )
 
     project = await fetch_project(project_id)
@@ -126,7 +128,8 @@ async def create_job(
         batchId=batch_id,
         dandiApiKey=dandi_api_key,
         consoleOutputUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_console_output",
-        resourceUtilizationLogUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_resource_utilization_log"
+        resourceUtilizationLogUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_resource_utilization_log",
+        requiredResources=required_resources
     )
 
     await insert_job(job)
@@ -148,7 +151,8 @@ def _check_job_is_consistent_with_processor_spec(
     processor_name: str,
     input_files_from_request: List[CreateJobRequestInputFile],
     output_files_from_request: List[CreateJobRequestOutputFile],
-    input_parameters: List[CreateJobRequestInputParameter]
+    input_parameters: List[CreateJobRequestInputParameter],
+    required_resources: DendroJobRequiredResources
 ):
     # check that the processor name matches
     if processor_spec.name != processor_name:
