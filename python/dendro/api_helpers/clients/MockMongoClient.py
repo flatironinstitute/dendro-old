@@ -83,13 +83,20 @@ class MockMongoCursor:
 def _document_matches_query(document: Dict, query: Dict) -> bool:
     # handle $in
     for key, value in query.items():
-        if key not in document:
-            return False # pragma: no cover
         if isinstance(value, dict):
-            assert '$in' in value, 'Only $in is supported for now'
-            if document[key] not in value['$in']:
-                return False
+            if '$in' in value:
+                if key not in document:
+                    return False # pragma: no cover
+                if document[key] not in value['$in']:
+                    return False
+            elif '$ne' in value:
+                if document.get(key, None) == value['$ne']:
+                    return False
+            else:
+                raise NotImplementedError()
         else:
+            if key not in document:
+                return False # pragma: no cover
             if isinstance(document[key], list):
                 if value not in document[key]:
                     return False

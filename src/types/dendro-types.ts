@@ -63,9 +63,9 @@ export type DendroJobInputParameter = {
 export const isDendroJobInputParameter = (x: any): x is DendroJobInputParameter => {
     return validateObject(x, {
         name: isString,
-        value: optional(isString),
+        value: optional(() => (true)),
         secret: optional(isBoolean)
-    })
+    }, {callback: (e) => {console.warn(e);}})
 }
 
 export type DendroJobOutputFile = {
@@ -96,7 +96,7 @@ export const isComputeResourceSpecProcessorParameter = (x: any): x is ComputeRes
         name: isString,
         description: isString,
         type: isString,
-        default: optional(isString),
+        default: optional(() => (true)),
         options: optional(isArrayOf(isOneOf([isString, isNumber]))),
         secret: isBoolean
     })
@@ -136,7 +136,7 @@ export type ComputeResourceSpecProcessorAttribute = {
 export const isComputeResourceSpecProcessorAttribute = (x: any): x is ComputeResourceSpecProcessorAttribute => {
     return validateObject(x, {
         name: isString,
-        value: isString
+        value: () => (true)
     })
 }
 
@@ -169,7 +169,7 @@ export const isComputeResourceSpecProcessor = (x: any): x is ComputeResourceSpec
         parameters: isArrayOf(isComputeResourceSpecProcessorParameter),
         attributes: isArrayOf(isComputeResourceSpecProcessorAttribute),
         tags: isArrayOf(isComputeResourceSpecProcessorTag)
-    })
+    }, {callback: (e) => {console.warn(e);}})
 }
 
 export type DendroJob = {
@@ -198,6 +198,7 @@ export type DendroJob = {
     outputFileIds?: string[]
     processorSpec: ComputeResourceSpecProcessor
     dandiApiKey?: string
+    deleted?: boolean
 }
 
 export const isDendroJob = (x: any): x is DendroJob => {
@@ -226,8 +227,9 @@ export const isDendroJob = (x: any): x is DendroJob => {
         timestampFinished: optional(isNumber),
         outputFileIds: optional(isArrayOf(isString)),
         processorSpec: isComputeResourceSpecProcessor,
-        dandiApiKey: optional(isString)
-    })
+        dandiApiKey: optional(isString),
+        deleted: optional(isBoolean)
+    }, {callback: (e) => {console.warn(e);}})
 }
 
 export type DendroFile = {
@@ -422,5 +424,19 @@ export const isProcessorGetJobResponse = (x: any): x is ProcessorGetJobResponse 
         inputs: isArrayOf(isProcessorGetJobResponseInput),
         outputs: isArrayOf(isProcessorGetJobResponseOutput),
         parameters: isArrayOf(isProcessorGetJobResponseParameter)
+    })
+}
+
+export type ComputeResourceUserUsage = {
+    computeResourceId: string
+    userId: string
+    jobsIncludingDeleted: DendroJob[]
+}
+
+export const isComputeResourceUserUsage = (x: any): x is ComputeResourceUserUsage => {
+    return validateObject(x, {
+        computeResourceId: isString,
+        userId: isString,
+        jobsIncludingDeleted: isArrayOf(isDendroJob)
     })
 }

@@ -92,6 +92,7 @@ class DendroJob(BaseModel):
     outputFileIds: Union[List[str], None] = None
     processorSpec: ComputeResourceSpecProcessor
     dandiApiKey: Union[str, None] = None
+    deleted: Union[bool, None] = None
 
 class DendroFile(BaseModel):
     projectId: str
@@ -195,3 +196,8 @@ class CreateJobRequest(BaseModel):
 class CreateJobResponse(BaseModel):
     jobId: str
     success: bool
+
+class ComputeResourceUserUsage(BaseModel):
+    computeResourceId: str
+    userId: str
+    jobsIncludingDeleted: List[DendroJob]

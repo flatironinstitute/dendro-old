@@ -6,6 +6,7 @@ from .file_routes import router as file_router
 from .job_routes import router as job_router
 from .github_auth_routes import router as github_auth_router
 from .user_routes import router as user_router
+from .usage_routes import router as usage_router
 
 router = APIRouter()
 
@@ -16,3 +17,4 @@ router.include_router(file_router)
 router.include_router(job_router, prefix="/jobs")
 router.include_router(github_auth_router)
 router.include_router(user_router, prefix="/users")
+router.include_router(usage_router, prefix="/usage")

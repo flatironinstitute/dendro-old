@@ -48,13 +48,13 @@ export const optional = (testFunctionOrSpec: Function | ValidateObjectSpec): ((x
     if (isFunction(testFunctionOrSpec)) {
         const testFunction: Function = testFunctionOrSpec
         return (x) => {
-            return ((x === undefined) || (testFunction(x)));
+            return ((x === undefined) || (x === null) || (testFunction(x)));
         }
     }
     else {
         return (x) => {
             const obj: ValidateObjectSpec = testFunctionOrSpec
-            return ((x === undefined) || (validateObject(x, obj)))
+            return ((x === undefined) || (x === null) || (validateObject(x, obj)))
         }
     }   
 }

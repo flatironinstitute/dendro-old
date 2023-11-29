@@ -12,7 +12,8 @@ async def _remove_detached_files_and_jobs(project_id: str):
         'projectId': project_id
     }).to_list(length=None) # type: ignore
     jobs = await jobs_collection.find({
-        'projectId': project_id
+        'projectId': project_id,
+        'deleted': {'$ne': True}
     }).to_list(length=None) # type: ignore
 
     for file in files:
@@ -42,9 +43,14 @@ async def _remove_detached_files_and_jobs(project_id: str):
         something_changed = False
         if len(job_ids_to_delete) > 0:
             something_changed = True
-            await jobs_collection.delete_many({
-                'jobId': {'$in': list(job_ids_to_delete)}
-            })
+            for job_id in job_ids_to_delete:
+                await jobs_collection.update_one({
+                    'jobId': job_id
+                }, {
+                    '$set': {
+                        'deleted': True
+                    }
+                })
             jobs = [x for x in jobs if x.jobId not in job_ids_to_delete]
         if len(file_ids_to_delete) > 0:
             something_changed = True
