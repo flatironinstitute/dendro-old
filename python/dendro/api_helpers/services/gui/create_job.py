@@ -125,7 +125,8 @@ async def create_job(
         processorSpec=processor_spec,
         batchId=batch_id,
         dandiApiKey=dandi_api_key,
-        consoleOutputUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_console_output"
+        consoleOutputUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_console_output",
+        resourceUtilizationLogUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_resource_utilization_log"
     )
 
     await insert_job(job)

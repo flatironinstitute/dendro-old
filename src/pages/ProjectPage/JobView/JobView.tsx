@@ -6,6 +6,10 @@ import { DendroJob } from "../../../types/dendro-types";
 import UserIdComponent from "../../../UserIdComponent";
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow";
 import { ElapsedTimeComponent } from "../FileEditor/NwbFileEditor";
+import Hyperlink from "../../../components/Hyperlink";
+import { useModalDialog } from "../../../ApplicationBar";
+import ModalWindow from "../../../components/ModalWindow/ModalWindow";
+import ResourceUtilizationView from "../ResourceUtilizationView/ResourceUtilizationView";
 
 type Props = {
     width: number,
@@ -82,6 +86,8 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
         downloadJson(JSON.stringify(job, null, 2), `dendro-job-${job.jobId}.json`)
     }, [job])
 
+    const {visible: resourceUtilizationVisible, handleOpen: openResourceUtilization, handleClose: closeResourceUtilization} = useModalDialog()
+
     if (!job) {
         return (
             <p>Loading job {jobId}</p>
@@ -148,12 +154,30 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
                 />
             </ExpandableSection>
             <hr />
+            <ExpandableSection title="Resource utilization" defaultExpanded={false}>
+                <>
+                    <div>
+                        <div>&nbsp;</div>
+                        <Hyperlink onClick={openResourceUtilization}>View resource utilization</Hyperlink>
+                        <div>&nbsp;</div>
+                    </div>
+                </>
+            </ExpandableSection>
+            <hr />
             <ExpandableSection title="Console output" defaultExpanded={true}>
                 <pre style={{fontSize: 10}}>
                     {jobConsoleOutput}
                 </pre>
             </ExpandableSection>
             <hr />
+            <ModalWindow
+                open={resourceUtilizationVisible}
+                onClose={closeResourceUtilization}
+            >
+                <ResourceUtilizationView
+                    job={job}
+                />
+            </ModalWindow>
         </div>
     )
 }

@@ -150,8 +150,9 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
 
 const isValidSpecUri = (specUri: string) => {
     if (!specUri) return false
-    if (!specUri.startsWith('http')) return false
-    return true
+    if (specUri.startsWith('file://')) return true
+    if (specUri.startsWith('http')) return true
+    return false
 }
 
 type EditAwsBatchOptsProps = {

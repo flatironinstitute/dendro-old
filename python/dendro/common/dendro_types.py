@@ -85,6 +85,7 @@ class DendroJob(BaseModel):
     computeResourceNodeId: Union[str, None] = None # obsolete
     computeResourceNodeName: Union[str, None] = None # obsolete
     consoleOutputUrl: Union[str, None] = None
+    resourceUtilizationLogUrl: Union[str, None] = None
     timestampQueued: Union[float, None] = None
     timestampStarting: Union[float, None] = None
     timestampStarted: Union[float, None] = None

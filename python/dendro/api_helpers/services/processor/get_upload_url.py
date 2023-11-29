@@ -5,9 +5,11 @@ from ...core.settings import get_settings
 from ._get_signed_upload_url import _get_signed_upload_url
 
 
-# note that output_name = "_console_output" is a special case
+# note that output_name of "_console_output" and "_resource_utilization_log" are special cases
 async def get_upload_url(job: DendroJob, output_name: str):
     if output_name == "_console_output":
+        pass
+    elif output_name == "_resource_utilization_log":
         pass
     else:
         aa = [x for x in job.outputFiles if x.name == output_name]

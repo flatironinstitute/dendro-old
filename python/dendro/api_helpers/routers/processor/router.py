@@ -117,19 +117,12 @@ async def processor_get_job_status(job_id: str, job_private_key: str = Header(..
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
-# set job console output
-class ProcessorSetJobConsoleOutputRequest(BaseModel):
-    consoleOutput: str
-
-class ProcessorSetJobConsoleOutputResponse(BaseModel):
-    success: bool
-
 # get job output upload url
 class ProcessorGetJobOutputUploadUrlResponse(BaseModel):
     uploadUrl: str
     success: bool
 
-# note that output_name = "_console_output" is a special case
+# note that output_name of "_console_output" and "_resource_utilization_log" are special cases
 @router.get("/jobs/{job_id}/outputs/{output_name}/upload_url")
 async def processor_get_upload_url(job_id: str, output_name: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputUploadUrlResponse:
     try:

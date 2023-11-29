@@ -191,6 +191,7 @@ export type DendroJob = {
     computeResourceNodeId?: string // obsolete
     computeResourceNodeName?: string // obsolete
     consoleOutputUrl?: string
+    resourceUtilizationLogUrl?: string
     timestampQueued?: number
     timestampStarting?: number
     timestampStarted?: number
@@ -221,6 +222,7 @@ export const isDendroJob = (x: any): x is DendroJob => {
         computeResourceNodeId: optional(isString), // obsolete
         computeResourceNodeName: optional(isString), // obsolete
         consoleOutputUrl: optional(isString),
+        resourceUtilizationLogUrl: optional(isString),
         timestampQueued: optional(isNumber),
         timestampStarting: optional(isNumber),
         timestampStarted: optional(isNumber),
