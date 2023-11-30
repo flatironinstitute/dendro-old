@@ -1,5 +1,4 @@
 from typing import List
-import os
 
 from ..common.dendro_types import DendroJobRequiredResources
 
