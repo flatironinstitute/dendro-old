@@ -1,5 +1,5 @@
 import os
-from typing import List, Union
+from typing import List, Union, Literal
 
 from ..sdk.App import App
 from ..common.dendro_types import DendroComputeResourceApp
@@ -10,11 +10,11 @@ class AppManager:
     def __init__(self, *,
                  compute_resource_id: str,
                  compute_resource_private_key: str,
-                 allow_aws_batch: bool = True,
+                 available_job_run_methods: List[Literal['local', 'aws_batch', 'slurm']]
                 ):
         self._compute_resource_id = compute_resource_id
         self._compute_resource_private_key = compute_resource_private_key
-        self._allow_aws_batch = allow_aws_batch
+        self._available_job_run_methods = available_job_run_methods
 
         self._compute_resource_apps: List[DendroComputeResourceApp] = []
         self._apps: List[App] = []
@@ -90,7 +90,7 @@ class AppManager:
         )
         self._apps.append(app)
 
-        if self._allow_aws_batch and app._app_image is not None:
+        if 'aws_batch' in self._available_job_run_methods and app._app_image is not None:
             from ..aws_batch.aws_batch_job_definition import create_aws_batch_job_definition
             stack_id = 'DendroBatchStack'
             job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iaac/aws_batch/aws_batch/stack_config.py
@@ -106,8 +106,8 @@ class AppManager:
                 environment_variables=environment_variables
             )
 
-        # print info about the app so we can see what's going on
-        print(f'  {len(app._processors)} processors')
+        processor_names_str = ', '.join([p._name for p in app._processors])
+        print(f'  processors: {processor_names_str}')
         print('')
         print('')
 

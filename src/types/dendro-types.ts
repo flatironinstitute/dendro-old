@@ -217,6 +217,7 @@ export type DendroJob = {
     outputFiles: DendroJobOutputFile[]
     requiredResources?: DendroJobRequiredResources
     usedResources?: DendroJobUsedResources
+    runMethod?: 'local' | 'aws_batch' | 'slurm'
     timestampCreated: number
     computeResourceId: string
     status: 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
@@ -250,6 +251,7 @@ export const isDendroJob = (x: any): x is DendroJob => {
         outputFiles: isArrayOf(isDendroJobOutputFile),
         requiredResources: optional(isDendroJobRequiredResources),
         usedResources: optional(isDendroJobUsedResources),
+        runMethod: optional(isOneOf([isEqualTo('local'), isEqualTo('aws_batch'), isEqualTo('slurm')])),
         timestampCreated: isNumber,
         computeResourceId: isString,
         status: isOneOf([isEqualTo('pending'), isEqualTo('queued'), isEqualTo('starting'), isEqualTo('running'), isEqualTo('completed'), isEqualTo('failed')]),

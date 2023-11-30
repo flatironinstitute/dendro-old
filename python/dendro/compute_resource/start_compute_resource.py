@@ -22,9 +22,16 @@ class Daemon:
         if self._compute_resource_private_key is None:
             raise ValueError('Compute resource has not been initialized in this directory, and the environment variable COMPUTE_RESOURCE_PRIVATE_KEY is not set.')
 
+        available_job_run_methods_str = os.getenv('AVAILABLE_JOB_RUN_METHODS', 'local')
+        available_job_run_methods = [s.strip() for s in available_job_run_methods_str.split(',')]
+        for a in available_job_run_methods:
+            if a not in ['local', 'aws_batch', 'slurm']:
+                raise ValueError(f'Invalid job run method: {a}')
+
         self._app_manager = AppManager(
             compute_resource_id=self._compute_resource_id,
-            compute_resource_private_key=self._compute_resource_private_key
+            compute_resource_private_key=self._compute_resource_private_key,
+            available_job_run_methods=available_job_run_methods # type: ignore
         )
         self._app_manager.update_apps()
 
