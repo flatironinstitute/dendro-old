@@ -281,8 +281,8 @@ export type App = {
     specUri?: string
     executablePath?: string // to be removed
     container?: string // to be removed
-    awsBatch?: ComputeResourceAwsBatchOpts
-    slurm?: ComputeResourceSlurmOpts
+    awsBatch?: ComputeResourceAwsBatchOpts // obsolete
+    slurm?: ComputeResourceSlurmOpts // obsolete
 }
 
 export const setComputeResourceApps = async (computeResourceId: string, apps: App[], auth: Auth): Promise<void> => {
@@ -387,11 +387,12 @@ export const createJob = async (
         processorSpec: ComputeResourceSpecProcessor,
         files: DendroFile[],
         batchId?: string,
-        requiredResources: DendroJobRequiredResources
+        requiredResources: DendroJobRequiredResources,
+        runMethod: 'local' | 'aws_batch' | 'slurm'
     },
     auth: Auth
 ) : Promise<string> => {
-    const {projectId, jobDefinition, processorSpec, files, batchId, requiredResources} = a
+    const {projectId, jobDefinition, processorSpec, files, batchId, requiredResources, runMethod} = a
     const processorName = jobDefinition.processorName
     const inputFiles = jobDefinition.inputFiles
     const inputParameters = jobDefinition.inputParameters
@@ -428,7 +429,8 @@ export const createJob = async (
         outputFiles,
         processorSpec,
         batchId,
-        requiredResources
+        requiredResources,
+        runMethod
     }
     if (dandiApiKey) {
         body.dandiApiKey = dandiApiKey

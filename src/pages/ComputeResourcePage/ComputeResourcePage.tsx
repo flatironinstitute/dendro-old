@@ -3,7 +3,7 @@ import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay";
 import { App, fetchComputeResource, fetchJobsForComputeResource, setComputeResourceApps } from "../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 import { timeAgoString } from "../../timeStrings";
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, DendroComputeResource, DendroJob } from "../../types/dendro-types";
+import { DendroComputeResource, DendroJob } from "../../types/dendro-types";
 import UserIdComponent from "../../UserIdComponent";
 import JobsTable from "../ProjectPage/JobsWindow/JobsTable";
 import ComputeResourceAppsTable from "./ComputeResourceAppsTable";
@@ -51,10 +51,10 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
             }) : undefined
     }, [jobs])
 
-    const handleNewApp = useCallback((name: string, specUri: string, awsBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => {
+    const handleNewApp = useCallback((name: string, specUri: string) => {
         if (!computeResource) return
         const oldApps = computeResource.apps
-        const newApps: App[] = [...oldApps.filter(a => (a.name !== name)), {name, specUri, awsBatch, slurm}]
+        const newApps: App[] = [...oldApps.filter(a => (a.name !== name)), {name, specUri}]
         setComputeResourceApps(computeResource.computeResourceId, newApps, auth).then(() => {
             refreshComputeResource()
         })

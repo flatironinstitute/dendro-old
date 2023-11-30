@@ -1,10 +1,11 @@
 import os
 import sys
 import subprocess
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Literal
+
 from ..sdk.App import App
 from ..common._api_request import _processor_put_api_request
-from ..common.dendro_types import ComputeResourceSlurmOpts, DendroJobRequiredResources
+from ..common.dendro_types import DendroJobRequiredResources
 from ._run_job_in_aws_batch import _run_job_in_aws_batch
 from ..mock import using_mock
 
@@ -37,6 +38,7 @@ def _start_job(*,
     job_id: str,
     job_private_key: str,
     processor_name: str,
+    run_method: Literal['local', 'slurm', 'aws_batch'],
     app: App,
     run_process: bool = True,
     return_shell_command: bool = False,
@@ -52,18 +54,16 @@ def _start_job(*,
     assert hasattr(app, '_app_executable'), 'App does not have an executable path'
     app_executable: Union[str, None] = app._app_executable
     app_image: Union[str, None] = app._app_image
-    use_aws_batch = app._aws_batch_opts.useAwsBatch if app._aws_batch_opts else False
-    slurm_opts: Union[ComputeResourceSlurmOpts, None] = app._slurm_opts
 
     # default for app_executable
     if app_executable is None:
         assert app_image, 'You must set app_executable if app_image is not set'
         app_executable = '/app/main.py' # the default
 
-    if slurm_opts is not None:
+    if run_method == 'slurm':
         assert not run_process, 'Not expecting to see run_process here'
 
-    if use_aws_batch:
+    if run_method == 'aws_batch':
         assert not return_shell_command, 'Cannot return shell command for AWS Batch job'
         assert app_image, 'aws_batch_job_queue is set but app_image is not set'
         print(f'Running job in AWS Batch: {job_id} {processor_name}')

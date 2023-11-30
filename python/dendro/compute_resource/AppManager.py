@@ -1,3 +1,4 @@
+import os
 from typing import List, Union
 
 from ..sdk.App import App
@@ -9,9 +10,11 @@ class AppManager:
     def __init__(self, *,
                  compute_resource_id: str,
                  compute_resource_private_key: str,
+                 allow_aws_batch: bool = True,
                 ):
         self._compute_resource_id = compute_resource_id
         self._compute_resource_private_key = compute_resource_private_key
+        self._allow_aws_batch = allow_aws_batch
 
         self._compute_resource_apps: List[DendroComputeResourceApp] = []
         self._apps: List[App] = []
@@ -55,8 +58,13 @@ class AppManager:
             # Report the compute resource spec
             print('Reporting the compute resource spec')
             url_path = f'/api/compute_resource/compute_resources/{self._compute_resource_id}/spec'
+            default_job_run_method = os.environ.get('DEFAULT_JOB_RUN_METHOD', 'local')
+            available_job_run_methods_str = os.environ.get('AVAILABLE_JOB_RUN_METHODS', 'local')
+            available_job_run_methods = [s.strip() for s in available_job_run_methods_str.split(',')]
             spec = {
-                'apps': [a._spec_dict for a in self._apps]
+                'apps': [a._spec_dict for a in self._apps],
+                'defaultJobRunMethod': default_job_run_method,
+                'availableJobRunMethods': available_job_run_methods
             }
             _compute_resource_put_api_request(
                 url_path=url_path,
@@ -79,17 +87,11 @@ class AppManager:
         print(f'Loading app {cr_app.specUri}')
         app = App.from_spec_uri(
             spec_uri=cr_app.specUri,
-            aws_batch_opts=cr_app.awsBatch,
-            slurm_opts=cr_app.slurm
         )
         self._apps.append(app)
 
-        if app._aws_batch_opts is not None:
+        if self._allow_aws_batch and app._app_image is not None:
             from ..aws_batch.aws_batch_job_definition import create_aws_batch_job_definition
-            if app._slurm_opts is not None:
-                raise Exception('App with awsBatch opts also has slurm opts')
-            if app._app_image is None:
-                raise Exception('App with awsBatch opts has no app image')
             stack_id = 'DendroBatchStack'
             job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iaac/aws_batch/aws_batch/stack_config.py
             efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iaac/aws_batch/aws_batch/stack_config.py
@@ -105,28 +107,11 @@ class AppManager:
             )
 
         # print info about the app so we can see what's going on
-        s = []
-        if cr_app.awsBatch is not None:
-            if cr_app.slurm is not None:
-                print('WARNING: App has awsBatch opts but also has slurm opts')
-            s.append(f'Use AWS Batch: {cr_app.awsBatch.useAwsBatch}')
-        if cr_app.slurm is not None:
-            slurm_cpus_per_task = cr_app.slurm.cpusPerTask
-            slurm_partition = cr_app.slurm.partition
-            slurm_time = cr_app.slurm.time
-            slurm_other_opts = cr_app.slurm.otherOpts
-            s.append(f'slurmCpusPerTask: {slurm_cpus_per_task}')
-            s.append(f'slurmPartition: {slurm_partition}')
-            s.append(f'slurmTime: {slurm_time}')
-            s.append(f'slurmOtherOpts: {slurm_other_opts}')
-        print(f'  {" | ".join(s)}')
         print(f'  {len(app._processors)} processors')
         print('')
         print('')
 
 def _app_matches(app: App, cr_app: DendroComputeResourceApp) -> bool:
     return (
-        app._spec_uri == cr_app.specUri and
-        app._aws_batch_opts == cr_app.awsBatch and
-        app._slurm_opts == cr_app.slurm
+        app._spec_uri == cr_app.specUri
     )

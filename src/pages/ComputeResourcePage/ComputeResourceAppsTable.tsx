@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useMemo, useReducer } from "react"
 import { useModalDialog } from "../../ApplicationBar"
 import Hyperlink from "../../components/Hyperlink"
 import ModalWindow from "../../components/ModalWindow/ModalWindow"
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, DendroComputeResource } from "../../types/dendro-types"
+import { DendroComputeResource } from "../../types/dendro-types"
 import { Checkbox, selectedStringsReducer } from "../ProjectPage/FileBrowser/FileBrowser2"
 import ComputeResourceAppsTableMenuBar from "./ComputeResourceAppsTableMenuBar"
 import NewAppWindow from "./NewAppWindow"
@@ -11,8 +11,8 @@ type Props = {
     width: number
     height: number
     computeResource: DendroComputeResource
-    onNewApp: (name: string, specUri: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
-    onEditApp: (name: string, specUri: string, absBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => void
+    onNewApp: (name: string, specUri: string) => void
+    onEditApp: (name: string, specUri: string) => void
     onDeleteApps: (appNames: string[]) => void
 }
 
@@ -57,8 +57,6 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
                             <th style={{width: colWidth}} />
                             <th>App</th>
                             <th>Spec URI</th>
-                            <th>AWS Batch</th>
-                            <th>Slurm</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,22 +74,6 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
                                     <td>
                                         {app.specUri || ''}
                                     </td>
-                                    <td>
-                                        {app.awsBatch ? `Use AWS Batch: ${app.awsBatch.useAwsBatch ? "true" : "false"}` : ''}
-                                    </td>
-                                    <td>
-                                        {app.slurm ? (
-                                            <span>
-                                                <span>{app.slurm.cpusPerTask ? `CPUs per task: ${app.slurm.cpusPerTask}` : ''}</span>
-                                                &nbsp;
-                                                <span>{app.slurm.partition ? `Partition: ${app.slurm.partition}` : ''}</span>
-                                                &nbsp;
-                                                <span>{app.slurm.time ? `Time: ${app.slurm.time}` : ''}</span>
-                                                &nbsp;
-                                                <span>{app.slurm.otherOpts ? `Other options: ${app.slurm.otherOpts}` : ''}</span>
-                                            </span>
-                                        ) : ''}
-                                    </td>
                                 </tr>
                             ))
                         }
@@ -104,7 +86,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
             >
                 <NewAppWindow
                     computeResource={computeResource}
-                    onNewApp={(name, specUri, awsBatch, slurmOpts) => {closeNewAppWindow(); onNewApp(name, specUri, awsBatch, slurmOpts);}}
+                    onNewApp={(name, specUri) => {closeNewAppWindow(); onNewApp(name, specUri);}}
                 />
             </ModalWindow>
             <ModalWindow
@@ -113,7 +95,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
             >
                 <NewAppWindow
                     computeResource={computeResource}
-                    onNewApp={(name, specUri, awsBatch, slurmOpts) => {closeEditAppWindow(); onEditApp(name, specUri, awsBatch, slurmOpts);}}
+                    onNewApp={(name, specUri) => {closeEditAppWindow(); onEditApp(name, specUri);}}
                     appBeingEdited={selectedAppForEditing}
                 />
             </ModalWindow>

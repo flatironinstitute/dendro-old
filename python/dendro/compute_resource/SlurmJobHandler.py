@@ -4,16 +4,15 @@ import time
 import subprocess
 
 from ..mock import using_mock
-from ..common.dendro_types import ComputeResourceSlurmOpts, DendroJob
+from ..common.dendro_types import DendroJob
 
 if TYPE_CHECKING:
     from .JobManager import JobManager
 
 
 class SlurmJobHandler:
-    def __init__(self, *, job_manager: 'JobManager', slurm_opts: ComputeResourceSlurmOpts):
+    def __init__(self, *, job_manager: 'JobManager'):
         self._job_manager = job_manager
-        self._slurm_opts = slurm_opts
         self._jobs: List[DendroJob] = []
         self._job_ids = set()
         self._time_of_last_job_added = 0
@@ -68,10 +67,17 @@ class SlurmJobHandler:
             f.write('\n')
         if script_has_at_least_one_job:
             # run the slurm script with srun
-            slurm_cpus_per_task = self._slurm_opts.cpusPerTask
-            slurm_partition = self._slurm_opts.partition
-            slurm_time = self._slurm_opts.time
-            slurm_other_opts = self._slurm_opts.otherOpts
+            # slurm_cpus_per_task = self._slurm_opts.cpusPerTask
+            # slurm_partition = self._slurm_opts.partition
+            # slurm_time = self._slurm_opts.time
+            # slurm_other_opts = self._slurm_opts.otherOpts
+
+            # TODO: figure out where to get this information!
+            slurm_cpus_per_task = 4
+            slurm_partition = 'partition'
+            slurm_time = '1:00:00'
+            slurm_other_opts = ''
+
             oo = []
             if slurm_cpus_per_task is not None:
                 oo.append(f'--cpus-per-task={slurm_cpus_per_task}')

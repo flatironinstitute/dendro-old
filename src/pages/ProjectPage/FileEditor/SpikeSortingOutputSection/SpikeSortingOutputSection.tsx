@@ -112,15 +112,20 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
             memoryGb: 8,
             timeSec: 3600
         }
+        const defaultRunMethod = computeResource?.spec?.defaultJobRunMethod
+        if (!defaultRunMethod) {
+            throw new Error(`defaultJobRunMethod not found for compute resource: ${computeResource?.computeResourceId}`)
+        }
         await createJob({
             projectId,
             jobDefinition,
             processorSpec: spikeSortingFigurlProcessor,
             files,
             batchId: undefined,
-            requiredResources
+            requiredResources,
+            runMethod: defaultRunMethod
         }, auth)
-    }, [spikeSortingFigurlProcessor, projectId, recordingFileName, auth, fileName, electricalSeriesPath, files])
+    }, [spikeSortingFigurlProcessor, projectId, recordingFileName, auth, fileName, electricalSeriesPath, files, computeResource])
 
     const handleOpenSpikeSortingView = useCallback(async () => {
         if (!spikeSortingFigurlFile) return

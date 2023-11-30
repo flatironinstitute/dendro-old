@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import Any, List, Union, Literal
 import os
 from pydantic import BaseModel
 from .Project import Project
@@ -26,7 +26,8 @@ def submit_job(*,
     parameters: List[SubmitJobParameter],
     batch_id: Union[str, None] = None,
     rerun_policy: str = 'never', # always | never | if_failed
-    required_resources: DendroJobRequiredResources
+    required_resources: DendroJobRequiredResources,
+    run_method: Literal['local', 'aws_batch', 'slurm']
 ):
     """Submit a job to the Dendro compute service.
 
@@ -125,7 +126,8 @@ def submit_job(*,
         processorSpec=processor_spec,
         batchId=batch_id,
         dandiApiKey=os.environ.get('DANDI_API_KEY', None),
-        requiredResources=required_resources
+        requiredResources=required_resources,
+        runMethod=run_method
     )
 
     dendro_api_key = os.environ.get('DENDRO_API_KEY', None)

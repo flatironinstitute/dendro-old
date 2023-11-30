@@ -7,7 +7,6 @@ from .InputFile import InputFile
 from .AppProcessor import AppProcessor
 from .Job import Job
 from ._run_job import _run_job_parent_process
-from ..common.dendro_types import ComputeResourceSlurmOpts, ComputeResourceAwsBatchOpts
 from ..common._api_request import _processor_get_api_request
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
@@ -49,8 +48,6 @@ class App:
 
         self._spec_dict: Union[dict, None] = None # this is set when the app is loaded from a spec (internal use only)
         self._spec_uri: Union[str, None] = None # this is set when the app is loaded from a spec_uri (internal use only)
-        self._aws_batch_opts: Union[ComputeResourceAwsBatchOpts, None] = None # this is set when the app is loaded from a spec_uri (internal use only)
-        self._slurm_opts: Union[ComputeResourceSlurmOpts, None] = None # this is set when the app is loaded from a spec_uri (internal use only)
 
     def add_processor(self, processor_class: Type[ProcessorBase]):
         """Add a processor to the app
@@ -162,16 +159,12 @@ class App:
 
     @staticmethod
     def from_spec_uri(
-        spec_uri: str,
-        aws_batch_opts: Union[ComputeResourceAwsBatchOpts, None] = None,
-        slurm_opts: Union[ComputeResourceSlurmOpts, None] = None
+        spec_uri: str
     ):
         """Define an app from a spec URI (e.g., a gh url to the spec.json blob). This is called internally."""
         spec: dict = _load_spec_from_uri(spec_uri)
         a = App.from_spec(spec)
         a._spec_uri = spec_uri
-        a._aws_batch_opts = aws_batch_opts
-        a._slurm_opts = slurm_opts
         return a
 
     def _run_job_child_process(self, *, job_id: str, job_private_key: str):

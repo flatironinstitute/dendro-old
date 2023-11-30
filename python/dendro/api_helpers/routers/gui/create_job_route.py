@@ -37,6 +37,7 @@ async def create_job_handler(
     batch_id = data.batchId
     dandi_api_key = data.dandiApiKey
     required_resources = data.requiredResources
+    run_method = data.runMethod
 
     job_id = await create_job(
         project_id=project_id,
@@ -48,7 +49,8 @@ async def create_job_handler(
         batch_id=batch_id,
         user_id=user_id,
         dandi_api_key=dandi_api_key,
-        required_resources=required_resources
+        required_resources=required_resources,
+        run_method=run_method
     )
 
     return CreateJobResponse(

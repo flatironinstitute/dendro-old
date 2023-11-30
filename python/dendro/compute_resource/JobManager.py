@@ -1,7 +1,6 @@
-from typing import Dict, List, Union, TYPE_CHECKING
+from typing import Dict, List, TYPE_CHECKING
 from .SlurmJobHandler import SlurmJobHandler
 from ..common.dendro_types import DendroJob
-from ..sdk.App import App
 from ..sdk._run_job import _set_job_status
 from .ComputeResourceException import ComputeResourceException
 if TYPE_CHECKING:
@@ -26,8 +25,12 @@ class JobManager:
 
         self._slurm_job_handlers_by_processor: Dict[str, SlurmJobHandler] = {}
     def handle_jobs(self, jobs: List[DendroJob]):
+        for job in jobs:
+            if job.runMethod is None:
+                self._fail_job(job, 'runMethod is None')
+
         # Local jobs
-        local_jobs = [job for job in jobs if self._is_local_job(job)]
+        local_jobs = [job for job in jobs if job.runMethod == 'local']
         num_non_pending_local_jobs = len([job for job in local_jobs if job.status != 'pending'])
         if num_non_pending_local_jobs < max_simultaneous_local_jobs:
             pending_local_jobs = [job for job in local_jobs if job.status == 'pending']
@@ -38,47 +41,24 @@ class JobManager:
                 self._start_job(job)
 
         # AWS Batch jobs
-        aws_batch_jobs = [job for job in jobs if self._is_aws_batch_job(job)]
+        aws_batch_jobs = [job for job in jobs if job.runMethod == 'aws_batch']
         pending_aws_batch_jobs = [job for job in aws_batch_jobs if self._job_is_pending(job)]
         for job in pending_aws_batch_jobs:
             self._start_job(job)
 
         # SLURM jobs
-        slurm_jobs = [job for job in jobs if self._is_slurm_job(job) and self._job_is_pending(job)]
+        slurm_jobs = [job for job in jobs if job.runMethod == 'slurm' and self._job_is_pending(job)]
         for job in slurm_jobs:
             processor_name = job.processorName
             if processor_name not in self._slurm_job_handlers_by_processor:
                 app = self._app_manager.find_app_with_processor(processor_name)
                 if not app:
                     raise ComputeResourceException(f'Could not find app for processor {processor_name}')
-                if not app._slurm_opts:
-                    raise ComputeResourceException(f'Unexpected: Could not find slurm opts for app {app._name}')
-                self._slurm_job_handlers_by_processor[processor_name] = SlurmJobHandler(job_manager=self, slurm_opts=app._slurm_opts)
+                self._slurm_job_handlers_by_processor[processor_name] = SlurmJobHandler(job_manager=self)
             self._slurm_job_handlers_by_processor[processor_name].add_job(job)
     def do_work(self):
         for slurm_job_handler in self._slurm_job_handlers_by_processor.values():
             slurm_job_handler.do_work()
-    def _get_job_resource_type(self, job: DendroJob) -> Union[str, None]:
-        processor_name = job.processorName
-        app: Union[App, None] = self._app_manager.find_app_with_processor(processor_name)
-        if app is None:
-            return None
-        # if app._aws_batch_opts is not None and app._aws_batch_opts.jobQueue is not None:
-        #     return 'aws_batch'
-        if app._aws_batch_opts and app._aws_batch_opts.useAwsBatch:
-            return 'aws_batch'
-        if app._slurm_opts is not None:
-            return 'slurm'
-        return 'local'
-    def _is_local_job(self, job: DendroJob) -> bool:
-        return self._get_job_resource_type(job) == 'local'
-
-    def _is_aws_batch_job(self, job: DendroJob) -> bool:
-        return self._get_job_resource_type(job) == 'aws_batch'
-
-    def _is_slurm_job(self, job: DendroJob) -> bool:
-        return self._get_job_resource_type(job) == 'slurm'
-
     def _job_is_pending(self, job: DendroJob) -> bool:
         return job.status == 'pending'
     def _start_job(self, job: DendroJob, run_process: bool = True, return_shell_command: bool = False):
@@ -99,10 +79,12 @@ class JobManager:
             from ._start_job import _start_job
             if job.requiredResources is None:
                 raise Exception('Cannot start job... requiredResources is None')
+            assert job.runMethod is not None, 'Unexpected: job.runMethod is None'
             return _start_job(
                 job_id=job_id,
                 job_private_key=job_private_key,
                 processor_name=processor_name,
+                run_method=job.runMethod,
                 app=app,
                 run_process=run_process,
                 return_shell_command=return_shell_command,
@@ -114,8 +96,13 @@ class JobManager:
             traceback.print_exc()
             msg = f'Failed to start job: {str(e)}'
             print(msg)
-            _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=msg)
+            self._fail_job(job, msg)
             return ''
+    def _fail_job(self, job: DendroJob, error: str):
+        job_id = job.jobId
+        job_private_key = job.jobPrivateKey
+        print(f'Failing job {job_id}: {error}')
+        _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=error)
 
 def _sort_jobs_by_timestamp_created(jobs: List[DendroJob]) -> List[DendroJob]:
     return sorted(jobs, key=lambda job: job.timestampCreated)

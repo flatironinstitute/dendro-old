@@ -8,6 +8,7 @@ import { ComputeResourceSpecApp, ComputeResourceSpecProcessor, DendroComputeReso
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow"
 import { useNwbFile } from "../FileEditor/NwbFileEditor"
 import { useProject } from "../ProjectPageContext"
+import RunMethodSelector from "./RunMethodSelector"
 
 type Props = {
     filePaths: string[]
@@ -103,6 +104,13 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         setRequiredResources(rr)
     }, [processor])
 
+    const defaultRunMethod = computeResource?.spec?.defaultJobRunMethod
+    const [runMethod, setRunMethod] = useState<'local' | 'aws_batch' | 'slurm'>(defaultRunMethod || 'local')
+
+    const availableRunMethods: ('local' | 'aws_batch' | 'slurm')[] = useMemo(() => {
+        return computeResource?.spec?.availableJobRunMethods || ['local']
+    }, [computeResource])
+
     const handleSubmit = useCallback(async () => {
         if (!processor) return
         if (!files) return
@@ -130,7 +138,8 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                 processorSpec: processor.processor,
                 files,
                 batchId,
-                requiredResources
+                requiredResources,
+                runMethod
             }
             console.log('CREATING JOB', job)
             await createJob(job, auth)
@@ -138,7 +147,7 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         setOperatingMessage(undefined)
         setOperating(false)
         onClose()
-    }, [projectId, jobDefinition, processor, filePaths, files, overwriteExistingOutputs, descriptionString, auth, onClose, selectedSpikeSortingProcessor, requiredResources])
+    }, [projectId, jobDefinition, processor, filePaths, files, overwriteExistingOutputs, descriptionString, auth, onClose, selectedSpikeSortingProcessor, requiredResources, runMethod])
 
     const descriptionStringIsValid = useMemo(() => {
         // description string must be alphanumeric with dashes but not underscores
@@ -213,6 +222,9 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                 app={processor?.app}
                 appSpec={processor?.appSpec}
                 onClose={onClose}
+                runMethod={runMethod}
+                setRunMethod={setRunMethod}
+                availableRunMethods={availableRunMethods}
             />
             <RightColumn
                 width={0}
@@ -289,6 +301,9 @@ type LeftColumnProps = {
     appSpec?: ComputeResourceSpecApp
     app?: DendroComputeResourceApp
     onClose: () => void
+    runMethod: 'local' | 'aws_batch' | 'slurm'
+    setRunMethod: (val: 'local' | 'aws_batch' | 'slurm') => void
+    availableRunMethods: ('local' | 'aws_batch' | 'slurm')[]
 }
 
 const LeftColumn: FunctionComponent<LeftColumnProps> = ({
@@ -301,7 +316,9 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
     operatingMessage,
     requiredResources, setRequiredResources,
     app,
-    onClose
+    onClose,
+    runMethod, setRunMethod,
+    availableRunMethods
 }) => {
     return (
         <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
@@ -335,6 +352,12 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
                 requiredResources={requiredResources}
                 setRequiredResources={setRequiredResources}
             />}
+            <div>&nbsp;</div><hr /><div>&nbsp;</div>
+            <RunMethodSelector
+                runMethod={runMethod}
+                setRunMethod={setRunMethod}
+                availableRunMethods={availableRunMethods}
+            />
             <div>&nbsp;</div><hr /><div>&nbsp;</div>
             <div>
                 {/* Large submit button */}
@@ -390,16 +413,6 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
                 app && (
                     <>
                         <div>Dendro app: {app.name}</div>
-                        <div>&nbsp;</div>
-                        <div>{
-                            app?.awsBatch?.useAwsBatch ? (
-                                <div>These jobs will run on AWS Batch</div>
-                            ) : app?.slurm ? (
-                                <div>These jobs will run on a Slurm cluster</div>
-                            ) : (
-                                <div>These jobs will run directly on the compute resource controller computer</div>
-                            )
-                        }</div>
                     </>
                 )
             }

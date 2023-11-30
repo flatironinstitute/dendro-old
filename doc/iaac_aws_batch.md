@@ -1,6 +1,6 @@
 # AWS Batch IaaC
 
-In order to run Dendro Apps as AWS Batch jobs, the infrastructure must be provisioned first. This is done in two stages:
+In order to run Dendro jobs in AWS Batch, the infrastructure must be provisioned first. This is done in two stages:
 
 1. Before installing any Apps: Provision the base AWS Batch infrastructure using CDK. This includes IAM roles, VPC, Security Group, EFS filesystems, Batch Compute Environments and Batch Job Queues.
 2. At every App install: Provision the App-specific infrastructure using Boto3. This includes one EFS Volume one Batch Job Definition.

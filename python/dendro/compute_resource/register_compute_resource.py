@@ -12,7 +12,9 @@ env_var_keys = [
     'SINGLETON_JOB_ID',
     'BATCH_AWS_ACCESS_KEY_ID',
     'BATCH_AWS_SECRET_ACCESS_KEY',
-    'BATCH_AWS_REGION'
+    'BATCH_AWS_REGION',
+    'DEFAULT_JOB_RUN_METHOD',
+    'AVAILABLE_JOB_RUN_METHODS'
 ]
 
 def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = None, compute_resource_private_key: Optional[str] = None) -> Tuple[str, str]:
