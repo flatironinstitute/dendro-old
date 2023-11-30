@@ -84,7 +84,7 @@ class AppManager:
         )
         self._apps.append(app)
 
-        if app._aws_batch_opts is not None:
+        if app._aws_batch_opts is not None and app._aws_batch_opts.useAwsBatch:
             from ..aws_batch.aws_batch_job_definition import create_aws_batch_job_definition
             if app._slurm_opts is not None:
                 raise Exception('App with awsBatch opts also has slurm opts')
@@ -106,7 +106,7 @@ class AppManager:
 
         # print info about the app so we can see what's going on
         s = []
-        if cr_app.awsBatch is not None:
+        if cr_app.awsBatch is not None and cr_app.awsBatch.useAwsBatch:
             if cr_app.slurm is not None:
                 print('WARNING: App has awsBatch opts but also has slurm opts')
             s.append(f'Use AWS Batch: {cr_app.awsBatch.useAwsBatch}')
