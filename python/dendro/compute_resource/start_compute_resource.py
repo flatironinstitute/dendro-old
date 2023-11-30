@@ -95,8 +95,8 @@ class Daemon:
                         self._app_manager.update_apps()
 
                 if time_to_handle_jobs or jobs_have_changed:
-                    if time_to_handle_jobs:
-                        print('Checking for new jobs')
+                    # if time_to_handle_jobs:
+                    #     print('Checking for new jobs') # this pollutes the logs too much
                     timer_handle_jobs = time.time()
                     self._handle_jobs()
 

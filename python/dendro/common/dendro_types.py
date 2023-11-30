@@ -151,6 +151,8 @@ class ComputeResourceSpecApp(BaseModel):
 
 class ComputeResourceSpec(BaseModel):
     apps: List[ComputeResourceSpecApp]
+    defaultJobRunMethod: Literal['local', 'aws_batch', 'slurm']
+    availableJobRunMethods: List[Literal['local', 'aws_batch', 'slurm']]
 
 class DendroComputeResource(BaseModel):
     computeResourceId: str

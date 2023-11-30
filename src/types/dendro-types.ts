@@ -372,16 +372,16 @@ export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp =>
 }
 
 export type ComputeResourceSpec = {
+    apps: ComputeResourceSpecApp[]
     defaultJobRunMethod?: 'local' | 'aws_batch' | 'slurm'
     availableJobRunMethods?: ('local' | 'aws_batch' | 'slurm')[]
-    apps: ComputeResourceSpecApp[]
 }
 
 export const isComputeResourceSpec = (x: any): x is ComputeResourceSpec => {
     return validateObject(x, {
+        apps: isArrayOf(isComputeResourceSpecApp),
         defaultJobRunMethod: optional(isOneOf([isEqualTo('local'), isEqualTo('aws_batch'), isEqualTo('slurm')])),
         availableJobRunMethods: optional(isArrayOf(isOneOf([isEqualTo('local'), isEqualTo('aws_batch'), isEqualTo('slurm')]))),
-        apps: isArrayOf(isComputeResourceSpecApp)
     })
 }
 
