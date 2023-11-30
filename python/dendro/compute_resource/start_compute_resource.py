@@ -23,7 +23,7 @@ class Daemon:
             raise ValueError('Compute resource has not been initialized in this directory, and the environment variable COMPUTE_RESOURCE_PRIVATE_KEY is not set.')
 
         available_job_run_methods_str = os.getenv('AVAILABLE_JOB_RUN_METHODS', 'local')
-        available_job_run_methods = [s.strip() for s in available_job_run_methods_str.split(',')]
+        available_job_run_methods = [s.strip() for s in available_job_run_methods_str.split(',') if s]
         for a in available_job_run_methods:
             if a not in ['local', 'aws_batch', 'slurm']:
                 raise ValueError(f'Invalid job run method: {a}')
@@ -148,8 +148,15 @@ def start_compute_resource(dir: str, *, timeout: Optional[float] = None, cleanup
     else:
         the_config = {}
     for k in env_var_keys:
-        if k in the_config:
+        if k in the_config and the_config[k]:
             os.environ[k] = the_config[k]
+        else:
+            the_config[k] = ''
+    for k in the_config.keys():
+        if k not in env_var_keys:
+            print('WARNING: Unknown key in config file: ' + k)
+    with open(config_fname, 'w', encoding='utf8') as f:
+        yaml.dump(the_config, f)
     daemon = Daemon()
     daemon.start(timeout=timeout, cleanup_old_jobs=cleanup_old_jobs)
 

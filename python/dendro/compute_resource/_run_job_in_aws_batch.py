@@ -22,21 +22,8 @@ def _run_job_in_aws_batch(
 ):
     import boto3
 
-    aws_access_key_id = os.getenv('BATCH_AWS_ACCESS_KEY_ID', None)
-    if aws_access_key_id is None:
-        raise KeyError('BATCH_AWS_ACCESS_KEY_ID is not set')
-    aws_secret_access_key = os.getenv('BATCH_AWS_SECRET_ACCESS_KEY', None)
-    if aws_secret_access_key is None:
-        raise KeyError('BATCH_AWS_SECRET_ACCESS_KEY is not set')
-    aws_region = os.getenv('BATCH_AWS_REGION', None)
-    if aws_region is None:
-        raise KeyError('BATCH_AWS_REGION is not set')
-
     client = boto3.client(
-        'batch',
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        region_name=aws_region
+        'batch'
     )
 
     stack_id = 'DendroBatchStack'
