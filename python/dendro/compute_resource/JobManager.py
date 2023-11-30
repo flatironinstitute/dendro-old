@@ -1,13 +1,15 @@
-from typing import Dict, List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 from .SlurmJobHandler import SlurmJobHandler
 from ..common.dendro_types import DendroJob
 from ..sdk._run_job import _set_job_status
-from .ComputeResourceException import ComputeResourceException
 if TYPE_CHECKING:
     from .AppManager import AppManager
 
 
+# TODO: make these configurable
 max_simultaneous_local_jobs = 2
+max_simultaneous_aws_batch_jobs = 20
+max_simultaneous_slurm_jobs = 50
 
 class JobManager:
     def __init__(self, *,
@@ -22,48 +24,38 @@ class JobManager:
         # important to keep track of which jobs we attempted to start
         # so that we don't attempt multiple times in the case where starting failed
         self._attempted_to_start_job_ids = set()
+        self._attempted_to_fail_job_ids = set()
 
-        self._slurm_job_handlers_by_processor: Dict[str, SlurmJobHandler] = {}
+        self._slurm_job_handler = SlurmJobHandler(job_manager=self)
     def handle_jobs(self, jobs: List[DendroJob]):
-        for job in jobs:
-            if job.runMethod is None:
-                self._fail_job(job, 'runMethod is None')
+        local_jobs = [job for job in jobs if job.runMethod == 'local']
+        aws_batch_jobs = [job for job in jobs if job.runMethod == 'aws_batch']
+        slurm_jobs = [job for job in jobs if job.runMethod == 'slurm']
+        none_jobs = [job for job in jobs if job.runMethod is None]
+
+        for job in none_jobs:
+            self._fail_job(job, 'runMethod is None')
 
         # Local jobs
-        local_jobs = [job for job in jobs if job.runMethod == 'local']
-        num_non_pending_local_jobs = len([job for job in local_jobs if job.status != 'pending'])
-        if num_non_pending_local_jobs < max_simultaneous_local_jobs:
-            pending_local_jobs = [job for job in local_jobs if job.status == 'pending']
-            pending_local_jobs = _sort_jobs_by_timestamp_created(pending_local_jobs)
-            num_to_start = min(max_simultaneous_local_jobs - num_non_pending_local_jobs, len(pending_local_jobs))
-            local_jobs_to_start = pending_local_jobs[:num_to_start]
-            for job in local_jobs_to_start:
-                self._start_job(job)
+        local_jobs_to_start = _choose_pending_jobs_to_start(local_jobs, max_simultaneous_local_jobs)
+        for job in local_jobs_to_start:
+            self._start_job(job)
 
         # AWS Batch jobs
-        aws_batch_jobs = [job for job in jobs if job.runMethod == 'aws_batch']
-        pending_aws_batch_jobs = [job for job in aws_batch_jobs if self._job_is_pending(job)]
-        for job in pending_aws_batch_jobs:
+        aws_jobs_to_start = _choose_pending_jobs_to_start(aws_batch_jobs, max_simultaneous_aws_batch_jobs)
+        for job in aws_jobs_to_start:
             self._start_job(job)
 
         # SLURM jobs
-        slurm_jobs = [job for job in jobs if job.runMethod == 'slurm' and self._job_is_pending(job)]
-        for job in slurm_jobs:
-            processor_name = job.processorName
-            if processor_name not in self._slurm_job_handlers_by_processor:
-                app = self._app_manager.find_app_with_processor(processor_name)
-                if not app:
-                    raise ComputeResourceException(f'Could not find app for processor {processor_name}')
-                self._slurm_job_handlers_by_processor[processor_name] = SlurmJobHandler(job_manager=self)
-            self._slurm_job_handlers_by_processor[processor_name].add_job(job)
+        # this is more tricky... let's send the to slurm job handler
+        self._slurm_job_handler.handle_jobs(slurm_jobs)
     def do_work(self):
-        for slurm_job_handler in self._slurm_job_handlers_by_processor.values():
-            slurm_job_handler.do_work()
+        self._slurm_job_handler.do_work()
     def _job_is_pending(self, job: DendroJob) -> bool:
         return job.status == 'pending'
     def _start_job(self, job: DendroJob, run_process: bool = True, return_shell_command: bool = False):
         job_id = job.jobId
-        if job_id in self._attempted_to_start_job_ids:
+        if job_id in self._attempted_to_start_job_ids or job_id in self._attempted_to_fail_job_ids:
             return '' # see above comment about why this is necessary
         self._attempted_to_start_job_ids.add(job_id)
         job_private_key = job.jobPrivateKey
@@ -100,9 +92,24 @@ class JobManager:
             return ''
     def _fail_job(self, job: DendroJob, error: str):
         job_id = job.jobId
+        if job_id in self._attempted_to_fail_job_ids:
+            return '' # see above comment about why this is necessary
+        self._attempted_to_fail_job_ids.add(job_id)
+        job_id = job.jobId
         job_private_key = job.jobPrivateKey
         print(f'Failing job {job_id}: {error}')
         _set_job_status(job_id=job_id, job_private_key=job_private_key, status='failed', error=error)
 
 def _sort_jobs_by_timestamp_created(jobs: List[DendroJob]) -> List[DendroJob]:
     return sorted(jobs, key=lambda job: job.timestampCreated)
+
+def _choose_pending_jobs_to_start(jobs: List[DendroJob], max_num_simultaneous_jobs: int) -> List[DendroJob]:
+    num_non_pending_jobs = len([job for job in jobs if job.status != 'pending'])
+    if num_non_pending_jobs < max_num_simultaneous_jobs:
+        pending_jobs = [job for job in jobs if job.status == 'pending']
+        pending_jobs = _sort_jobs_by_timestamp_created(pending_jobs)
+        num_to_start = min(max_num_simultaneous_jobs - num_non_pending_jobs, len(pending_jobs))
+        jobs_to_start = pending_jobs[:num_to_start]
+    else:
+        jobs_to_start = []
+    return jobs_to_start

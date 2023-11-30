@@ -87,8 +87,3 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
     assert COMPUTE_RESOURCE_ID is not None
     assert COMPUTE_RESOURCE_PRIVATE_KEY is not None
     return COMPUTE_RESOURCE_ID, COMPUTE_RESOURCE_PRIVATE_KEY
-
-def _random_string(length: int) -> str:
-    import random
-    import string
-    return ''.join(random.choice(string.ascii_lowercase) for i in range(length))

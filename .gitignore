@@ -1,4 +1,5 @@
 slurm_batch_*
+slurm_group_assignments
 tmp
 __pycache__
 
