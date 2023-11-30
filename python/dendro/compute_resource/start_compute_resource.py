@@ -71,23 +71,33 @@ class Daemon:
 
         try:
             print('Starting compute resource')
+            reported_that_compute_resource_is_running = False
             overall_timer = time.time()
             while True:
                 elapsed_handle_jobs = time.time() - timer_handle_jobs
-                need_to_handle_jobs = elapsed_handle_jobs > (60 * 10) / time_scale_factor # normally we will get pubsub messages for updates, but if we don't, we should check every 10 minutes
+                # normally we will get pubsub messages for updates, but if we don't, we should check every 10 minutes
+                time_to_handle_jobs = elapsed_handle_jobs > 60 * 10 / time_scale_factor
                 messages = pubsub_client.take_messages() if pubsub_client is not None else []
+                jobs_have_changed = False
                 for msg in messages:
                     if msg['type'] == 'newPendingJob':
-                        need_to_handle_jobs = True
+                        jobs_have_changed = True
                     if msg['type'] == 'jobStatusChaged':
-                        need_to_handle_jobs = True
+                        jobs_have_changed = True
                     if msg['type'] == 'computeResourceAppsChanaged':
                         self._app_manager.update_apps()
-                if need_to_handle_jobs:
+
+                if time_to_handle_jobs or jobs_have_changed:
+                    if time_to_handle_jobs:
+                        print('Checking for new jobs')
                     timer_handle_jobs = time.time()
                     self._handle_jobs()
 
                 self._job_manager.do_work()
+
+                if not reported_that_compute_resource_is_running:
+                    print('Compute resource is running')
+                    reported_that_compute_resource_is_running = True
 
                 overall_elapsed = time.time() - overall_timer
                 if timeout is not None and overall_elapsed > timeout:
