@@ -89,7 +89,7 @@ class Daemon:
                 for msg in messages:
                     if msg['type'] == 'newPendingJob':
                         jobs_have_changed = True
-                    if msg['type'] == 'jobStatusChaged':
+                    if msg['type'] == 'jobStatusChanged':
                         jobs_have_changed = True
                     if msg['type'] == 'computeResourceAppsChanaged':
                         self._app_manager.update_apps()

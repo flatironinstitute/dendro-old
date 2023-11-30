@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .JobManager import JobManager
 
 
-max_num_simultaneous_slurm_groups = 5 # TODO: make these configurable
+max_num_simultaneous_slurm_groups = 5 # TODO: make this configurable
 
 # This will determine how many cpu jobs get grouped together in a single slurm job
 num_cpus_per_slurm_node = 100 # TODO: make this configurable
@@ -131,7 +131,7 @@ class SlurmJobHandler:
             oo.append(f'--cpus-per-task={num_cpus_per_job}')
             oo.append(f'--partition={slurm_partition}')
             if num_gpus_per_job > 0:
-                oo.append(f'---gpus-per-task={num_gpus_per_job}')
+                oo.append(f'--gpus-per-task={num_gpus_per_job}')
             oo.append(f'--time={slurm_time}')
 
             # provide memory per cpu
