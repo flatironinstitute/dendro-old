@@ -76,7 +76,7 @@ class Daemon:
             while True:
                 elapsed_handle_jobs = time.time() - timer_handle_jobs
                 # normally we will get pubsub messages for updates, but if we don't, we should check every 10 minutes
-                time_to_handle_jobs = elapsed_handle_jobs > 5 / time_scale_factor
+                time_to_handle_jobs = elapsed_handle_jobs > 60 * 10 / time_scale_factor
                 messages = pubsub_client.take_messages() if pubsub_client is not None else []
                 jobs_have_changed = False
                 for msg in messages:
