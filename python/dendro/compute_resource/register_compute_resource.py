@@ -65,6 +65,11 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
     COMPUTE_RESOURCE_ID = the_env['COMPUTE_RESOURCE_ID']
     COMPUTE_RESOURCE_PRIVATE_KEY = the_env['COMPUTE_RESOURCE_PRIVATE_KEY']
 
+    if not COMPUTE_RESOURCE_ID:
+        raise ValueError('COMPUTE_RESOURCE_ID is not set')
+    if not COMPUTE_RESOURCE_PRIVATE_KEY:
+        raise ValueError('COMPUTE_RESOURCE_PRIVATE_KEY is not set')
+
     timestamp = int(time.time())
     msg = {
         'timestamp': timestamp
