@@ -141,7 +141,7 @@ class SlurmJobHandler:
 
             slurm_opts_str = ' '.join(oo)
             if not using_mock():
-                cmd = f'srun -n {slurm_opts_str} bash {slurm_script_fname}'
+                cmd = f'srun {slurm_opts_str} bash {slurm_script_fname}'
             else:
                 cmd = f'bash {slurm_script_fname}'
 
