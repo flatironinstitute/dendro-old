@@ -86,16 +86,12 @@ def _start_job(*,
     working_dir = os.getcwd() + '/jobs/' + job_id
     os.makedirs(working_dir, exist_ok=True)
 
-    # for safety, verify that cleanup directory is as expected
-    dendro_job_cleanup_dir = working_dir
-    assert dendro_job_cleanup_dir.endswith('/jobs/' + job_id), f'Unexpected dendro_job_cleanup_dir: {dendro_job_cleanup_dir}'
     env_vars = {
         'PYTHONUNBUFFERED': '1',
         'JOB_ID': job_id,
         'JOB_PRIVATE_KEY': job_private_key,
         'APP_EXECUTABLE': app_executable,
-        'DENDRO_URL': 'https://dendro.vercel.app',
-        'DENDRO_JOB_CLEANUP_DIR': dendro_job_cleanup_dir # see the warning above
+        'DENDRO_URL': 'https://dendro.vercel.app'
     }
 
     if required_resources.timeSec is not None:
@@ -109,6 +105,10 @@ def _start_job(*,
     #     env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     if not app_image:
+        # for safety, verify that cleanup directory is as expected
+        dendro_job_cleanup_dir = working_dir
+        assert dendro_job_cleanup_dir.endswith('/jobs/' + job_id), f'Unexpected dendro_job_cleanup_dir: {dendro_job_cleanup_dir}'
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = dendro_job_cleanup_dir # see the warning above
         return _run_local_job(
             app_executable=app_executable,
             env_vars=env_vars,
@@ -220,6 +220,7 @@ def _run_container_job(*,
             'docker', 'run', '-it'
         ]
         cmd2.extend(['-v', f'{tmpdir}:/tmp'])
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp/working'
         cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
         for k, v in env_vars.items():
             cmd2.extend(['-e', f'{k}={v}'])
@@ -247,6 +248,7 @@ def _run_container_job(*,
         cmd2 = ['singularity', 'exec']
         cmd2.extend(['--bind', f'{tmpdir}:/tmp'])
         # The working directory should be /tmp/working so that if the container wants to write to the working directory, it will not run out of space
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp/working'
         cmd2.extend(['--pwd', '/tmp/working'])
         cmd2.extend(['--cleanenv']) # this is important to prevent singularity from passing environment variables to the container
         cmd2.extend(['--contain']) # we don't want singularity to mount the home or tmp directories of the host

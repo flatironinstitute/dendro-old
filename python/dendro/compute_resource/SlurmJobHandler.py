@@ -97,7 +97,6 @@ class SlurmJobHandler:
                         # this is how we make sure one and only one job is run in each process
                         f.write(f'if [ "$SLURM_PROCID" == "{ii}" ]; then\n')
                         f.write(f'    {cmd}\n')
-                        f.write(f'    rm slurm_group_assignments/{job.jobId}\n')
                         f.write('fi\n')
                         f.write('\n')
                     else:

@@ -61,6 +61,8 @@ class AppManager:
             default_job_run_method = os.environ.get('DEFAULT_JOB_RUN_METHOD', 'local')
             available_job_run_methods_str = os.environ.get('AVAILABLE_JOB_RUN_METHODS', 'local')
             available_job_run_methods = [s.strip() for s in available_job_run_methods_str.split(',')]
+            print(f'  default_job_run_method: {default_job_run_method}')
+            print(f'  available_job_run_methods: {available_job_run_methods}')
             spec = {
                 'apps': [a._spec_dict for a in self._apps],
                 'defaultJobRunMethod': default_job_run_method,
