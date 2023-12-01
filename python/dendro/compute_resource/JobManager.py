@@ -9,7 +9,6 @@ if TYPE_CHECKING:
 # TODO: make these configurable
 max_simultaneous_local_jobs = 2
 max_simultaneous_aws_batch_jobs = 20
-max_simultaneous_slurm_jobs = 50
 
 class JobManager:
     def __init__(self, *,
