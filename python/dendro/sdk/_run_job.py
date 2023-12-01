@@ -246,7 +246,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                 # delete files in the cleanup dir but do not delete the cleanup dir itself
                 def _delete_files_in_dir(dir: str):
                     for fname in os.listdir(dir):
-                        if fname == 'denro-job.log':
+                        if fname == 'dendro-job.log':
                             # don't delete the log file
                             continue
                         fpath = os.path.join(dir, fname)
