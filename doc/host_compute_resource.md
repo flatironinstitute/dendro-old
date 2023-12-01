@@ -53,4 +53,4 @@ The following are available apps that you can configure
 
 ## Submitting jobs to AWS Batch
 
-[See iaac_aws_batch](./iaac_aws_batch.md)
+[See iac_aws_batch](./iac_aws_batch.md)

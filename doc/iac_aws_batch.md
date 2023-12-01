@@ -1,4 +1,4 @@
-# AWS Batch IaaC
+# AWS Batch Infrastructure as Code (IaC)
 
 Here we provide instructions for setting up your compute resource to run Dendro jobs in AWS Batch. First you will need to provision the base AWS Batch infrastructure using CDK. This includes IAM roles, VPC, Security Group, EFS filesystems, Batch Compute Environments and Batch Job Queues. Next you will need to configure your compute resource controller to submit jobs to AWS Batch. Finally, when you submit jobs from the web interface, you must select aws_batch as the run method.
 
@@ -15,7 +15,7 @@ Here we provide instructions for setting up your compute resource to run Dendro 
 AWS CDK is a very convenient tool, it helps automate the provisioning of AWS infrastructure and organizes all created resources in a CloudFormation stack, which can be easily updated or deleted.
 
 Follow these steps if you're running Dendro CDK stack for the first time:
-- go to `cloned_dendro_repo_path/iaac/aws_batch` directory.
+- go to `cloned_dendro_repo_path/iac/aws_batch` directory.
 - run `pip install -r requirements.txt` to install the required Python packages.
 - run `cdk bootstrap` to set up the CDK deployment infrastructure (CKDToolkit) in your AWS account. This only needs to be done once.
 - run `cdk deploy` to deploy the stack to your default AWS account/region.
