@@ -397,6 +397,12 @@ type ParameterRowProps = {
 const ParameterRow: FunctionComponent<ParameterRowProps> = ({parameter, value, nwbFile, setValue, setValid, readOnly, secret, visible}) => {
     const {type, name, description} = parameter
     const [isValid, setIsValid] = useState<boolean>(false)
+    useEffect(() => {
+        if (parameter.type === 'bool') {
+            setValid(true)
+            setIsValid(true)
+        }
+    }, [parameter, setValid])
     return (
         <tr style={{display: visible ? undefined : 'none'}}>
             <td title={`${name} (${type})`} style={nameColumnStyle}>
@@ -478,7 +484,6 @@ const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({paramet
         return <FloatEdit value={value} setValue={setValue} setValid={setValid} optional={true} />
     }
     else if (type === 'bool') {
-        setValid(true)
         return <input type="checkbox" checked={value || false} onChange={evt => {setValue(evt.target.checked ? true : false)}} />
     }
     else if (type === 'List[int]') {
