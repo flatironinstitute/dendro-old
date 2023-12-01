@@ -326,6 +326,10 @@ _type_map = {
     'List[bool]': List[bool],
     'Optional[int]': Union[int, None],
     'Optional[float]': Union[float, None],
+    'Optional[List[str]]': Union[List[str], None],
+    'Optional[List[int]]': Union[List[int], None],
+    'Optional[List[float]]': Union[List[float], None],
+    'Optional[List[bool]]': Union[List[bool], None]
 }
 
 def _type_to_string(type: Any):
