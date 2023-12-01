@@ -271,8 +271,11 @@ def _run_container_job(*,
         cmd2.extend(['--nv'])
         for k, v in env_vars.items():
             cmd2.extend(['--env', f'{k}={v}'])
-        if num_cpus is not None:
-            cmd2.extend(['--cpus', str(num_cpus)])
+
+        # don't use --cpus for now because we run into cgroups issues and the container fails to start
+        # if num_cpus is not None:
+        #     cmd2.extend(['--cpus', str(num_cpus)])
+
         cmd2.extend([f'docker://{app_image}']) # todo: what if it's not a dockerhub image?
         cmd2.extend([app_executable])
         if run_process:
