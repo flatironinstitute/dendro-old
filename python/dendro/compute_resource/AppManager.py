@@ -95,8 +95,8 @@ class AppManager:
         if 'aws_batch' in self._available_job_run_methods and app._app_image is not None:
             from ..aws_batch.aws_batch_job_definition import create_aws_batch_job_definition
             stack_id = 'DendroBatchStack'
-            job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iaac/aws_batch/aws_batch/stack_config.py
-            efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iaac/aws_batch/aws_batch/stack_config.py
+            job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iac/aws_batch/aws_batch/stack_config.py
+            efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iac/aws_batch/aws_batch/stack_config.py
             print(f'Creating AWS batch job definition for app {app._name}')
             environment_variables = []
 
