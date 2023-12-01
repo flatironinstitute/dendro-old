@@ -340,7 +340,8 @@ def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executab
         os.chdir(os.path.dirname(app_executable))
         app_instance = _load_app_from_main(app_executable)
         try:
-            app_instance._run_job_child_process(job_id=job_id, job_private_key=job_private_key)
+            from ._run_job_child_process import _run_job_child_process
+            _run_job_child_process(job_id=job_id, job_private_key=job_private_key, processors=app_instance._processors)
 
             return proc
         finally:
