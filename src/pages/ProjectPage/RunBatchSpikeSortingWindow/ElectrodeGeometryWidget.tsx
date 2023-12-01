@@ -1,10 +1,14 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react"
-import { ElectrodeLocation } from "./ElectrodeGeometryView"
 
 type ElectrodeGeometryWidgetProps = {
     width: number
     height: number
     electrodeLocations: ElectrodeLocation[]
+}
+
+export type ElectrodeLocation = {
+    x: number,
+    y: number
 }
 
 const ElectrodeGeometryWidget: FunctionComponent<ElectrodeGeometryWidgetProps> = ({width, height, electrodeLocations}) => {

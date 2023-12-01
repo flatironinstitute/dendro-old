@@ -1,16 +1,11 @@
 import { FunctionComponent, useEffect, useState } from "react"
 import { RemoteH5File } from "../../../RemoteH5File/RemoteH5File"
-import ElectrodeGeometryWidget from "./ElectrodeGeometryWidget"
+import ElectrodeGeometryWidget, { ElectrodeLocation } from "./ElectrodeGeometryWidget"
 
 type ElectrodeGeometryViewProps = {
     width: number
     height: number
     nwbFile: RemoteH5File
-}
-
-export type ElectrodeLocation = {
-    x: number,
-    y: number
 }
 
 const ElectrodeGeometryView: FunctionComponent<ElectrodeGeometryViewProps> = ({width, height, nwbFile}) => {
