@@ -292,7 +292,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 files,
                 batchId: undefined,
                 requiredResources,
-                runMethod: defaultRunMethod
+                runMethod: 'slurm' as any // hard-code during testing
             }
             console.log('CREATING JOB', job)
             await createJob(job, auth)
