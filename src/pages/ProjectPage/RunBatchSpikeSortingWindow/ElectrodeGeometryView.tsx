@@ -36,7 +36,6 @@ const ElectrodeGeometryView: FunctionComponent<ElectrodeGeometryViewProps> = ({w
             for (let i = 0; i < x.length; i++) {
                 locations.push({x: x[i], y: y[i]})
             }
-            console.log('--- locations', locations)
             setElectrodeLocations(locations)
         })()
     }, [nwbFile])

@@ -15,9 +15,10 @@ type FileBrowserMenuBarProps = {
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
+    onMearecGenerateTemplates?: () => void
 }
 
-const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile }) => {
+const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onMearecGenerateTemplates }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
     const {route, setRoute} = useRoute()
     const [operating, setOperating] = useState(false)
@@ -48,6 +49,17 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
     const okayToRunSpikeSorting = useMemo(() => (
         selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.startsWith('imported/'))
     ), [selectedFileNames])
+
+    const dropdownMenuOptions = useMemo(() => {
+        const opts = []
+        if (onUploadSmallFile) {
+            opts.push({label: 'Upload small file', onClick: onUploadSmallFile})
+        }
+        if (onMearecGenerateTemplates) {
+            opts.push({label: 'MEArec: generate templates', onClick: onMearecGenerateTemplates})
+        }
+        return opts
+    }, [onUploadSmallFile, onMearecGenerateTemplates])
 
     if (route.page !== 'project') {
         throw Error(`Unexpected route page: ${route.page}`)
@@ -116,9 +128,7 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
             &nbsp;&nbsp;&nbsp;
             {
                 <DropdownMenu
-                    options={[
-                        {label: 'Upload small file', onClick: onUploadSmallFile}
-                    ]}
+                    options={dropdownMenuOptions}
                 />
             }
         </div>

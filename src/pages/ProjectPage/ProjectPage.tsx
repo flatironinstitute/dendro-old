@@ -3,11 +3,14 @@ import { useModalDialog } from "../../ApplicationBar";
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 import HBoxLayout from "../../components/HBoxLayout";
 import ModalWindow from "../../components/ModalWindow/ModalWindow";
-import { setUrlFile } from "../../dbInterface/dbInterface";
+import { DendroProcessingJobDefinition, createJob, setUrlFile } from "../../dbInterface/dbInterface";
 import useRoute from "../../useRoute";
-import ComputeResourcePage from "../ComputeResourcePage/ComputeResourcePage";
 // import ManualNwbSelector from "./ManualNwbSelector/ManualNwbSelector";
+import { DendroJobRequiredResources } from "../../types/dendro-types";
 import { SetupComputeResources } from "../ComputeResourcesPage/ComputeResourcesContext";
+import { getDandiApiHeaders } from "../DandiBrowser/DandiBrowser";
+import DandisetView from "../DandiBrowser/DandisetView";
+import { AssetResponse, AssetsResponseItem } from "../DandiBrowser/types";
 import DandiUploadWindow from "./DandiUpload/DandiUploadWindow";
 import { DandiUploadTask } from "./DandiUpload/prepareDandiUploadTask";
 import ProcessorsView from "./ProcessorsView";
@@ -16,9 +19,6 @@ import ProjectHome from "./ProjectHome";
 import ProjectJobs from "./ProjectJobs";
 import { SetupProjectPage, useProject } from "./ProjectPageContext";
 import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpikeSortingWindow";
-import { getDandiApiHeaders } from "../DandiBrowser/DandiBrowser";
-import DandisetView from "../DandiBrowser/DandisetView";
-import { AssetResponse, AssetsResponseItem } from "../DandiBrowser/types";
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
 
 type Props = {
@@ -132,9 +132,9 @@ type MainPanelProps = {
 }
 
 const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
-    const {openTab, project, refreshFiles, computeResourceId} = useProject()
+    const {projectId, project, refreshFiles, computeResource, files} = useProject()
     const auth = useGithubAuth()
-    const {route, setRoute, staging} = useRoute()
+    const {route, staging} = useRoute()
     if (route.page !== 'project') throw Error(`Unexpected route ${JSON.stringify(route)}`)
     const currentView = route.tab || 'project-home'
 
@@ -248,6 +248,58 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         await handleImportDandiNwbFiles(files)
     }, [handleImportDandiNwbFiles, stagingStr, staging])
 
+    const mearecGenerateTemplatesProcessor = useMemo(() => {
+        if (!computeResource) return undefined
+        for (const app of computeResource.spec?.apps || []) {
+            for (const p of app.processors || []) {
+                if (p.name === 'mearec_generate_templates') {
+                    return p
+                }
+            }
+        }
+        return undefined
+    }, [computeResource])
+
+    const handleMearecGenerateTemplates = useCallback(() => {
+        (async () => {
+            if (!projectId) return
+            if (!mearecGenerateTemplatesProcessor) return
+            if (!files) return
+            const processorName = 'mearec_generate_templates'
+            const jobDef: DendroProcessingJobDefinition = {
+                processorName,
+                inputFiles: [],
+                inputParameters: [],
+                outputFiles: [{
+                    name: 'output',
+                    fileName: 'generated/mearec/default.templates.h5'
+                }]
+            }
+            const requiredResources: DendroJobRequiredResources = {
+                numCpus: 8,
+                numGpus: 0,
+                memoryGb: 8,
+                timeSec: 3600 * 1
+            }
+            const defaultRunMethod = computeResource?.spec?.defaultJobRunMethod
+            if (!defaultRunMethod) {
+                throw new Error(`defaultRunMethod not found for compute resource: ${computeResource?.computeResourceId}`)
+            }
+            const job = {
+                projectId,
+                jobDefinition: jobDef,
+                processorSpec: mearecGenerateTemplatesProcessor,
+                files,
+                batchId: undefined,
+                requiredResources,
+                runMethod: defaultRunMethod
+            }
+            console.log('CREATING JOB', job)
+            await createJob(job, auth)
+            console.log('JOB CREATED')
+        })()
+    }, [projectId, mearecGenerateTemplatesProcessor, computeResource, files, auth])
+
     return (
         <div style={{position: 'absolute', width, height, overflow: 'hidden', background: 'white'}}>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-home' ? undefined : 'hidden'}}>
@@ -263,6 +315,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     onRunBatchSpikeSorting={handleRunSpikeSorting}
                     onDandiUpload={handleDandiUpload}
                     onUploadSmallFile={handleUploadSmallFile}
+                    onMearecGenerateTemplates={mearecGenerateTemplatesProcessor && handleMearecGenerateTemplates}
                 />
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
