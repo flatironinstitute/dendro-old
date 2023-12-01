@@ -227,6 +227,8 @@ def _run_container_job(*,
         cmd2.extend([app_image])
         cmd2.extend([app_executable])
         if run_process:
+            print(f'Pulling image {app_image}')
+            subprocess.run(['docker', 'pull', app_image])
             print(f'Running: {" ".join(cmd2)}')
             subprocess.Popen(
                 cmd2,
