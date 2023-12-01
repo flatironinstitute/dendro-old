@@ -28,8 +28,10 @@ conda activate processing
 
 or add this command to your ~/.bashrc file to automatically start in this environment each time you open a new terminal.
 
-## Install docker or singularity
+## Install docker or apptainer
 
-To use your computer as a dendro compute resource, you'll most likely need to install either docker or singularity. Docker is simpler to install, whereas singularity is better for shared environments or compute clusters.
+To use your computer as a dendro compute resource, you'll most likely need to install either docker or apptainer (or singularity). Docker is simpler to install, whereas apptainer is better for shared environments or compute clusters.
 
 To install docker server (or docker engine): https://docs.docker.com/engine/install/
+
+To get started with apptainer: https://apptainer.org/

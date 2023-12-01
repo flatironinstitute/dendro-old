@@ -123,7 +123,9 @@ def _start_job(*,
         env_vars=env_vars,
         working_dir=working_dir,
         run_process=run_process,
-        return_shell_command=return_shell_command
+        return_shell_command=return_shell_command,
+        num_cpus=required_resources.numCpus
+        # don't actually limit the memory, because we don't want the process being harshly terminated - it needs to be able to clean up
     )
 
 # This was the method used previously when we wanted to capture the output of the process and display it to the console
@@ -209,7 +211,8 @@ def _run_container_job(*,
     env_vars: dict,
     working_dir: str,
     run_process: bool,
-    return_shell_command: bool
+    return_shell_command: bool,
+    num_cpus: Union[int, None]
 ):
     container_method = os.environ.get('CONTAINER_METHOD', 'docker')
     if container_method == 'docker':
@@ -224,6 +227,8 @@ def _run_container_job(*,
         cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
         for k, v in env_vars.items():
             cmd2.extend(['-e', f'{k}={v}'])
+        if num_cpus is not None:
+            cmd2.extend(['--cpus', str(num_cpus)])
         cmd2.extend([app_image])
         cmd2.extend([app_executable])
         if run_process:
@@ -243,20 +248,31 @@ def _run_container_job(*,
             return f'cd {working_dir} && {" ".join(cmd2)}'
         else:
             return ''
-    elif container_method == 'singularity':
-        tmpdir = working_dir + '/tmp' # important to provide a /tmp directory for singularity so that it doesn't run out of disk space
+    elif container_method == 'singularity' or container_method == 'apptainer':
+        tmpdir = working_dir + '/tmp' # important to provide a /tmp directory for singularity or apptainer so that it doesn't run out of disk space
         os.makedirs(tmpdir, exist_ok=True)
         os.makedirs(tmpdir + '/working', exist_ok=True)
-        cmd2 = ['singularity', 'exec']
+
+        # determine the appropriate executable
+        if container_method == 'singularity':
+            executable = 'singularity'
+        elif container_method == 'apptainer':
+            executable = 'apptainer'
+        else:
+            raise JobException(f'Unexpected container method (*): {container_method}')
+
+        cmd2 = [executable, 'exec']
         cmd2.extend(['--bind', f'{tmpdir}:/tmp'])
         # The working directory should be /tmp/working so that if the container wants to write to the working directory, it will not run out of space
         env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp/working'
         cmd2.extend(['--pwd', '/tmp/working'])
-        cmd2.extend(['--cleanenv']) # this is important to prevent singularity from passing environment variables to the container
-        cmd2.extend(['--contain']) # we don't want singularity to mount the home or tmp directories of the host
+        cmd2.extend(['--cleanenv']) # this is important to prevent singularity or apptainer from passing environment variables to the container
+        cmd2.extend(['--contain']) # we don't want singularity or apptainer to mount the home or tmp directories of the host
         cmd2.extend(['--nv'])
         for k, v in env_vars.items():
             cmd2.extend(['--env', f'{k}={v}'])
+        if num_cpus is not None:
+            cmd2.extend(['--cpus', str(num_cpus)])
         cmd2.extend([f'docker://{app_image}']) # todo: what if it's not a dockerhub image?
         cmd2.extend([app_executable])
         if run_process:

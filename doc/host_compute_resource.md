@@ -5,7 +5,7 @@ Each Dendro project comes equipped with a dedicated compute resource for executi
 Prerequisites
 
 * Python >= 3.9
-* Docker or (Singularity >= 3.11)
+* Docker or apptainer (or singularity >= 3.11)
 
 Clone this repo, then
 
@@ -18,7 +18,7 @@ pip install -e .[compute_resource]
 ```bash
 # Initialize (one time)
 export COMPUTE_RESOURCE_DIR=/some/path
-export CONTAINER_METHOD=singularity # or docker
+export CONTAINER_METHOD=apptainer # or docker (or singularity)
 cd $COMPUTE_RESOURCE_DIR
 dendro register-compute-resource
 # Open the provided link in a browser and log in using GitHub
