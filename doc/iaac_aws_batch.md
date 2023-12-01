@@ -1,9 +1,6 @@
 # AWS Batch IaaC
 
-In order to run Dendro jobs in AWS Batch, the infrastructure must be provisioned first. This is done in two stages:
-
-1. Before installing any Apps: Provision the base AWS Batch infrastructure using CDK. This includes IAM roles, VPC, Security Group, EFS filesystems, Batch Compute Environments and Batch Job Queues.
-2. At every App install: Provision the App-specific infrastructure using Boto3. This includes one EFS Volume one Batch Job Definition.
+Here we provide instructions for setting up your compute resource to run Dendro jobs in AWS Batch. First you will need to provision the base AWS Batch infrastructure using CDK. This includes IAM roles, VPC, Security Group, EFS filesystems, Batch Compute Environments and Batch Job Queues. Next you will need to configure your compute resource controller to submit jobs to AWS Batch. Finally, when you submit jobs from the web interface, you must select aws_batch as the run method.
 
 ## Prerequisites
 
@@ -13,7 +10,7 @@ In order to run Dendro jobs in AWS Batch, the infrastructure must be provisioned
 - Set up your AWS credentials, either by [configuring the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) or by [setting environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html).
 
 
-## Provision base Batch infrastructure with CDK
+## Step 1. Provision base Batch infrastructure with CDK
 
 AWS CDK is a very convenient tool, it helps automate the provisioning of AWS infrastructure and organizes all created resources in a CloudFormation stack, which can be easily updated or deleted.
 
@@ -35,9 +32,29 @@ Other useful CDK commands:
 - `cdk destroy` - destroy the stack.
 - `cdk docs` - open CDK documentation.
 
-## Provision App-specific infrastructure with Boto3
+## Step 2. Configure compute resource controller
 
-For every Dendro App installed on a Dendro Compute Resource, an AWS Batch Job Definition must be created. This is done automatically by the Dendro Compute Resource Controller.
+In your compute resource directory, open the `.dendro-compute-resource-node.yaml` file and set
+
+```
+...
+AVAILABLE_JOB_RUN_METHODS: "local,aws_batch"
+DEFAULT_JOB_RUN_METHOD: "aws_batch"
+```
+
+You can choose whether you also include the local run method, and you can choose which run method is the default.
+
+After you have made these changes, you will need to restart the compute resource controller.
+
+```bash
+dendro start-compute-resource
+```
+
+See [hosting a compute resource](./host_compute_resource.md) for more details.
+
+## Step 3. Submit jobs
+
+When you submit jobs from the web interface, you must select aws_batch as the run method.
 
 
 ## Extra - Simple File Manager for Amazon EFS

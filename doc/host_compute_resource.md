@@ -1,6 +1,6 @@
 # Hosting a Dendro compute resource
 
-Each Dendro project comes equipped with a dedicated compute resource for executing analysis jobs. The default setting uses a compute resource provided by the author with limitations on CPU, memory, and concurrent jobs, shared among all users. This public resource should only be used for testing with small jobs. Contact one of the authors if you would like to run more intensive processing or configure your own compute resources.
+Each Dendro project comes equipped with a dedicated compute resource for executing analysis jobs. The default setting uses a compute resource provided by the authors with limitations on CPU, memory, and concurrent jobs, shared among all users. This public resource should only be used for testing with small jobs. Contact one of the authors if you would like to run more intensive processing or configure your own compute resources.
 
 Prerequisites
 
@@ -31,7 +31,7 @@ dendro start-compute-resource
 # Leave this open in a terminal. It is recommended that you use a terminal multiplexer like tmux or screen.
 ```
 
-In the web interface, go to settings for your project, and select your compute resource. New analyses within your project will now use your compute resource for analysis jobs.
+In the web interface, go to settings for your project, and select your compute resource. New jobs submitted within your project will now use your compute resource for analysis jobs.
 
 ## Configuring apps for your compute resource
 
@@ -50,3 +50,7 @@ The following are available apps that you can configure
 | kilosort2_5 | https://github.com/scratchrealm/pc-spike-sorting/blob/main/kilosort2_5/spec.json |
 | spike-sorting_utils | https://github.com/scratchrealm/pc-spike-sorting/blob/main/spike_sorting_utils/spec.json |
 | dandi-upload | https://github.com/scratchrealm/pc-spike-sorting/blob/main/dandi_upload/spec.json |
+
+## Submitting jobs to AWS Batch
+
+[See iaac_aws_batch](./iaac_aws_batch.md)
