@@ -1,13 +1,13 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
-import { Checkbox, selectedStringsReducer } from "../FileBrowser/FileBrowser2"
 import { useModalDialog } from "../../../ApplicationBar"
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, DendroComputeResource } from "../../../types/dendro-types"
-import { App, fetchComputeResource, setComputeResourceApps } from "../../../dbInterface/dbInterface"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
-import ComputeResourceAppsTableMenuBar2 from "./ComputeResourceAppsTableMenuBar2"
 import Hyperlink from "../../../components/Hyperlink"
 import ModalWindow from "../../../components/ModalWindow/ModalWindow"
+import { App, fetchComputeResource, setComputeResourceApps } from "../../../dbInterface/dbInterface"
+import { DendroComputeResource } from "../../../types/dendro-types"
 import NewAppWindow from "../../ComputeResourcePage/NewAppWindow"
+import { Checkbox, selectedStringsReducer } from "../FileBrowser/FileBrowser2"
+import ComputeResourceAppsTableMenuBar2 from "./ComputeResourceAppsTableMenuBar2"
 
 type Props = {
     computeResourceId: string
@@ -47,10 +47,10 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
         // TODO
     }, [])
 
-    const handleNewApp = useCallback((name: string, specUri: string, awsBatch?: ComputeResourceAwsBatchOpts, slurm?: ComputeResourceSlurmOpts) => {
+    const handleNewApp = useCallback((name: string, specUri: string) => {
         if (!computeResource) return
         const oldApps = computeResource.apps
-        const newApps: App[] = [...oldApps.filter(a => (a.name !== name)), {name, specUri, awsBatch, slurm}]
+        const newApps: App[] = [...oldApps.filter(a => (a.name !== name)), {name, specUri}]
         setComputeResourceApps(computeResource.computeResourceId, newApps, auth).then(() => {
             refreshComputeResource()
         })
@@ -95,8 +95,6 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
                             <th style={{width: colWidth}} />
                             <th>App</th>
                             <th>Spec URI</th>
-                            <th>AWS Batch</th>
-                            <th>Slurm</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -114,22 +112,6 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
                                     <td>
                                         {app.specUri || ''}
                                     </td>
-                                    <td>
-                                        {app.awsBatch ? `Using AWS Batch: ${app.awsBatch.useAwsBatch ? "true" : "false"}` : ''}
-                                    </td>
-                                    <td>
-                                        {app.slurm ? (
-                                            <span>
-                                                <span>{app.slurm.cpusPerTask ? `CPUs per task: ${app.slurm.cpusPerTask}` : ''}</span>
-                                                &nbsp;
-                                                <span>{app.slurm.partition ? `Partition: ${app.slurm.partition}` : ''}</span>
-                                                &nbsp;
-                                                <span>{app.slurm.time ? `Time: ${app.slurm.time}` : ''}</span>
-                                                &nbsp;
-                                                <span>{app.slurm.otherOpts ? `Other options: ${app.slurm.otherOpts}` : ''}</span>
-                                            </span>
-                                        ) : ''}
-                                    </td>
                                 </tr>
                             ))
                         }
@@ -142,7 +124,7 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
             >
                 {computeResource && <NewAppWindow
                     computeResource={computeResource}
-                    onNewApp={(name, specUri, awsBatch, slurmOpts) => {closeNewAppWindow(); handleNewApp(name, specUri, awsBatch, slurmOpts);}}
+                    onNewApp={(name, specUri) => {closeNewAppWindow(); handleNewApp(name, specUri);}}
                 />}
             </ModalWindow>
             <ModalWindow
@@ -151,7 +133,7 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
             >
                 {computeResource && <NewAppWindow
                     computeResource={computeResource}
-                    onNewApp={(name, specUri, awsBatch, slurmOpts) => {closeEditAppWindow(); handleNewApp(name, specUri, awsBatch, slurmOpts);}}
+                    onNewApp={(name, specUri) => {closeEditAppWindow(); handleNewApp(name, specUri);}}
                     appBeingEdited={selectedAppForEditing}
                 />}
             </ModalWindow>

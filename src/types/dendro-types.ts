@@ -217,6 +217,7 @@ export type DendroJob = {
     outputFiles: DendroJobOutputFile[]
     requiredResources?: DendroJobRequiredResources
     usedResources?: DendroJobUsedResources
+    runMethod?: 'local' | 'aws_batch' | 'slurm'
     timestampCreated: number
     computeResourceId: string
     status: 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
@@ -250,6 +251,7 @@ export const isDendroJob = (x: any): x is DendroJob => {
         outputFiles: isArrayOf(isDendroJobOutputFile),
         requiredResources: optional(isDendroJobRequiredResources),
         usedResources: optional(isDendroJobUsedResources),
+        runMethod: optional(isOneOf([isEqualTo('local'), isEqualTo('aws_batch'), isEqualTo('slurm')])),
         timestampCreated: isNumber,
         computeResourceId: isString,
         status: isOneOf([isEqualTo('pending'), isEqualTo('queued'), isEqualTo('starting'), isEqualTo('running'), isEqualTo('completed'), isEqualTo('failed')]),
@@ -296,12 +298,14 @@ export const isDendroFile = (x: any): x is DendroFile => {
     })
 }
 
+// obsolete
 export type ComputeResourceAwsBatchOpts = {
     jobQueue?: string // obsolete
     jobDefinition?: string
     useAwsBatch?: boolean
 }
 
+// obsolete
 export const isComputeResourceAwsBatchOpts = (x: any): x is ComputeResourceAwsBatchOpts => {
     return validateObject(x, {
         jobQueue: optional(isString), // obsolete
@@ -311,6 +315,7 @@ export const isComputeResourceAwsBatchOpts = (x: any): x is ComputeResourceAwsBa
 }
 
 
+// obsolete
 export type ComputeResourceSlurmOpts = {
     partition?: string
     time?: string
@@ -318,6 +323,7 @@ export type ComputeResourceSlurmOpts = {
     otherOpts?: string
 }
 
+// obsolete
 export const isComputeResourceSlurmOpts = (x: any): x is ComputeResourceSlurmOpts => {
     return validateObject(x, {
         partition: optional(isString),
@@ -332,8 +338,8 @@ export type DendroComputeResourceApp = {
     specUri?: string
     executablePath?: string // to be removed
     container?: string // to be removed
-    awsBatch?: ComputeResourceAwsBatchOpts
-    slurm?: ComputeResourceSlurmOpts
+    awsBatch?: ComputeResourceAwsBatchOpts // obsolete
+    slurm?: ComputeResourceSlurmOpts // obsolete
 }
 
 export const isDendroComputeResourceApp = (x: any): x is DendroComputeResourceApp => {
@@ -342,8 +348,8 @@ export const isDendroComputeResourceApp = (x: any): x is DendroComputeResourceAp
         specUri: optional(isString),
         executablePath: optional(isString), // to be removed
         container: optional(isString), // to be removed
-        awsBatch: optional(isComputeResourceAwsBatchOpts),
-        slurm: optional(isComputeResourceSlurmOpts)
+        awsBatch: optional(isComputeResourceAwsBatchOpts), // obsolete
+        slurm: optional(isComputeResourceSlurmOpts) // obsolete
     })
 }
 
@@ -367,11 +373,15 @@ export const isComputeResourceSpecApp = (x: any): x is ComputeResourceSpecApp =>
 
 export type ComputeResourceSpec = {
     apps: ComputeResourceSpecApp[]
+    defaultJobRunMethod?: 'local' | 'aws_batch' | 'slurm'
+    availableJobRunMethods?: ('local' | 'aws_batch' | 'slurm')[]
 }
 
 export const isComputeResourceSpec = (x: any): x is ComputeResourceSpec => {
     return validateObject(x, {
-        apps: isArrayOf(isComputeResourceSpecApp)
+        apps: isArrayOf(isComputeResourceSpecApp),
+        defaultJobRunMethod: optional(isOneOf([isEqualTo('local'), isEqualTo('aws_batch'), isEqualTo('slurm')])),
+        availableJobRunMethods: optional(isArrayOf(isOneOf([isEqualTo('local'), isEqualTo('aws_batch'), isEqualTo('slurm')]))),
     })
 }
 

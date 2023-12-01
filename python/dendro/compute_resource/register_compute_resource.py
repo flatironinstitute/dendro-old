@@ -9,10 +9,8 @@ env_var_keys = [
     'COMPUTE_RESOURCE_ID',
     'COMPUTE_RESOURCE_PRIVATE_KEY',
     'CONTAINER_METHOD',
-    'SINGLETON_JOB_ID',
-    'BATCH_AWS_ACCESS_KEY_ID',
-    'BATCH_AWS_SECRET_ACCESS_KEY',
-    'BATCH_AWS_REGION'
+    'DEFAULT_JOB_RUN_METHOD',
+    'AVAILABLE_JOB_RUN_METHODS'
 ]
 
 def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = None, compute_resource_private_key: Optional[str] = None) -> Tuple[str, str]:
@@ -53,10 +51,24 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
         raise ValueError('Cannot specify compute_resource_id or compute_resource_private_key if compute resource node is already initialized.')
 
     with open(env_fname, 'r', encoding='utf8') as f:
-        the_env = yaml.safe_load(f)
+        the_env_from_config_file = yaml.safe_load(f)
+
+    for k in env_var_keys:
+        if k in the_env_from_config_file:
+            the_env[k] = the_env_from_config_file[k]
+        else:
+            the_env_from_config_file[k] = ''
+
+    with open(env_fname, 'w', encoding='utf8') as f:
+        yaml.dump(the_env_from_config_file, f)
 
     COMPUTE_RESOURCE_ID = the_env['COMPUTE_RESOURCE_ID']
     COMPUTE_RESOURCE_PRIVATE_KEY = the_env['COMPUTE_RESOURCE_PRIVATE_KEY']
+
+    if not COMPUTE_RESOURCE_ID:
+        raise ValueError('COMPUTE_RESOURCE_ID is not set')
+    if not COMPUTE_RESOURCE_PRIVATE_KEY:
+        raise ValueError('COMPUTE_RESOURCE_PRIVATE_KEY is not set')
 
     timestamp = int(time.time())
     msg = {
@@ -75,8 +87,3 @@ def register_compute_resource(*, dir: str, compute_resource_id: Optional[str] = 
     assert COMPUTE_RESOURCE_ID is not None
     assert COMPUTE_RESOURCE_PRIVATE_KEY is not None
     return COMPUTE_RESOURCE_ID, COMPUTE_RESOURCE_PRIVATE_KEY
-
-def _random_string(length: int) -> str:
-    import random
-    import string
-    return ''.join(random.choice(string.ascii_lowercase) for i in range(length))

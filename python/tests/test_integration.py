@@ -19,7 +19,6 @@ async def test_integration(tmp_path):
     from dendro.mock import set_use_mock
     from dendro.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
     from dendro.common._api_request import _gui_post_api_request, _client_get_api_request
-    from dendro.common.dendro_types import ComputeResourceSlurmOpts
     from dendro.common.dendro_types import DendroJobRequiredResources
 
     tmpdir = str(tmp_path)
@@ -75,13 +74,7 @@ async def test_integration(tmp_path):
             ),
             DendroComputeResourceApp(
                 name='mock_app_2',
-                specUri=f'file://{tmpdir}/mock_app_2/spec.json',
-                slurm=ComputeResourceSlurmOpts(
-                    partition='test_partition',
-                    time='1:00:00',
-                    cpusPerTask=4,
-                    otherOpts='--test=1'
-                )
+                specUri=f'file://{tmpdir}/mock_app_2/spec.json'
             )
         ]
         _set_compute_resource_apps(
@@ -250,7 +243,8 @@ async def test_integration(tmp_path):
                 processorSpec=processor_spec,
                 batchId=None,
                 dandiApiKey=None,
-                requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600)
+                requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600),
+                runMethod='local'
             )
             resp = _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)
             resp = CreateJobResponse(**resp)
@@ -278,7 +272,8 @@ async def test_integration(tmp_path):
             processorSpec=processor_spec_2,
             batchId=None,
             dandiApiKey=None,
-            requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600)
+            requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600),
+            runMethod='slurm'
         )
         resp = _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)
         resp = CreateJobResponse(**resp)
@@ -299,7 +294,8 @@ async def test_integration(tmp_path):
             processorSpec=processor_spec_2,
             batchId=None,
             dandiApiKey=None,
-            requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600)
+            requiredResources=DendroJobRequiredResources(numCpus=1, numGpus=0, memoryGb=8, timeSec=3600),
+            runMethod='local'
         )
         with pytest.raises(Exception):
             _gui_post_api_request(url_path='/api/gui/jobs', data=_model_dump(req), github_access_token=github_access_token)

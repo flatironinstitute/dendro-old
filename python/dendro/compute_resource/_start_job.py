@@ -1,10 +1,11 @@
 import os
 import sys
 import subprocess
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Literal
+
 from ..sdk.App import App
 from ..common._api_request import _processor_put_api_request
-from ..common.dendro_types import ComputeResourceSlurmOpts, DendroJobRequiredResources
+from ..common.dendro_types import DendroJobRequiredResources
 from ._run_job_in_aws_batch import _run_job_in_aws_batch
 from ..mock import using_mock
 
@@ -37,6 +38,7 @@ def _start_job(*,
     job_id: str,
     job_private_key: str,
     processor_name: str,
+    run_method: Literal['local', 'slurm', 'aws_batch'],
     app: App,
     run_process: bool = True,
     return_shell_command: bool = False,
@@ -52,18 +54,16 @@ def _start_job(*,
     assert hasattr(app, '_app_executable'), 'App does not have an executable path'
     app_executable: Union[str, None] = app._app_executable
     app_image: Union[str, None] = app._app_image
-    use_aws_batch = app._aws_batch_opts.useAwsBatch if app._aws_batch_opts else False
-    slurm_opts: Union[ComputeResourceSlurmOpts, None] = app._slurm_opts
 
     # default for app_executable
     if app_executable is None:
         assert app_image, 'You must set app_executable if app_image is not set'
         app_executable = '/app/main.py' # the default
 
-    if slurm_opts is not None:
+    if run_method == 'slurm':
         assert not run_process, 'Not expecting to see run_process here'
 
-    if use_aws_batch:
+    if run_method == 'aws_batch':
         assert not return_shell_command, 'Cannot return shell command for AWS Batch job'
         assert app_image, 'aws_batch_job_queue is set but app_image is not set'
         print(f'Running job in AWS Batch: {job_id} {processor_name}')
@@ -86,16 +86,12 @@ def _start_job(*,
     working_dir = os.getcwd() + '/jobs/' + job_id
     os.makedirs(working_dir, exist_ok=True)
 
-    # for safety, verify that cleanup directory is as expected
-    dendro_job_cleanup_dir = working_dir
-    assert dendro_job_cleanup_dir.endswith('/jobs/' + job_id), f'Unexpected dendro_job_cleanup_dir: {dendro_job_cleanup_dir}'
     env_vars = {
         'PYTHONUNBUFFERED': '1',
         'JOB_ID': job_id,
         'JOB_PRIVATE_KEY': job_private_key,
         'APP_EXECUTABLE': app_executable,
-        'DENDRO_URL': 'https://dendro.vercel.app',
-        'DENDRO_JOB_CLEANUP_DIR': dendro_job_cleanup_dir # see the warning above
+        'DENDRO_URL': 'https://dendro.vercel.app'
     }
 
     if required_resources.timeSec is not None:
@@ -109,6 +105,10 @@ def _start_job(*,
     #     env_vars['KACHERY_CLOUD_PRIVATE_KEY'] = kachery_cloud_private_key
 
     if not app_image:
+        # for safety, verify that cleanup directory is as expected
+        dendro_job_cleanup_dir = working_dir
+        assert dendro_job_cleanup_dir.endswith('/jobs/' + job_id), f'Unexpected dendro_job_cleanup_dir: {dendro_job_cleanup_dir}'
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = dendro_job_cleanup_dir # see the warning above
         return _run_local_job(
             app_executable=app_executable,
             env_vars=env_vars,
@@ -220,6 +220,7 @@ def _run_container_job(*,
             'docker', 'run', '-it'
         ]
         cmd2.extend(['-v', f'{tmpdir}:/tmp'])
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp/working'
         cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
         for k, v in env_vars.items():
             cmd2.extend(['-e', f'{k}={v}'])
@@ -247,6 +248,7 @@ def _run_container_job(*,
         cmd2 = ['singularity', 'exec']
         cmd2.extend(['--bind', f'{tmpdir}:/tmp'])
         # The working directory should be /tmp/working so that if the container wants to write to the working directory, it will not run out of space
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp/working'
         cmd2.extend(['--pwd', '/tmp/working'])
         cmd2.extend(['--cleanenv']) # this is important to prevent singularity from passing environment variables to the container
         cmd2.extend(['--contain']) # we don't want singularity to mount the home or tmp directories of the host

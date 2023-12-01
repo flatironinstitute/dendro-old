@@ -84,18 +84,23 @@ const DandiUploadWindow: FunctionComponent<DandiUploadWindowProps> = ({ dandiUpl
             memoryGb: 8,
             timeSec: 3600 * 1
         }
+        const defaultRunMethod = computeResource?.spec?.defaultJobRunMethod
+        if (!defaultRunMethod) {
+            throw new Error(`defaultRunMethod not found for compute resource: ${computeResource?.computeResourceId}`)
+        }
         const job = {
             projectId,
             jobDefinition: jobDef,
             processorSpec: processor,
             files,
             batchId: undefined,
-            requiredResources
+            requiredResources,
+            runMethod: defaultRunMethod
         }
         console.log('CREATING JOB', job)
         await createJob(job, auth)
         onClose()
-    }, [processor, dandiUploadTask, projectId, files, auth, dandiApiKey, onClose, jobs])
+    }, [processor, dandiUploadTask, projectId, files, auth, dandiApiKey, onClose, jobs, computeResource])
 
     if (!['admin', 'editor'].includes(projectRole || '')) {
         return (

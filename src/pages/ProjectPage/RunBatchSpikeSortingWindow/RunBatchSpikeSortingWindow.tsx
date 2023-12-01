@@ -8,6 +8,7 @@ import { ComputeResourceSpecApp, ComputeResourceSpecProcessor, DendroComputeReso
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow"
 import { useNwbFile } from "../FileEditor/NwbFileEditor"
 import { useProject } from "../ProjectPageContext"
+import RunMethodSelector from "./RunMethodSelector"
 
 type Props = {
     filePaths: string[]
@@ -103,6 +104,13 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         setRequiredResources(rr)
     }, [processor])
 
+    const defaultRunMethod = computeResource?.spec?.defaultJobRunMethod
+    const [runMethod, setRunMethod] = useState<'local' | 'aws_batch' | 'slurm'>(defaultRunMethod || 'local')
+
+    const availableRunMethods: ('local' | 'aws_batch' | 'slurm')[] = useMemo(() => {
+        return computeResource?.spec?.availableJobRunMethods || ['local']
+    }, [computeResource])
+
     const handleSubmit = useCallback(async () => {
         if (!processor) return
         if (!files) return
@@ -130,7 +138,8 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                 processorSpec: processor.processor,
                 files,
                 batchId,
-                requiredResources
+                requiredResources,
+                runMethod
             }
             console.log('CREATING JOB', job)
             await createJob(job, auth)
@@ -138,7 +147,7 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         setOperatingMessage(undefined)
         setOperating(false)
         onClose()
-    }, [projectId, jobDefinition, processor, filePaths, files, overwriteExistingOutputs, descriptionString, auth, onClose, selectedSpikeSortingProcessor, requiredResources])
+    }, [projectId, jobDefinition, processor, filePaths, files, overwriteExistingOutputs, descriptionString, auth, onClose, selectedSpikeSortingProcessor, requiredResources, runMethod])
 
     const descriptionStringIsValid = useMemo(() => {
         // description string must be alphanumeric with dashes but not underscores
@@ -213,6 +222,9 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                 app={processor?.app}
                 appSpec={processor?.appSpec}
                 onClose={onClose}
+                runMethod={runMethod}
+                setRunMethod={setRunMethod}
+                availableRunMethods={availableRunMethods}
             />
             <RightColumn
                 width={0}
@@ -289,6 +301,9 @@ type LeftColumnProps = {
     appSpec?: ComputeResourceSpecApp
     app?: DendroComputeResourceApp
     onClose: () => void
+    runMethod: 'local' | 'aws_batch' | 'slurm'
+    setRunMethod: (val: 'local' | 'aws_batch' | 'slurm') => void
+    availableRunMethods: ('local' | 'aws_batch' | 'slurm')[]
 }
 
 const LeftColumn: FunctionComponent<LeftColumnProps> = ({
@@ -301,7 +316,9 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
     operatingMessage,
     requiredResources, setRequiredResources,
     app,
-    onClose
+    onClose,
+    runMethod, setRunMethod,
+    availableRunMethods
 }) => {
     return (
         <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
@@ -334,6 +351,9 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
             {requiredResources && <RequiredResourcesEditor
                 requiredResources={requiredResources}
                 setRequiredResources={setRequiredResources}
+                runMethod={runMethod}
+                setRunMethod={setRunMethod}
+                availableRunMethods={availableRunMethods}
             />}
             <div>&nbsp;</div><hr /><div>&nbsp;</div>
             <div>
@@ -390,16 +410,6 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
                 app && (
                     <>
                         <div>Dendro app: {app.name}</div>
-                        <div>&nbsp;</div>
-                        <div>{
-                            app?.awsBatch?.useAwsBatch ? (
-                                <div>These jobs will run on AWS Batch</div>
-                            ) : app?.slurm ? (
-                                <div>These jobs will run on a Slurm cluster</div>
-                            ) : (
-                                <div>These jobs will run directly on the compute resource controller computer</div>
-                            )
-                        }</div>
                     </>
                 )
             }
@@ -482,6 +492,9 @@ export const formDescriptionStringFromProcessorName = (processorName: string) =>
 }
 
 type RequiredResourcesEditorProps = {
+    runMethod: 'local' | 'aws_batch' | 'slurm'
+    setRunMethod: (method: 'local' | 'aws_batch' | 'slurm') => void
+    availableRunMethods: ('local' | 'aws_batch' | 'slurm')[]
     requiredResources: DendroJobRequiredResources
     setRequiredResources: (val: DendroJobRequiredResources) => void
 }
@@ -490,14 +503,26 @@ const numGpusChoices = [0, 1]
 const memoryGbChoices = [2, 4, 8, 16, 32]
 const timeMinChoices = [1, 5, 10, 30, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 1440, 1440 * 2, 1440 * 3, 1440 * 4, 1440 * 5, 1440 * 6, 1440 * 7]
 
-const RequiredResourcesEditor: FunctionComponent<RequiredResourcesEditorProps> = ({requiredResources, setRequiredResources}) => {
+const RequiredResourcesEditor: FunctionComponent<RequiredResourcesEditorProps> = ({requiredResources, setRequiredResources, runMethod, setRunMethod, availableRunMethods}) => {
     const {numCpus, numGpus, memoryGb, timeSec} = requiredResources
     const WW = 70
     return (
         <div>
-            <h3>Resource requirements</h3>
+            <h3>Resources</h3>
             <table className="table1" style={{maxWidth: 500}}>
                 <tbody>
+                    <tr>
+                        <td>Run method</td>
+                        <td>
+                            <select value={runMethod} onChange={evt => setRunMethod(evt.target.value as any)}>
+                                {
+                                    availableRunMethods.map(method => (
+                                        <option key={method} value={method}>{method}</option>
+                                    ))
+                                }
+                            </select>
+                        </td>
+                    </tr>
                     <tr>
                         <td>Number of CPUs</td>
                         <td>

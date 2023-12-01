@@ -1,4 +1,4 @@
-from typing import Union, List, Any, Optional
+from typing import Union, List, Any, Optional, Literal
 
 from .. import BaseModel
 
@@ -90,6 +90,7 @@ class DendroJob(BaseModel):
     outputFiles: List[DendroJobOutputFile]
     requiredResources: Union[DendroJobRequiredResources, None] = None
     usedResources: Union[DendroJobUsedResources, None] = None
+    runMethod: Union[Literal['local', 'aws_batch', 'slurm'], None] = None
     timestampCreated: float
     computeResourceId: str
     status: str # 'pending' | 'queued' | 'starting' | 'running' | 'completed' | 'failed'
@@ -120,11 +121,13 @@ class DendroFile(BaseModel):
     metadata: dict
     jobId: Union[str, None] = None # the job that produced this file
 
+# obsolete
 class ComputeResourceAwsBatchOpts(BaseModel):
     jobQueue: Optional[str] = None # obsolete
     jobDefinition: Optional[str] = None # obsolete
-    useAwsBatch: Optional[bool] = None
+    useAwsBatch: Optional[bool] = None # obsolete
 
+# obsolete
 class ComputeResourceSlurmOpts(BaseModel):
     partition: Union[str, None] = None
     time: Union[str, None] = None
@@ -136,8 +139,8 @@ class DendroComputeResourceApp(BaseModel):
     specUri: str
     executablePath: Union[str, None] = None # to be removed (once database has been cleared)
     container: Union[str, None] = None # to be removed (once database has been cleared)
-    awsBatch: Union[ComputeResourceAwsBatchOpts, None] = None
-    slurm: Union[ComputeResourceSlurmOpts, None] = None
+    awsBatch: Union[ComputeResourceAwsBatchOpts, None] = None # obsolete
+    slurm: Union[ComputeResourceSlurmOpts, None] = None # obsolete
 
 class ComputeResourceSpecApp(BaseModel):
     name: str
@@ -148,6 +151,8 @@ class ComputeResourceSpecApp(BaseModel):
 
 class ComputeResourceSpec(BaseModel):
     apps: List[ComputeResourceSpecApp]
+    defaultJobRunMethod: Union[Literal['local', 'aws_batch', 'slurm'], None] = None
+    availableJobRunMethods: Union[List[Literal['local', 'aws_batch', 'slurm']], None] = None
 
 class DendroComputeResource(BaseModel):
     computeResourceId: str
@@ -207,6 +212,7 @@ class CreateJobRequest(BaseModel):
     batchId: Union[str, None] = None
     dandiApiKey: Union[str, None] = None
     requiredResources: DendroJobRequiredResources
+    runMethod: Literal['local', 'aws_batch', 'slurm']
 
 class CreateJobResponse(BaseModel):
     jobId: str

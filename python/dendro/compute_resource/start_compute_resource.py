@@ -22,9 +22,16 @@ class Daemon:
         if self._compute_resource_private_key is None:
             raise ValueError('Compute resource has not been initialized in this directory, and the environment variable COMPUTE_RESOURCE_PRIVATE_KEY is not set.')
 
+        available_job_run_methods_str = os.getenv('AVAILABLE_JOB_RUN_METHODS', 'local')
+        available_job_run_methods = [s.strip() for s in available_job_run_methods_str.split(',') if s]
+        for a in available_job_run_methods:
+            if a not in ['local', 'aws_batch', 'slurm']:
+                raise ValueError(f'Invalid job run method: {a}')
+
         self._app_manager = AppManager(
             compute_resource_id=self._compute_resource_id,
-            compute_resource_private_key=self._compute_resource_private_key
+            compute_resource_private_key=self._compute_resource_private_key,
+            available_job_run_methods=available_job_run_methods # type: ignore
         )
         self._app_manager.update_apps()
 
@@ -82,14 +89,14 @@ class Daemon:
                 for msg in messages:
                     if msg['type'] == 'newPendingJob':
                         jobs_have_changed = True
-                    if msg['type'] == 'jobStatusChaged':
+                    if msg['type'] == 'jobStatusChanged':
                         jobs_have_changed = True
                     if msg['type'] == 'computeResourceAppsChanaged':
                         self._app_manager.update_apps()
 
                 if time_to_handle_jobs or jobs_have_changed:
-                    if time_to_handle_jobs:
-                        print('Checking for new jobs')
+                    # if time_to_handle_jobs:
+                    #     print('Checking for new jobs') # this pollutes the logs too much
                     timer_handle_jobs = time.time()
                     self._handle_jobs()
 
@@ -141,8 +148,15 @@ def start_compute_resource(dir: str, *, timeout: Optional[float] = None, cleanup
     else:
         the_config = {}
     for k in env_var_keys:
-        if k in the_config:
+        if k in the_config and the_config[k]:
             os.environ[k] = the_config[k]
+        else:
+            the_config[k] = ''
+    for k in the_config.keys():
+        if k not in env_var_keys:
+            print('WARNING: Unknown key in config file: ' + k)
+    with open(config_fname, 'w', encoding='utf8') as f:
+        yaml.dump(the_config, f)
     daemon = Daemon()
     daemon.start(timeout=timeout, cleanup_old_jobs=cleanup_old_jobs)
 

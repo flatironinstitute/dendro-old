@@ -1,5 +1,6 @@
 import time
-from typing import Union, List, Any
+from typing import Union, List, Any, Literal
+
 from ....common.dendro_types import ComputeResourceSpecProcessor, DendroJobInputFile, DendroJobOutputFile, DendroJob, DendroJobInputParameter, DendroJobRequiredResources
 from ...clients.db import fetch_project, fetch_file, delete_file, fetch_project_jobs, delete_job, insert_job
 from ...core._get_project_role import _check_user_can_edit_project
@@ -22,7 +23,8 @@ async def create_job(*,
     batch_id: Union[str, None],
     user_id: str,
     dandi_api_key: Union[str, None] = None,
-    required_resources: DendroJobRequiredResources
+    required_resources: DendroJobRequiredResources,
+    run_method: Literal['local', 'aws_batch', 'slurm']
 ):
     _check_job_is_consistent_with_processor_spec(
         processor_spec=processor_spec,
@@ -129,7 +131,8 @@ async def create_job(*,
         dandiApiKey=dandi_api_key,
         consoleOutputUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_console_output",
         resourceUtilizationLogUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_resource_utilization_log",
-        requiredResources=required_resources
+        requiredResources=required_resources,
+        runMethod=run_method
     )
 
     await insert_job(job)
