@@ -1,7 +1,7 @@
 from typing import List, TYPE_CHECKING
 from .SlurmJobHandler import SlurmJobHandler
 from ..common.dendro_types import DendroJob
-from ..sdk._run_job import _set_job_status
+from ..sdk._run_job_parent_process import _set_job_status
 if TYPE_CHECKING:
     from .AppManager import AppManager
 

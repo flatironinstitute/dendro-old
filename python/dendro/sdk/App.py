@@ -1,13 +1,9 @@
 from typing import List, Union, Type, get_type_hints
 import os
 import json
-import shutil
-import tempfile
-from .InputFile import InputFile
 from .AppProcessor import AppProcessor
-from .Job import Job
-from ._run_job import _run_job_parent_process
-from ..common._api_request import _processor_get_api_request
+from ._run_job_parent_process import _run_job_parent_process
+from ._run_job_child_process import _run_job_child_process
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
 
@@ -80,7 +76,7 @@ class App:
             if JOB_INTERNAL == '1':
                 # In this mode, we run the job directly
                 # This is called internally by the other run mode (need to explain this better)
-                return self._run_job_child_process(job_id=JOB_ID, job_private_key=JOB_PRIVATE_KEY)
+                return _run_job_child_process(job_id=JOB_ID, job_private_key=JOB_PRIVATE_KEY, processors=self._processors)
 
             # In this mode we run the job, including the top-level interactions with the dendro API, such as setting the status and the console output, and checking whether the job has been canceled/deleted
             if APP_EXECUTABLE is None:
@@ -167,98 +163,6 @@ class App:
         a._spec_uri = spec_uri
         return a
 
-    def _run_job_child_process(self, *, job_id: str, job_private_key: str):
-        """
-        Used internally to actually run the job by calling the processor function.
-        If an app image is being used, this will occur within the container.
-        """
-        # Get a job from the remote dendro API
-        job: Job = _get_job(job_id=job_id, job_private_key=job_private_key)
-
-        # Find the registered processor and the associated processor function
-        processor_name = job.processor_name
-        processor = next((p for p in self._processors if p._name == processor_name), None)
-        assert processor, f'Processor not found: {processor_name}'
-        if not processor._processor_class:
-            raise Exception(f'Processor does not have a processor_class: {processor_name}')
-        processor_class = processor._processor_class
-
-        # Assemble the context for the processor function
-        context = ContextObject()
-        for input in processor._inputs:
-            if not input.list:
-                # this input is not a list
-                input_file = next((i for i in job.inputs if i.name == input.name), None)
-                assert input_file, f'Input not found: {input.name}'
-                setattr(context, input.name, input_file)
-            else:
-                # this input is a list
-                the_list: List[InputFile] = []
-                ii = 0
-                while True:
-                    # find a job input of the form <input_name>[ii]
-                    input_file = next((i for i in job.inputs if i.name == f'{input.name}[{ii}]'), None)
-                    if input_file is None:
-                        # if not found, we must be at the end of the list
-                        break
-                    the_list.append(input_file)
-                    ii += 1
-                setattr(context, input.name, the_list)
-        for output in processor._outputs:
-            output_file = next((o for o in job.outputs if o.name == output.name), None)
-            assert output_file is not None, f'Output not found: {output.name}'
-            setattr(context, output.name, output_file)
-        for parameter in processor._parameters:
-            job_parameter = next((p for p in job.parameters if p.name == parameter.name), None)
-            parameter_value = parameter.default if job_parameter is None else job_parameter.value
-            _setattr_where_name_may_have_dots(context, parameter.name, parameter_value)
-
-        _set_custom_kachery_storage_backend(job_id=job_id, job_private_key=job_private_key)
-
-        # Run the processor function
-        processor_class.run(context)
-
-        # Check that all outputs were set
-        for output in processor._outputs:
-            output_file = next((o for o in job.outputs if o.name == output.name), None)
-            assert output_file is not None, f'Output not found: {output.name}'
-            assert output_file.was_uploaded, f'Output was not uploaded: {output.name}'
-
-# An empty object that we can set attributes on
-class ContextObject:
-    pass
-
-class TemporaryDirectory:
-    """A context manager for temporary directories"""
-    def __init__(self):
-        self._dir = None
-    def __enter__(self):
-        self._dir = tempfile.mkdtemp()
-        return self._dir
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self._dir:
-            shutil.rmtree(self._dir)
-
-def _get_job(*, job_id: str, job_private_key: str) -> Job:
-    """Get a job from the dendro API"""
-    job = Job(
-        job_id=job_id,
-        job_private_key=job_private_key
-    )
-    return job
-
-def _setattr_where_name_may_have_dots(obj, name, value):
-    """Set an attribute on an object, where the name may have dots in it"""
-    if '.' not in name:
-        setattr(obj, name, value)
-        return
-    parts = name.split('.')
-    for part in parts[:-1]:
-        if not hasattr(obj, part):
-            setattr(obj, part, ContextObject())
-        obj = getattr(obj, part)
-    setattr(obj, parts[-1], value)
-
 def _get_type_of_context_in_processor_class(processor_class):
     # Retrieve the 'run' method from the processor class
     run_method = getattr(processor_class, 'run', None)
@@ -268,53 +172,3 @@ def _get_type_of_context_in_processor_class(processor_class):
     type_hints = get_type_hints(run_method)
     # Return the type hint for the 'context' parameter
     return type_hints.get('context')
-
-class CustomKacheryStorageBackend:
-    def __init__(self, *, job_id: str, job_private_key: str):
-        self._job_id = job_id
-        self._job_private_key = job_private_key
-    def store_file(self, file_path: str, *, label: str):
-        sha1 = _compute_sha1_of_file(file_path)
-
-        url_path = f'/api/processor/jobs/{self._job_id}/additional_uploads/sha1/{sha1}/upload_url'
-        headers = {
-            'job-private-key': self._job_private_key
-        }
-        res = _processor_get_api_request(
-            url_path=url_path,
-            headers=headers
-        )
-        upload_url = res['uploadUrl']
-        download_url = res['downloadUrl']
-
-        import requests
-        with open(file_path, 'rb') as f:
-            resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
-        if resp_upload.status_code != 200:
-            raise Exception(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
-        return download_url
-
-def _set_custom_kachery_storage_backend(*, job_id: str, job_private_key: str):
-    try:
-        import kachery_cloud as kcl
-    except ImportError:
-        # if we don't have kachery installed, then let's not worry about it
-        return
-
-    try:
-        custom_storage_backend = CustomKacheryStorageBackend(job_id=job_id, job_private_key=job_private_key)
-        kcl.set_custom_storage_backend(custom_storage_backend)
-    except Exception as e:
-        print('WARNING: Problem setting custom kachery storage backend:', e)
-        return
-
-def _compute_sha1_of_file(file_path: str):
-    import hashlib
-    sha1 = hashlib.sha1()
-    with open(file_path, 'rb') as f:
-        while True:
-            chunk = f.read(2**16)
-            if not chunk:
-                break
-            sha1.update(chunk)
-    return sha1.hexdigest()
