@@ -20,6 +20,7 @@ import ProjectJobs from "./ProjectJobs";
 import { SetupProjectPage, useProject } from "./ProjectPageContext";
 import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpikeSortingWindow";
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
+import MearecGenerateTemplatesWindow from "./MearecGenerateTemplatesWindow/MearecGenerateTemplatesWindow";
 
 type Props = {
     width: number
@@ -260,45 +261,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         return undefined
     }, [computeResource])
 
-    const handleMearecGenerateTemplates = useCallback(() => {
-        (async () => {
-            if (!projectId) return
-            if (!mearecGenerateTemplatesProcessor) return
-            if (!files) return
-            const processorName = 'mearec_generate_templates'
-            const jobDef: DendroProcessingJobDefinition = {
-                processorName,
-                inputFiles: [],
-                inputParameters: [],
-                outputFiles: [{
-                    name: 'output',
-                    fileName: 'generated/mearec/default.templates.h5'
-                }]
-            }
-            const requiredResources: DendroJobRequiredResources = {
-                numCpus: 8,
-                numGpus: 0,
-                memoryGb: 8,
-                timeSec: 3600 * 1
-            }
-            const defaultRunMethod = computeResource?.spec?.defaultJobRunMethod
-            if (!defaultRunMethod) {
-                throw new Error(`defaultRunMethod not found for compute resource: ${computeResource?.computeResourceId}`)
-            }
-            const job = {
-                projectId,
-                jobDefinition: jobDef,
-                processorSpec: mearecGenerateTemplatesProcessor,
-                files,
-                batchId: undefined,
-                requiredResources,
-                runMethod: 'slurm' as any // hard-code during testing
-            }
-            console.log('CREATING JOB', job)
-            await createJob(job, auth)
-            console.log('JOB CREATED')
-        })()
-    }, [projectId, mearecGenerateTemplatesProcessor, computeResource, files, auth])
+    const {visible: mearecGenerateTemplatesWindowVisible, handleOpen: openMearecGenerateTemplatesWindow, handleClose: closeMearecGenerateTemplatesWindow} = useModalDialog()
 
     return (
         <div style={{position: 'absolute', width, height, overflow: 'hidden', background: 'white'}}>
@@ -315,7 +278,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     onRunBatchSpikeSorting={handleRunSpikeSorting}
                     onDandiUpload={handleDandiUpload}
                     onUploadSmallFile={handleUploadSmallFile}
-                    onMearecGenerateTemplates={mearecGenerateTemplatesProcessor && handleMearecGenerateTemplates}
+                    onMearecGenerateTemplates={mearecGenerateTemplatesProcessor && openMearecGenerateTemplatesWindow}
                 />
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
@@ -377,6 +340,16 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             >
                 <UploadSmallFileWindow
                     onClose={closeUploadSmallFileWindow}
+                />
+            </ModalWindow>
+            <ModalWindow
+                open={mearecGenerateTemplatesWindowVisible}
+                onClose={closeMearecGenerateTemplatesWindow}
+            >
+                <MearecGenerateTemplatesWindow
+                    width={0}
+                    height={0}
+                    onClose={closeMearecGenerateTemplatesWindow}
                 />
             </ModalWindow>
         </div>
