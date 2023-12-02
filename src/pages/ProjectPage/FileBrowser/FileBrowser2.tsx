@@ -21,6 +21,7 @@ type Props = {
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
+    onMearacGenerateTemplates?: () => void
 }
 
 type FileItem = {
@@ -118,7 +119,7 @@ type TreeNode = {
     file?: DendroFile
 }
 
-const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile}) => {
+const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onMearacGenerateTemplates}) => {
     const {currentTabName} = useProject()
 
     const rootNode = useMemo(() => {
@@ -280,6 +281,7 @@ const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, file
                     onRunBatchSpikeSorting={onRunBatchSpikeSorting}
                     onDandiUpload={onDandiUpload}
                     onUploadSmallFile={onUploadSmallFile}
+                    onMearecGenerateTemplates={onMearacGenerateTemplates}
                 />
             </div>
             <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>

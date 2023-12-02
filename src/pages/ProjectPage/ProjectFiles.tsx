@@ -14,9 +14,10 @@ type ProjectFilesProps = {
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
+    onMearecGenerateTemplates?: () => void
 }
 
-const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile}) => {
+const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onMearecGenerateTemplates}) => {
     const {filesIncludingPending, openTab, deleteFile, closeTab, openTabs, refreshFiles} = useProject()
 
     const handleOpenFile = useCallback((fileName: string) => {
@@ -50,6 +51,7 @@ const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRu
                 onRunBatchSpikeSorting={onRunBatchSpikeSorting}
                 onDandiUpload={onDandiUpload}
                 onUploadSmallFile={onUploadSmallFile}
+                onMearacGenerateTemplates={onMearecGenerateTemplates}
             />
             <ProjectTabWidget
                 width={0}
