@@ -10,9 +10,9 @@ from ..common._api_request import _processor_get_api_request
 # We'll at least give them a dict() and a model_dump() method
 class ContextObject:
     def __init__(self) -> None:
-        self._dendro_dict = dict()
+        self._dendro_attributes = {}
     def _dendro_set_attribute(self, name, value):
-        self._dendro_dict[name] = value
+        self._dendro_attributes[name] = value
         setattr(self, name, value)
     def _denro_set_attribute_where_name_may_have_dots(self, name, value):
         if '.' not in name:
@@ -27,9 +27,15 @@ class ContextObject:
             assert isinstance(obj, ContextObject), f'Unexpected type for {part}'
         obj._dendro_set_attribute(parts[-1], value)
     def dict(self):
-        return self._dendro_dict
+        ret = {}
+        for k, v in self._dendro_attributes.items():
+            if isinstance(v, ContextObject):
+                ret[k] = v.dict()
+            else:
+                ret[k] = v
+        return ret
     def model_dump(self):
-        return self._dendro_dict
+        return self.dict()
 
 def _run_job_child_process(*, job_id: str, job_private_key: str, processors: List[AppProcessor]):
     """
