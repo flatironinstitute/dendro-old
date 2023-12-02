@@ -6,8 +6,36 @@ from ..common._api_request import _processor_get_api_request
 
 
 # An empty object that we can set attributes on
+# The user is going to think it's a pydantic model, but it's not
+# We'll at least give them a dict() and a model_dump() method
 class ContextObject:
-    pass
+    def __init__(self) -> None:
+        self._dendro_attributes = {}
+    def _dendro_set_attribute(self, name, value):
+        self._dendro_attributes[name] = value
+        setattr(self, name, value)
+    def _denro_set_attribute_where_name_may_have_dots(self, name, value):
+        if '.' not in name:
+            self._dendro_set_attribute(name, value)
+            return
+        parts = name.split('.')
+        obj = self
+        for part in parts[:-1]:
+            if not hasattr(obj, part):
+                obj._dendro_set_attribute(part, ContextObject())
+            obj = getattr(obj, part)
+            assert isinstance(obj, ContextObject), f'Unexpected type for {part}'
+        obj._dendro_set_attribute(parts[-1], value)
+    def dict(self):
+        ret = {}
+        for k, v in self._dendro_attributes.items():
+            if isinstance(v, ContextObject):
+                ret[k] = v.dict()
+            else:
+                ret[k] = v
+        return ret
+    def model_dump(self):
+        return self.dict()
 
 def _run_job_child_process(*, job_id: str, job_private_key: str, processors: List[AppProcessor]):
     """
@@ -42,7 +70,7 @@ def _run_job_child_process(*, job_id: str, job_private_key: str, processors: Lis
             input_file = next((i for i in job.inputs if i.name == input.name), None)
             if not input_file:
                 raise Exception(f'Input not found: {input.name}')
-            setattr(context, input.name, input_file)
+            context._dendro_set_attribute(input.name, input_file)
         else:
             # this input is a list
             print(f'[dendro] Input (list): {input.name}')
@@ -57,13 +85,13 @@ def _run_job_child_process(*, job_id: str, job_private_key: str, processors: Lis
                 the_list.append(input_file)
                 ii += 1
             print(f'[dendro] Input (list): {input.name} (found {len(the_list)} files)')
-            setattr(context, input.name, the_list)
+            context._dendro_set_attribute(input.name, the_list)
     for output in processor._outputs:
         print(f'[dendro] Output: {output.name}')
         output_file = next((o for o in job.outputs if o.name == output.name), None)
         if not output_file:
             raise Exception(f'Output not found: {output.name}')
-        setattr(context, output.name, output_file)
+        context._dendro_set_attribute(output.name, output_file)
     for parameter in processor._parameters:
         job_parameter = next((p for p in job.parameters if p.name == parameter.name), None)
         if job_parameter is None:
@@ -71,7 +99,7 @@ def _run_job_child_process(*, job_id: str, job_private_key: str, processors: Lis
         else:
             parameter_value = job_parameter.value
         print(f'[dendro] Parameter: {parameter.name} = {parameter_value}')
-        _setattr_where_name_may_have_dots(context, parameter.name, parameter_value)
+        context._denro_set_attribute_where_name_may_have_dots(parameter.name, parameter_value)
 
     print('[dendro] Preparing to run processor')
     _set_custom_kachery_storage_backend(job_id=job_id, job_private_key=job_private_key)
@@ -98,18 +126,6 @@ def _get_job(*, job_id: str, job_private_key: str) -> Job:
         job_private_key=job_private_key
     )
     return job
-
-def _setattr_where_name_may_have_dots(obj, name, value):
-    """Set an attribute on an object, where the name may have dots in it"""
-    if '.' not in name:
-        setattr(obj, name, value)
-        return
-    parts = name.split('.')
-    for part in parts[:-1]:
-        if not hasattr(obj, part):
-            setattr(obj, part, ContextObject())
-        obj = getattr(obj, part)
-    setattr(obj, parts[-1], value)
 
 def _set_custom_kachery_storage_backend(*, job_id: str, job_private_key: str):
     try:
