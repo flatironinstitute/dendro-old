@@ -1,9 +1,9 @@
 import { Settings } from "@mui/icons-material";
 import { FunctionComponent, useMemo } from "react";
-import { useModalDialog } from "../../ApplicationBar";
-import Hyperlink from "../../components/Hyperlink";
-import ModalWindow from "../../components/ModalWindow/ModalWindow";
-import SmallIconButton from "../../components/SmallIconButton";
+import { useModalWindow } from "@hodj/modal-window"
+import { Hyperlink } from "@hodj/misc";
+import ModalWindow from "@hodj/modal-window";
+import { SmallIconButton } from "@hodj/misc";
 import { timeAgoString } from "../../timeStrings";
 import useRoute from "../../useRoute";
 import { useProject } from "./ProjectPageContext";
@@ -25,7 +25,7 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
     const {setRoute} = useRoute()
     const {project, files, jobs, projectId} = useProject()
 
-    const {visible: settingsWindowVisible, handleOpen: openSettingsWindow, handleClose: closeSettingsWindow} = useModalDialog()
+    const {visible: settingsWindowVisible, handleOpen: openSettingsWindow, handleClose: closeSettingsWindow} = useModalWindow()
 
     const associatedDandisetElements = useMemo(() => {
         if (!project) return undefined
@@ -124,7 +124,7 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
             
             
             <ModalWindow
-                open={settingsWindowVisible}
+                visible={settingsWindowVisible}
                 onClose={closeSettingsWindow}
             >
                 <ProjectSettingsWindow />

@@ -1,7 +1,7 @@
 import { faCaretDown, faCaretRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react";
-import Hyperlink from "../../../components/Hyperlink";
+import { Hyperlink } from "@hodj/misc";
 import ComputeResourceNameDisplay from "../../../ComputeResourceNameDisplay";
 import { timeAgoString } from "../../../timeStrings";
 import { DendroJob } from "../../../types/dendro-types";

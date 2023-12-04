@@ -1,6 +1,6 @@
 import { Add, Delete, Edit } from "@mui/icons-material"
 import { FunctionComponent, useCallback } from "react"
-import SmallIconButton from "../../../components/SmallIconButton"
+import { SmallIconButton } from "@hodj/misc";
 
 type ComputeResourceAppsTableMenuBarProps = {
     selectedAppNames: string[]

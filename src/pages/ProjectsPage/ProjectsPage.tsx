@@ -1,7 +1,7 @@
 import { FunctionComponent } from "react";
 import ProjectsTable from "./ProjectsTable";
 import useRoute from "../../useRoute";
-import Hyperlink from "../../components/Hyperlink";
+import { Hyperlink } from "@hodj/misc";
 import './ProjectsPage.css'
 
 type Props = {

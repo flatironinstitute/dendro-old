@@ -2,7 +2,7 @@ import { faPython } from '@fortawesome/free-brands-svg-icons';
 import { faCaretDown, faCaretRight, faFile, faFolder } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react";
-import Hyperlink from '../../../components/Hyperlink';
+import { Hyperlink } from "@hodj/misc";
 import { timeAgoString } from '../../../timeStrings';
 import { DendroFile } from '../../../types/dendro-types';
 import { useProject } from '../ProjectPageContext';
@@ -10,6 +10,7 @@ import './file-browser-table.css';
 import FileBrowserMenuBar from './FileBrowserMenuBar';
 import formatByteCount from './formatByteCount';
 import { DandiUploadTask } from '../DandiUpload/prepareDandiUploadTask';
+import { PluginAction } from '../../../plugins/DendroFrontendPlugin';
 
 type Props = {
     width: number
@@ -21,7 +22,7 @@ type Props = {
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
-    onMearacGenerateTemplates?: () => void
+    onAction?: (action: PluginAction) => void
 }
 
 type FileItem = {
@@ -119,7 +120,7 @@ type TreeNode = {
     file?: DendroFile
 }
 
-const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onMearacGenerateTemplates}) => {
+const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onAction}) => {
     const {currentTabName} = useProject()
 
     const rootNode = useMemo(() => {
@@ -281,7 +282,7 @@ const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, file
                     onRunBatchSpikeSorting={onRunBatchSpikeSorting}
                     onDandiUpload={onDandiUpload}
                     onUploadSmallFile={onUploadSmallFile}
-                    onMearecGenerateTemplates={onMearacGenerateTemplates}
+                    onAction={onAction}
                 />
             </div>
             <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>

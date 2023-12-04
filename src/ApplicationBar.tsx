@@ -5,8 +5,8 @@ import ApiKeysWindow from "./ApiKeysWindow/ApiKeysWindow";
 import GitHubLoginWindow from "./GitHub/GitHubLoginWindow";
 import { useGithubAuth } from "./GithubAuth/useGithubAuth";
 import UserIdComponent from "./UserIdComponent";
-import ModalWindow from "./components/ModalWindow/ModalWindow";
-import SmallIconButton from "./components/SmallIconButton";
+import ModalWindow from "@hodj/modal-window";
+import { SmallIconButton } from "@hodj/misc";
 import useRoute from "./useRoute";
 
 type Props = {
@@ -21,8 +21,8 @@ const ApplicationBar: FunctionComponent<Props> = () => {
     const {setRoute} = useRoute()
     const {signedIn, userId} = useGithubAuth()
 
-    const {visible: githubAccessWindowVisible, handleOpen: openGitHubAccessWindow, handleClose: closeGitHubAccessWindow} = useModalDialog()
-    const {visible: apiKeysWindowVisible, handleOpen: openApiKeysWindow, handleClose: closeApiKeysWindow} = useModalDialog()
+    const {visible: githubAccessWindowVisible, handleOpen: openGitHubAccessWindow, handleClose: closeGitHubAccessWindow} = useModalWindow()
+    const {visible: apiKeysWindowVisible, handleOpen: openApiKeysWindow, handleClose: closeApiKeysWindow} = useModalWindow()
 
     const onHome = useCallback(() => {
         setRoute({page: 'dandisets'})
@@ -94,7 +94,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
                 </Toolbar>
             </AppBar>
             <ModalWindow
-                open={githubAccessWindowVisible}
+                visible={githubAccessWindowVisible}
                 // onClose={closeGitHubAccessWindow}
             >
                 <GitHubLoginWindow
@@ -102,7 +102,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
                 />
             </ModalWindow>
             <ModalWindow
-                open={apiKeysWindowVisible}
+                visible={apiKeysWindowVisible}
                 onClose={closeApiKeysWindow}
             >
                 <ApiKeysWindow
@@ -113,7 +113,7 @@ const ApplicationBar: FunctionComponent<Props> = () => {
     )
 }
 
-export const useModalDialog = () => {
+export const useModalWindow = () => {
     const [visible, setVisible] = useState<boolean>(false)
     const handleOpen = useCallback(() => {
         setVisible(true)

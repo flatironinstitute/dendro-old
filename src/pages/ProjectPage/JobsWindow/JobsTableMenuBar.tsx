@@ -1,8 +1,8 @@
-import { Delete, Refresh } from "@mui/icons-material"
-import { FunctionComponent, useCallback, useState } from "react"
-import SmallIconButton from "../../../components/SmallIconButton"
-import { confirm } from "../../../confirm_prompt_alert"
-import { useProject } from "../ProjectPageContext"
+import { SmallIconButton } from "@hodj/misc";
+import { Delete, Refresh } from "@mui/icons-material";
+import { FunctionComponent, useCallback, useState } from "react";
+import { confirm } from "../../../confirm_prompt_alert";
+import { useProject } from "../ProjectPageContext";
 
 type JobsTableMenuBarProps = {
     width: number

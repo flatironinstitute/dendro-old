@@ -1,8 +1,8 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
-import { useModalDialog } from "../../../ApplicationBar"
+import { useModalWindow } from "@hodj/modal-window"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
-import Hyperlink from "../../../components/Hyperlink"
-import ModalWindow from "../../../components/ModalWindow/ModalWindow"
+import { Hyperlink } from "@hodj/misc";
+import ModalWindow from "@hodj/modal-window";
 import { App, fetchComputeResource, setComputeResourceApps } from "../../../dbInterface/dbInterface"
 import { DendroComputeResource } from "../../../types/dendro-types"
 import NewAppWindow from "../../ComputeResourcePage/NewAppWindow"
@@ -26,8 +26,8 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
 
     const [selectedAppNames, selectedAppNamesDispatch] = useReducer(selectedStringsReducer, new Set<string>())
 
-    const {visible: newAppWindowVisible, handleOpen: openNewAppWindow, handleClose: closeNewAppWindow} = useModalDialog()
-    const {visible: editAppWindowVisible, handleOpen: openEditAppWindow, handleClose: closeEditAppWindow} = useModalDialog()
+    const {visible: newAppWindowVisible, handleOpen: openNewAppWindow, handleClose: closeNewAppWindow} = useModalWindow()
+    const {visible: editAppWindowVisible, handleOpen: openEditAppWindow, handleClose: closeEditAppWindow} = useModalWindow()
 
     const auth = useGithubAuth()
 
@@ -119,7 +119,7 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
                 </table>
             </div>
             <ModalWindow
-                open={newAppWindowVisible}
+                visible={newAppWindowVisible}
                 onClose={closeNewAppWindow}
             >
                 {computeResource && <NewAppWindow
@@ -128,7 +128,7 @@ const ComputeResourceAppsTable2: FunctionComponent<Props> = ({computeResourceId}
                 />}
             </ModalWindow>
             <ModalWindow
-                open={editAppWindowVisible}
+                visible={editAppWindowVisible}
                 onClose={closeEditAppWindow}
             >
                 {computeResource && <NewAppWindow

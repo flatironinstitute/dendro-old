@@ -1,18 +1,18 @@
 import { FunctionComponent, useCallback, useMemo, useState } from "react";
-import { useModalDialog } from "../../ApplicationBar";
+import { useModalWindow } from "@hodj/modal-window"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
-import HBoxLayout from "../../components/HBoxLayout";
-import ModalWindow from "../../components/ModalWindow/ModalWindow";
-import { DendroProcessingJobDefinition, createJob, setUrlFile } from "../../dbInterface/dbInterface";
+import ModalWindow from "@hodj/modal-window";
+import { setUrlFile } from "../../dbInterface/dbInterface";
 import useRoute from "../../useRoute";
 // import ManualNwbSelector from "./ManualNwbSelector/ManualNwbSelector";
-import { DendroJobRequiredResources } from "../../types/dendro-types";
+import { PluginAction } from "../../plugins/DendroFrontendPlugin";
 import { SetupComputeResources } from "../ComputeResourcesPage/ComputeResourcesContext";
 import { getDandiApiHeaders } from "../DandiBrowser/DandiBrowser";
 import DandisetView from "../DandiBrowser/DandisetView";
 import { AssetResponse, AssetsResponseItem } from "../DandiBrowser/types";
 import DandiUploadWindow from "./DandiUpload/DandiUploadWindow";
 import { DandiUploadTask } from "./DandiUpload/prepareDandiUploadTask";
+import MearecGenerateTemplatesWindow from "./MearecGenerateTemplatesWindow/MearecGenerateTemplatesWindow";
 import ProcessorsView from "./ProcessorsView";
 import ProjectFiles from "./ProjectFiles";
 import ProjectHome from "./ProjectHome";
@@ -20,7 +20,7 @@ import ProjectJobs from "./ProjectJobs";
 import { SetupProjectPage, useProject } from "./ProjectPageContext";
 import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpikeSortingWindow";
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
-import MearecGenerateTemplatesWindow from "./MearecGenerateTemplatesWindow/MearecGenerateTemplatesWindow";
+import { HBoxLayout } from "@hodj/misc";
 
 type Props = {
     width: number
@@ -133,7 +133,7 @@ type MainPanelProps = {
 }
 
 const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
-    const {projectId, project, refreshFiles, computeResource, files} = useProject()
+    const {project, refreshFiles} = useProject()
     const auth = useGithubAuth()
     const {route, staging} = useRoute()
     if (route.page !== 'project') throw Error(`Unexpected route ${JSON.stringify(route)}`)
@@ -186,21 +186,21 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
     //     handleCreateFiles([{fileName, url: nwbUrl, metadata}])
     // }, [handleCreateFiles])
 
-    const {visible: runSpikeSortingWindowVisible, handleOpen: openRunSpikeSortingWindow, handleClose: closeRunSpikeSortingWindow} = useModalDialog()
+    const {visible: runSpikeSortingWindowVisible, handleOpen: openRunSpikeSortingWindow, handleClose: closeRunSpikeSortingWindow} = useModalWindow()
     const [spikeSortingFilePaths, setSpikeSortingFilePaths] = useState<string[]>([])
     const handleRunSpikeSorting = useCallback((filePaths: string[]) => {
         setSpikeSortingFilePaths(filePaths)
         openRunSpikeSortingWindow()
     }, [openRunSpikeSortingWindow])
 
-    const {visible: dandiUploadWindowVisible, handleOpen: openDandiUploadWindow, handleClose: closeDandiUploadWindow} = useModalDialog()
+    const {visible: dandiUploadWindowVisible, handleOpen: openDandiUploadWindow, handleClose: closeDandiUploadWindow} = useModalWindow()
     const [dandiUploadTask, setDandiUploadTask] = useState<DandiUploadTask | undefined>(undefined)
     const handleDandiUpload = useCallback((dandiUploadTask: DandiUploadTask) => {
         setDandiUploadTask(dandiUploadTask)
         openDandiUploadWindow()
     }, [openDandiUploadWindow])
 
-    const {visible: uploadSmallFileWindowVisible, handleOpen: openUploadSmallFileWindow, handleClose: closeUploadSmallFileWindow} = useModalDialog()
+    const {visible: uploadSmallFileWindowVisible, handleOpen: openUploadSmallFileWindow, handleClose: closeUploadSmallFileWindow} = useModalWindow()
     const handleUploadSmallFile = useCallback(() => {
         openUploadSmallFileWindow()
     }, [openUploadSmallFileWindow])
@@ -249,19 +249,13 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         await handleImportDandiNwbFiles(files)
     }, [handleImportDandiNwbFiles, stagingStr, staging])
 
-    const mearecGenerateTemplatesProcessor = useMemo(() => {
-        if (!computeResource) return undefined
-        for (const app of computeResource.spec?.apps || []) {
-            for (const p of app.processors || []) {
-                if (p.name === 'mearec_generate_templates') {
-                    return p
-                }
-            }
-        }
-        return undefined
-    }, [computeResource])
+    const {visible: mearecGenerateTemplatesWindowVisible, handleOpen: openMearecGenerateTemplatesWindow, handleClose: closeMearecGenerateTemplatesWindow} = useModalWindow()
 
-    const {visible: mearecGenerateTemplatesWindowVisible, handleOpen: openMearecGenerateTemplatesWindow, handleClose: closeMearecGenerateTemplatesWindow} = useModalDialog()
+    const handleAction = useCallback(async (action: PluginAction) => {
+        if (action.name === 'mearec-generate-templates') {
+            openMearecGenerateTemplatesWindow()
+        }
+    }, [openMearecGenerateTemplatesWindow])
 
     return (
         <div style={{position: 'absolute', width, height, overflow: 'hidden', background: 'white'}}>
@@ -278,7 +272,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     onRunBatchSpikeSorting={handleRunSpikeSorting}
                     onDandiUpload={handleDandiUpload}
                     onUploadSmallFile={handleUploadSmallFile}
-                    onMearecGenerateTemplates={mearecGenerateTemplatesProcessor && openMearecGenerateTemplatesWindow}
+                    onAction={handleAction}
                 />
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
@@ -312,7 +306,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 />
             </div>
             <ModalWindow
-                open={runSpikeSortingWindowVisible}
+                visible={runSpikeSortingWindowVisible}
             >
                 <RunBatchSpikeSortingWindow
                     width={0}
@@ -322,7 +316,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 />
             </ModalWindow>
             <ModalWindow
-                open={dandiUploadWindowVisible}
+                visible={dandiUploadWindowVisible}
                 onClose={closeDandiUploadWindow}
             >
                 {
@@ -335,7 +329,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 }
             </ModalWindow>
             <ModalWindow
-                open={uploadSmallFileWindowVisible}
+                visible={uploadSmallFileWindowVisible}
                 onClose={closeUploadSmallFileWindow}
             >
                 <UploadSmallFileWindow
@@ -343,7 +337,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 />
             </ModalWindow>
             <ModalWindow
-                open={mearecGenerateTemplatesWindowVisible}
+                visible={mearecGenerateTemplatesWindowVisible}
                 onClose={closeMearecGenerateTemplatesWindow}
             >
                 <MearecGenerateTemplatesWindow

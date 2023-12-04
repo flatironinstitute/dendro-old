@@ -2,8 +2,8 @@ import { FunctionComponent, useCallback, useEffect, useReducer, useState } from 
 import { useGithubAuth } from "../GithubAuth/useGithubAuth"
 import { createDendroApiKeyForUser } from "../dbInterface/dbInterface"
 import UserIdComponent from "../UserIdComponent"
-import Hyperlink from "../components/Hyperlink"
 import { confirm } from "../confirm_prompt_alert"
+import { Hyperlink } from "@hodj/misc"
 
 type ApiKeysWindowProps = {
     onClose: () => void

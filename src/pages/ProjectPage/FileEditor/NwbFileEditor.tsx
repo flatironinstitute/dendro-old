@@ -1,8 +1,8 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
-import { useModalDialog } from "../../../ApplicationBar";
+import { useModalWindow } from "@hodj/modal-window"
 import { RemoteH5File, getRemoteH5File } from "../../../RemoteH5File/RemoteH5File";
-import Hyperlink from "../../../components/Hyperlink";
-import ModalWindow from "../../../components/ModalWindow/ModalWindow";
+import { Hyperlink } from "@hodj/misc";
+import ModalWindow from "@hodj/modal-window";
 import Splitter from "../../../components/Splitter";
 import JobsWindow from "../JobsWindow/JobsWindow";
 import LoadNwbInPythonWindow from "../LoadNwbInPythonWindow/LoadNwbInPythonWindow";
@@ -134,7 +134,7 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
         console.warn(`Mismatch between dandiAssetPath (${dandiAssetPath}) and assetResponse.path (${assetResponse.path})`)
     }
 
-    const {visible: loadNwbInPythonWindowVisible, handleOpen: openLoadNwbInPythonWindow, handleClose: closeLoadNwbInPythonWindow} = useModalDialog()
+    const {visible: loadNwbInPythonWindowVisible, handleOpen: openLoadNwbInPythonWindow, handleClose: closeLoadNwbInPythonWindow} = useModalWindow()
 
     const spikeSortingJob = useMemo(() => {
         if (!jobs) return undefined
@@ -248,7 +248,7 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
             <div>&nbsp;</div>
             <hr />
             <ModalWindow
-                open={loadNwbInPythonWindowVisible}
+                visible={loadNwbInPythonWindowVisible}
                 onClose={closeLoadNwbInPythonWindow}
             >
                 {project && <LoadNwbInPythonWindow

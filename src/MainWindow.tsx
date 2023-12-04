@@ -1,22 +1,20 @@
+import { HBoxLayout, VBoxLayout } from "@hodj/misc";
 import { FunctionComponent, useState } from "react";
 import ApplicationBar, { applicationBarHeight } from "./ApplicationBar";
+import GitHubAuthPage from "./GitHub/GitHubAuthPage";
+import HelpPanel from "./HelpPanel/HelpPanel";
+import RecentProjectsPanel from "./RecentProjectsPanel/RecentProjectsPanel";
+import Splitter from "./components/Splitter";
 import AboutPage from "./pages/AboutPage/AboutPage";
-import HomePage from "./pages/HomePage/HomePage";
-import useRoute from "./useRoute";
-import useWindowDimensions from "./useWindowDimensions";
-import DandiBrowser from "./pages/DandiBrowser/DandiBrowser";
-import ProjectPage from "./pages/ProjectPage/ProjectPage";
-import RegisterComputeResourcePage from "./pages/RegisterComputeResourcePage/RegisterComputeResourcePage";
+import AdminPage from "./pages/AdminPage/AdminPage";
 import ComputeResourcePage from "./pages/ComputeResourcePage/ComputeResourcePage";
 import ComputeResourcesPage from "./pages/ComputeResourcesPage/ComputeResourcesPage";
-import GitHubAuthPage from "./GitHub/GitHubAuthPage";
+import DandiBrowser from "./pages/DandiBrowser/DandiBrowser";
+import ProjectPage from "./pages/ProjectPage/ProjectPage";
 import ProjectsPage from "./pages/ProjectsPage/ProjectsPage";
-import VBoxLayout from "./components/VBoxLayout";
-import HBoxLayout from "./components/HBoxLayout";
-import HelpPanel from "./HelpPanel/HelpPanel";
-import AdminPage from "./pages/AdminPage/AdminPage";
-import Splitter from "./components/Splitter";
-import RecentProjectsPanel from "./RecentProjectsPanel/RecentProjectsPanel";
+import RegisterComputeResourcePage from "./pages/RegisterComputeResourcePage/RegisterComputeResourcePage";
+import useRoute from "./useRoute";
+import useWindowDimensions from "./useWindowDimensions";
 
 type Props = {
     // none

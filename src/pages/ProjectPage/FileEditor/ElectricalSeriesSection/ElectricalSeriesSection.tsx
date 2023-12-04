@@ -1,8 +1,8 @@
 import { FunctionComponent, useCallback, useState } from "react"
 import { useElectricalSeriesPaths, useNwbFile } from "../NwbFileEditor"
-import Hyperlink from "../../../../components/Hyperlink"
-import ModalWindow from "../../../../components/ModalWindow/ModalWindow"
-import { useModalDialog } from "../../../../ApplicationBar"
+import { Hyperlink } from "@hodj/misc";
+import ModalWindow from "@hodj/modal-window";
+import { useModalWindow } from "@hodj/modal-window"
 import { useProject } from "../../ProjectPageContext"
 import LoadElectricalSeriesScriptWindow from "./LoadElectricalSeriesScriptWindow"
 
@@ -15,7 +15,7 @@ const ElectricalSeriesSection: FunctionComponent<ElectricalSeriesSectionProps> =
     const nwbFile = useNwbFile(nwbUrl)
     const electricalSeriesPaths = useElectricalSeriesPaths(nwbFile)
     const [selectedElectricalSeriesPath, setSelectedElectricalSeriesPath] = useState<string>('')
-    const {visible: loadInScriptVisible, handleOpen: openLoadInScriptWindow, handleClose: closeLoadInScriptWindow} = useModalDialog()
+    const {visible: loadInScriptVisible, handleOpen: openLoadInScriptWindow, handleClose: closeLoadInScriptWindow} = useModalWindow()
     const {project} = useProject()
     const loadInScript = useCallback((path: string) => {
         setSelectedElectricalSeriesPath(path)
@@ -39,7 +39,7 @@ const ElectricalSeriesSection: FunctionComponent<ElectricalSeriesSectionProps> =
                 }
             </ul>
             <ModalWindow
-                open={loadInScriptVisible}
+                visible={loadInScriptVisible}
                 onClose={closeLoadInScriptWindow}
             >
                 {selectedElectricalSeriesPath && project && fileName && (

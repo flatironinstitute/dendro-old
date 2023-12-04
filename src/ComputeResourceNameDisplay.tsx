@@ -1,7 +1,7 @@
+import { Hyperlink } from "@hodj/misc";
 import { FunctionComponent, useMemo } from "react";
-import Hyperlink from "./components/Hyperlink";
-import useRoute from "./useRoute";
 import { useComputeResources } from "./pages/ComputeResourcesPage/ComputeResourcesContext";
+import useRoute from "./useRoute";
 
 type Props = {
     computeResourceId: string | undefined

@@ -1,7 +1,7 @@
 import { FunctionComponent, useCallback, useMemo, useReducer } from "react"
-import { useModalDialog } from "../../ApplicationBar"
-import Hyperlink from "../../components/Hyperlink"
-import ModalWindow from "../../components/ModalWindow/ModalWindow"
+import { useModalWindow } from "@hodj/modal-window"
+import { Hyperlink } from "@hodj/misc";
+import ModalWindow from "@hodj/modal-window";
 import { DendroComputeResource } from "../../types/dendro-types"
 import { Checkbox, selectedStringsReducer } from "../ProjectPage/FileBrowser/FileBrowser2"
 import ComputeResourceAppsTableMenuBar from "./ComputeResourceAppsTableMenuBar"
@@ -23,8 +23,8 @@ const vPadding = 5
 const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, computeResource, onNewApp, onEditApp, onDeleteApps}) => {
     const [selectedAppNames, selectedAppNamesDispatch] = useReducer(selectedStringsReducer, new Set<string>())
 
-    const {visible: newAppWindowVisible, handleOpen: openNewAppWindow, handleClose: closeNewAppWindow} = useModalDialog()
-    const {visible: editAppWindowVisible, handleOpen: openEditAppWindow, handleClose: closeEditAppWindow} = useModalDialog()
+    const {visible: newAppWindowVisible, handleOpen: openNewAppWindow, handleClose: closeNewAppWindow} = useModalWindow()
+    const {visible: editAppWindowVisible, handleOpen: openEditAppWindow, handleClose: closeEditAppWindow} = useModalWindow()
 
     const onAppClicked = useCallback((appName: string) => {
         // TODO
@@ -81,7 +81,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
                 </table>
             </div>
             <ModalWindow
-                open={newAppWindowVisible}
+                visible={newAppWindowVisible}
                 onClose={closeNewAppWindow}
             >
                 <NewAppWindow
@@ -90,7 +90,7 @@ const ComputeResourceAppsTable: FunctionComponent<Props> = ({width, height, comp
                 />
             </ModalWindow>
             <ModalWindow
-                open={editAppWindowVisible}
+                visible={editAppWindowVisible}
                 onClose={closeEditAppWindow}
             >
                 <NewAppWindow
