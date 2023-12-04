@@ -10,6 +10,7 @@ type ResourceUtilizationViewProps = {
 type ResourceUtilizationLog = ResourceUtilizationLogLine[]
 
 type ResourceUtilizationLogLine = {
+    type: 'utilization_event',
     timestamp: number,
     cpu: {
         percent: number
@@ -48,6 +49,10 @@ type ResourceUtilizationLogLine = {
     gpu: {
         loads: number[]
     } | null
+} | {
+    type: 'custom_event',
+    timestamp: number,
+    event: any
 }
 
 const useResourceUtilizationLog = (job: DendroJob) => {
@@ -97,9 +102,13 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
     const {resourceUtilizationLog, refreshResourceUtilizationLog} = useResourceUtilizationLog(job)
     const referenceTime = resourceUtilizationLog && resourceUtilizationLog.length > 0 ? resourceUtilizationLog[0].timestamp : 0
 
+    const resourceUtilizationLogFiltered: (ResourceUtilizationLogLine & {type: 'utilization_event'})[] = useMemo(() => {
+        return resourceUtilizationLog.filter(l => l.type === 'utilization_event') as any
+    }, [resourceUtilizationLog])
+
     const handleDownloadCsv = useCallback(() => {
         const headerLine = "timestamp,cpu_percent,memory_used,memory_total,network_sent,network_received,disk_read,disk_write"
-        const lines = resourceUtilizationLog.map(l => {
+        const lines = resourceUtilizationLogFiltered.map(l => {
             const cpuPercent = l.cpu.percent
             const memoryUsed = l.virtual_memory.used / 1024 / 1024 / 1024
             const memoryTotal = l.virtual_memory.total / 1024 / 1024 / 1024
@@ -117,7 +126,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
         a.href = url
         a.download = `resource_utilization_${job.jobId}.csv`
         a.click()
-    }, [resourceUtilizationLog, job])
+    }, [resourceUtilizationLogFiltered, job])
 
     const handleDownloadJsonl = useCallback(() => {
         const lines = resourceUtilizationLog.map(l => JSON.stringify(l))
@@ -145,7 +154,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                 series={[
                     {
                         label: 'CPU percent',
-                        data: resourceUtilizationLog.map(l => ({
+                        data: resourceUtilizationLogFiltered.map(l => ({
                             x: l.timestamp,
                             y: l.cpu.percent
                         })),
@@ -160,7 +169,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                 series={[
                     {
                         label: 'Memory used',
-                        data: resourceUtilizationLog.map(l => ({
+                        data: resourceUtilizationLogFiltered.map(l => ({
                             x: l.timestamp,
                             y: l.virtual_memory.used / 1024 / 1024 / 1024
                         })),
@@ -168,7 +177,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                     },
                     {
                         label: 'Total memory',
-                        data: resourceUtilizationLog.map(l => ({
+                        data: resourceUtilizationLogFiltered.map(l => ({
                             x: l.timestamp,
                             y: l.virtual_memory.total / 1024 / 1024 / 1024
                         })),
@@ -183,7 +192,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                 series={[
                     {
                         label: 'GPU load',
-                        data: resourceUtilizationLog.map(l => ({
+                        data: resourceUtilizationLogFiltered.map(l => ({
                             x: l.timestamp,
                             y: l.gpu ? l.gpu.loads.reduce((a, b) => a + b, 0) : 0
                         })),
@@ -199,7 +208,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                     series={[
                         {
                             label: 'Network sent',
-                            data: resourceUtilizationLog.map(l => ({
+                            data: resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.net_io_counters?.bytes_sent || 0) / 1024 / 1024 / 1024
                             })),
@@ -207,7 +216,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                         },
                         {
                             label: 'Network received',
-                            data: resourceUtilizationLog.map(l => ({
+                            data: resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.net_io_counters?.bytes_recv || 0) / 1024 / 1024 / 1024
                             })),
@@ -222,7 +231,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                     series={[
                         {
                             label: 'Network sent',
-                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                            data: cumulativeToInstantaneous(resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.net_io_counters?.bytes_sent || 0) / 1024 / 1024
                             }))),
@@ -230,7 +239,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                         },
                         {
                             label: 'Network received',
-                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                            data: cumulativeToInstantaneous(resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.net_io_counters?.bytes_recv || 0) / 1024 / 1024
                             }))),
@@ -247,7 +256,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                     series={[
                         {
                             label: 'Disk read',
-                            data: resourceUtilizationLog.map(l => ({
+                            data: resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.disk_io_counters?.read_bytes || 0) / 1024 / 1024
                             })),
@@ -255,7 +264,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                         },
                         {
                             label: 'Disk write',
-                            data: resourceUtilizationLog.map(l => ({
+                            data: resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.disk_io_counters?.write_bytes || 0) / 1024 / 1024
                             })),
@@ -270,7 +279,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                     series={[
                         {
                             label: 'Disk read',
-                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                            data: cumulativeToInstantaneous(resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.disk_io_counters?.read_bytes || 0) / 1024 / 1024
                             }))),
@@ -278,7 +287,7 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
                         },
                         {
                             label: 'Disk write',
-                            data: cumulativeToInstantaneous(resourceUtilizationLog.map(l => ({
+                            data: cumulativeToInstantaneous(resourceUtilizationLogFiltered.map(l => ({
                                 x: l.timestamp,
                                 y: (l.disk_io_counters?.write_bytes || 0) / 1024 / 1024
                             }))),
