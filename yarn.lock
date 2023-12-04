@@ -555,6 +555,13 @@
   resolved "https://registry.yarnpkg.com/@hodj/modal-window/-/modal-window-0.0.6.tgz#9ed54df7725db01eb9d2f4624c8b1c48094adf9f"
   integrity sha512-xRa+8OX8bgPohUBdEtMjdKZP9TQ7I0aeW8gcKD884acfOFVT4hzMXwyINg8K3XVtjMfln3lneASsPE8+bGZLuQ==
 
+"@hodj/splitter@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@hodj/splitter/-/splitter-0.0.1.tgz#99eb7b5141ec26303ab066c8bd91db8d703830e8"
+  integrity sha512-iPv8GY7SKy5H2tli8nWVz8o9V5XzYl46++Fr1lWp0obkmeHUYRmgoV9OHyWPA9KnOdwY1m57rUo4PXE8RVgiIw==
+  dependencies:
+    react-draggable "^4.4.6"
+
 "@humanwhocodes/config-array@^0.11.13":
   version "0.11.13"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.13.tgz#075dc9684f40a531d9b26b0822153c1e832ee297"
@@ -4947,7 +4954,7 @@ react-dom@^18.2.0:
     loose-envify "^1.1.0"
     scheduler "^0.23.0"
 
-react-draggable@^4.4.5:
+react-draggable@^4.4.5, react-draggable@^4.4.6:
   version "4.4.6"
   resolved "https://registry.yarnpkg.com/react-draggable/-/react-draggable-4.4.6.tgz#63343ee945770881ca1256a5b6fa5c9f5983fe1e"
   integrity sha512-LtY5Xw1zTPqHkVmtM3X8MUOxNDOUhv/khTgBgrUvwaS064bwVvxT+q5El0uUFNx5IEPKXuRejr7UqLwBIg5pdw==

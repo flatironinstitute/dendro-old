@@ -3,7 +3,7 @@ import { useModalWindow } from "@hodj/modal-window"
 import { RemoteH5File, getRemoteH5File } from "../../../RemoteH5File/RemoteH5File";
 import { Hyperlink } from "@hodj/misc";
 import ModalWindow from "@hodj/modal-window";
-import Splitter from "../../../components/Splitter";
+import { Splitter } from "@hodj/splitter";
 import JobsWindow from "../JobsWindow/JobsWindow";
 import LoadNwbInPythonWindow from "../LoadNwbInPythonWindow/LoadNwbInPythonWindow";
 import { useProject } from "../ProjectPageContext";

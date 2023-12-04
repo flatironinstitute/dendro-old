@@ -1,5 +1,5 @@
 import { FunctionComponent, useCallback } from "react";
-import Splitter from "../../components/Splitter";
+import { Splitter } from "@hodj/splitter";
 import TabWidget from "../../TabWidget/TabWidget";
 import FileBrowser2, { FileIcon } from "./FileBrowser/FileBrowser2";
 import FileEditor from "./FileEditor/FileEditor";

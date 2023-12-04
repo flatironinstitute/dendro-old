@@ -19,6 +19,7 @@
     "@hodj/electrode-geometry-widget": "0.0.3",
     "@hodj/misc": "0.0.1",
     "@hodj/modal-window": "^0.0.6",
+    "@hodj/splitter": "^0.0.1",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.0",
     "github-markdown-css": "^5.2.0",

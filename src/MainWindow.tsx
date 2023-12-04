@@ -4,7 +4,7 @@ import ApplicationBar, { applicationBarHeight } from "./ApplicationBar";
 import GitHubAuthPage from "./GitHub/GitHubAuthPage";
 import HelpPanel from "./HelpPanel/HelpPanel";
 import RecentProjectsPanel from "./RecentProjectsPanel/RecentProjectsPanel";
-import Splitter from "./components/Splitter";
+import { Splitter } from "@hodj/splitter";
 import AboutPage from "./pages/AboutPage/AboutPage";
 import AdminPage from "./pages/AdminPage/AdminPage";
 import ComputeResourcePage from "./pages/ComputeResourcePage/ComputeResourcePage";

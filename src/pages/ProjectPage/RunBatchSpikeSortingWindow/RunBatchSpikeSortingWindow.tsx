@@ -8,7 +8,7 @@ import LeftColumn from "./LeftColumn"
 import RightColumn from "./RightColumn"
 import SelectProcessorComponent from "./SelectProcessorComponent"
 import getDefaultRequiredResources from "./getDefaultRequiredResources"
-import Splitter from "../../../components/Splitter"
+import { Splitter } from "@hodj/splitter";
 
 type Props = {
     filePaths: string[]
