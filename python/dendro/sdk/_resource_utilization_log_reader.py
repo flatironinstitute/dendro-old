@@ -22,6 +22,7 @@ def _resource_utilization_log_reader(outq: queue.Queue, exit_event: threading.Ev
         net_io_counters = psutil.net_io_counters(pernic=False, nowrap=True)
         gpu_loads = _get_gpu_loads()
         log_record = {
+            'type': 'utilization_event',
             'timestamp': time.time(),
             'cpu': {
                 'percent': cpu_percent
