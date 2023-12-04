@@ -198,6 +198,7 @@ class AwsBatchStack(Stack):
             id=compute_env_gpu_id,
             vpc=vpc,
             instance_types=[
+                ec2.InstanceType("g4dn.xlarge"), # 4 vCPUs, 16 GiB
                 ec2.InstanceType("g4dn.2xlarge"), # 8 vCPUs, 32 GiB
                 # ec2.InstanceType("g4dn.4xlarge"), # 16 vCPUs, 64 GiB
             ],
