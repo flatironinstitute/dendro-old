@@ -1,11 +1,9 @@
-import { Search } from "@mui/icons-material"
-import { FunctionComponent, useCallback, useEffect, useState } from "react"
-import SearchResults from "./SearchResults"
-import { AssetResponse, AssetsResponseItem, DandisetSearchResultItem, DandisetsResponse } from "./types"
-import SmallIconButton from "../../components/SmallIconButton"
-import useRoute from "../../useRoute"
-import Hyperlink from "../../components/Hyperlink"
-import VBoxLayout from "../../components/VBoxLayout"
+import { Hyperlink, SmallIconButton, VBoxLayout } from "@hodj/misc";
+import { Search } from "@mui/icons-material";
+import { FunctionComponent, useEffect, useState } from "react";
+import useRoute from "../../useRoute";
+import SearchResults from "./SearchResults";
+import { DandisetSearchResultItem, DandisetsResponse } from "./types";
 
 type Props = {
     width: number

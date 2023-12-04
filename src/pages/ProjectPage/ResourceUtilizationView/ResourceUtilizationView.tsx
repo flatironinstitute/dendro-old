@@ -1,7 +1,7 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react"
 import { DendroJob } from "../../../types/dendro-types"
 import LogPlot from "./LogPlot"
-import Hyperlink from "../../../components/Hyperlink"
+import { Hyperlink } from "@hodj/misc";
 
 type ResourceUtilizationViewProps = {
     job: DendroJob

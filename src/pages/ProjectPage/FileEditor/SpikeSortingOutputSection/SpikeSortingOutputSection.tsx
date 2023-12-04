@@ -1,12 +1,12 @@
 import { FunctionComponent, useCallback, useMemo } from "react";
-import Hyperlink from "../../../../components/Hyperlink";
+import { Hyperlink } from "@hodj/misc";
 import { createJob, DendroProcessingJobDefinition } from "../../../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../../../GithubAuth/useGithubAuth";
 import { DendroJob, DendroJobRequiredResources } from "../../../../types/dendro-types";
 import { useProject } from "../../ProjectPageContext";
 import { isElectricalSeriesPathParameter } from "../../EditJobDefinitionWindow/EditJobDefinitionWindow";
-import { useModalDialog } from "../../../../ApplicationBar";
-import ModalWindow from "../../../../components/ModalWindow/ModalWindow";
+import { useModalWindow } from "@hodj/modal-window"
+import ModalWindow from "@hodj/modal-window";
 import LoadSpikeSortingInScriptWindow from "./LoadSpikeSortingInScriptWindow";
 
 type SpikeSortingOutputSectionProps = {
@@ -141,7 +141,7 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
 
     const status = spikeSortingFigurlJob ? spikeSortingFigurlJob.status : undefined
 
-    const {visible: loadInScriptVisible, handleOpen: openLoadInScriptWindow, handleClose: closeLoadInScriptWindow} = useModalDialog()
+    const {visible: loadInScriptVisible, handleOpen: openLoadInScriptWindow, handleClose: closeLoadInScriptWindow} = useModalWindow()
 
     if (!recordingFile) return <div>Recording file not found</div>
     if (!sortingFile) return <div>Sorting file not found</div>
@@ -187,7 +187,7 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
                 </Hyperlink>
             </div>
             <ModalWindow
-                open={loadInScriptVisible}
+                visible={loadInScriptVisible}
                 onClose={closeLoadInScriptWindow}
             >
                 {project && <LoadSpikeSortingInScriptWindow

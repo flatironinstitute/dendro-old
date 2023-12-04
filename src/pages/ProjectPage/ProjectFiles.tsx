@@ -7,6 +7,7 @@ import { useProject } from "./ProjectPageContext";
 import JobView from "./JobView/JobView";
 import { confirm } from "../../confirm_prompt_alert";
 import { DandiUploadTask } from "./DandiUpload/prepareDandiUploadTask";
+import { PluginAction } from "../../plugins/DendroFrontendPlugin";
 
 type ProjectFilesProps = {
     width: number
@@ -14,10 +15,10 @@ type ProjectFilesProps = {
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
-    onMearecGenerateTemplates?: () => void
+    onAction?: (action: PluginAction) => void
 }
 
-const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onMearecGenerateTemplates}) => {
+const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onAction}) => {
     const {filesIncludingPending, openTab, deleteFile, closeTab, openTabs, refreshFiles} = useProject()
 
     const handleOpenFile = useCallback((fileName: string) => {
@@ -51,7 +52,7 @@ const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRu
                 onRunBatchSpikeSorting={onRunBatchSpikeSorting}
                 onDandiUpload={onDandiUpload}
                 onUploadSmallFile={onUploadSmallFile}
-                onMearacGenerateTemplates={onMearecGenerateTemplates}
+                onAction={onAction}
             />
             <ProjectTabWidget
                 width={0}

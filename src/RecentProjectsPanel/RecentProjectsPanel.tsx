@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useEffect, useState } from "react"
 import useRoute from "../useRoute"
 import { useDendro } from "../DendroContext/DendroContext"
 import { DendroProject, isDendroProject } from "../types/dendro-types"
-import Hyperlink from "../components/Hyperlink"
+import { Hyperlink } from "@hodj/misc";
 
 type RecentProjectsPanelProps = {
     width: number

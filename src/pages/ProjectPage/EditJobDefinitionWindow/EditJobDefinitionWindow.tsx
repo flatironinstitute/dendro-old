@@ -1,5 +1,5 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react";
-import Hyperlink from "../../../components/Hyperlink";
+import { Hyperlink } from "@hodj/misc";
 import { DendroProcessingJobDefinition, DendroProcessingJobDefinitionAction } from "../../../dbInterface/dbInterface";
 import { RemoteH5File } from "../../../RemoteH5File/RemoteH5File";
 import { ComputeResourceSpecProcessor, ComputeResourceSpecProcessorParameter } from "../../../types/dendro-types";

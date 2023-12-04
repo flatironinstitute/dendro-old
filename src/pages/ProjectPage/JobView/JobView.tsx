@@ -1,14 +1,13 @@
+import { Hyperlink } from "@hodj/misc";
+import ModalWindow, { useModalWindow } from "@hodj/modal-window";
 import { FunctionComponent, PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
 import ComputeResourceNameDisplay from "../../../ComputeResourceNameDisplay";
-import { defaultJobDefinition, fetchJob, DendroProcessingJobDefinition } from "../../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";
-import { DendroJob } from "../../../types/dendro-types";
 import UserIdComponent from "../../../UserIdComponent";
+import { DendroProcessingJobDefinition, defaultJobDefinition, fetchJob } from "../../../dbInterface/dbInterface";
+import { DendroJob } from "../../../types/dendro-types";
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow";
 import { ElapsedTimeComponent } from "../FileEditor/NwbFileEditor";
-import Hyperlink from "../../../components/Hyperlink";
-import { useModalDialog } from "../../../ApplicationBar";
-import ModalWindow from "../../../components/ModalWindow/ModalWindow";
 import ResourceUtilizationView from "../ResourceUtilizationView/ResourceUtilizationView";
 
 type Props = {
@@ -86,7 +85,7 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
         downloadJson(JSON.stringify(job, null, 2), `dendro-job-${job.jobId}.json`)
     }, [job])
 
-    const {visible: resourceUtilizationVisible, handleOpen: openResourceUtilization, handleClose: closeResourceUtilization} = useModalDialog()
+    const {visible: resourceUtilizationVisible, handleOpen: openResourceUtilization, handleClose: closeResourceUtilization} = useModalWindow()
 
     if (!job) {
         return (
@@ -171,7 +170,7 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
             </ExpandableSection>
             <hr />
             <ModalWindow
-                open={resourceUtilizationVisible}
+                visible={resourceUtilizationVisible}
                 onClose={closeResourceUtilization}
             >
                 <ResourceUtilizationView

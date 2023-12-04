@@ -1,6 +1,6 @@
 import { FunctionComponent, useMemo } from "react"
 import UserIdComponent from "../../UserIdComponent"
-import Hyperlink from "../../components/Hyperlink"
+import { Hyperlink } from "@hodj/misc";
 import { timeAgoString } from "../../timeStrings"
 import useRoute from "../../useRoute"
 import useProjectsForUser from './useProjectsForUser'

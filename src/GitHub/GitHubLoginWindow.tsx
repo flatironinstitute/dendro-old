@@ -1,10 +1,10 @@
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useCallback, useEffect, useRef, useState } from "react";
-import Hyperlink from "../components/Hyperlink";
 import { setGitHubTokenInfoToLocalStorage } from "../GithubAuth/getGithubAuthFromLocalStorage";
 import { useGithubAuth } from "../GithubAuth/useGithubAuth";
 import UserIdComponent from "../UserIdComponent";
+import { Hyperlink } from "@hodj/misc";
 
 type Props = {
     onClose?: () => void

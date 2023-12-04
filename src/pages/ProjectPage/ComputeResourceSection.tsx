@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from "react"
-import Hyperlink from "../../components/Hyperlink"
+import { Hyperlink } from "@hodj/misc";
 import { useProject } from "./ProjectPageContext"
 import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay"
 import { useComputeResources } from "../ComputeResourcesPage/ComputeResourcesContext"

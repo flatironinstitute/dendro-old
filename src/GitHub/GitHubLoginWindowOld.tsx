@@ -1,8 +1,8 @@
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Hyperlink } from "@hodj/misc";
 import { Button, Checkbox, FormControlLabel } from "@mui/material";
 import { FunctionComponent, useCallback, useState } from "react";
-import Hyperlink from "../components/Hyperlink";
 import { useGithubAuth } from "../GithubAuth/useGithubAuth";
 import PersonalAccessTokenWindow from "./PersonalAccessTokenWindow";
 

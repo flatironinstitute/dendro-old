@@ -1,6 +1,6 @@
 import { FunctionComponent, useEffect, useState } from "react"
 import { RemoteH5File } from "../../../RemoteH5File/RemoteH5File"
-import ElectrodeGeometryWidget, { ElectrodeLocation } from "./ElectrodeGeometryWidget"
+import ElectrodeGeometryWidget, {ElectrodeLocation} from "@hodj/electrode-geometry-widget"
 
 type ElectrodeGeometryViewProps = {
     width: number

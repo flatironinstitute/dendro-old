@@ -1,11 +1,13 @@
 import { Add, Delete, Refresh, Settings } from "@mui/icons-material"
 import { FunctionComponent, useCallback, useMemo, useState } from "react"
-import SmallIconButton from "../../../components/SmallIconButton"
+import { SmallIconButton } from "@hodj/misc";
 import { confirm } from "../../../confirm_prompt_alert"
+import { PluginAction } from "../../../plugins/DendroFrontendPlugin"
+import initializePlugins from "../../../plugins/initializePlugins"
+import useRoute from "../../../useRoute"
 import prepareDandiUploadTask, { DandiUploadTask } from "../DandiUpload/prepareDandiUploadTask"
 import { useProject } from "../ProjectPageContext"
 import DropdownMenu from "./DropdownMenu"
-import useRoute from "../../../useRoute"
 
 type FileBrowserMenuBarProps = {
     width: number
@@ -15,10 +17,12 @@ type FileBrowserMenuBarProps = {
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
-    onMearecGenerateTemplates?: () => void
+    onAction?: (action: PluginAction) => void
 }
 
-const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onMearecGenerateTemplates }) => {
+const {actions} = initializePlugins()
+
+const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onAction }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
     const {route, setRoute} = useRoute()
     const [operating, setOperating] = useState(false)
@@ -55,11 +59,18 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
         if (onUploadSmallFile) {
             opts.push({label: 'Upload small file', onClick: onUploadSmallFile})
         }
-        if (onMearecGenerateTemplates) {
-            opts.push({label: 'MEArec: generate templates', onClick: onMearecGenerateTemplates})
+        if (onAction) {
+            actions.forEach(action => {
+                opts.push({
+                    label: action.label,
+                    onClick: () => {
+                        onAction(action)
+                    }
+                })
+            })
         }
         return opts
-    }, [onUploadSmallFile, onMearecGenerateTemplates])
+    }, [onUploadSmallFile, onAction])
 
     if (route.page !== 'project') {
         throw Error(`Unexpected route page: ${route.page}`)

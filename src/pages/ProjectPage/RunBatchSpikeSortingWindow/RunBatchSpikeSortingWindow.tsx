@@ -195,7 +195,6 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         )
     }
     const W1 = Math.min(500, width / 2)
-    const spacing = 20
     return (
         <Splitter
             width={width}
