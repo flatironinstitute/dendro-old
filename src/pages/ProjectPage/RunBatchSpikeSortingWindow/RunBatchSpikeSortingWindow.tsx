@@ -1,6 +1,5 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
-import HBoxLayout from "../../../components/HBoxLayout"
 import { DendroProcessingJobDefinition, createJob, defaultJobDefinition, dendroJobDefinitionReducer, fetchFile } from "../../../dbInterface/dbInterface"
 import { ComputeResourceSpecApp, ComputeResourceSpecProcessor, DendroComputeResourceApp, DendroFile, DendroJobRequiredResources } from "../../../types/dendro-types"
 import { useNwbFile } from "../FileEditor/NwbFileEditor"
