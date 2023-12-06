@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 from typing import Union, Optional, Dict, Any
 import threading
 import queue
@@ -53,11 +54,26 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
     resource_utilization_log_upload_url: Union[str, None] = None
     resource_utilization_log_upload_url_timestamp = 0
 
+    # detect custom events in the console output
+    # of the form ##dendro-event##{...}
+    def on_detect_custom_event(evt):
+        nonlocal all_resource_utilization_log
+        nonlocal resource_utilization_log_changed
+        log_record = {
+            'type': 'custom_event',
+            'timestamp': time.time(),
+            'event': evt
+        }
+        all_resource_utilization_log += (json.dumps(log_record) + '\n').encode('utf-8') # important to encode this string
+        resource_utilization_log_changed = True
+    custom_event_detector = CustomEventDetector(on_detect_custom_event)
+
     def check_for_new_console_output():
         nonlocal console_out_q
         nonlocal last_newline_index_in_console_output
         nonlocal all_console_output
         nonlocal console_output_changed
+        nonlocal custom_event_detector
         while True:
             try:
                 # get the latest output from the job
@@ -69,6 +85,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                     # handle carriage return (e.g. in progress bar)
                     all_console_output = all_console_output[:last_newline_index_in_console_output + 1]
                 all_console_output += x
+                custom_event_detector.process_bytes(x)
                 console_output_changed = True
             except queue.Empty:
                 break
@@ -471,3 +488,26 @@ def _debug_log(msg: str):
     timestamp_str = time.strftime('%Y-%m-%d %H:%M:%S')
     with open('dendro-job.log', 'a', encoding='utf-8') as f:
         f.write(f'{timestamp_str} {msg}\n')
+
+# Look for the events of the form ##dendro-event##{...} in the console output
+class CustomEventDetector:
+    def __init__(self, on_detect_custom_event):
+        self._on_detect_custom_event = on_detect_custom_event
+        self._last_line = b''
+    def process_bytes(self, x: bytes):
+        for i in range(len(x)):
+            self._process_byte(x[i:i + 1])
+    def _process_byte(self, x: bytes):
+        if x == b'\n':
+            self._process_line(self._last_line)
+            self._last_line = b''
+        else:
+            self._last_line += x
+    def _process_line(self, line: bytes):
+        if line.startswith(b'##dendro-event##'):
+            evt_json = line[len(b'##dendro-event##'):]
+            try:
+                evt = json.loads(evt_json)
+                self._on_detect_custom_event(evt)
+            except: # noqa: E722
+                pass
