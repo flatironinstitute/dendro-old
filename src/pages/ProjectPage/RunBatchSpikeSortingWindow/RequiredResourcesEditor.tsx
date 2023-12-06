@@ -8,9 +8,9 @@ type RequiredResourcesEditorProps = {
     requiredResources: DendroJobRequiredResources
     setRequiredResources: (val: DendroJobRequiredResources) => void
 }
-const numCpusChoices = [1, 2, 4, 8, 16]
-const numGpusChoices = [0, 1]
-const memoryGbChoices = [2, 4, 8, 16, 32]
+const numCpusChoices = [1, 2, 4, 6, 8, 12, 16, 20, 24, 28, 32, 48, 64, 96, 128, 256, 512, 1024, 2048]
+const numGpusChoices = [0, 1, 2]
+const memoryGbChoices = [1, 2, 4, 6, 8, 12, 16, 20, 24, 28, 32, 48, 64, 96, 128, 256, 512, 1024, 2048]
 const timeMinChoices = [1, 5, 10, 30, 60, 120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720, 1440, 1440 * 2, 1440 * 3, 1440 * 4, 1440 * 5, 1440 * 6, 1440 * 7]
 
 const RequiredResourcesEditor: FunctionComponent<RequiredResourcesEditorProps> = ({requiredResources, setRequiredResources, runMethod, setRunMethod, availableRunMethods}) => {
