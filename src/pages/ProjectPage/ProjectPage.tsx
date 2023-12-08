@@ -21,6 +21,8 @@ import { SetupProjectPage, useProject } from "./ProjectPageContext";
 import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpikeSortingWindow";
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
 import { HBoxLayout } from "@hodj/misc";
+import openFilesInNeurosift from "./openFilesInNeurosift";
+import { DendroFile } from "../../types/dendro-types";
 
 type Props = {
     width: number
@@ -133,7 +135,7 @@ type MainPanelProps = {
 }
 
 const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
-    const {project, refreshFiles} = useProject()
+    const {project, projectId, refreshFiles, files} = useProject()
     const auth = useGithubAuth()
     const {route, staging} = useRoute()
     if (route.page !== 'project') throw Error(`Unexpected route ${JSON.stringify(route)}`)
@@ -192,6 +194,30 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         setSpikeSortingFilePaths(filePaths)
         openRunSpikeSortingWindow()
     }, [openRunSpikeSortingWindow])
+
+    const handleOpenInNeurosift = useCallback((filePaths: string[]) => {
+        if (!files) {
+            console.warn('No files')
+            return
+        }
+        if (filePaths.length > 5) {
+            alert('Too many files to open in NeuroSIFT')
+            return
+        }
+
+        const files2 = filePaths.map(filePath => {
+            const file = files.find(file => file.fileName === filePath)
+            if (!file) throw Error(`Unexpected: file not found: ${filePath}`)
+            return file
+        }, [files])
+
+        openFilesInNeurosift(files2, projectId).then(() => {
+            console.info('Opened in NeuroSIFT')
+        }, err => {
+            console.warn(err)
+            alert(`Problem opening in NeuroSIFT: ${err.message}`)
+        })
+    }, [files, projectId])
 
     const {visible: dandiUploadWindowVisible, handleOpen: openDandiUploadWindow, handleClose: closeDandiUploadWindow} = useModalWindow()
     const [dandiUploadTask, setDandiUploadTask] = useState<DandiUploadTask | undefined>(undefined)
@@ -270,6 +296,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     width={width}
                     height={height}
                     onRunBatchSpikeSorting={handleRunSpikeSorting}
+                    onOpenInNeurosift={handleOpenInNeurosift}
                     onDandiUpload={handleDandiUpload}
                     onUploadSmallFile={handleUploadSmallFile}
                     onAction={handleAction}

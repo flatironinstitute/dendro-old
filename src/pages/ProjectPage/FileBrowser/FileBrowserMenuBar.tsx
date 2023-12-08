@@ -1,4 +1,4 @@
-import { Add, Delete, Refresh, Settings } from "@mui/icons-material"
+import { Add, Delete, Preview, Refresh, Settings } from "@mui/icons-material"
 import { FunctionComponent, useCallback, useMemo, useState } from "react"
 import { SmallIconButton } from "@hodj/misc";
 import { confirm } from "../../../confirm_prompt_alert"
@@ -15,6 +15,7 @@ type FileBrowserMenuBarProps = {
     selectedFileNames: string[]
     onResetSelection: () => void
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
+    onOpenInNeurosift?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
     onAction?: (action: PluginAction) => void
@@ -22,7 +23,7 @@ type FileBrowserMenuBarProps = {
 
 const {actions} = initializePlugins()
 
-const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onAction }) => {
+const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
     const {route, setRoute} = useRoute()
     const [operating, setOperating] = useState(false)
@@ -52,6 +53,10 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
 
     const okayToRunSpikeSorting = useMemo(() => (
         selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.startsWith('imported/'))
+    ), [selectedFileNames])
+
+    const okayToOpenInNeurosift = useMemo(() => (
+        selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.endsWith('.nwb')) && selectedFileNames.length <= 5
     ), [selectedFileNames])
 
     const dropdownMenuOptions = useMemo(() => {
@@ -110,6 +115,20 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
                             title={selectedFileNames.length > 0 ? `Run spike sorting on these ${selectedFileNames.length} files` : ''}
                             onClick={() => onRunBatchSpikeSorting(selectedFileNames)}
                             label="Run spike sorting"
+                        />
+                    </>
+                )
+            }
+            {
+                okayToOpenInNeurosift && onOpenInNeurosift && (
+                    <>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <SmallIconButton
+                            icon={<Preview />}
+                            disabled={(selectedFileNames.length === 0) || operating}
+                            title={selectedFileNames.length > 0 ? `Open these ${selectedFileNames.length} files in Neurosift` : ''}
+                            onClick={() => onOpenInNeurosift(selectedFileNames)}
+                            label="Open in NeuroSIFT"
                         />
                     </>
                 )
