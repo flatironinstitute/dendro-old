@@ -128,7 +128,7 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
                             disabled={(selectedFileNames.length === 0) || operating}
                             title={selectedFileNames.length > 0 ? `Open these ${selectedFileNames.length} files in Neurosift` : ''}
                             onClick={() => onOpenInNeurosift(selectedFileNames)}
-                            label="Open in NeuroSIFT"
+                            label="Open in Neurosift"
                         />
                     </>
                 )

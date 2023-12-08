@@ -201,7 +201,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             return
         }
         if (filePaths.length > 5) {
-            alert('Too many files to open in NeuroSIFT')
+            alert('Too many files to open in Neurosift')
             return
         }
 
@@ -212,10 +212,10 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         }, [files])
 
         openFilesInNeurosift(files2, projectId).then(() => {
-            console.info('Opened in NeuroSIFT')
+            console.info('Opened in Neurosift')
         }, err => {
             console.warn(err)
-            alert(`Problem opening in NeuroSIFT: ${err.message}`)
+            alert(`Problem opening in Neurosift: ${err.message}`)
         })
     }, [files, projectId])
 
