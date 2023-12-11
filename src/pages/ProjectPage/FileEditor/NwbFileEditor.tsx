@@ -1,9 +1,9 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
-import { useModalWindow } from "@hodj/modal-window"
+import { useModalWindow } from "@fi-sci/modal-window"
 import { RemoteH5File, getRemoteH5File } from "../../../RemoteH5File/RemoteH5File";
-import { Hyperlink } from "@hodj/misc";
-import ModalWindow from "@hodj/modal-window";
-import { Splitter } from "@hodj/splitter";
+import { Hyperlink } from "@fi-sci/misc";
+import ModalWindow from "@fi-sci/modal-window";
+import { Splitter } from "@fi-sci/splitter";
 import JobsWindow from "../JobsWindow/JobsWindow";
 import LoadNwbInPythonWindow from "../LoadNwbInPythonWindow/LoadNwbInPythonWindow";
 import { useProject } from "../ProjectPageContext";

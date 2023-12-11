@@ -1,6 +1,6 @@
 import { Add, Delete, Preview, Refresh, Settings } from "@mui/icons-material"
 import { FunctionComponent, useCallback, useMemo, useState } from "react"
-import { SmallIconButton } from "@hodj/misc";
+import { SmallIconButton } from "@fi-sci/misc";
 import { confirm } from "../../../confirm_prompt_alert"
 import { PluginAction } from "../../../plugins/DendroFrontendPlugin"
 import initializePlugins from "../../../plugins/initializePlugins"

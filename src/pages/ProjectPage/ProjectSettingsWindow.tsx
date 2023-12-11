@@ -1,6 +1,6 @@
 import { Edit } from "@mui/icons-material";
 import { FunctionComponent, useCallback, useEffect, useState } from "react";
-import { SmallIconButton } from "@hodj/misc";
+import { SmallIconButton } from "@fi-sci/misc";
 import { confirm } from "../../confirm_prompt_alert";
 import useRoute from "../../useRoute";
 import { useProject } from "./ProjectPageContext";

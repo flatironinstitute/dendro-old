@@ -1,8 +1,8 @@
 import { FunctionComponent, useCallback, useState } from "react"
 import { useElectricalSeriesPaths, useNwbFile } from "../NwbFileEditor"
-import { Hyperlink } from "@hodj/misc";
-import ModalWindow from "@hodj/modal-window";
-import { useModalWindow } from "@hodj/modal-window"
+import { Hyperlink } from "@fi-sci/misc";
+import ModalWindow from "@fi-sci/modal-window";
+import { useModalWindow } from "@fi-sci/modal-window"
 import { useProject } from "../../ProjectPageContext"
 import LoadElectricalSeriesScriptWindow from "./LoadElectricalSeriesScriptWindow"
 

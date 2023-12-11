@@ -3,7 +3,7 @@ import useRoute from "../useRoute"
 import Markdown from "../Markdown/Markdown"
 import nunjucks from "nunjucks"
 import { useGithubAuth } from "../GithubAuth/useGithubAuth"
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 
 nunjucks.configure({ autoescape: true })
 

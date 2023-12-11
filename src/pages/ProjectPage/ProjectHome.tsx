@@ -1,9 +1,9 @@
 import { Settings } from "@mui/icons-material";
 import { FunctionComponent, useMemo } from "react";
-import { useModalWindow } from "@hodj/modal-window"
-import { Hyperlink } from "@hodj/misc";
-import ModalWindow from "@hodj/modal-window";
-import { SmallIconButton } from "@hodj/misc";
+import { useModalWindow } from "@fi-sci/modal-window"
+import { Hyperlink } from "@fi-sci/misc";
+import ModalWindow from "@fi-sci/modal-window";
+import { SmallIconButton } from "@fi-sci/misc";
 import { timeAgoString } from "../../timeStrings";
 import useRoute from "../../useRoute";
 import { useProject } from "./ProjectPageContext";

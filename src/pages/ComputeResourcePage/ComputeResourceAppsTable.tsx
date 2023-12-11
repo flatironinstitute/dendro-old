@@ -1,7 +1,7 @@
 import { FunctionComponent, useCallback, useMemo, useReducer } from "react"
-import { useModalWindow } from "@hodj/modal-window"
-import { Hyperlink } from "@hodj/misc";
-import ModalWindow from "@hodj/modal-window";
+import { useModalWindow } from "@fi-sci/modal-window"
+import { Hyperlink } from "@fi-sci/misc";
+import ModalWindow from "@fi-sci/modal-window";
 import { DendroComputeResource } from "../../types/dendro-types"
 import { Checkbox, selectedStringsReducer } from "../ProjectPage/FileBrowser/FileBrowser2"
 import ComputeResourceAppsTableMenuBar from "./ComputeResourceAppsTableMenuBar"

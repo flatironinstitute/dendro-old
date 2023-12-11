@@ -11,7 +11,7 @@ import rehypeMathJaxSvg from "rehype-mathjax";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from 'remark-gfm';
 import remarkMathPlugin from 'remark-math';
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 
 type Props ={
 	source: string

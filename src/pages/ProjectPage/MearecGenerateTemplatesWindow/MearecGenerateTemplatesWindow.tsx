@@ -3,7 +3,7 @@ import { useProject } from "../ProjectPageContext"
 import { DendroProcessingJobDefinition, createJob } from "../../../dbInterface/dbInterface"
 import { DendroJobRequiredResources } from "../../../types/dendro-types"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
-import { Splitter } from "@hodj/splitter";
+import { Splitter } from "@fi-sci/splitter";
 
 type MearecGenerateTemplatesWindowProps = {
     width: number

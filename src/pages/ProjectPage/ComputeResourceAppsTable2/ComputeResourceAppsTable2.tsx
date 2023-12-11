@@ -1,8 +1,8 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useState } from "react"
-import { useModalWindow } from "@hodj/modal-window"
+import { useModalWindow } from "@fi-sci/modal-window"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
-import { Hyperlink } from "@hodj/misc";
-import ModalWindow from "@hodj/modal-window";
+import { Hyperlink } from "@fi-sci/misc";
+import ModalWindow from "@fi-sci/modal-window";
 import { App, fetchComputeResource, setComputeResourceApps } from "../../../dbInterface/dbInterface"
 import { DendroComputeResource } from "../../../types/dendro-types"
 import NewAppWindow from "../../ComputeResourcePage/NewAppWindow"

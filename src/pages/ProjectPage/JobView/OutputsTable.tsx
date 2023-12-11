@@ -1,5 +1,5 @@
 import { FunctionComponent, useCallback } from "react"
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 import { DendroJob } from "../../../types/dendro-types"
 import useRoute from "../../../useRoute"
 import { useProject } from "../ProjectPageContext"

@@ -1,7 +1,7 @@
 import { FunctionComponent, useCallback, useMemo, useState } from "react";
-import { useModalWindow } from "@hodj/modal-window"
+import { useModalWindow } from "@fi-sci/modal-window"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
-import ModalWindow from "@hodj/modal-window";
+import ModalWindow from "@fi-sci/modal-window";
 import { setUrlFile } from "../../dbInterface/dbInterface";
 import useRoute from "../../useRoute";
 // import ManualNwbSelector from "./ManualNwbSelector/ManualNwbSelector";
@@ -20,7 +20,7 @@ import ProjectJobs from "./ProjectJobs";
 import { SetupProjectPage, useProject } from "./ProjectPageContext";
 import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpikeSortingWindow";
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
-import { HBoxLayout } from "@hodj/misc";
+import { HBoxLayout } from "@fi-sci/misc";
 import openFilesInNeurosift from "./openFilesInNeurosift";
 import { DendroFile } from "../../types/dendro-types";
 

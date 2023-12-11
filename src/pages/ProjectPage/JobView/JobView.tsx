@@ -1,5 +1,5 @@
-import { Hyperlink } from "@hodj/misc";
-import ModalWindow, { useModalWindow } from "@hodj/modal-window";
+import { Hyperlink } from "@fi-sci/misc";
+import ModalWindow, { useModalWindow } from "@fi-sci/modal-window";
 import { FunctionComponent, PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react";
 import ComputeResourceNameDisplay from "../../../ComputeResourceNameDisplay";
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";

@@ -4,7 +4,7 @@ import { FunctionComponent, useCallback, useEffect, useRef, useState } from "rea
 import { setGitHubTokenInfoToLocalStorage } from "../GithubAuth/getGithubAuthFromLocalStorage";
 import { useGithubAuth } from "../GithubAuth/useGithubAuth";
 import UserIdComponent from "../UserIdComponent";
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 
 type Props = {
     onClose?: () => void

@@ -2,7 +2,7 @@ import { faPython } from '@fortawesome/free-brands-svg-icons';
 import { faCaretDown, faCaretRight, faFile, faFolder } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react";
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 import { timeAgoString } from '../../../timeStrings';
 import { DendroFile } from '../../../types/dendro-types';
 import { useProject } from '../ProjectPageContext';

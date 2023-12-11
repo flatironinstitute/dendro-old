@@ -1,7 +1,7 @@
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { applicationBarColorDarkened } from "../../ApplicationBar"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth"
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 import { createProject, setProjectTags } from "../../dbInterface/dbInterface"
 import useRoute from "../../useRoute"
 import { useProject } from "../ProjectPage/ProjectPageContext"

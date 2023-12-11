@@ -1,4 +1,4 @@
-import { SmallIconButton } from "@hodj/misc";
+import { SmallIconButton } from "@fi-sci/misc";
 import { Delete, Refresh } from "@mui/icons-material";
 import { FunctionComponent, useCallback, useState } from "react";
 import { confirm } from "../../../confirm_prompt_alert";
