@@ -90,8 +90,8 @@ class InputFile(BaseModel):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
-        if isinstance(v, cls):
-            return v
+    def validate(cls, value):
+        if isinstance(value, cls):
+            return value
         else:
-            raise ValueError(f'Unexpected type for InputFile: {type(v)}')
+            raise ValueError(f'Unexpected type for InputFile: {type(value)}')
