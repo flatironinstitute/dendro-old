@@ -370,8 +370,9 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         refreshJobs,
         deleteJob: deleteJobHandler,
         deleteFile: deleteFileHandler,
-        fileHasBeenEdited
-    }), [projectId, project, files, filesIncludingPending, openTabs, jobs, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited])
+        fileHasBeenEdited,
+        refreshProject
+    }), [projectId, project, files, filesIncludingPending, openTabs, jobs, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited, refreshProject])
 
     return (
         <ProjectPageContext.Provider value={value}>
