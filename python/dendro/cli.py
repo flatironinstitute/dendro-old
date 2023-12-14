@@ -50,8 +50,8 @@ def run_mock_job():
 # ------------------------------------------------------------
 @click.command(help='Run an app processor (used for testing)')
 @click.option('--app-dir', default='.', help='Path to the app directory')
-@click.option('--processor', default=None, help='Name of the processor to run')
-@click.option('--context', default=None, help='Path to the context file (.json or .yaml)')
+@click.option('--processor', required=True, help='Name of the processor to run')
+@click.option('--context', required=True, help='Path to the context file (.json or .yaml)')
 def test_app_processor(app_dir: str, processor: str, context: str):
     test_app_processor_function(app_dir=app_dir, processor=processor, context=context)
 

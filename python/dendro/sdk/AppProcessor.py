@@ -2,7 +2,11 @@ from typing import Any, List, Union, Dict, Type
 from dataclasses import dataclass
 import inspect
 from .. import BaseModel
-from pydantic_core import PydanticUndefined
+try:
+    from pydantic_core import PydanticUndefined
+except ImportError:
+    # pydantic v1
+    PydanticUndefined = None
 from .ProcessorBase import ProcessorBase
 from .InputFile import InputFile
 from .OutputFile import OutputFile
