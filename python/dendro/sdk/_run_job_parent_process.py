@@ -269,4 +269,4 @@ def _debug_log(msg: str):
     # write to dendro-job.log
     # this will be written to the working directory, which should be in the job dir
     with open(f'{dendro_internal_folder}/dendro-job.log', 'a', encoding='utf-8') as f:
-        f.write(msg2)
+        f.write(msg2 + '\n')
