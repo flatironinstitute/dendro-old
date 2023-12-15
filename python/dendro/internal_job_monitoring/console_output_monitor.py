@@ -50,6 +50,8 @@ def console_output_monitor(parent_pid: str):
 
 def do_upload(*, console_out_file, job_id, job_private_key):
     import requests
+    if not os.path.exists(console_out_file):
+        return
     with open(console_out_file, 'r') as f:
         console_text = f.read()
     console_text_lines = console_text.split('\n')

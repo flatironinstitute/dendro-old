@@ -22,12 +22,15 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
         os.mkdir(dendro_internal_folder)
     console_out_fname = os.path.join(dendro_internal_folder, 'console_output.txt')
     cancel_out_fname = os.path.join(dendro_internal_folder, 'cancel.txt')
+    console_out_monitor_output_fname = os.path.join(dendro_internal_folder, 'console_output_monitor_output.txt')
+    resource_utilization_monitor_output_fname = os.path.join(dendro_internal_folder, 'resource_utilization_monitor_output.txt')
+    job_status_monitor_output_fname = os.path.join(dendro_internal_folder, 'job_status_monitor_output.txt')
 
     # set the job status to running by calling the remote dendro API
     _debug_log(f'Running job {job_id}')
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
-    with open(console_out_fname, 'w') as console_out_file:
+    with open(console_out_fname, 'w') as console_out_file, open(console_out_monitor_output_fname, 'w') as console_out_monitor_output_file, open(resource_utilization_monitor_output_fname, 'w') as resource_utilization_monitor_output_file, open(job_status_monitor_output_fname, 'w') as job_status_monitor_output_file:
         succeeded = False # whether we succeeded in running the job without an exception
         error_message = '' # if we fail, this will be set to the exception message
         try:
@@ -38,7 +41,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                 'JOB_PRIVATE_KEY': job_private_key,
                 'CONSOLE_OUTPUT_FILE': os.path.abspath(console_out_fname)
             }
-            _launch_detached_process(cmd=cmd, env=env)
+            _launch_detached_process(cmd=cmd, env=env, stdout=console_out_monitor_output_file, stderr=subprocess.STDOUT)
 
             # start the resource utilization monitor
             cmd = f'dendro internal-job-monitor resource_utilization --parent-pid {os.getpid()}'
@@ -46,7 +49,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                 'JOB_ID': job_id,
                 'JOB_PRIVATE_KEY': job_private_key
             }
-            _launch_detached_process(cmd=cmd, env=env)
+            _launch_detached_process(cmd=cmd, env=env, stdout=resource_utilization_monitor_output_file, stderr=subprocess.STDOUT)
 
             # start the status check monitor
             cmd = f'dendro internal-job-monitor job_status --parent-pid {os.getpid()}'
@@ -55,6 +58,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                 'JOB_PRIVATE_KEY': job_private_key,
                 'CANCEL_OUT_FILE': cancel_out_fname
             }
+            _launch_detached_process(cmd=cmd, env=env, stdout=job_status_monitor_output_file, stderr=subprocess.STDOUT)
 
             # Launch the job in a separate process
             proc = _launch_job_child_process(
@@ -238,7 +242,7 @@ def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Op
     if not resp['success']:
         raise SetJobStatusError(f'Error setting job status: {resp["error"]}')
 
-def _launch_detached_process(*, cmd: str, env: Dict[str, str]):
+def _launch_detached_process(*, cmd: str, env: Dict[str, str], stdout: Any, stderr: Any):
     _debug_log(f'Launching detached process: {cmd}')
     subprocess.Popen(
         cmd.split(' '),
@@ -246,8 +250,8 @@ def _launch_detached_process(*, cmd: str, env: Dict[str, str]):
             **os.environ.copy(),
             **env
         },
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=stdout,
+        stderr=stderr,
         start_new_session=True
     )
 
