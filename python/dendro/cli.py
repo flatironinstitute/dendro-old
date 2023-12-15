@@ -56,6 +56,25 @@ def test_app_processor(app_dir: str, processor: str, context: str):
     test_app_processor_function(app_dir=app_dir, processor=processor, context=context)
 
 # ------------------------------------------------------------
+# Internal job monitoring process
+# ------------------------------------------------------------
+@click.command(help='Internal job monitoring process')
+@click.argument('monitor_type', type=click.Choice(['resource_utilization', 'console_output', 'job_status']))
+@click.option('--parent-pid', required=True, help='Parent PID')
+def internal_job_monitor(monitor_type: str, parent_pid: str):
+    if monitor_type == 'resource_utilization':
+        from .internal_job_monitoring.resource_utilization_monitor import resource_utilization_monitor
+        resource_utilization_monitor(parent_pid=parent_pid)
+    elif monitor_type == 'console_output':
+        from .internal_job_monitoring.console_output_monitor import console_output_monitor
+        console_output_monitor(parent_pid=parent_pid)
+    elif monitor_type == 'job_status':
+        from .internal_job_monitoring.job_status_monitor import job_status_monitor
+        job_status_monitor(parent_pid=parent_pid)
+    else:
+        raise Exception(f'Unrecognized monitor_type: {monitor_type}')
+
+# ------------------------------------------------------------
 # Main cli
 # ------------------------------------------------------------
 @click.group(help="dendro command line interface")
@@ -67,3 +86,4 @@ main.add_command(start_compute_resource)
 main.add_command(make_app_spec_file)
 main.add_command(test_app_processor)
 main.add_command(run_mock_job)
+main.add_command(internal_job_monitor)
