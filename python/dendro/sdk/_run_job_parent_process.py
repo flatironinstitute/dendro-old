@@ -27,43 +27,43 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
     _debug_log(f'Running job {job_id}')
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
-    # start the console output monitor
-    cmd = f'dendro internal-job-monitor console_output --parent-pid {os.getpid()}'
-    env = {
-        'JOB_ID': job_id,
-        'JOB_PRIVATE_KEY': job_private_key,
-        'CONSOLE_OUTPUT_FILE': os.path.abspath(console_out_fname)
-    }
-    _launch_detached_process(cmd=cmd, env=env)
-
-    # start the resource utilization monitor
-    cmd = f'dendro internal-job-monitor resource_utilization --parent-pid {os.getpid()}'
-    env = {
-        'JOB_ID': job_id,
-        'JOB_PRIVATE_KEY': job_private_key
-    }
-    _launch_detached_process(cmd=cmd, env=env)
-
-    # start the status check monitor
-    cmd = f'dendro internal-job-monitor job_status --parent-pid {os.getpid()}'
-    env = {
-        'JOB_ID': job_id,
-        'JOB_PRIVATE_KEY': job_private_key,
-        'CANCEL_OUT_FILE': cancel_out_fname
-    }
-
     with open(console_out_fname, 'w') as console_out_file:
-        # Launch the job in a separate process
-        proc = _launch_job_child_process(
-            job_id=job_id,
-            job_private_key=job_private_key,
-            app_executable=app_executable,
-            console_out_file=console_out_file
-        )
-
         succeeded = False # whether we succeeded in running the job without an exception
         error_message = '' # if we fail, this will be set to the exception message
         try:
+            # start the console output monitor
+            cmd = f'dendro internal-job-monitor console_output --parent-pid {os.getpid()}'
+            env = {
+                'JOB_ID': job_id,
+                'JOB_PRIVATE_KEY': job_private_key,
+                'CONSOLE_OUTPUT_FILE': os.path.abspath(console_out_fname)
+            }
+            _launch_detached_process(cmd=cmd, env=env)
+
+            # start the resource utilization monitor
+            cmd = f'dendro internal-job-monitor resource_utilization --parent-pid {os.getpid()}'
+            env = {
+                'JOB_ID': job_id,
+                'JOB_PRIVATE_KEY': job_private_key
+            }
+            _launch_detached_process(cmd=cmd, env=env)
+
+            # start the status check monitor
+            cmd = f'dendro internal-job-monitor job_status --parent-pid {os.getpid()}'
+            env = {
+                'JOB_ID': job_id,
+                'JOB_PRIVATE_KEY': job_private_key,
+                'CANCEL_OUT_FILE': cancel_out_fname
+            }
+
+            # Launch the job in a separate process
+            proc = _launch_job_child_process(
+                job_id=job_id,
+                job_private_key=job_private_key,
+                app_executable=app_executable,
+                console_out_file=console_out_file
+            )
+
             first_iteration = True
             while True:
                 skip_this_check = using_mock() and first_iteration
@@ -242,7 +242,10 @@ def _launch_detached_process(*, cmd: str, env: Dict[str, str]):
     _debug_log(f'Launching detached process: {cmd}')
     subprocess.Popen(
         cmd,
-        env=env,
+        env={
+            **os.environ.copy(),
+            **env
+        },
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True
