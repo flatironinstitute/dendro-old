@@ -1,298 +1,146 @@
 import sys
 import os
-from typing import Union, Optional, Dict, Any
-import threading
-import queue
 import time
+from typing import Union, Optional, Dict, Any
 import subprocess
-import requests
-from ..common._api_request import _processor_get_api_request, _processor_put_api_request
+from ..common._api_request import _processor_put_api_request
 from ..mock import using_mock
-from ._resource_utilization_log_reader import _resource_utilization_log_reader
 
 
 # This function is called internally by the compute resource daemon through the dendro CLI
 # * Sets the job status to running in the database via the API
 # * Runs the job in a separate process by calling the app executable with the appropriate env vars
-# * Monitors the job output, updating the database periodically via the API
-# * Sets the job status to completed or failed in the database via the API
+# * Launches detached processes to monitor the console output, resource utilization, and job status
+# * Finally, sets the job status to completed or failed in the database via the API
+
+dendro_internal_folder = '_dendro'
 
 def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable: str, job_timeout_sec: Union[int, None]):
-    time_scale_factor = 1 if not using_mock() else 10000
-
     _run_job_timer = time.time()
 
     # set the job status to running by calling the remote dendro API
     _debug_log(f'Running job {job_id}')
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
-    # Launch the job in a separate process
-    proc = _launch_job_child_process(job_id=job_id, job_private_key=job_private_key, app_executable=app_executable)
+    if not os.path.exists(dendro_internal_folder):
+        os.mkdir(dendro_internal_folder)
+    console_out_fname = os.path.join(dendro_internal_folder, 'console_output.txt')
+    cancel_out_fname = os.path.join(dendro_internal_folder, 'cancel.txt')
 
-    # We are going to be monitoring the output of the job in a separate thread, and it will be communicated to this thread via a queue
-    console_out_q = queue.Queue()
-    console_out_reader_thread = threading.Thread(target=_output_reader, args=(proc, console_out_q))
-    console_out_reader_thread.start()
+    # start the console output monitor
+    cmd = f'dendro internal-job-monitor console_output --parent-pid {os.getpid()}'
+    env = {
+        'JOB_ID': job_id,
+        'JOB_PRIVATE_KEY': job_private_key,
+        'CONSOLE_OUTPUT_FILE': os.path.abspath(console_out_fname)
+    }
+    _launch_detached_process(cmd=cmd, env=env)
 
-    resource_utilization_log_q = queue.Queue()
-    resource_utilization_log_exit_event = threading.Event()
-    resource_utilization_log_reader_thread = threading.Thread(target=_resource_utilization_log_reader, args=(resource_utilization_log_q, resource_utilization_log_exit_event))
-    resource_utilization_log_reader_thread.start()
+    # start the resource utilization monitor
+    cmd = f'dendro internal-job-monitor resource_utilization --parent-pid {os.getpid()}'
+    env = {
+        'JOB_ID': job_id,
+        'JOB_PRIVATE_KEY': job_private_key
+    }
+    _launch_detached_process(cmd=cmd, env=env)
 
-    all_console_output = b''
-    last_newline_index_in_console_output = -1
-    last_report_console_output_time = time.time()
-    console_output_changed = False
-    console_output_upload_url: Union[str, None] = None
-    console_output_upload_url_timestamp = 0
+    # start the status check monitor
+    cmd = f'dendro internal-job-monitor job_status --parent-pid {os.getpid()}'
+    env = {
+        'JOB_ID': job_id,
+        'JOB_PRIVATE_KEY': job_private_key,
+        'CANCEL_OUT_FILE': cancel_out_fname
+    }
 
-    all_resource_utilization_log = b''
-    last_report_resource_utilization_log_time = time.time()
-    resource_utilization_log_changed = False
-    last_check_job_exists_time = time.time() if not using_mock() else 0
-    resource_utilization_log_upload_url: Union[str, None] = None
-    resource_utilization_log_upload_url_timestamp = 0
+    with open(console_out_fname, 'w') as console_out_file:
+        # Launch the job in a separate process
+        proc = _launch_job_child_process(
+            job_id=job_id,
+            job_private_key=job_private_key,
+            app_executable=app_executable,
+            console_out_file=console_out_file
+        )
 
-    def check_for_new_console_output():
-        nonlocal console_out_q
-        nonlocal last_newline_index_in_console_output
-        nonlocal all_console_output
-        nonlocal console_output_changed
-        while True:
-            try:
-                # get the latest output from the job
-                x = console_out_q.get(block=False)
-
-                if x == b'\n':
-                    last_newline_index_in_console_output = len(all_console_output)
-                if x == b'\r':
-                    # handle carriage return (e.g. in progress bar)
-                    all_console_output = all_console_output[:last_newline_index_in_console_output + 1]
-                all_console_output += x
-                console_output_changed = True
-            except queue.Empty:
-                break
-
-    def upload_console_output(output: str):
-        nonlocal console_output_upload_url
-        nonlocal console_output_upload_url_timestamp
-        elapsed = time.time() - console_output_upload_url_timestamp
-        if elapsed > 60 * 30 / time_scale_factor:
-            # every 30 minutes, request a new upload url (the old one expires after 1 hour)
-            console_output_upload_url_timestamp = time.time()
-            # request a signed upload url for the console output
-            console_output_upload_url = _get_upload_url(job_id=job_id, job_private_key=job_private_key, output_name='_console_output')
-        if console_output_upload_url is not None:
-            _upload_console_output(console_output_upload_url=console_output_upload_url, output=output)
-        if using_mock():
-            print('MOCK: Console output: ' + output)
-
-    def check_for_new_resource_utilization_log():
-        nonlocal resource_utilization_log_q
-        nonlocal all_resource_utilization_log
-        nonlocal resource_utilization_log_changed
-        while True:
-            try:
-                # get the latest output from the job
-                x = resource_utilization_log_q.get(block=False)
-                all_resource_utilization_log += x
-                resource_utilization_log_changed = True
-            except queue.Empty:
-                break
-
-    def upload_resource_utilization_log(log: str):
-        nonlocal resource_utilization_log_upload_url
-        nonlocal resource_utilization_log_upload_url_timestamp
-        elapsed = time.time() - resource_utilization_log_upload_url_timestamp
-        if elapsed > 60 * 30 / time_scale_factor:
-            # every 30 minutes, request a new upload url (the old one expires after 1 hour)
-            resource_utilization_log_upload_url_timestamp = time.time()
-            # request a signed upload url for the resource utilization log
-            resource_utilization_log_upload_url = _get_upload_url(job_id=job_id, job_private_key=job_private_key, output_name='_resource_utilization_log')
-        if resource_utilization_log_upload_url is not None:
-            _upload_resource_utilization_log(resource_utilization_log_upload_url=resource_utilization_log_upload_url, log=log)
-        if using_mock():
-            print('MOCK: Resource utilization log: ' + log)
-
-    num_status_check_failures = 0 # keep track of this so we don't do infinite retries
-    succeeded = False # whether we succeeded in running the job without an exception
-    error_message = '' # if we fail, this will be set to the exception message
-    try:
-        first_iteration = True
-        while True:
-            skip_this_check = using_mock() and first_iteration
-            if not skip_this_check:
-                try:
-                    retcode = proc.wait(1)
-                    # don't check this now -- wait until after we had a chance to read the last console output
-                except subprocess.TimeoutExpired:
-                    retcode = None # process is still running
-            else:
-                retcode = None
-            check_for_new_console_output()
-            check_for_new_resource_utilization_log()
-
-            for output_name in ['console_output', 'resource_utilization_log']:
-                if output_name == 'console_output':
-                    changed = console_output_changed
-                elif output_name == 'resource_utilization_log':
-                    changed = resource_utilization_log_changed
+        succeeded = False # whether we succeeded in running the job without an exception
+        error_message = '' # if we fail, this will be set to the exception message
+        try:
+            first_iteration = True
+            while True:
+                skip_this_check = using_mock() and first_iteration
+                if not skip_this_check:
+                    try:
+                        retcode = proc.wait(1)
+                        # don't check this now -- wait until after we had a chance to read the last console output
+                    except subprocess.TimeoutExpired:
+                        retcode = None # process is still running
                 else:
-                    raise ValueError('Invalid output name: ' + output_name)
-                if changed:
-                    if output_name == 'console_output':
-                        report_time = last_report_console_output_time
-                    elif output_name == 'resource_utilization_log':
-                        report_time = last_report_resource_utilization_log_time
-                    else:
-                        raise ValueError('Invalid output name: ' + output_name)
-                    elapsed = time.time() - report_time
-                    run_job_elapsed_time = time.time() - _run_job_timer
-                    do_report = False
-                    if retcode is not None:
-                        # if the job is finished, report the output
-                        do_report = True
-                    elif run_job_elapsed_time < 60 * 2 / time_scale_factor:
-                        # for the first 2 minutes, report every 10 seconds
-                        if elapsed > 10 / time_scale_factor:
-                            do_report = True
-                    elif run_job_elapsed_time < 60 * 10 / time_scale_factor:
-                        # for the next 8 minutes, report every 30 seconds
-                        if elapsed > 30 / time_scale_factor:
-                            do_report = True
-                    else:
-                        # after that, report every 120 seconds
-                        if elapsed > 60 * 2 / time_scale_factor:
-                            do_report = True
-                    if do_report:
-                        # we are going to report the output
-                        if output_name == 'console_output':
-                            last_report_console_output_time = time.time()
-                            console_output_changed = False
-                            try:
-                                _debug_log('Setting job console output')
-                                # _set_job_console_output(job_id=job_id, job_private_key=job_private_key, console_output=all_output.decode('utf-8'))
-                                upload_console_output(output=all_console_output.decode('utf-8'))
-                            except Exception as e: # pylint: disable=broad-except
-                                _debug_log('WARNING: problem setting console output: ' + str(e))
-                                print('WARNING: problem setting console output: ' + str(e))
-                        elif output_name == 'resource_utilization_log':
-                            last_report_resource_utilization_log_time = time.time()
-                            resource_utilization_log_changed = False
-                            try:
-                                _debug_log('Setting job resource utilization log')
-                                upload_resource_utilization_log(log=all_resource_utilization_log.decode('utf-8'))
-                            except Exception as e:
-                                _debug_log('WARNING: problem setting resource utilization log: ' + str(e))
-                                print('WARNING: problem setting resource utilization log: ' + str(e))
-                        else:
-                            raise ValueError('Invalid output name: ' + output_name)
+                    retcode = None
 
-            if retcode is not None:
-                # now that we have set the final console output and resource utilization log we can raise an exception if the job failed
-                if retcode != 0:
-                    raise ValueError(f'Error running job: return code {retcode}')
-                break
+                if retcode is not None:
+                    if retcode != 0:
+                        raise ValueError(f'Error running job: return code {retcode}')
+                    # job has completed with exit code 0
+                    break
 
-            # check whether job was canceled due to it having been deleted from the dendro system
-            elapsed = time.time() - last_check_job_exists_time
-            if elapsed > 120 / time_scale_factor:
-                last_check_job_exists_time = time.time()
-                try:
-                    job_status = _get_job_status(job_id=job_id, job_private_key=job_private_key)
-                    num_status_check_failures = 0
-                except: # noqa: E722
-                    # maybe this failed due to a network error. we'll try this a couple or a few times before giving up
-                    print('Failed to check job status')
-                    num_status_check_failures += 1
-                    if num_status_check_failures >= 3:
-                        print('Failed to check job status 3 times in a row. Assuming job was canceled.')
-                        raise
-                    job_status = '<request-failed>'
-                if job_status is None:
-                    raise ValueError('Job does not exist (was probably canceled)')
-                if job_status != 'running':
-                    raise ValueError(f'Unexpected job status: {job_status}')
-            time.sleep(5 / time_scale_factor) # wait 5 seconds before checking things again
+                # check if the cancel file has been created
+                if os.path.exists(cancel_out_fname):
+                    with open(cancel_out_fname, 'r') as f:
+                        cancel_msg = f.read()
+                    _debug_log(f'Job canceled: {cancel_msg}')
+                    raise Exception(f'Job canceled: {cancel_msg}')
 
-            # check job timeout
-            if job_timeout_sec is not None:
-                elapsed = time.time() - _run_job_timer
-                if elapsed > job_timeout_sec:
-                    raise Exception(f'Job timed out: {elapsed} > {job_timeout_sec} seconds')
+                # check job timeout
+                if job_timeout_sec is not None:
+                    elapsed = time.time() - _run_job_timer
+                    if elapsed > job_timeout_sec:
+                        raise Exception(f'Job timed out: {elapsed} > {job_timeout_sec} seconds')
 
-            first_iteration = False
-        succeeded = True # No exception
-    except Exception as e: # pylint: disable=broad-except
-        _debug_log(f'Error running job: {str(e)}')
-        succeeded = False
-        error_message = str(e)
-    finally:
-        _debug_log('Closing subprocess')
-        try:
-            if proc.stdout:
-                proc.stdout.close()
-            if proc.stderr:
-                proc.stderr.close()
-            proc.terminate()
-        except Exception: # pylint: disable=broad-except
-            pass
+                first_iteration = False
 
-        dendro_job_cleanup_dir = os.environ.get('DENDRO_JOB_CLEANUP_DIR', None)
-        if dendro_job_cleanup_dir is not None:
-            print(f'Cleaning up DENDRO_JOB_CLEANUP_DIR: {dendro_job_cleanup_dir}')
-            _debug_log(f'Cleaning up DENDRO_JOB_CLEANUP_DIR: {dendro_job_cleanup_dir}')
-            try:
-                # delete files in the cleanup dir but do not delete the cleanup dir itself
-                def _delete_files_in_dir(dir: str):
-                    for fname in os.listdir(dir):
-                        if fname == 'dendro-job.log':
-                            # don't delete the log file
-                            continue
-                        fpath = os.path.join(dir, fname)
-                        if os.path.isdir(fpath):
-                            _delete_files_in_dir(fpath)
-                        else:
-                            print(f'Deleting {fpath}')
-                            os.remove(fpath)
-                _delete_files_in_dir(dendro_job_cleanup_dir)
-            except Exception as e:
-                print(f'WARNING: problem cleaning up DENDRO_JOB_CLEANUP_DIR: {str(e)}')
-        else:
-            print('No DENDRO_JOB_CLEANUP_DIR environment variable set. Not cleaning up.')
-
-        console_out_reader_thread.join(timeout=10)
-        if console_out_reader_thread.is_alive():
-            _debug_log('WARNING: console output reader thread did not exit')
-        resource_utilization_log_exit_event.set()
-        resource_utilization_log_reader_thread.join(timeout=10)
-        if resource_utilization_log_reader_thread.is_alive():
-            _debug_log('WARNING: resource utilization log reader thread did not exit')
-
-    check_for_new_console_output()
-    if console_output_changed:
-        _debug_log('Setting final job console output')
-        try:
-            # _set_job_console_output(job_id=job_id, job_private_key=job_private_key, console_output=all_output.decode('utf-8'))
-            upload_console_output(output=all_console_output.decode('utf-8'))
+                time.sleep(3)
+            succeeded = True # No exception
         except Exception as e: # pylint: disable=broad-except
-            _debug_log('WARNING: problem setting final console output: ' + str(e))
-            print('WARNING: problem setting final console output: ' + str(e))
+            _debug_log(f'Error running job: {str(e)}')
+            succeeded = False
+            error_message = str(e)
+        finally:
+            _debug_log('Closing subprocess')
+            try:
+                if proc.stdout:
+                    proc.stdout.close()
+                if proc.stderr:
+                    proc.stderr.close()
+                proc.terminate()
+            except Exception: # pylint: disable=broad-except
+                pass
 
-    check_for_new_resource_utilization_log()
-    if resource_utilization_log_changed:
-        _debug_log('Setting final job resource utilization log')
-        try:
-            upload_resource_utilization_log(log=all_resource_utilization_log.decode('utf-8'))
-        except Exception as e:
-            _debug_log('WARNING: problem setting final resource utilization log: ' + str(e))
-            print('WARNING: problem setting final resource utilization log: ' + str(e))
+            dendro_job_cleanup_dir = os.environ.get('DENDRO_JOB_CLEANUP_DIR', None)
+            if dendro_job_cleanup_dir is not None:
+                _debug_log(f'Cleaning up DENDRO_JOB_CLEANUP_DIR: {dendro_job_cleanup_dir}')
+                try:
+                    # delete files in the cleanup dir but do not delete the cleanup dir itself
+                    def _delete_files_in_dir(dir: str):
+                        for fname in os.listdir(dir):
+                            if fname == 'dendro-job.log':
+                                # don't delete the log file
+                                continue
+                            fpath = os.path.join(dir, fname)
+                            if os.path.isdir(fpath):
+                                _delete_files_in_dir(fpath)
+                            else:
+                                _debug_log(f'Deleting {fpath}')
+                                os.remove(fpath)
+                    _delete_files_in_dir(dendro_job_cleanup_dir)
+                except Exception as e:
+                    _debug_log(f'WARNING: problem cleaning up DENDRO_JOB_CLEANUP_DIR: {str(e)}')
+            else:
+                _debug_log('No DENDRO_JOB_CLEANUP_DIR environment variable set. Not cleaning up.')
 
     # Set the final job status
     _debug_log('Finalizing job')
     _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
 
-def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executable: str):
+def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executable: str, console_out_file: Any):
     if not using_mock(): # pragma: no cover
         # Set the appropriate environment variables and launch the job in a background process
         cmd = app_executable
@@ -304,7 +152,7 @@ def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executab
             'JOB_INTERNAL': '1',
             'PYTHONUNBUFFERED': '1'
         }
-        print(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
+        _debug_log(f'Running {app_executable} (Job ID: {job_id})) (Job private key: {job_private_key})')
         working_dir = os.environ.get('DENDRO_JOB_WORKING_DIR', None)
         if working_dir is not None:
             if not os.path.exists(working_dir):
@@ -314,12 +162,12 @@ def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executab
                 os.mkdir(working_dir + '/tmp')
             env['DENDRO_JOB_WORKING_DIR'] = working_dir
             env['TMPDIR'] = working_dir + '/tmp'
-            print(f'Using working directory {working_dir}')
+            _debug_log(f'Using working directory {working_dir}')
         _debug_log('Opening subprocess')
         proc = subprocess.Popen(
             cmd,
             env=env,
-            stdout=subprocess.PIPE,
+            stdout=console_out_file,
             stderr=subprocess.STDOUT,
             cwd=working_dir
         )
@@ -349,17 +197,6 @@ def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executab
             if 'main' in sys.modules:
                 del sys.modules['main'] # important to do this so that at a later time we can load a different main.py
 
-def _output_reader(proc, outq: queue.Queue):
-    """This is a thread that reads the output of the job and puts it into a queue"""
-    while True:
-        try:
-            x = proc.stdout.read(1)
-        except: # noqa: E722
-            break
-        if len(x) == 0:
-            break
-        outq.put(x)
-
 def _finalize_job(*, job_id: str, job_private_key: str, succeeded: bool, error_message: str):
     try:
         if succeeded:
@@ -376,18 +213,6 @@ def _finalize_job(*, job_id: str, job_private_key: str, succeeded: bool, error_m
         # This is unfortunate - we completed the job, but somehow failed to update the status in the dendro system - maybe there was a network error (maybe we should retry?)
         _debug_log('WARNING: problem setting final job status: ' + str(e))
         print('WARNING: problem setting final job status: ' + str(e))
-
-def _get_job_status(*, job_id: str, job_private_key: str) -> str:
-    """Get a job status from the dendro API"""
-    url_path = f'/api/processor/jobs/{job_id}/status'
-    headers = {
-        'job-private-key': job_private_key
-    }
-    res = _processor_get_api_request(
-        url_path=url_path,
-        headers=headers
-    )
-    return res['status']
 
 class SetJobStatusError(Exception):
     pass
@@ -413,61 +238,20 @@ def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Op
     if not resp['success']:
         raise SetJobStatusError(f'Error setting job status: {resp["error"]}')
 
-def _get_upload_url(*, job_id: str, job_private_key: str, output_name: str) -> str:
-    """Get a signed upload URL for the output (console or resource log) of a job"""
-    url_path = f'/api/processor/jobs/{job_id}/outputs/{output_name}/upload_url'
-    headers = {
-        'job-private-key': job_private_key
-    }
-    res = _processor_get_api_request(
-        url_path=url_path,
-        headers=headers
+def _launch_detached_process(*, cmd: str, env: Dict[str, str]):
+    _debug_log(f'Launching detached process: {cmd}')
+    subprocess.Popen(
+        cmd,
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True
     )
-    return res['uploadUrl']
-
-class UploadConsoleOutputError(Exception):
-    pass
-
-def _upload_console_output(*, console_output_upload_url: str, output: str):
-    """Upload the console output of a job to the cloud bucket"""
-    if using_mock():
-        return
-    r = requests.put(console_output_upload_url, data=output.encode('utf-8'), timeout=60)
-    if r.status_code != 200:
-        raise UploadConsoleOutputError(f'Error uploading console output: {r.status_code} {r.text}')
-
-class UploadResourceUtilizationLogError(Exception):
-    pass
-
-def _upload_resource_utilization_log(*, resource_utilization_log_upload_url: str, log: str):
-    """Upload the resource utilization log of a job to the cloud bucket"""
-    if using_mock():
-        return
-    r = requests.put(resource_utilization_log_upload_url, data=log.encode('utf-8'), timeout=60)
-    if r.status_code != 200:
-        raise UploadResourceUtilizationLogError(f'Error uploading resource utilization log: {r.status_code} {r.text}')
-
-# This was the old method
-# def _set_job_console_output(*, job_id: str, job_private_key: str, console_output: str):
-#     """Set the console output of a job in the dendro API"""
-#     url_path = f'/api/processor/jobs/{job_id}/console_output'
-#     headers = {
-#         'job-private-key': job_private_key
-#     }
-#     data = {
-#         'consoleOutput': console_output
-#     }
-#     resp = _processor_put_api_request(
-#         url_path=url_path,
-#         headers=headers,
-#         data=data
-#     )
-#     if not resp['success']:
-#         raise Exception(f'Error setting job console output: {resp["error"]}')
 
 def _debug_log(msg: str):
+    print(msg)
     # write to dendro-job.log
     # this will be written to the working directory, which should be in the job dir
     timestamp_str = time.strftime('%Y-%m-%d %H:%M:%S')
-    with open('dendro-job.log', 'a', encoding='utf-8') as f:
+    with open(f'{dendro_internal_folder}/dendro-job.log', 'a', encoding='utf-8') as f:
         f.write(f'{timestamp_str} {msg}\n')
