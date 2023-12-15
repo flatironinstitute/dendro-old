@@ -132,11 +132,11 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                     # delete files in the cleanup dir but do not delete the cleanup dir itself
                     def _delete_files_in_dir(dir: str):
                         for fname in os.listdir(dir):
-                            if fname == 'dendro-job.log':
-                                # don't delete the log file
-                                continue
                             fpath = os.path.join(dir, fname)
                             if os.path.isdir(fpath):
+                                if fname == '_dendro':
+                                    # don't delete the internal log folder
+                                    continue
                                 _delete_files_in_dir(fpath)
                             else:
                                 _debug_log(f'Deleting {fpath}')
@@ -150,6 +150,8 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
     # Set the final job status
     _debug_log('Finalizing job')
     _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
+
+    _debug_log('Exiting')
 
 def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executable: str, console_out_file: Any):
     if not using_mock(): # pragma: no cover
