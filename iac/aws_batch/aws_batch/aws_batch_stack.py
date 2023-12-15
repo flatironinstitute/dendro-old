@@ -3,6 +3,8 @@ from aws_cdk import (
     Stack,
     RemovalPolicy,
     Tags,
+    Fn,
+    CfnTag,
     aws_iam as iam,
     aws_ec2 as ec2,
     aws_batch as batch,
@@ -132,6 +134,46 @@ class AwsBatchStack(Stack):
             allow_all_outbound=True
         )
 
+        # Define the block device
+        block_device = ec2.CfnLaunchTemplate.BlockDeviceMappingProperty(
+            device_name="/dev/xvda",
+            ebs=ec2.CfnLaunchTemplate.EbsProperty(
+                volume_size=2000,  # Size in GiB
+                delete_on_termination=True,
+                # encrypted=True
+            )
+        )
+
+        # Define the launch template
+        launch_template_name = f"{stack_id}-EC2LaunchTemplate"
+        launch_template = ec2.CfnLaunchTemplate(
+            scope=self,
+            id=launch_template_name,
+            launch_template_name=f"{stack_id}-EC2LaunchTemplate",
+            launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
+                image_id="ami-0d625ab7e92ab3a43",
+                instance_type="g4dn.2xlarge",
+                # key_name="your-key-pair",
+                ebs_optimized=True,
+                block_device_mappings=[block_device],
+                # iam_instance_profile=ec2.CfnLaunchTemplate.IamInstanceProfileProperty(
+                #     arn=ecs_instance_role.role_arn
+                # ),
+                tag_specifications=[
+                    ec2.CfnLaunchTemplate.TagSpecificationProperty(
+                        resource_type="instance",
+                        tags=[CfnTag(key="AWSBatchService", value="batch")]
+                    )
+                ],
+                user_data=Fn.base64(
+                    "#!/bin/bash\n" +
+                    "mkfs -t ext4 /dev/xvda\n" +
+                    "mkdir -p /tmp\n" +
+                    "mount /dev/xvda /tmp\n"
+                )
+            )
+        )
+
         # Create an EFS filesystem
         if create_efs:
             file_system = efs.FileSystem(
@@ -208,6 +250,7 @@ class AwsBatchStack(Stack):
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
             instance_role=ecs_instance_role, # type: ignore because Role implements IRole
+            launch_template=launch_template
         )
         Tags.of(compute_env_gpu).add("DendroName", f"{stack_id}-compute-env")
 
