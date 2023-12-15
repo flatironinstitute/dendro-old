@@ -5,6 +5,7 @@ from typing import Union, Optional, Dict, Any
 import subprocess
 from ..common._api_request import _processor_put_api_request
 from ..mock import using_mock
+import shutil
 
 
 # This function is called internally by the compute resource daemon through the dendro CLI
@@ -16,10 +17,13 @@ from ..mock import using_mock
 dendro_internal_folder = '_dendro'
 
 def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable: str, job_timeout_sec: Union[int, None]):
+    timescale = 1 if not using_mock() else 1000 # if using mock, run 1000x faster so that we can test timeouts
+
     _run_job_timer = time.time()
 
-    if not os.path.exists(dendro_internal_folder):
-        os.mkdir(dendro_internal_folder)
+    if os.path.exists(dendro_internal_folder):
+        shutil.rmtree(dendro_internal_folder)
+    os.mkdir(dendro_internal_folder)
     console_out_fname = os.path.join(dendro_internal_folder, 'console_output.txt')
     cancel_out_fname = os.path.join(dendro_internal_folder, 'cancel.txt')
     console_out_monitor_output_fname = os.path.join(dendro_internal_folder, 'console_output_monitor_output.txt')
@@ -32,35 +36,38 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
 
     last_report_timestamp = 0
 
+    proc = None
+
     with open(console_out_fname, 'w') as console_out_file, open(console_out_monitor_output_fname, 'w') as console_out_monitor_output_file, open(resource_utilization_monitor_output_fname, 'w') as resource_utilization_monitor_output_file, open(job_status_monitor_output_fname, 'w') as job_status_monitor_output_file:
         succeeded = False # whether we succeeded in running the job without an exception
         error_message = '' # if we fail, this will be set to the exception message
         try:
-            # start the console output monitor
-            cmd = f'dendro internal-job-monitor console_output --parent-pid {os.getpid()}'
-            env = {
-                'JOB_ID': job_id,
-                'JOB_PRIVATE_KEY': job_private_key,
-                'CONSOLE_OUT_FILE': os.path.abspath(console_out_fname)
-            }
-            _launch_detached_process(cmd=cmd, env=env, stdout=console_out_monitor_output_file, stderr=subprocess.STDOUT)
+            if not using_mock():
+                # start the console output monitor
+                cmd = f'dendro internal-job-monitor console_output --parent-pid {os.getpid()}'
+                env = {
+                    'JOB_ID': job_id,
+                    'JOB_PRIVATE_KEY': job_private_key,
+                    'CONSOLE_OUT_FILE': os.path.abspath(console_out_fname)
+                }
+                _launch_detached_process(cmd=cmd, env=env, stdout=console_out_monitor_output_file, stderr=subprocess.STDOUT)
 
-            # start the resource utilization monitor
-            cmd = f'dendro internal-job-monitor resource_utilization --parent-pid {os.getpid()}'
-            env = {
-                'JOB_ID': job_id,
-                'JOB_PRIVATE_KEY': job_private_key
-            }
-            _launch_detached_process(cmd=cmd, env=env, stdout=resource_utilization_monitor_output_file, stderr=subprocess.STDOUT)
+                # start the resource utilization monitor
+                cmd = f'dendro internal-job-monitor resource_utilization --parent-pid {os.getpid()}'
+                env = {
+                    'JOB_ID': job_id,
+                    'JOB_PRIVATE_KEY': job_private_key
+                }
+                _launch_detached_process(cmd=cmd, env=env, stdout=resource_utilization_monitor_output_file, stderr=subprocess.STDOUT)
 
-            # start the status check monitor
-            cmd = f'dendro internal-job-monitor job_status --parent-pid {os.getpid()}'
-            env = {
-                'JOB_ID': job_id,
-                'JOB_PRIVATE_KEY': job_private_key,
-                'CANCEL_OUT_FILE': cancel_out_fname
-            }
-            _launch_detached_process(cmd=cmd, env=env, stdout=job_status_monitor_output_file, stderr=subprocess.STDOUT)
+                # start the status check monitor
+                cmd = f'dendro internal-job-monitor job_status --parent-pid {os.getpid()}'
+                env = {
+                    'JOB_ID': job_id,
+                    'JOB_PRIVATE_KEY': job_private_key,
+                    'CANCEL_OUT_FILE': cancel_out_fname
+                }
+                _launch_detached_process(cmd=cmd, env=env, stdout=job_status_monitor_output_file, stderr=subprocess.STDOUT)
 
             # Launch the job in a separate process
             proc = _launch_job_child_process(
@@ -75,7 +82,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                 skip_this_check = using_mock() and first_iteration
                 if not skip_this_check:
                     try:
-                        retcode = proc.wait(1)
+                        retcode = proc.wait(1 / timescale)
                         # don't check this now -- wait until after we had a chance to read the last console output
                     except subprocess.TimeoutExpired:
                         retcode = None # process is still running
@@ -108,22 +115,23 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                     last_report_timestamp = time.time()
                     _debug_log('Job still running')
 
-                time.sleep(3)
+                time.sleep(3 / timescale)
             succeeded = True # No exception
         except Exception as e: # pylint: disable=broad-except
             _debug_log(f'Error running job: {str(e)}')
             succeeded = False
             error_message = str(e)
         finally:
-            _debug_log('Closing subprocess')
-            try:
-                if proc.stdout:
-                    proc.stdout.close()
-                if proc.stderr:
-                    proc.stderr.close()
-                proc.terminate()
-            except Exception: # pylint: disable=broad-except
-                pass
+            if proc is not None:
+                _debug_log('Closing subprocess')
+                try:
+                    if proc.stdout:
+                        proc.stdout.close()
+                    if proc.stderr:
+                        proc.stderr.close()
+                    proc.terminate()
+                except Exception: # pylint: disable=broad-except
+                    pass
 
             dendro_job_cleanup_dir = os.environ.get('DENDRO_JOB_CLEANUP_DIR', None)
             if dendro_job_cleanup_dir is not None:
