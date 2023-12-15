@@ -241,7 +241,7 @@ def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Op
 def _launch_detached_process(*, cmd: str, env: Dict[str, str]):
     _debug_log(f'Launching detached process: {cmd}')
     subprocess.Popen(
-        cmd,
+        cmd.split(' '),
         env={
             **os.environ.copy(),
             **env
