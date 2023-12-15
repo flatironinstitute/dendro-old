@@ -135,44 +135,69 @@ class AwsBatchStack(Stack):
         )
 
         # Define the block device
-        block_device = ec2.CfnLaunchTemplate.BlockDeviceMappingProperty(
+        # block_device = ec2.CfnLaunchTemplate.BlockDeviceMappingProperty(
+        #     device_name="/dev/xvda",
+        #     ebs=ec2.CfnLaunchTemplate.EbsProperty(
+        #         volume_size=2000,  # Size in GiB
+        #         delete_on_termination=True,
+        #         # encrypted=True
+        #     )
+        # )
+        block_device = ec2.BlockDevice(
             device_name="/dev/xvda",
-            ebs=ec2.CfnLaunchTemplate.EbsProperty(
-                volume_size=2000,  # Size in GiB
-                delete_on_termination=True,
-                # encrypted=True
+            volume=ec2.BlockDeviceVolume.ebs(
+                volume_size=50,
+                delete_on_termination=True
             )
         )
 
         # Define the launch template
         launch_template_name = f"{stack_id}-EC2LaunchTemplate"
-        launch_template = ec2.CfnLaunchTemplate(
+        # launch_template = ec2.LaunchTemplate(
+        #     scope=self,
+        #     id=launch_template_name,
+        #     launch_template_name=f"{stack_id}-EC2LaunchTemplate",
+        #     launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
+        #         image_id="ami-0d625ab7e92ab3a43",
+        #         instance_type="g4dn.2xlarge",
+        #         # key_name="your-key-pair",
+        #         ebs_optimized=True,
+        #         block_device_mappings=[block_device],
+        #         # iam_instance_profile=ec2.CfnLaunchTemplate.IamInstanceProfileProperty(
+        #         #     arn=ecs_instance_role.role_arn
+        #         # ),
+        #         tag_specifications=[
+        #             ec2.CfnLaunchTemplate.TagSpecificationProperty(
+        #                 resource_type="instance",
+        #                 tags=[CfnTag(key="AWSBatchService", value="batch")]
+        #             )
+        #         ],
+        #         user_data=Fn.base64(
+        #             "#!/bin/bash\n" +
+        #             "mkfs -t ext4 /dev/xvda\n" +
+        #             "mkdir -p /tmp\n" +
+        #             "mount /dev/xvda /tmp\n"
+        #         )
+        #     )
+        # )
+        launch_template = ec2.LaunchTemplate(
             scope=self,
-            id=launch_template_name,
-            launch_template_name=f"{stack_id}-EC2LaunchTemplate",
-            launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
-                image_id="ami-0d625ab7e92ab3a43",
-                instance_type="g4dn.2xlarge",
-                # key_name="your-key-pair",
-                ebs_optimized=True,
-                block_device_mappings=[block_device],
-                # iam_instance_profile=ec2.CfnLaunchTemplate.IamInstanceProfileProperty(
-                #     arn=ecs_instance_role.role_arn
-                # ),
-                tag_specifications=[
-                    ec2.CfnLaunchTemplate.TagSpecificationProperty(
-                        resource_type="instance",
-                        tags=[CfnTag(key="AWSBatchService", value="batch")]
-                    )
-                ],
-                user_data=Fn.base64(
-                    "#!/bin/bash\n" +
-                    "mkfs -t ext4 /dev/xvda\n" +
-                    "mkdir -p /tmp\n" +
-                    "mount /dev/xvda /tmp\n"
-                )
+            id="EC2LaunchTemplate",
+            launch_template_name="DendroEC2LaunchTemplate",
+            block_devices=[block_device],
+            instance_type=ec2.InstanceType("g4dn.2xlarge"),
+            machine_image=ec2.MachineImage.generic_linux({
+                "us-east-2": "ami-0d625ab7e92ab3a43"
+            }),
+            ebs_optimized=True,
+            user_data=ec2.UserData.custom(
+                "#!/bin/bash\n" +
+                "mkfs -t ext4 /dev/xvda\n" +
+                "mkdir -p /tmp\n" +
+                "mount /dev/xvda /tmp\n"
             )
         )
+        Tags.of(launch_template).add("AWSBatchService", "batch")
 
         # Create an EFS filesystem
         if create_efs:
@@ -237,7 +262,7 @@ class AwsBatchStack(Stack):
         # Compute environment for GPU
         compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
-            id=compute_env_gpu_id,
+            id=compute_env_gpu_id+"-2",
             vpc=vpc,
             instance_types=[
                 ec2.InstanceType("g4dn.xlarge"), # 4 vCPUs, 16 GiB
