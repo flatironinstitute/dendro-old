@@ -18,14 +18,14 @@ dendro_internal_folder = '_dendro'
 def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable: str, job_timeout_sec: Union[int, None]):
     _run_job_timer = time.time()
 
-    # set the job status to running by calling the remote dendro API
-    _debug_log(f'Running job {job_id}')
-    _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
-
     if not os.path.exists(dendro_internal_folder):
         os.mkdir(dendro_internal_folder)
     console_out_fname = os.path.join(dendro_internal_folder, 'console_output.txt')
     cancel_out_fname = os.path.join(dendro_internal_folder, 'cancel.txt')
+
+    # set the job status to running by calling the remote dendro API
+    _debug_log(f'Running job {job_id}')
+    _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
     # start the console output monitor
     cmd = f'dendro internal-job-monitor console_output --parent-pid {os.getpid()}'
