@@ -30,6 +30,8 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
     _debug_log(f'Running job {job_id}')
     _set_job_status(job_id=job_id, job_private_key=job_private_key, status='running')
 
+    last_report_timestamp = 0
+
     with open(console_out_fname, 'w') as console_out_file, open(console_out_monitor_output_fname, 'w') as console_out_monitor_output_file, open(resource_utilization_monitor_output_fname, 'w') as resource_utilization_monitor_output_file, open(job_status_monitor_output_fname, 'w') as job_status_monitor_output_file:
         succeeded = False # whether we succeeded in running the job without an exception
         error_message = '' # if we fail, this will be set to the exception message
@@ -100,6 +102,11 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                         raise Exception(f'Job timed out: {elapsed} > {job_timeout_sec} seconds')
 
                 first_iteration = False
+
+                elapsed_since_report = time.time() - last_report_timestamp
+                if elapsed_since_report >= 120:
+                    last_report_timestamp = time.time()
+                    _debug_log('Job still running')
 
                 time.sleep(3)
             succeeded = True # No exception
@@ -256,9 +263,10 @@ def _launch_detached_process(*, cmd: str, env: Dict[str, str], stdout: Any, stde
     )
 
 def _debug_log(msg: str):
-    print(msg)
+    timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+    msg2 = f'{timestamp} {msg}'
+    print(msg2)
     # write to dendro-job.log
     # this will be written to the working directory, which should be in the job dir
-    timestamp_str = time.strftime('%Y-%m-%d %H:%M:%S')
     with open(f'{dendro_internal_folder}/dendro-job.log', 'a', encoding='utf-8') as f:
-        f.write(f'{timestamp_str} {msg}\n')
+        f.write(msg2)
