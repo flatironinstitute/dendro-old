@@ -65,8 +65,9 @@ def do_upload(*, console_out_file, job_id, job_private_key):
         # find the last \r
         last_cr_index = line.rfind('\r')
         if last_cr_index != -1:
-            line = line[last_cr_index + 1:]
-        new_lines.append(line)
+            new_lines.append(line[last_cr_index + 1:].encode('utf-8'))
+        else:
+            new_lines.append(line.encode('utf-8'))
     text_to_upload = b'\n'.join(new_lines)
     try:
         console_output_upload_url = _get_upload_url(job_id=job_id, job_private_key=job_private_key, output_name='_console_output')
