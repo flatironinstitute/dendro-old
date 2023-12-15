@@ -94,7 +94,11 @@ def resource_utilization_monitor(parent_pid: str):
                 interval = 120
             if elapsed_since_upload >= interval:
                 last_upload_timestamp = time.time()
-                do_upload()
+                do_upload(
+                    all_lines=all_lines,
+                    job_id=job_id,
+                    job_private_key=job_private_key
+                )
 
         time.sleep(1)
 

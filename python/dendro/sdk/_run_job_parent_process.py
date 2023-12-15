@@ -39,7 +39,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
             env = {
                 'JOB_ID': job_id,
                 'JOB_PRIVATE_KEY': job_private_key,
-                'CONSOLE_OUTPUT_FILE': os.path.abspath(console_out_fname)
+                'CONSOLE_OUT_FILE': os.path.abspath(console_out_fname)
             }
             _launch_detached_process(cmd=cmd, env=env, stdout=console_out_monitor_output_file, stderr=subprocess.STDOUT)
 
