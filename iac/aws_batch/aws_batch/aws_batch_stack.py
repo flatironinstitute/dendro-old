@@ -11,6 +11,7 @@ from aws_cdk import (
     aws_efs as efs
 )
 import boto3
+import base64
 
 from .stack_config import (
     stack_id,
@@ -135,24 +136,15 @@ class AwsBatchStack(Stack):
         )
 
         # Define the block device
-        # block_device = ec2.CfnLaunchTemplate.BlockDeviceMappingProperty(
-        #     device_name="/dev/xvda",
-        #     ebs=ec2.CfnLaunchTemplate.EbsProperty(
-        #         volume_size=2000,  # Size in GiB
-        #         delete_on_termination=True,
-        #         # encrypted=True
-        #     )
-        # )
         block_device = ec2.BlockDevice(
             device_name="/dev/xvda",
             volume=ec2.BlockDeviceVolume.ebs(
-                volume_size=50,
+                volume_size=2000,
                 delete_on_termination=True
             )
         )
 
         # Define the launch template
-        launch_template_name = f"{stack_id}-EC2LaunchTemplate"
         # launch_template = ec2.LaunchTemplate(
         #     scope=self,
         #     id=launch_template_name,
@@ -180,9 +172,23 @@ class AwsBatchStack(Stack):
         #         )
         #     )
         # )
+        user_data_script = """MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+
+--==BOUNDARY==
+Content-Type: text/x-shellscript; charset="us-ascii"
+
+#!/bin/bash
+mkfs -t ext4 /dev/xvda
+mkdir -p /tmp
+mount /dev/xvda /tmp
+
+--==BOUNDARY==--
+"""
+        encoded_user_data = base64.b64encode(user_data_script.encode()).decode()
         launch_template = ec2.LaunchTemplate(
             scope=self,
-            id="EC2LaunchTemplate",
+            id="DendroEC2LaunchTemplate",
             launch_template_name="DendroEC2LaunchTemplate",
             block_devices=[block_device],
             instance_type=ec2.InstanceType("g4dn.2xlarge"),
@@ -190,12 +196,7 @@ class AwsBatchStack(Stack):
                 "us-east-2": "ami-0d625ab7e92ab3a43"
             }),
             ebs_optimized=True,
-            user_data=ec2.UserData.custom(
-                "#!/bin/bash\n" +
-                "mkfs -t ext4 /dev/xvda\n" +
-                "mkdir -p /tmp\n" +
-                "mount /dev/xvda /tmp\n"
-            )
+            user_data=ec2.UserData.custom(encoded_user_data)
         )
         Tags.of(launch_template).add("AWSBatchService", "batch")
 
@@ -262,7 +263,7 @@ class AwsBatchStack(Stack):
         # Compute environment for GPU
         compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
-            id=compute_env_gpu_id+"-2",
+            id=compute_env_gpu_id,
             vpc=vpc,
             instance_types=[
                 ec2.InstanceType("g4dn.xlarge"), # 4 vCPUs, 16 GiB
