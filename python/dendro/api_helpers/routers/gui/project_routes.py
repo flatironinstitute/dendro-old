@@ -276,7 +276,7 @@ async def set_project_users(project_id, data: SetProjectUsersRequest, github_acc
     _check_user_is_project_admin(project, user_id)
 
     # parse the request
-    users = data.users
+    users = [x.dict() for x in data.users]
 
     await update_project(project_id, update={
         'users': users,

@@ -1,6 +1,6 @@
 import { Menu } from '@mui/icons-material';
 import React, { useState } from 'react';
-import { SmallIconButton } from "@hodj/misc";
+import { SmallIconButton } from "@fi-sci/misc";
 import './DropdownMenu.css';
 
 type Option = {

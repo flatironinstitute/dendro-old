@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react"
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 import { ComputeResourceSpecApp, ComputeResourceSpecProcessor, DendroComputeResourceApp } from "../../../types/dendro-types"
 
 type SelectProcessorComponentProps = {

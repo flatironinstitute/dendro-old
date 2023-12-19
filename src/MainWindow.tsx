@@ -1,10 +1,10 @@
-import { HBoxLayout, VBoxLayout } from "@hodj/misc";
+import { HBoxLayout, VBoxLayout } from "@fi-sci/misc";
 import { FunctionComponent, useState } from "react";
 import ApplicationBar, { applicationBarHeight } from "./ApplicationBar";
 import GitHubAuthPage from "./GitHub/GitHubAuthPage";
 import HelpPanel from "./HelpPanel/HelpPanel";
 import RecentProjectsPanel from "./RecentProjectsPanel/RecentProjectsPanel";
-import { Splitter } from "@hodj/splitter";
+import { Splitter } from "@fi-sci/splitter";
 import AboutPage from "./pages/AboutPage/AboutPage";
 import AdminPage from "./pages/AdminPage/AdminPage";
 import ComputeResourcePage from "./pages/ComputeResourcePage/ComputeResourcePage";

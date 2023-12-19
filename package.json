@@ -1,7 +1,7 @@
 {
   "name": "dendro",
   "private": true,
-  "version": "0.1.12",
+  "version": "0.1.14",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -12,14 +12,14 @@
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@fi-sci/electrode-geometry": "~0.0.1",
+    "@fi-sci/misc": "~0.0.1",
+    "@fi-sci/modal-window": "~0.0.1",
+    "@fi-sci/splitter": "~0.0.1",
     "@fortawesome/fontawesome-svg-core": "^6.3.0",
     "@fortawesome/free-brands-svg-icons": "^6.3.0",
     "@fortawesome/free-solid-svg-icons": "^6.4.0",
     "@fortawesome/react-fontawesome": "^0.2.0",
-    "@hodj/electrode-geometry-widget": "0.0.3",
-    "@hodj/misc": "0.0.1",
-    "@hodj/modal-window": "^0.0.6",
-    "@hodj/splitter": "^0.0.1",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.0",
     "github-markdown-css": "^5.2.0",

@@ -1,6 +1,6 @@
 import { Delete } from "@mui/icons-material"
 import { FunctionComponent, useCallback } from "react"
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay"
 import { confirm } from "../../confirm_prompt_alert"
 import { timeAgoString } from "../../timeStrings"

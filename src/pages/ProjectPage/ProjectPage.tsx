@@ -1,7 +1,7 @@
 import { FunctionComponent, useCallback, useMemo, useState } from "react";
-import { useModalWindow } from "@hodj/modal-window"
+import { useModalWindow } from "@fi-sci/modal-window"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
-import ModalWindow from "@hodj/modal-window";
+import ModalWindow from "@fi-sci/modal-window";
 import { setUrlFile } from "../../dbInterface/dbInterface";
 import useRoute from "../../useRoute";
 // import ManualNwbSelector from "./ManualNwbSelector/ManualNwbSelector";
@@ -20,7 +20,9 @@ import ProjectJobs from "./ProjectJobs";
 import { SetupProjectPage, useProject } from "./ProjectPageContext";
 import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpikeSortingWindow";
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
-import { HBoxLayout } from "@hodj/misc";
+import { HBoxLayout } from "@fi-sci/misc";
+import openFilesInNeurosift from "./openFilesInNeurosift";
+import { DendroFile } from "../../types/dendro-types";
 
 type Props = {
     width: number
@@ -133,7 +135,7 @@ type MainPanelProps = {
 }
 
 const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
-    const {project, refreshFiles} = useProject()
+    const {project, projectId, refreshFiles, files} = useProject()
     const auth = useGithubAuth()
     const {route, staging} = useRoute()
     if (route.page !== 'project') throw Error(`Unexpected route ${JSON.stringify(route)}`)
@@ -192,6 +194,30 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         setSpikeSortingFilePaths(filePaths)
         openRunSpikeSortingWindow()
     }, [openRunSpikeSortingWindow])
+
+    const handleOpenInNeurosift = useCallback((filePaths: string[]) => {
+        if (!files) {
+            console.warn('No files')
+            return
+        }
+        if (filePaths.length > 5) {
+            alert('Too many files to open in Neurosift')
+            return
+        }
+
+        const files2 = filePaths.map(filePath => {
+            const file = files.find(file => file.fileName === filePath)
+            if (!file) throw Error(`Unexpected: file not found: ${filePath}`)
+            return file
+        }, [files])
+
+        openFilesInNeurosift(files2, projectId).then(() => {
+            console.info('Opened in Neurosift')
+        }, err => {
+            console.warn(err)
+            alert(`Problem opening in Neurosift: ${err.message}`)
+        })
+    }, [files, projectId])
 
     const {visible: dandiUploadWindowVisible, handleOpen: openDandiUploadWindow, handleClose: closeDandiUploadWindow} = useModalWindow()
     const [dandiUploadTask, setDandiUploadTask] = useState<DandiUploadTask | undefined>(undefined)
@@ -270,6 +296,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     width={width}
                     height={height}
                     onRunBatchSpikeSorting={handleRunSpikeSorting}
+                    onOpenInNeurosift={handleOpenInNeurosift}
                     onDandiUpload={handleDandiUpload}
                     onUploadSmallFile={handleUploadSmallFile}
                     onAction={handleAction}

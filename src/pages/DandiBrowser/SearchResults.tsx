@@ -1,7 +1,7 @@
 import { FunctionComponent, useCallback } from "react"
 import { applicationBarColorDarkened } from "../../ApplicationBar"
-import { Hyperlink } from "@hodj/misc";
-import { Splitter } from "@hodj/splitter";
+import { Hyperlink } from "@fi-sci/misc";
+import { Splitter } from "@fi-sci/splitter";
 import useRoute from "../../useRoute"
 import DandisetView from "./DandisetView"
 import formatByteCount from "./formatByteCount"

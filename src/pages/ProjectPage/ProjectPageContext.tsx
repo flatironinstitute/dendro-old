@@ -138,6 +138,7 @@ type ProjectPageContextType = {
     refreshJobs: () => void
     deleteFile: (fileName: string) => Promise<void>
     fileHasBeenEdited: (fileName: string) => boolean
+    refreshProject: () => void
 }
 
 const ProjectPageContext = React.createContext<ProjectPageContextType>({
@@ -158,7 +159,8 @@ const ProjectPageContext = React.createContext<ProjectPageContextType>({
     deleteJob: async () => {},
     refreshJobs: () => {},
     deleteFile: async () => {},
-    fileHasBeenEdited: () => false
+    fileHasBeenEdited: () => false,
+    refreshProject: () => {}
 })
 
 export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({children, projectId}) => {
@@ -370,8 +372,9 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         refreshJobs,
         deleteJob: deleteJobHandler,
         deleteFile: deleteFileHandler,
-        fileHasBeenEdited
-    }), [projectId, project, files, filesIncludingPending, openTabs, jobs, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited])
+        fileHasBeenEdited,
+        refreshProject
+    }), [projectId, project, files, filesIncludingPending, openTabs, jobs, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited, refreshProject])
 
     return (
         <ProjectPageContext.Provider value={value}>

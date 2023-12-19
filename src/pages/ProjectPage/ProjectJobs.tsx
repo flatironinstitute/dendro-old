@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from "react";
-import { Splitter } from "@hodj/splitter";
+import { Splitter } from "@fi-sci/splitter";
 import JobsTable from "./JobsWindow/JobsTable";
 import JobView from "./JobView/JobView";
 import { useProject } from "./ProjectPageContext";

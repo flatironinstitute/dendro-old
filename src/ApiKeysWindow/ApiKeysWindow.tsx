@@ -3,7 +3,7 @@ import { useGithubAuth } from "../GithubAuth/useGithubAuth"
 import { createDendroApiKeyForUser } from "../dbInterface/dbInterface"
 import UserIdComponent from "../UserIdComponent"
 import { confirm } from "../confirm_prompt_alert"
-import { Hyperlink } from "@hodj/misc"
+import { Hyperlink } from "@fi-sci/misc"
 
 type ApiKeysWindowProps = {
     onClose: () => void

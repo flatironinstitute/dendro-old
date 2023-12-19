@@ -6,6 +6,8 @@ from ._run_job_parent_process import _run_job_parent_process
 from ._run_job_child_process import _run_job_child_process
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
+from .InputFile import InputFile
+from .OutputFile import OutputFile
 
 
 class DendroAppException(Exception):
@@ -107,6 +109,15 @@ class App:
             processor = next((p for p in self._processors if p._name == PROCESSOR_NAME), None)
             if not processor:
                 raise Exception(f'Processor not found: {PROCESSOR_NAME}')
+
+            # handle input files coming in as url's
+            for input in processor._inputs:
+                context[input.name] = InputFile(name=input.name, url=context[input.name])
+
+            # handle output files coming in as file paths
+            for output in processor._outputs:
+                context[output.name] = OutputFile(name=output.name, output_file_name=context[output.name])
+
             processor_class = processor._processor_class
             assert processor_class, f'Processor does not have a processor_class: {PROCESSOR_NAME}'
             context_type = _get_type_of_context_in_processor_class(processor_class)

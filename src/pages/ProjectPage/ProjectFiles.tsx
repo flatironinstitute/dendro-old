@@ -1,5 +1,5 @@
 import { FunctionComponent, useCallback } from "react";
-import { Splitter } from "@hodj/splitter";
+import { Splitter } from "@fi-sci/splitter";
 import TabWidget from "../../TabWidget/TabWidget";
 import FileBrowser2, { FileIcon } from "./FileBrowser/FileBrowser2";
 import FileEditor from "./FileEditor/FileEditor";
@@ -13,12 +13,13 @@ type ProjectFilesProps = {
     width: number
     height: number
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
+    onOpenInNeurosift?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
     onAction?: (action: PluginAction) => void
 }
 
-const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onDandiUpload, onUploadSmallFile, onAction}) => {
+const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
     const {filesIncludingPending, openTab, deleteFile, closeTab, openTabs, refreshFiles} = useProject()
 
     const handleOpenFile = useCallback((fileName: string) => {
@@ -50,6 +51,7 @@ const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRu
                 onDeleteFile={handleDeleteFile}
                 hideSizeColumn={false}
                 onRunBatchSpikeSorting={onRunBatchSpikeSorting}
+                onOpenInNeurosift={onOpenInNeurosift}
                 onDandiUpload={onDandiUpload}
                 onUploadSmallFile={onUploadSmallFile}
                 onAction={onAction}

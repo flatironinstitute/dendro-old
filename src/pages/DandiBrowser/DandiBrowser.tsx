@@ -1,4 +1,4 @@
-import { Hyperlink, SmallIconButton, VBoxLayout } from "@hodj/misc";
+import { Hyperlink, SmallIconButton, VBoxLayout } from "@fi-sci/misc";
 import { Search } from "@mui/icons-material";
 import { FunctionComponent, useEffect, useState } from "react";
 import useRoute from "../../useRoute";

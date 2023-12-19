@@ -1,12 +1,12 @@
 import { FunctionComponent, useCallback, useMemo } from "react";
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 import { createJob, DendroProcessingJobDefinition } from "../../../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../../../GithubAuth/useGithubAuth";
 import { DendroJob, DendroJobRequiredResources } from "../../../../types/dendro-types";
 import { useProject } from "../../ProjectPageContext";
 import { isElectricalSeriesPathParameter } from "../../EditJobDefinitionWindow/EditJobDefinitionWindow";
-import { useModalWindow } from "@hodj/modal-window"
-import ModalWindow from "@hodj/modal-window";
+import { useModalWindow } from "@fi-sci/modal-window"
+import ModalWindow from "@fi-sci/modal-window";
 import LoadSpikeSortingInScriptWindow from "./LoadSpikeSortingInScriptWindow";
 
 type SpikeSortingOutputSectionProps = {

@@ -1,4 +1,4 @@
-import { Hyperlink } from "@hodj/misc";
+import { Hyperlink } from "@fi-sci/misc";
 import { FunctionComponent, useMemo } from "react";
 import { useComputeResources } from "./pages/ComputeResourcesPage/ComputeResourcesContext";
 import useRoute from "./useRoute";

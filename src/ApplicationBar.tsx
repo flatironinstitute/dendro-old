@@ -5,8 +5,8 @@ import ApiKeysWindow from "./ApiKeysWindow/ApiKeysWindow";
 import GitHubLoginWindow from "./GitHub/GitHubLoginWindow";
 import { useGithubAuth } from "./GithubAuth/useGithubAuth";
 import UserIdComponent from "./UserIdComponent";
-import ModalWindow from "@hodj/modal-window";
-import { SmallIconButton } from "@hodj/misc";
+import ModalWindow from "@fi-sci/modal-window";
+import { SmallIconButton } from "@fi-sci/misc";
 import useRoute from "./useRoute";
 
 type Props = {
