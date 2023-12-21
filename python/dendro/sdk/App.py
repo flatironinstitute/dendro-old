@@ -112,7 +112,13 @@ class App:
 
             # handle input files coming in as url's
             for input in processor._inputs:
-                context[input.name] = InputFile(name=input.name, url=context[input.name])
+                input_value = context[input.name]
+                if input_value.startswith('http://') or input_value.startswith('https://'):
+                    context[input.name] = InputFile(name=input.name, url=input_value)
+                elif input_value.startswith('/'):
+                    context[input.name] = InputFile(name=input.name, local_file_name=input_value)
+                else:
+                    raise Exception(f'Input value for {input.name} must either be a URL or an absolute local path. Got: {input_value}')
 
             # handle output files coming in as file paths
             for output in processor._outputs:
