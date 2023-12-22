@@ -10,11 +10,11 @@ def make_app_spec_file_function(app_dir: str, spec_output_file: str):
     if spec_output_file is None:
         spec_output_file = str(app_dir_path / 'spec.json')
 
-    executable_path = str(app_dir_path / 'main.py')
+    script_path = str(app_dir_path / 'main.py')
 
     env = os.environ.copy()
     env['SPEC_OUTPUT_FILE'] = spec_output_file
-    subprocess.run([executable_path], env=env)
+    subprocess.run(['python', script_path], env=env)
 
     # When we do it the following way, the inspection of type hints in the processor context does not work
 

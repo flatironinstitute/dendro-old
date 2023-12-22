@@ -112,11 +112,23 @@ class App:
 
             # handle input files coming in as url's
             for input in processor._inputs:
-                context[input.name] = InputFile(name=input.name, url=context[input.name])
+                input_value = _get_in_dict_where_key_may_have_dots(context, input.name)
+                if input_value.startswith('http://') or input_value.startswith('https://'):
+                    _set_in_dict_where_key_may_have_dots(context, input.name, InputFile(name=input.name, url=input_value))
+                elif input_value.startswith('/') or input_value.startswith('./') or input_value.startswith('../'):
+                    _set_in_dict_where_key_may_have_dots(context, input.name, InputFile(name=input.name, local_file_name=input_value))
+                else:
+                    raise Exception(f'Input value for {input.name} must either be a URL or a local path starting with /, ./ or ../. Got: {input_value}')
 
             # handle output files coming in as file paths
             for output in processor._outputs:
-                context[output.name] = OutputFile(name=output.name, output_file_name=context[output.name])
+                output_value = _get_in_dict_where_key_may_have_dots(context, output.name)
+                if output_value.startswith('https://') or output_value.startswith('http://'):
+                    raise Exception(f'Output value for {output.name} cannot be a URL. Should be local file path. Got: {output_value}')
+                elif output_value.startswith('/') or output_value.startswith('./') or output_value.startswith('../'):
+                    _set_in_dict_where_key_may_have_dots(context, output.name, OutputFile(name=output.name, output_file_name=output_value))
+                else:
+                    raise Exception(f'Output value for {output.name} must be a local path starting with /, ./ or ../. Got: {output_value}')
 
             processor_class = processor._processor_class
             assert processor_class, f'Processor does not have a processor_class: {PROCESSOR_NAME}'
@@ -183,3 +195,21 @@ def _get_type_of_context_in_processor_class(processor_class):
     type_hints = get_type_hints(run_method)
     # Return the type hint for the 'context' parameter
     return type_hints.get('context')
+
+def _get_in_dict_where_key_may_have_dots(d: dict, key: str):
+    if '.' in key:
+        key_parts = key.split('.')
+        for key_part in key_parts[:-1]:
+            d = d[key_part]
+        return d[key_parts[-1]]
+    else:
+        return d[key]
+
+def _set_in_dict_where_key_may_have_dots(d: dict, key: str, value):
+    if '.' in key:
+        key_parts = key.split('.')
+        for key_part in key_parts[:-1]:
+            d = d[key_part]
+        d[key_parts[-1]] = value
+    else:
+        d[key] = value
