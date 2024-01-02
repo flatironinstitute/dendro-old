@@ -6,6 +6,8 @@
 
 [View the documentation](https://flatironinstitute.github.io/dendro-docs)
 
+[Visit the live site](https://dendro.vercel.app/)
+
 ### LICENSE
 
 Apache 2.0
