@@ -15,6 +15,7 @@ import ProjectsPage from "./pages/ProjectsPage/ProjectsPage";
 import RegisterComputeResourcePage from "./pages/RegisterComputeResourcePage/RegisterComputeResourcePage";
 import useRoute from "./useRoute";
 import useWindowDimensions from "./useWindowDimensions";
+import ImportDandiAssetPage from "./pages/ImportDandiAssetPage/ImportDandiAssetPage";
 
 type Props = {
     // none
@@ -122,6 +123,8 @@ const MainContent2: FunctionComponent<MainContent2Props> = ({width, height}) => 
             <ProjectsPage width={width} height={height} />
         ) : route.page === 'register-compute-resource' ? (
             <RegisterComputeResourcePage />
+        ) : route.page === 'importDandiAsset' ? (
+            <ImportDandiAssetPage />
         ) : route.page === 'github-auth' ? (
             <GitHubAuthPage />
         ) : route.page === 'admin' ? (

@@ -2,6 +2,9 @@
 fastapi
 motor
 simplejson
-pydantic
+# was having some trouble with the latest version of pydantic, so pinning it for now
+# error was: "No module named 'pydantic_core._pydantic_core'"
+pydantic==2.4
 aiohttp
 cryptography
+boto3
