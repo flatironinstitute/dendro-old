@@ -12,6 +12,7 @@ _globals = {
     'mock_mongo_client': None
 }
 
+# pyright: reportGeneralTypeIssues=false
 def _get_mongo_client() -> Union['AsyncIOMotorClient', MockMongoClient]:
     # We want one async mongo client per event loop
     loop = asyncio.get_event_loop()
