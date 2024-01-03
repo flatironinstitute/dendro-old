@@ -36,18 +36,21 @@ class JobManager:
             self._fail_job(job, 'runMethod is None')
 
         # Local jobs
-        local_jobs_to_start = _choose_pending_jobs_to_start(local_jobs, max_simultaneous_local_jobs)
-        for job in local_jobs_to_start:
-            self._start_job(job)
+        if 'local' in self._app_manager._available_job_run_methods:
+            local_jobs_to_start = _choose_pending_jobs_to_start(local_jobs, max_simultaneous_local_jobs)
+            for job in local_jobs_to_start:
+                self._start_job(job)
 
         # AWS Batch jobs
-        aws_jobs_to_start = _choose_pending_jobs_to_start(aws_batch_jobs, max_simultaneous_aws_batch_jobs)
-        for job in aws_jobs_to_start:
-            self._start_job(job)
+        if 'aws_batch' in self._app_manager._available_job_run_methods:
+            aws_jobs_to_start = _choose_pending_jobs_to_start(aws_batch_jobs, max_simultaneous_aws_batch_jobs)
+            for job in aws_jobs_to_start:
+                self._start_job(job)
 
         # SLURM jobs
         # this is more tricky... let's send the to slurm job handler
-        self._slurm_job_handler.handle_jobs(slurm_jobs)
+        if 'slurm' in self._app_manager._available_job_run_methods:
+            self._slurm_job_handler.handle_jobs(slurm_jobs)
     def do_work(self):
         self._slurm_job_handler.do_work()
     def _job_is_pending(self, job: DendroJob) -> bool:
