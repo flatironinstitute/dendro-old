@@ -16,10 +16,18 @@ const ProjectAnalysis: FunctionComponent<ProjectAnalysisProps> = ({width, height
 
     const {analysisSourceClient, status} = useAnalysisSourceClient(analysisSourceUrl)
 
+    if (!project) {
+        return (
+            <div style={{width, height, padding: 20}}>
+                <span style={{fontSize: 20}}>Loading project...</span>
+            </div>
+        )
+    }
+
     if (!analysisSourceUrl) {
         return (
             <div style={{width, height, padding: 20}}>
-                <span style={{fontSize: 20}}>This project does not have an analysis source URL.</span>
+                <span style={{fontSize: 20}}>This project does not have a linked analysis source URL.</span>
             </div>
         )
     }

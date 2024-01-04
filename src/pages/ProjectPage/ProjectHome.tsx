@@ -112,8 +112,8 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
                         <td>Num. jobs:</td>
                         <td>{jobs?.length} (<Hyperlink onClick={() => setRoute({page: 'project', projectId, tab: 'project-jobs'})}>view jobs</Hyperlink>)</td>
                     </tr>
-                    <tr key="analysis-source">
-                        <td>Analysis source:</td>
+                    <tr key="linked-analysis">
+                        <td>Linked analysis:</td>
                         <td>
                             {project?.analysisSourceUrl && <a href={project?.analysisSourceUrl} target="_blank" rel="noreferrer">{project?.analysisSourceUrl}</a>}&nbsp;
                             {['editor', 'admin'].includes(projectRole || '') && <IconButton onClick={handleEditAnalysisSourceUrl}><Edit /></IconButton>}

@@ -48,7 +48,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height, onCurrentProjectC
     )
 }
 
-export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
+export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-linked-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
 
 type ProjectPageView = {
     type: ProjectPageViewType
@@ -69,8 +69,8 @@ const projectPageViews: ProjectPageView[] = [
         label: 'Jobs'
     },
     {
-        type: 'project-analysis',
-        label: 'Analysis'
+        type: 'project-linked-analysis',
+        label: 'Linked analysis'
     },
     {
         type: 'dandi-import',
@@ -315,7 +315,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     height={height}
                 />
             </div>
-            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-analysis' ? undefined : 'hidden'}}>
+            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-linked-analysis' ? undefined : 'hidden'}}>
                 <ProjectAnalysis
                     width={width}
                     height={height}
