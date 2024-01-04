@@ -1,10 +1,10 @@
-import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react"
-import { SelectedStrings, SelectedStringsAction, expandedFoldersReducer } from "./FileBrowser2"
 import { Hyperlink } from "@fi-sci/misc"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPython } from "@fortawesome/free-brands-svg-icons"
-import { faCaretDown, faCaretRight, faFile, faFolder } from "@fortawesome/free-solid-svg-icons"
+import { faCaretDown, faCaretRight, faFile, faFolder, faNoteSticky } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react"
 import { timeAgoString } from "../../../timeStrings"
+import { SelectedStrings, SelectedStringsAction, expandedFoldersReducer } from "./FileBrowser2"
 import formatByteCount from "./formatByteCount"
 
 export type FileItem = {
@@ -290,6 +290,9 @@ export const FileIcon: FunctionComponent<{fileName: string}> = ({fileName}) => {
     }
     else if (ext === 'nwb') {
         return <FontAwesomeIcon icon={faFile as any} style={{color: 'red'}} />
+    }
+    else if (ext === 'ipynb') {
+        return <FontAwesomeIcon icon={faNoteSticky as any} style={{color: 'darkblue'}} />
     }
     else {
         return <FontAwesomeIcon icon={faFile as any} style={{color: 'gray'}} />

@@ -45,8 +45,8 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, 
             else if (tab === 'project-jobs') {
                 sourcePath = '/help/project-project-jobs.md'
             }
-            else if (tab === 'project-analysis') {
-                sourcePath = '/help/project-project-analysis.md'
+            else if (tab === 'project-linked-analysis') {
+                sourcePath = '/help/project-project-linked-analysis.md'
             }
             else if (tab === 'dandi-import') {
                 sourcePath = '/help/project-dandi-import.md'
@@ -127,19 +127,24 @@ const TopBar: FunctionComponent<TopBarProps> = ({helpExpanded, setHelpExpanded})
         <div style={{fontSize: 30}}>
             {
                 helpExpanded ? (
-                    <Hyperlink
-                        onClick={() => setHelpExpanded(false)}
-                    >
-                        {/* Arrow pointing to the right */}
-                        &rarr;
-                    </Hyperlink>
+                    <span title="Collapse help panel">
+                        <Hyperlink
+                            onClick={() => setHelpExpanded(false)}
+                            
+                        >
+                            {/* Arrow pointing to the right */}
+                            &rarr;
+                        </Hyperlink>
+                    </span>
                 ) : (
-                    <Hyperlink
-                        onClick={() => setHelpExpanded(true)}
-                    >
-                        {/* Arrow pointing to the left */}
-                        &larr;
-                    </Hyperlink>
+                    <span title="Expand help panel">
+                        <Hyperlink
+                            onClick={() => setHelpExpanded(true)}
+                        >
+                            {/* Arrow pointing to the left */}
+                            &larr;
+                        </Hyperlink>
+                    </span>
                 )
             }
         </div>

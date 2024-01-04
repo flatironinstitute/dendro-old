@@ -40,6 +40,7 @@ const ImportDandiAssetPage: FunctionComponent<Props> = () => {
         content = (
             <SetupProjectPage
                 projectId={projectIdToUse}
+                onCurrentProjectChanged={() => {}}
             >
                 <ImportDandiAssetIntoProjectComponent
                     dandisetId={route.dandisetId}

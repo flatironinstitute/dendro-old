@@ -147,10 +147,12 @@ const calculateRightPanelWidth = (width: number) => {
         return 0
     }
     else if (width < 1200) {
-        return 250
+        return 300
     }
-    else {
-        return 350
+    else if (width < 1600) {
+        return 300
+    } {
+        return 500
     }
 }
 
