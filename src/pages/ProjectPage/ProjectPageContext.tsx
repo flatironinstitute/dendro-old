@@ -10,6 +10,7 @@ const adminMode = queryParameters.get('admin') === '1'
 
 type Props = {
     projectId: string
+    onCurrentProjectChanged: (project: DendroProject | undefined) => void
 }
 
 type OpenTabsState = {
@@ -163,7 +164,7 @@ const ProjectPageContext = React.createContext<ProjectPageContextType>({
     refreshProject: () => {}
 })
 
-export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({children, projectId}) => {
+export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({children, projectId, onCurrentProjectChanged}) => {
     const [project, setProject] = React.useState<DendroProject | undefined>()
     const [files, setFiles] = React.useState<DendroFile[] | undefined>()
     const [refreshFilesCode, setRefreshFilesCode] = React.useState(0)
@@ -179,6 +180,10 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
     const [openTabs, openTabsDispatch] = React.useReducer(openTabsReducer, {openTabs: [], currentTabName: undefined})
 
     const auth = useGithubAuth()
+
+    useEffect(() => {
+        onCurrentProjectChanged(project)
+    }, [project, onCurrentProjectChanged])
 
     useEffect(() => {
         const computeResourceId = project?.computeResourceId || import.meta.env.VITE_DEFAULT_COMPUTE_RESOURCE_ID

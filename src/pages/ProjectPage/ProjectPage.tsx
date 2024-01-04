@@ -23,19 +23,22 @@ import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow"
 import { HBoxLayout } from "@fi-sci/misc";
 import openFilesInNeurosift from "./openFilesInNeurosift";
 import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
+import { DendroProject } from "../../types/dendro-types";
 
 type Props = {
     width: number
     height: number
+    onCurrentProjectChanged: (project: DendroProject | undefined) => void
 }
 
-const ProjectPage: FunctionComponent<Props> = ({width, height}) => {
+const ProjectPage: FunctionComponent<Props> = ({width, height, onCurrentProjectChanged}) => {
     const {route} = useRoute()
     if (route.page !== 'project') throw Error('route.page != project')
     const projectId = route.projectId
     return (
         <SetupProjectPage
             projectId={projectId}
+            onCurrentProjectChanged={onCurrentProjectChanged}
         >
             <ProjectPageChild
                 width={width}
@@ -83,7 +86,7 @@ const projectPageViews: ProjectPageView[] = [
     }
 ]
 
-const ProjectPageChild: FunctionComponent<Props> = ({width, height}) => {
+const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({width, height}) => {
     const leftMenuPanelWidth = 150
     return (
         <SetupComputeResources>

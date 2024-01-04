@@ -16,6 +16,7 @@ import RegisterComputeResourcePage from "./pages/RegisterComputeResourcePage/Reg
 import useRoute from "./useRoute";
 import useWindowDimensions from "./useWindowDimensions";
 import ImportDandiAssetPage from "./pages/ImportDandiAssetPage/ImportDandiAssetPage";
+import { DendroProject } from "./types/dendro-types";
 
 type Props = {
     // none
@@ -47,6 +48,7 @@ type MainContentProps = {
 const MainContent: FunctionComponent<MainContentProps> = ({width, height}) => {
     const [rightPanelExpanded, setRightPanelExpanded] = useState(true)
     const rightPanelWidth = rightPanelExpanded ? calculateRightPanelWidth(width) : 30
+    const [currentProject, setCurrentProject] = useState<DendroProject | undefined>(undefined)
 
     return (
         <HBoxLayout
@@ -56,12 +58,14 @@ const MainContent: FunctionComponent<MainContentProps> = ({width, height}) => {
             <MainContent2
                 width={0}
                 height={0}
+                onCurrentProjectChanged={setCurrentProject}
             />
             <RightPanel
                 width={0}
                 height={0}
                 expanded={rightPanelExpanded}
                 setExpanded={setRightPanelExpanded}
+                currentProject={currentProject}
             />
         </HBoxLayout>
     )
@@ -72,9 +76,10 @@ type RightPanelProps = {
     height: number
     expanded: boolean
     setExpanded: (expanded: boolean) => void
+    currentProject: DendroProject | undefined
 }
 
-const RightPanel: FunctionComponent<RightPanelProps> = ({width, height, expanded, setExpanded}) => {
+const RightPanel: FunctionComponent<RightPanelProps> = ({width, height, expanded, setExpanded, currentProject}) => {
     return (
         <Splitter
             direction="vertical"
@@ -87,6 +92,7 @@ const RightPanel: FunctionComponent<RightPanelProps> = ({width, height, expanded
                 height={0}
                 expanded={expanded}
                 setExpanded={setExpanded}
+                currentProject={currentProject}
             />
             <RecentProjectsPanel
                 width={0}
@@ -100,15 +106,16 @@ const RightPanel: FunctionComponent<RightPanelProps> = ({width, height, expanded
 type MainContent2Props = {
     width: number
     height: number
+    onCurrentProjectChanged: (project: DendroProject | undefined) => void
 }
 
-const MainContent2: FunctionComponent<MainContent2Props> = ({width, height}) => {
+const MainContent2: FunctionComponent<MainContent2Props> = ({width, height, onCurrentProjectChanged}) => {
     const {route} = useRoute()
     return (
         (route.page === 'dandisets' || route.page === 'dandiset') ? (
             <DandiBrowser width={width} height={height} />
         ) : route.page === 'project' ? (
-            <ProjectPage width={width} height={height} />
+            <ProjectPage width={width} height={height} onCurrentProjectChanged={onCurrentProjectChanged} />
         ) : route.page === 'about' ? (
             <AboutPage width={width} height={height} />
         ) : route.page === 'compute-resource' ? (

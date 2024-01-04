@@ -4,7 +4,7 @@ class AnalysisSourceClient {
     constructor(private url: string, private path: string, private clonedRepo: ClonedRepo) {
     }
     static async create(url: string, setStatus: (status: string) => void) {
-        const {repoUrl, branch, path} = parseUrl(url);
+        const {repoUrl, branch, path} = parseAnalysisSourceUrl(url);
         setStatus(`Cloning repo ${repoUrl}`)
         const clonedRepo = new ClonedRepo({url: repoUrl, branch})
         await clonedRepo.initialize(setStatus)
@@ -22,7 +22,7 @@ class AnalysisSourceClient {
     }
 }
 
-const parseUrl = (url: string) => {
+export const parseAnalysisSourceUrl = (url: string) => {
     // for example, url = https://github.com/magland/dendro_analysis/tree/main/projects/eb87e88a
     if (!url.startsWith('https://github.com')) {
         throw new Error('Invalid url: ' + url);
@@ -39,14 +39,16 @@ const parseUrl = (url: string) => {
         return {
             repoUrl: `https://github.com/${owner}/${repo}`,
             branch,
-            path
+            path,
+            repoName: repo
         };
     }
     else if (!a) {
         return {
             repoUrl: url,
             branch: '',
-            path: ''
+            path: '',
+            repoName: repo
         };
     }
     else {

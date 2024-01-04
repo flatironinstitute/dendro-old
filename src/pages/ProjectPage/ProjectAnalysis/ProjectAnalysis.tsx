@@ -3,6 +3,7 @@ import { useProject } from "../ProjectPageContext"
 import AnalysisSourceClient from "./AnalysisSourceClient"
 import { Splitter } from "@fi-sci/splitter"
 import AnalysisSourceFileBrowser from "./AnalysisSourceFileBrowser"
+import AnalysisSourceFileView from "./AnalysisSourceFileView"
 
 type ProjectAnalysisProps = {
     width: number
@@ -65,6 +66,7 @@ type ProjectAnalysisChildProps = {
 
 const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({width, height, analysisSourceClient}) => {
     const initialSplitterPosition = 250
+    const [currentFileName, setCurrentFileName] = useState<string | undefined>(undefined)
     return (
         <Splitter
             width={width}
@@ -76,8 +78,14 @@ const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({wid
                 width={0}
                 height={0}
                 analysisSourceClient={analysisSourceClient}
+                onOpenFile={setCurrentFileName}
             />
-            <div>Test</div>
+            <AnalysisSourceFileView
+                width={0}
+                height={0}
+                analysisSourceClient={analysisSourceClient}
+                fileName={currentFileName}
+            />
         </Splitter>
     )
 }

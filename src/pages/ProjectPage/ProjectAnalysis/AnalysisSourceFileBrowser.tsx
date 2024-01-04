@@ -8,13 +8,14 @@ type AnalysisSourceFileBrowserProps = {
     width: number
     height: number
     analysisSourceClient: AnalysisSourceClient
+    onOpenFile: (path: string) => void
 }
 
 type AnalysisSourceFile = {
     path: string
 }
 
-const AnalysisSourceFileBrowser: FunctionComponent<AnalysisSourceFileBrowserProps> = ({width, height, analysisSourceClient}) => {
+const AnalysisSourceFileBrowser: FunctionComponent<AnalysisSourceFileBrowserProps> = ({width, height, analysisSourceClient, onOpenFile}) => {
     const [allFiles, setAllFiles] = useState<AnalysisSourceFile[] | undefined>(undefined)
 
     const [selectedFileNames, selectedFileNamesDispatch] = useReducer(selectedStringsReducer, new Set<string>())
@@ -63,7 +64,7 @@ const AnalysisSourceFileBrowser: FunctionComponent<AnalysisSourceFileBrowserProp
                 selectedFileNames={selectedFileNames}
                 selectedFileNamesDispatch={selectedFileNamesDispatch}
                 currentTabName={undefined}
-                onOpenFile={() => {}}
+                onOpenFile={onOpenFile}
                 multiSelect={false}
             />
         </div>

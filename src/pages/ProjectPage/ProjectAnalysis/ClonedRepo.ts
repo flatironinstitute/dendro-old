@@ -59,7 +59,8 @@ class ClonedRepo {
         return {subdirectories, files}
     }
     async readTextFile(p: string): Promise<string> {
-        const a = await fs.promises.readFile(p, 'utf8')
+        const fullPath = joinPaths(this.#dir, p)
+        const a = await fs.promises.readFile(fullPath, 'utf8')
         return a as string
     }
 }
