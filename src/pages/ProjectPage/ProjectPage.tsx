@@ -22,7 +22,7 @@ import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpi
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
 import { HBoxLayout } from "@fi-sci/misc";
 import openFilesInNeurosift from "./openFilesInNeurosift";
-import { DendroFile } from "../../types/dendro-types";
+import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
 
 type Props = {
     width: number
@@ -45,7 +45,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height}) => {
     )
 }
 
-export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
+export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
 
 type ProjectPageView = {
     type: ProjectPageViewType
@@ -64,6 +64,10 @@ const projectPageViews: ProjectPageView[] = [
     {
         type: 'project-jobs',
         label: 'Jobs'
+    },
+    {
+        type: 'project-analysis',
+        label: 'Analysis'
     },
     {
         type: 'dandi-import',
@@ -304,6 +308,12 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
                 <ProjectJobs
+                    width={width}
+                    height={height}
+                />
+            </div>
+            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-analysis' ? undefined : 'hidden'}}>
+                <ProjectAnalysis
                     width={width}
                     height={height}
                 />

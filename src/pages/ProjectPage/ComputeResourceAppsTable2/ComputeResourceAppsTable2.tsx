@@ -6,8 +6,9 @@ import ModalWindow from "@fi-sci/modal-window";
 import { App, fetchComputeResource, setComputeResourceApps } from "../../../dbInterface/dbInterface"
 import { DendroComputeResource } from "../../../types/dendro-types"
 import NewAppWindow from "../../ComputeResourcePage/NewAppWindow"
-import { Checkbox, selectedStringsReducer } from "../FileBrowser/FileBrowser2"
+import { selectedStringsReducer } from "../FileBrowser/FileBrowser2"
 import ComputeResourceAppsTableMenuBar2 from "./ComputeResourceAppsTableMenuBar2"
+import { Checkbox } from "../FileBrowser/FileBrowserTable";
 
 type Props = {
     computeResourceId: string

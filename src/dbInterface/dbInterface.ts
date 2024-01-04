@@ -131,6 +131,12 @@ export const setProjectComputeResourceId = async (projectId: string, computeReso
     if (!response.success) throw Error(`Error in setProjectComputeResourceId: ${response.error}`)
 }
 
+export const setProjectAnalysisSourceUrl = async (projectId: string, analysisSourceUrl: string, auth: Auth): Promise<void> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}/analysis_source_url`
+    const response = await putRequest(url, {analysisSourceUrl}, auth)
+    if (!response.success) throw Error(`Error in setProjectAnalysisSourceUrl: ${response.error}`)
+}
+
 export const fetchProject = async (projectId: string, auth: Auth): Promise<DendroProject | undefined> => {
     const url = `${apiBase}/api/gui/projects/${projectId}`
     const response = await getRequest(url, auth)

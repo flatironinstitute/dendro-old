@@ -3,9 +3,10 @@ import { useModalWindow } from "@fi-sci/modal-window"
 import { Hyperlink } from "@fi-sci/misc";
 import ModalWindow from "@fi-sci/modal-window";
 import { DendroComputeResource } from "../../types/dendro-types"
-import { Checkbox, selectedStringsReducer } from "../ProjectPage/FileBrowser/FileBrowser2"
+import { selectedStringsReducer } from "../ProjectPage/FileBrowser/FileBrowser2"
 import ComputeResourceAppsTableMenuBar from "./ComputeResourceAppsTableMenuBar"
 import NewAppWindow from "./NewAppWindow"
+import { Checkbox } from "../ProjectPage/FileBrowser/FileBrowserTable";
 
 type Props = {
     width: number

@@ -256,6 +256,34 @@ async def set_project_compute_resource_id(project_id, data: SetProjectComputeRes
 
     return SetProjectComputeResourceIdResponse(success=True)
 
+class SetProjectAnalysisSourceUrlRequest(BaseModel):
+    analysisSourceUrl: str
+
+class SetProjectAnalysisSourceUrlResponse(BaseModel):
+    success: bool
+
+@router.put("/{project_id}/analysis_source_url")
+@api_route_wrapper
+async def set_project_analysis_source_url(project_id, data: SetProjectAnalysisSourceUrlRequest, github_access_token: str = Header(...)):
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
+    assert user_id
+
+    project = await fetch_project(project_id, raise_on_not_found=True)
+    assert project
+
+    _check_user_can_edit_project(project, user_id)
+
+    # parse the request
+    analysis_source_url = data.analysisSourceUrl
+
+    await update_project(project_id, update={
+        'analysisSourceUrl': analysis_source_url,
+        'timestampModified': time.time()
+    })
+
+    return SetProjectAnalysisSourceUrlResponse(success=True)
+
 # set project users
 class SetProjectUsersRequest(BaseModel):
     users: List[DendroProjectUser]

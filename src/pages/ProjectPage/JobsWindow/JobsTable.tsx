@@ -6,8 +6,9 @@ import ComputeResourceNameDisplay from "../../../ComputeResourceNameDisplay";
 import { timeAgoString } from "../../../timeStrings";
 import { DendroJob } from "../../../types/dendro-types";
 import UserIdComponent from "../../../UserIdComponent";
-import { Checkbox, selectedStringsReducer } from "../FileBrowser/FileBrowser2";
+import { selectedStringsReducer } from "../FileBrowser/FileBrowser2";
 import JobsTableMenuBar from "./JobsTableMenuBar";
+import { Checkbox } from "../FileBrowser/FileBrowserTable";
 
 type Props = {
     width: number
