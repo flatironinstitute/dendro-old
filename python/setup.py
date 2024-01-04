@@ -35,7 +35,8 @@ setup(
             'motor',
             'simplejson',
             'pydantic',
-            'aiohttp'
+            'aiohttp',
+            'boto3'
         ]
     },
     entry_points={

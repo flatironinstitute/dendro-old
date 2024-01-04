@@ -1,5 +1,5 @@
-import { Settings } from "@mui/icons-material";
-import { FunctionComponent, useMemo } from "react";
+import { Edit, Settings } from "@mui/icons-material";
+import { FunctionComponent, useCallback, useMemo } from "react";
 import { useModalWindow } from "@fi-sci/modal-window"
 import { Hyperlink } from "@fi-sci/misc";
 import ModalWindow from "@fi-sci/modal-window";
@@ -10,6 +10,9 @@ import { useProject } from "./ProjectPageContext";
 import ProjectSettingsWindow from "./ProjectSettingsWindow";
 import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay";
 import ComputeResourceSection from "./ComputeResourceSection";
+import { IconButton } from "@mui/material";
+import { setProjectAnalysisSourceUrl } from "../../dbInterface/dbInterface";
+import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 
 type Props = {
     width: number
@@ -23,7 +26,7 @@ const headingStyle: React.CSSProperties = {
 
 const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
     const {setRoute} = useRoute()
-    const {project, files, jobs, projectId} = useProject()
+    const {project, files, jobs, projectId, projectRole, refreshProject} = useProject()
 
     const {visible: settingsWindowVisible, handleOpen: openSettingsWindow, handleClose: closeSettingsWindow} = useModalWindow()
 
@@ -56,11 +59,22 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
         }).filter(tag => tag !== undefined)
     }, [project])
 
+    const auth = useGithubAuth()
+
+    const handleEditAnalysisSourceUrl = useCallback(async () => {
+        if (!project) return
+        const newAnalysisSourceUrl = prompt('Enter new analysis source URL:', project.analysisSourceUrl || '')
+        if (newAnalysisSourceUrl != null) {
+            await setProjectAnalysisSourceUrl(project.projectId, newAnalysisSourceUrl, auth)
+            refreshProject()
+        }
+    }, [project, auth, refreshProject])
+
     return (
         <div className="ProjectHome" style={{position: 'absolute', width, height, overflowY: 'auto', padding: 10, background: 'white'}}>
             <div style={headingStyle}>Project: {project?.name}</div>
             &nbsp;
-            <table className="table1" style={{maxWidth: 500}}>
+            <table className="table1" style={{maxWidth: 800}}>
                 <tbody>
                     <tr key="project-name">
                         <td>Project name:</td>
@@ -97,6 +111,13 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
                     <tr key="num-jobs">
                         <td>Num. jobs:</td>
                         <td>{jobs?.length} (<Hyperlink onClick={() => setRoute({page: 'project', projectId, tab: 'project-jobs'})}>view jobs</Hyperlink>)</td>
+                    </tr>
+                    <tr key="analysis-source">
+                        <td>Analysis source:</td>
+                        <td>
+                            {project?.analysisSourceUrl && <a href={project?.analysisSourceUrl} target="_blank" rel="noreferrer">{project?.analysisSourceUrl}</a>}&nbsp;
+                            {['editor', 'admin'].includes(projectRole || '') && <IconButton onClick={handleEditAnalysisSourceUrl}><Edit /></IconButton>}
+                        </td>
                     </tr>
                 </tbody>
             </table>

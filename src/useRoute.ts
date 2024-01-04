@@ -27,6 +27,13 @@ export type Route = {
     page: 'about'
 } | {
     page: 'admin'
+} | {
+    page: 'importDandiAsset'
+    dandisetId: string
+    dandisetVersion: string
+    assetPath: string
+    assetUrl: string
+    projectName: string
 }
 
 const useRoute = () => {
@@ -95,6 +102,24 @@ const useRoute = () => {
                 resourceCode
             }
         }
+        else if (p === '/importDandiAsset') {
+            const dandisetId = searchParams.get('dandisetId')
+            const dandisetVersion = searchParams.get('dandisetVersion')
+            const assetPath = searchParams.get('assetPath')
+            const assetUrl = searchParams.get('assetUrl')
+            const projectName = searchParams.get('projectName')
+            if (!dandisetId || !dandisetVersion || !assetUrl || !assetPath || !projectName) {
+                throw new Error('Missing required query parameters')
+            }
+            return {
+                page: 'importDandiAsset',
+                dandisetId,
+                dandisetVersion,
+                assetPath,
+                assetUrl,
+                projectName
+            }
+        }
         else if (p === '/github/auth') {
             return {
                 page: 'github-auth'
@@ -146,6 +171,9 @@ const useRoute = () => {
         }
         else if (r.page === 'register-compute-resource') {
             navigate(`/register-compute-resource/${r.computeResourceId}/${r.resourceCode}` + queryString)
+        }
+        else if (r.page === 'importDandiAsset') {
+            navigate(`/importDandiAsset?dandisetId=${r.dandisetId}&dandisetVersion=${r.dandisetVersion}&assetPath=${r.assetPath}&assetUrl=${r.assetUrl}&projectName=${r.projectName}`)
         }
         else if (r.page === 'github-auth') {
             navigate('/github/auth' + queryString)

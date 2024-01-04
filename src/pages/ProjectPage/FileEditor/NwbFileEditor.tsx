@@ -107,15 +107,26 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
     const stagingStr2 = dandiStaging ? 'gui-staging.' : ''
 
     const handleOpenInNeurosift = useCallback(() => {
-        const u = `https://flatironinstitute.github.io/neurosift/?p=/nwb&url=${nwbUrl}`
+        let additionalQueryParams = ''
+        if (metadata.dandisetId) {
+            additionalQueryParams += `&dandisetId=${metadata.dandisetId}`
+        }
+        if (metadata.dandisetVersion) {
+            additionalQueryParams += `&dandisetVersion=${metadata.dandisetVersion}`
+        }
+        if (metadata.dandiAssetPath) {
+            const dandiAssetPathEncoded = encodeURIComponent(metadata.dandiAssetPath)
+            additionalQueryParams += `&dandiAssetPath=${dandiAssetPathEncoded}`
+        }
+        const u = `https://flatironinstitute.github.io/neurosift/?p=/nwb&url=${nwbUrl}${additionalQueryParams}`
         window.open(u, '_blank')
-    }, [nwbUrl])
+    }, [nwbUrl, metadata])
 
     useEffect(() => {
         if (!dandisetId) return
         if (!dandiAssetId) return
         ; (async () => {
-            const headers = getDandiApiHeaders(dandiStaging)
+            const {headers} = getDandiApiHeaders(dandiStaging)
             const response = await fetch(
                 `https://api${stagingStr}.dandiarchive.org/api/dandisets/${dandisetId}/versions/${dandisetVersion}/assets/${dandiAssetId}/`,
                 {

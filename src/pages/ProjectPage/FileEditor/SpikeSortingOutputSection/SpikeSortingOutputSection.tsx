@@ -40,33 +40,35 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
         return files.find(f => (f.fileName === fileName))
     }, [fileName, files])
 
-    const spikeSortingFigurlJob = useMemo(() => {
+    const spikeSortingAnalysisJob = useMemo(() => {
         if (!jobs) return undefined
         return jobs.find(j => {
-            if (j.processorName !== 'spike_sorting_figurl') return false
+            if (j.processorName !== 'create_spike_sorting_analysis') return false
             const rr = j.inputFiles.find(f => (f.name === 'recording'))
             const ss = j.inputFiles.find(f => (f.name === 'sorting'))
-            if ((!rr) || (!ss)) return false
+            const pp = j.inputParameters.find(p => (p.name === 'electrical_series_path'))
+            if ((!rr) || (!ss) || (!pp)) return false
             if (rr.fileName !== recordingFileName) return false
             if (ss.fileName !== fileName) return false
+            if (pp.value !== electricalSeriesPath) return false
             return true
         })
-    }, [jobs, recordingFileName, fileName])
+    }, [jobs, recordingFileName, fileName, electricalSeriesPath])
 
-    const spikeSortingFigurlFile = useMemo(() => {
-        if (!spikeSortingFigurlJob) return undefined
+    const spikeSortingAnalysisFile = useMemo(() => {
+        if (!spikeSortingAnalysisJob) return undefined
         if (!files) return undefined
-        const ff1 = spikeSortingFigurlJob.outputFiles.find(f => (f.name === 'output'))
+        const ff1 = spikeSortingAnalysisJob.outputFiles.find(f => (f.name === 'output'))
         const ff2 = files.find(f => (f.fileName === ff1?.fileName))
         return ff2
-    }, [spikeSortingFigurlJob, files])
+    }, [spikeSortingAnalysisJob, files])
 
-    const spikeSortingFigurlProcessor = useMemo(() => {
+    const spikeSortingAnalysisProcessor = useMemo(() => {
         if (!computeResource) return undefined
         if (!computeResource.spec) return undefined
         for (const app of computeResource.spec.apps) {
             for (const pp of app.processors) {
-                if (pp.name === 'spike_sorting_figurl') {
+                if (pp.name === 'create_spike_sorting_analysis') {
                     return pp
                 }
             }
@@ -77,12 +79,12 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
     const auth = useGithubAuth()
 
     const handlePrepareSpikeSortingView = useCallback(async () => {
-        if (!spikeSortingFigurlProcessor) return
+        if (!spikeSortingAnalysisProcessor) return
         if (!recordingFileName) return
         if (!electricalSeriesPath) return
         if (!files) return
         const jobDefinition: DendroProcessingJobDefinition = {
-            processorName: spikeSortingFigurlProcessor.name,
+            processorName: spikeSortingAnalysisProcessor.name,
             inputFiles: [
                 {
                     name: 'recording',
@@ -96,7 +98,7 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
             outputFiles: [
                 {
                     name: 'output',
-                    fileName: `.spike_sorting_figurl/${fileName}.figurl`
+                    fileName: `.spike_sorting_analysis/${fileName}.nh5`
                 }
             ],
             inputParameters: [
@@ -119,27 +121,35 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
         await createJob({
             projectId,
             jobDefinition,
-            processorSpec: spikeSortingFigurlProcessor,
+            processorSpec: spikeSortingAnalysisProcessor,
             files,
             batchId: undefined,
             requiredResources,
             runMethod: defaultRunMethod
         }, auth)
-    }, [spikeSortingFigurlProcessor, projectId, recordingFileName, auth, fileName, electricalSeriesPath, files, computeResource])
+    }, [spikeSortingAnalysisProcessor, projectId, recordingFileName, auth, fileName, electricalSeriesPath, files, computeResource])
 
     const handleOpenSpikeSortingView = useCallback(async () => {
-        if (!spikeSortingFigurlFile) return
-        const c = spikeSortingFigurlFile.content
+        if (!spikeSortingAnalysisFile) return
+        const c = spikeSortingAnalysisFile.content
         if (!c) return
         if (!c.startsWith('url:')) return
         const url = c.slice('url:'.length)
-        const x = await loadRemoteData(url)
-        if (!x) return
-        if (!x.startsWith('https:')) return
-        window.open(x, '_blank')
-    }, [spikeSortingFigurlFile])
 
-    const status = spikeSortingFigurlJob ? spikeSortingFigurlJob.status : undefined
+        // const x = await loadRemoteData(url)
+        // if (!x) return
+        // if (!x.startsWith('https:')) return
+        // window.open(x, '_blank')
+
+        const figureData = {
+            type: 'spike_sorting_analysis',
+            analysisFile: url
+        }
+        const url2 = `https://figurl.org/f?v=https://magland.github.io/fi-sci-dist/apps/figurl-spike-sorting-analysis&d=${encodeURI(JSON.stringify(figureData))}` 
+        window.open(url2, '_blank')
+    }, [spikeSortingAnalysisFile])
+
+    const status = spikeSortingAnalysisJob ? spikeSortingAnalysisJob.status : undefined
 
     const {visible: loadInScriptVisible, handleOpen: openLoadInScriptWindow, handleClose: closeLoadInScriptWindow} = useModalWindow()
 
@@ -161,8 +171,8 @@ const SpikeSortingOutputSection: FunctionComponent<SpikeSortingOutputSectionProp
     else if (status === 'failed') {
         openSpikeSortingViewElement = <div>Error creating spike sorting view</div>
     }
-    else if (!spikeSortingFigurlProcessor) {
-        openSpikeSortingViewElement = <div>No spike_sorting_figurl processor found</div>
+    else if (!spikeSortingAnalysisProcessor) {
+        openSpikeSortingViewElement = <div>No spike_sorting_analysis processor found</div>
     }
     else {
         openSpikeSortingViewElement = (

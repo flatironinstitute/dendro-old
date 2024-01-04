@@ -22,20 +22,23 @@ import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpi
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
 import { HBoxLayout } from "@fi-sci/misc";
 import openFilesInNeurosift from "./openFilesInNeurosift";
-import { DendroFile } from "../../types/dendro-types";
+import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
+import { DendroProject } from "../../types/dendro-types";
 
 type Props = {
     width: number
     height: number
+    onCurrentProjectChanged: (project: DendroProject | undefined) => void
 }
 
-const ProjectPage: FunctionComponent<Props> = ({width, height}) => {
+const ProjectPage: FunctionComponent<Props> = ({width, height, onCurrentProjectChanged}) => {
     const {route} = useRoute()
     if (route.page !== 'project') throw Error('route.page != project')
     const projectId = route.projectId
     return (
         <SetupProjectPage
             projectId={projectId}
+            onCurrentProjectChanged={onCurrentProjectChanged}
         >
             <ProjectPageChild
                 width={width}
@@ -45,7 +48,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height}) => {
     )
 }
 
-export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
+export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
 
 type ProjectPageView = {
     type: ProjectPageViewType
@@ -66,6 +69,10 @@ const projectPageViews: ProjectPageView[] = [
         label: 'Jobs'
     },
     {
+        type: 'project-analysis',
+        label: 'Analysis'
+    },
+    {
         type: 'dandi-import',
         label: 'DANDI Import'
     },
@@ -79,7 +86,7 @@ const projectPageViews: ProjectPageView[] = [
     }
 ]
 
-const ProjectPageChild: FunctionComponent<Props> = ({width, height}) => {
+const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({width, height}) => {
     const leftMenuPanelWidth = 150
     return (
         <SetupComputeResources>
@@ -253,7 +260,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
     const handleImportItems = useCallback(async (items: {dandisetId: string, dandisetVersion: string, assetItem: AssetsResponseItem}[]) => {
         const files: {nwbUrl: string, dandisetId: string, dandisetVersion: string, assetId: string, assetPath: string, staging: boolean}[] = []
         for (const item of items) {
-            const headers = getDandiApiHeaders(staging)
+            const {headers} = getDandiApiHeaders(staging)
             const response = await fetch(
                 `https://api${stagingStr}.dandiarchive.org/api/dandisets/${item.dandisetId}/versions/${item.dandisetVersion}/assets/${item.assetItem.asset_id}/`,
                 {
@@ -304,6 +311,12 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
                 <ProjectJobs
+                    width={width}
+                    height={height}
+                />
+            </div>
+            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-analysis' ? undefined : 'hidden'}}>
+                <ProjectAnalysis
                     width={width}
                     height={height}
                 />

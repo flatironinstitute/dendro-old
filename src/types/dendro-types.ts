@@ -20,6 +20,7 @@ export type DendroProject = {
     users: DendroProjectUser[]
     publiclyReadable: boolean
     computeResourceId?: string | null
+    analysisSourceUrl?: string
     tags: string[]
     timestampCreated: number
     timestampModified: number
@@ -34,6 +35,7 @@ export const isDendroProject = (x: any): x is DendroProject => {
         users: isArrayOf(isDendroProjectUser),
         publiclyReadable: isBoolean,
         computeResourceId: optional(isOneOf([isString, isNull])),
+        analysisSourceUrl: optional(isString),
         tags: isArrayOf(isString),
         timestampCreated: isNumber,
         timestampModified: isNumber

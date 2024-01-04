@@ -1,13 +1,14 @@
 import { FunctionComponent, useCallback } from "react";
 import { Splitter } from "@fi-sci/splitter";
 import TabWidget from "../../TabWidget/TabWidget";
-import FileBrowser2, { FileIcon } from "./FileBrowser/FileBrowser2";
+import FileBrowser2 from "./FileBrowser/FileBrowser2";
 import FileEditor from "./FileEditor/FileEditor";
 import { useProject } from "./ProjectPageContext";
 import JobView from "./JobView/JobView";
 import { confirm } from "../../confirm_prompt_alert";
 import { DandiUploadTask } from "./DandiUpload/prepareDandiUploadTask";
 import { PluginAction } from "../../plugins/DendroFrontendPlugin";
+import { FileIcon } from "./FileBrowser/FileBrowserTable";
 
 type ProjectFilesProps = {
     width: number

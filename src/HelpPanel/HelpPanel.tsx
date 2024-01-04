@@ -1,9 +1,11 @@
-import { FunctionComponent, useEffect, useMemo, useState } from "react"
-import useRoute from "../useRoute"
-import Markdown from "../Markdown/Markdown"
+import { Hyperlink } from "@fi-sci/misc"
 import nunjucks from "nunjucks"
+import { FunctionComponent, useEffect, useMemo, useState } from "react"
 import { useGithubAuth } from "../GithubAuth/useGithubAuth"
-import { Hyperlink } from "@fi-sci/misc";
+import Markdown from "../Markdown/Markdown"
+import { DendroProject } from "../types/dendro-types"
+import useRoute from "../useRoute"
+import { parseAnalysisSourceUrl } from "../pages/ProjectPage/ProjectAnalysis/AnalysisSourceClient"
 
 nunjucks.configure({ autoescape: true })
 
@@ -12,9 +14,10 @@ type HelpPanelProps = {
     height: number
     expanded: boolean
     setExpanded: (helpExpanded: boolean) => void
+    currentProject: DendroProject | undefined
 }
 
-const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, setExpanded}) => {
+const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, setExpanded, currentProject}) => {
     const {route, staging} = useRoute()
     const [markdownSource, setMarkdownSource] = useState('')
     const [commonMarkdownSource, setCommonMarkdownSource] = useState('')
@@ -42,6 +45,9 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, 
             else if (tab === 'project-jobs') {
                 sourcePath = '/help/project-project-jobs.md'
             }
+            else if (tab === 'project-analysis') {
+                sourcePath = '/help/project-project-analysis.md'
+            }
             else if (tab === 'dandi-import') {
                 sourcePath = '/help/project-dandi-import.md'
             }
@@ -65,11 +71,28 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, 
         })()
     }, [])
 
+    const projectInfo = useMemo(() => {
+        if (!currentProject) return {}
+        const ret: any = {
+            ...currentProject
+        }
+        if (currentProject.analysisSourceUrl) {
+            const {repoUrl, repoName, branch, path} = parseAnalysisSourceUrl(currentProject.analysisSourceUrl)
+            ret['analysisSource'] = {
+                repoUrl,
+                branch,
+                path,
+                repoName
+            }
+        }
+        return ret
+    }, [currentProject])
+
     const processedMarkdownSource = useMemo(() => {
-        let x = nunjucks.renderString(markdownSource, {staging, route, signedIn})
+        let x = nunjucks.renderString(markdownSource, {staging, route, signedIn, project: projectInfo})
         x = x + `\n\n---\n${commonMarkdownSource}`
         return x
-    }, [markdownSource, staging, route, signedIn, commonMarkdownSource])
+    }, [markdownSource, staging, route, signedIn, commonMarkdownSource, projectInfo])
 
     // if not expanded, we don't show the main content (because it looks bad if only a small portion is showing)
     // but we do render the component so that it can show the top bar

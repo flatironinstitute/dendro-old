@@ -10,7 +10,7 @@ type Props = {
     height: number
 }
 
-export const getDandiApiHeaders = (useStaging: boolean): {[key: string]: string} => {
+export const getDandiApiHeaders = (useStaging: boolean): {headers: {[key: string]: string}, apiKeyProvided: boolean} => {
     const headers: {[key: string]: string} = {}
     const dandiApiKey = useStaging ? (
         localStorage.getItem('dandiStagingApiKey') || ''
@@ -20,7 +20,7 @@ export const getDandiApiHeaders = (useStaging: boolean): {[key: string]: string}
     if (dandiApiKey) {
         headers['Authorization'] = `token ${dandiApiKey}`
     }
-    return headers
+    return {headers, apiKeyProvided: !!dandiApiKey}
 }
 
 
@@ -35,9 +35,10 @@ const DandiBrowser: FunctionComponent<Props> = ({width, height}) => {
         let canceled = false
         setSearchResults([])
         ; (async () => {
-            const headers = getDandiApiHeaders(staging)
+            const {headers, apiKeyProvided} = getDandiApiHeaders(staging)
+            const embargoedStr = apiKeyProvided ? 'true,false' : 'false'
             const response = await fetch(
-                `https://api${stagingStr}.dandiarchive.org/api/dandisets/?page=1&page_size=50&ordering=-modified&search=${searchText}&draft=true&empty=false&embargoed=true`,
+                `https://api${stagingStr}.dandiarchive.org/api/dandisets/?page=1&page_size=50&ordering=-modified&search=${searchText}&draft=true&empty=false&embargoed=${embargoedStr}`,
                 {
                     headers
                 }
