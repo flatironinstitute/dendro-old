@@ -253,7 +253,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
     const handleImportItems = useCallback(async (items: {dandisetId: string, dandisetVersion: string, assetItem: AssetsResponseItem}[]) => {
         const files: {nwbUrl: string, dandisetId: string, dandisetVersion: string, assetId: string, assetPath: string, staging: boolean}[] = []
         for (const item of items) {
-            const headers = getDandiApiHeaders(staging)
+            const {headers} = getDandiApiHeaders(staging)
             const response = await fetch(
                 `https://api${stagingStr}.dandiarchive.org/api/dandisets/${item.dandisetId}/versions/${item.dandisetVersion}/assets/${item.assetItem.asset_id}/`,
                 {

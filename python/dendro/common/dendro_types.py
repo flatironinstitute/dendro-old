@@ -17,6 +17,7 @@ class DendroProject(BaseModel):
     timestampCreated: float
     timestampModified: float
     computeResourceId: Union[str, None] = None # it seems this needs to go at the end, otherwise it will be required by pydantic - not sure why
+    analysisSourceUrl: Union[str, None] = None
 
 class DendroJobInputFile(BaseModel):
     name: str

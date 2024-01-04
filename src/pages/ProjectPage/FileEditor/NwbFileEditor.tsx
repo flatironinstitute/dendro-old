@@ -126,7 +126,7 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
         if (!dandisetId) return
         if (!dandiAssetId) return
         ; (async () => {
-            const headers = getDandiApiHeaders(dandiStaging)
+            const {headers} = getDandiApiHeaders(dandiStaging)
             const response = await fetch(
                 `https://api${stagingStr}.dandiarchive.org/api/dandisets/${dandisetId}/versions/${dandisetVersion}/assets/${dandiAssetId}/`,
                 {

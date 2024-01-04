@@ -36,7 +36,7 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
         let canceled = false
         setDandisetResponse(null)
         ; (async () => {
-            const headers = getDandiApiHeaders(useStaging || false)
+            const {headers} = getDandiApiHeaders(useStaging || false)
             const response = await fetch(
                 `https://api${stagingStr}.dandiarchive.org/api/dandisets/${dandisetId}`,
                 {
@@ -62,7 +62,7 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
         if (!dandisetResponse) return
         if (!V) return
         ; (async () => {
-            const headers = getDandiApiHeaders(useStaging || false)
+            const {headers} = getDandiApiHeaders(useStaging || false)
             const response = await fetch(
                 `https://api${stagingStr}.dandiarchive.org/api/dandisets/${dandisetId}/versions/${V.version}/info/`,
                 {headers}
@@ -88,7 +88,7 @@ const DandisetView: FunctionComponent<DandisetViewProps> = ({dandisetId, width, 
         if (!V) return
         ; (async () => {
             let rr: AssetsResponse[] = []
-            const headers = getDandiApiHeaders(useStaging || false)
+            const {headers} = getDandiApiHeaders(useStaging || false)
             let uu: string | null = `https://api${stagingStr}.dandiarchive.org/api/dandisets/${dandisetId}/versions/${V.version}/assets/?page_size=1000`
             let count = 0
             while (uu) {
