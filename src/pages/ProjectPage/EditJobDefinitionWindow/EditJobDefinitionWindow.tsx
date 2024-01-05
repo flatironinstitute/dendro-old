@@ -502,7 +502,7 @@ const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({paramet
 
 type FloatEditProps = {
     value: any
-    setValue: (value: number | undefined) => void
+    setValue: (value: number | null) => void
     setValid: (valid: boolean) => void
     optional?: boolean
 }
@@ -526,7 +526,7 @@ const FloatEdit: FunctionComponent<FloatEditProps> = ({value, setValue, setValid
     useEffect(() => {
         if (internalValue === undefined) return
         if ((optional) && (internalValue === '')) {
-            setValue(undefined)
+            setValue(null)
             setValid(true)
         }
         else {
@@ -570,7 +570,7 @@ function stringIsValidFloat(s: string) {
 
 type IntEditProps = {
     value: any
-    setValue: (value: number | undefined) => void
+    setValue: (value: number | null) => void
     setValid: (valid: boolean) => void
     optional?: boolean
 }
@@ -594,7 +594,7 @@ const IntEdit: FunctionComponent<IntEditProps> = ({value, setValue, setValid, op
     useEffect(() => {
         if (internalValue === undefined) return
         if ((optional) && (internalValue === '')) {
-            setValue(undefined)
+            setValue(null)
             setValid(true)
         }
         else {
