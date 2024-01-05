@@ -512,6 +512,9 @@ const deepEqual = (a: any, b: any): boolean => {
     if (typeof a !== typeof b) {
         return false
     }
+    if (a === null) {
+        return b === null
+    }
     if (typeof a === 'object') {
         if (Array.isArray(a)) {
             if (!Array.isArray(b)) {
