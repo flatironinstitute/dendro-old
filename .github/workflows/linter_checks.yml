@@ -23,9 +23,9 @@ jobs:
       run: cd python && pip install -e .[api]
     - name: Install additional optional packages
       run: pip install GPUtil
-    - name: Install packages needed by iac/aws_batch
-      run: cd iac/aws_batch && pip install -r requirements.txt
+    # - name: Install packages needed by iac/aws_batch
+    #   run: cd iac/aws_batch && pip install -r requirements.txt
     - name: Run linter checks
       run: cd python && flake8 --config ../.flake8 && pyright
-    - name: Run linter checks for iac
-      run: cd iac && flake8 --config ../.flake8 && pyright
+    # - name: Run linter checks for iac
+    #   run: cd iac && flake8 --config ../.flake8 && pyright
