@@ -304,7 +304,11 @@ async def set_project_users(project_id, data: SetProjectUsersRequest, github_acc
     _check_user_is_project_admin(project, user_id)
 
     # parse the request
-    users = [x.dict() for x in data.users]
+    # support both pydantic v1 and v2
+    try:
+        users = [x.model_dump() for x in data.users]
+    except:
+        users = [x.dict() for x in data.users]
 
     await update_project(project_id, update={
         'users': users,

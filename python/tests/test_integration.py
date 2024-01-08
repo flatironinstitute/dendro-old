@@ -4,6 +4,7 @@ import time
 import tempfile
 import shutil
 import json
+import yaml
 
 
 @pytest.mark.asyncio
@@ -51,6 +52,13 @@ async def test_integration(tmp_path):
         compute_resource_dir = tmpdir + '/compute_resource'
         os.mkdir(compute_resource_dir)
         compute_resource_id, compute_resource_private_key = register_compute_resource(dir=compute_resource_dir)
+        config_fname = compute_resource_dir + '/.dendro-compute-resource-node.yaml'
+        assert os.path.exists(config_fname)
+        with open(config_fname, 'r') as f:
+            config = yaml.safe_load(f)
+        config['AVAILABLE_JOB_RUN_METHODS'] = 'local,slurm'
+        with open(config_fname, 'w') as f:
+            yaml.dump(config, f)
 
         # gui: Register compute resource
         _register_compute_resource(compute_resource_id=compute_resource_id, compute_resource_private_key=compute_resource_private_key, github_access_token=github_access_token, name='test-cr')
