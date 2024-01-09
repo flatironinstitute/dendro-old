@@ -27,5 +27,6 @@ async def find_projects(data: FindProjectsRequest) -> CreateProjectResponse:
     projects: List[DendroProject] = []
     for project_id in project_ids:
         p = await fetch_project(project_id)
-        projects.append(p)
+        if p is not None:
+            projects.append(p)
     return CreateProjectResponse(projects=projects, success=True)
