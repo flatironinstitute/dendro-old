@@ -1,5 +1,5 @@
 import { HBoxLayout, VBoxLayout } from "@fi-sci/misc";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import ApplicationBar, { applicationBarHeight } from "./ApplicationBar";
 import GitHubAuthPage from "./GitHub/GitHubAuthPage";
 import HelpPanel from "./HelpPanel/HelpPanel";
@@ -26,15 +26,19 @@ const MainWindow: FunctionComponent<Props> = () => {
     const {width, height} = useWindowDimensions()
     const H1 = applicationBarHeight
     const H2 = height - applicationBarHeight
+    const [contextTitle, setContextTitle] = useState<string | undefined>(undefined)
     return (
         <VBoxLayout
             width={width}
             heights={[H1, H2]}
         >
-            <ApplicationBar />
+            <ApplicationBar
+                contextTitle={contextTitle}
+            />
             <MainContent
                 width={0} // filled in by VBoxLayout
                 height={0} // filled in by VBoxLayout
+                onContextTitle={setContextTitle}
             />
         </VBoxLayout>
     )
@@ -43,12 +47,22 @@ const MainWindow: FunctionComponent<Props> = () => {
 type MainContentProps = {
     width: number
     height: number
+    onContextTitle: (contextTitle: string | undefined) => void
 }
 
-const MainContent: FunctionComponent<MainContentProps> = ({width, height}) => {
+const MainContent: FunctionComponent<MainContentProps> = ({width, height, onContextTitle}) => {
     const [rightPanelExpanded, setRightPanelExpanded] = useState(true)
     const rightPanelWidth = rightPanelExpanded ? calculateRightPanelWidth(width) : 30
     const [currentProject, setCurrentProject] = useState<DendroProject | undefined>(undefined)
+
+    useEffect(() => {
+        if (currentProject) {
+            onContextTitle(currentProject.name)
+        }
+        else {
+            onContextTitle(undefined)
+        }
+    }, [currentProject, onContextTitle])
 
     return (
         <HBoxLayout

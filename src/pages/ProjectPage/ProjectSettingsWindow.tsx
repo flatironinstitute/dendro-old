@@ -86,9 +86,9 @@ const EditProjectNameComponent: FunctionComponent<{projectName: string | undefin
             <span>
                 <input type="text" value={editText} onChange={e => setEditText(e.target.value)} />
                 &nbsp;
-                <button onClick={() => setEditing(false)}>Cancel</button>
-                &nbsp;
                 <button onClick={() => {setProjectName(editText); setEditing(false)}}>Save</button>
+                &nbsp;
+                <button onClick={() => setEditing(false)}>Cancel</button>
             </span>
         )
     }

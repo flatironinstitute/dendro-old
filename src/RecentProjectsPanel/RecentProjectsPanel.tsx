@@ -26,12 +26,28 @@ const initialRecentProjects = (): DendroProject[] => {
     }
 }
 
+const deepEqual = (p1: {[key: string]: any}, p2: {[key: string]: any}) => {
+    for (const key of Object.keys(p1)) {
+        if (p1[key] !== p2[key]) return false
+    }
+    for (const key of Object.keys(p2)) {
+        if (p1[key] !== p2[key]) return false
+    }
+    return true
+}
+
+const projectsMatch = (p1: DendroProject, p2: DendroProject) => {
+    // it's important to compare all the fields
+    // so that if the user changes the name of a project, it will be updated in the recent projects list
+    return deepEqual(p1, p2)
+}
+
 const useRecentProjects = () => {
     const [recentProjects, setRecentProjects] = useState<DendroProject[]>(initialRecentProjects())
 
     const addRecentProject = useCallback((project: DendroProject) => {
         // this is important so we don't get an infinite loop
-        if (recentProjects.length > 0 && recentProjects[0].projectId === project.projectId) return
+        if (recentProjects.length > 0 && projectsMatch(recentProjects[0], project)) return
         let newRecentProjects = recentProjects.filter(rp => rp.projectId !== project.projectId)
         newRecentProjects.unshift(project)
         newRecentProjects = newRecentProjects.slice(0, 10)

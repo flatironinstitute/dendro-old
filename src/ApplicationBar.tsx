@@ -10,14 +10,14 @@ import { SmallIconButton } from "@fi-sci/misc";
 import useRoute from "./useRoute";
 
 type Props = {
-    // none
+    contextTitle?: string
 }
 
 export const applicationBarHeight = 45
 export const applicationBarColor = '#bac'
 export const applicationBarColorDarkened = '#546'
 
-const ApplicationBar: FunctionComponent<Props> = () => {
+const ApplicationBar: FunctionComponent<Props> = ({contextTitle}) => {
     const {setRoute} = useRoute()
     const {signedIn, userId} = useGithubAuth()
 
@@ -37,7 +37,14 @@ const ApplicationBar: FunctionComponent<Props> = () => {
             <AppBar position="static" style={{height: applicationBarHeight - 10, color: 'black', background: applicationBarColor}}>
                 <Toolbar style={{minHeight: applicationBarHeight - 10}}>
                     <img src="/dendro.png" alt="logo" height={30} style={{paddingBottom: 1, cursor: 'pointer'}} onClick={onHome} />
-                    <div onClick={onHome} style={{cursor: 'pointer'}}>&nbsp;&nbsp;&nbsp;dendro (alpha)</div>
+                    <div onClick={onHome} style={{cursor: 'pointer'}}>
+                        &nbsp;&nbsp;&nbsp;dendro (alpha)
+                        {
+                            contextTitle && (
+                                <span style={{fontFamily: 'courier', color: 'purple'}}> - {contextTitle}</span>
+                            )
+                        }
+                    </div>
                     <span style={{marginLeft: 'auto'}} />
                     <span>
                         <SmallIconButton
