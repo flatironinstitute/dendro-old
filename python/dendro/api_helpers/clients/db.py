@@ -340,3 +340,14 @@ async def fetch_jobs_including_deleted(*, compute_resource_id: str, user_id: str
         for job in jobs:
             job.jobPrivateKey = '' # hide the private key
     return jobs
+
+async def fetch_files_with_content_string(content_string: str) -> List[DendroFile]:
+    client = _get_mongo_client()
+    files_collection = client['dendro']['files']
+    files = await files_collection.find({
+        'content': content_string
+    }).to_list(length=None)
+    for file in files:
+        _remove_id_field(file)
+    files = [DendroFile(**file) for file in files] # validate files
+    return files

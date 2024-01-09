@@ -140,7 +140,7 @@ const ImportDandiAssetIntoProjectComponent: FunctionComponent<ImportDandiAssetIn
     if (!file) {
         return (
             <div style={{paddingTop: 25, paddingBottom: 25}}>
-                <div>Importing {projectFileName} into project {project?.name}</div>
+                <div>Do you wish to import {projectFileName} into project {project?.name}?</div>
                 <div style={{paddingTop: 20}}>
                     <Button onClick={handleImport}>Import</Button>
                 </div>
