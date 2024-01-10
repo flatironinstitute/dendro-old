@@ -19,6 +19,7 @@ import "react-ipynb-renderer/dist/styles/default.css";
 //import "react-ipynb-renderer/dist/styles/solarizedl.css";
 
 import './AnalysisSourceFileView.css'
+import DOMPurify from "dompurify";
 
 type AnalysisSourceFileViewProps = {
     width: number
@@ -113,7 +114,7 @@ const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = (
                     <IpynbRenderer
                         ipynb={obj ? obj : {}}
                         syntaxTheme="ghcolors"
-                        // htmlFilter={(html: string) => (DOMPurify.sanitize(html, { ADD_TAGS: ['iframe'], ADD_ATTR: []}))}
+                        htmlFilter={(html: string) => (DOMPurify.sanitize(html, { ADD_TAGS: ['iframe'], ADD_ATTR: []}))}
                     />
                 </div>
             )
