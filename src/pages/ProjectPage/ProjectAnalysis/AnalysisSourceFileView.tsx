@@ -19,7 +19,6 @@ import "react-ipynb-renderer/dist/styles/default.css";
 //import "react-ipynb-renderer/dist/styles/solarizedl.css";
 
 import './AnalysisSourceFileView.css'
-import DOMPurify from "dompurify";
 
 type AnalysisSourceFileViewProps = {
     width: number
