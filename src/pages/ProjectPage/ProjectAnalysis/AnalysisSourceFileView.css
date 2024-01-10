@@ -1,0 +1,7 @@
+.ipynb-renderer-root pre {
+    font-size: 12px!important;
+}
+
+.ipynb-renderer-root div.output_html {
+    font-size: 15px!important;
+}
