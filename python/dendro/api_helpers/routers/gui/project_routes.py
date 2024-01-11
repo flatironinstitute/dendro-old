@@ -304,7 +304,8 @@ async def set_project_users(project_id, data: SetProjectUsersRequest, github_acc
     _check_user_is_project_admin(project, user_id)
 
     # parse the request
-    users = [x.dict() for x in data.users]
+    # support both pydantic v1 and v2
+    users = [_model_dump(x) for x in data.users]
 
     await update_project(project_id, update={
         'users': users,
@@ -333,3 +334,10 @@ async def admin_get_all_projects(github_access_token: str = Header(...)):
 
     projects = await fetch_all_projects()
     return AdminGetAllProjectsResponse(projects=projects, success=True)
+
+def _model_dump(model, exclude_none=False):
+    # handle both pydantic v1 and v2
+    if hasattr(model, 'model_dump'):
+        return model.model_dump(exclude_none=exclude_none)
+    else:
+        return model.dict(exclude_none=exclude_none)

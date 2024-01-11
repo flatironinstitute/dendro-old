@@ -1,7 +1,7 @@
 import { Button } from "@mui/material"
 import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth"
-import { createProject, setUrlFile } from "../../dbInterface/dbInterface"
+import { createProject, setProjectTags, setUrlFile } from "../../dbInterface/dbInterface"
 import useRoute from "../../useRoute"
 import { SetupProjectPage, useProject } from "../ProjectPage/ProjectPageContext"
 import useProjectsForUser from "../ProjectsPage/useProjectsForUser"
@@ -96,6 +96,7 @@ const ImportDandiAssetIntoProjectComponent: FunctionComponent<ImportDandiAssetIn
         if (!files) return undefined
         return files.find(file => file.fileName === projectFileName)
     }, [files, projectFileName])
+    const [importStatus, setImportStatus] = useState<string>('')
 
     const auth = useGithubAuth()
 
@@ -117,6 +118,7 @@ const ImportDandiAssetIntoProjectComponent: FunctionComponent<ImportDandiAssetIn
             console.warn(`Not a valid asset URL: ${assetUrl}`)
             return
         }
+        setImportStatus('Importing...')
         const aa = assetUrl.split('/')
         const assetId = aa[5]
         const metadata = {
@@ -133,6 +135,13 @@ const ImportDandiAssetIntoProjectComponent: FunctionComponent<ImportDandiAssetIn
             metadata,
             auth
         )
+        setImportStatus('Adding tag...')
+        const newTag = `dandiset${staging ? '-staging' : ''}.${dandisetId}`
+        if (!project.tags.includes(newTag)) {
+            const newTags = [...project.tags, newTag]
+            await setProjectTags(project.projectId, newTags, auth)
+        }
+        setImportStatus('Done.')
         setRoute({page: 'project', projectId: project.projectId})
     }, [project, projectFileName, assetUrl, dandisetId, dandisetVersion, assetPath, auth, setRoute])
 
@@ -140,9 +149,12 @@ const ImportDandiAssetIntoProjectComponent: FunctionComponent<ImportDandiAssetIn
     if (!file) {
         return (
             <div style={{paddingTop: 25, paddingBottom: 25}}>
-                <div>Importing {projectFileName} into project {project?.name}</div>
+                <div>Do you wish to import {projectFileName} into project {project?.name}?</div>
                 <div style={{paddingTop: 20}}>
-                    <Button onClick={handleImport}>Import</Button>
+                    <Button onClick={handleImport} disabled={!!importStatus}>Import</Button>
+                </div>
+                <div>
+                    {importStatus}
                 </div>
             </div>
         )

@@ -1,7 +1,7 @@
 import { FunctionComponent, useEffect, useMemo, useState } from "react"
 import AnalysisSourceClient from "./AnalysisSourceClient"
 import ReactSyntaxHighlighter from "react-syntax-highlighter"
-import { IpynbRenderer } from "react-ipynb-renderer"
+import {IpynbRenderer} from "react-ipynb-renderer"
 
 // select jupyter theme
 import "react-ipynb-renderer/dist/styles/default.css";
@@ -13,10 +13,13 @@ import "react-ipynb-renderer/dist/styles/default.css";
 //import "react-ipynb-renderer/dist/styles/gruvboxd.css";
 //import "react-ipynb-renderer/dist/styles/gruvboxl.css";
 //import "react-ipynb-renderer/dist/styles/monokai.css";
-//import "react-ipynb-renderer/dist/styles/oceans16.css";
+// import "react-ipynb-renderer/dist/styles/oceans16.css";
 //import "react-ipynb-renderer/dist/styles/onedork.css";
 //import "react-ipynb-renderer/dist/styles/solarizedd.css";
 //import "react-ipynb-renderer/dist/styles/solarizedl.css";
+
+import './AnalysisSourceFileView.css'
+import DOMPurify from "dompurify";
 
 type AnalysisSourceFileViewProps = {
     width: number
@@ -65,13 +68,53 @@ const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = (
             }
             catch (err) {
                 content = <div>Error parsing ipynb file</div>
-                obj = undefined
+                obj = {}
+            }
+            // replace http text with links
+            // the commented out code below is for embedding the content of the link in an iframe
+            for (const cell of (obj.cells || [])) {
+                const outputs = cell.outputs || []
+                const newOutputs = []
+                for (const output of outputs) {
+                    let replaced = false
+                    if (output.output_type === 'stream') {
+                        let txt = ''
+                        if ((output.text) && (Array.isArray(output.text)) && (output.text.length === 1)) txt = output.text[0]
+                        // if (txt.startsWith('https://figurl.org/f?')) {
+                        if (txt.startsWith('https://') || txt.startsWith('http://')) {
+                            replaced = true
+                            const url = txt
+                            // const html = `
+                            //     <a href="${url}" target="_blank">${url}</a><br>
+                            //     <iframe src="${url}" width="100%" height="600"></iframe>
+                            // `
+                            const html = `<a href="${url}" target="_blank">${url}</a>`
+                            newOutputs.push({
+                                "data": {
+                                 "text/html": [
+                                  html
+                                 ],
+                                 "text/plain": [
+                                  "<IPython.core.display.HTML object>"
+                                 ]
+                                },
+                                "metadata": {},
+                                "output_type": "display_data"
+                               })
+                        }
+                    }
+                    if (!replaced) {
+                        newOutputs.push(output)
+                    }
+                }
+                cell.outputs = newOutputs
             }
             content = (
                 <div style={{position: 'absolute', width, top: topBarHeight, height: height - topBarHeight, overflowY: 'auto'}}>
                     <IpynbRenderer
                         ipynb={obj ? obj : {}}
-                        syntaxTheme="darcula"
+                        syntaxTheme="ghcolors"
+                        htmlFilter={(html: string) => (DOMPurify.sanitize(html, { ADD_TAGS: ['iframe'], ADD_ATTR: []}))}
                     />
                 </div>
             )
