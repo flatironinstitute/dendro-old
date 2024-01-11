@@ -25,8 +25,10 @@ app = FastAPI()
 # Set up CORS
 origins = [
     "http://localhost:3000",
+    "http://localhost:3001",
     "http://localhost:5173",
-    "https://dendro.vercel.app"
+    "https://dendro.vercel.app",
+    "https://flatironinstitute.github.io"
 ]
 
 app.add_middleware(

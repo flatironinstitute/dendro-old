@@ -12,7 +12,7 @@ type Props = {
 const ProjectsPage: FunctionComponent<Props> = ({width, height}) => {
     const {setRoute} = useRoute()
     return (
-        <div className="projects-page">
+        <div className="projects-page" style={{position: 'absolute', width, height, overflowY: 'auto'}}>
             <h3>Your projects</h3>
             <ProjectsTable />
             <hr />

@@ -128,7 +128,7 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
                 !valid ? (
                     <div>
                         <div>&nbsp;</div>
-                        <span style={{color: 'red'}}>There are errors in the job definition.</span>
+                        <span style={{color: 'red'}}>There are errors in the job definition. Check for red marks in the parameters form.</span>
                     </div>
                 ) : <span />
             }

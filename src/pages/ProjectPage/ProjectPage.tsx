@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useMemo, useState } from "react";
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
 import { useModalWindow } from "@fi-sci/modal-window"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 import ModalWindow from "@fi-sci/modal-window";
@@ -146,7 +146,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
     const auth = useGithubAuth()
     const {route, staging} = useRoute()
     if (route.page !== 'project') throw Error(`Unexpected route ${JSON.stringify(route)}`)
-    const currentView = route.tab || 'project-home'
+    const currentView = (route.tab || 'project-home') as ProjectPageViewType
 
     const handleCreateFiles = useCallback(async (files: {fileName: string, url: string, metadata: any}[]) => {
         if (!project) {
@@ -290,46 +290,73 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         }
     }, [openMearecGenerateTemplatesWindow])
 
+    const [viewsThatHaveBeenVisible, setViewsThatHaveBeenVisible] = useState<ProjectPageViewType[]>([])
+    useEffect(() => {
+        if (!viewsThatHaveBeenVisible.includes(currentView)) {
+            setViewsThatHaveBeenVisible(viewsThatHaveBeenVisible.concat([currentView]))
+        }
+    }, [currentView, viewsThatHaveBeenVisible])
+
     return (
         <div style={{position: 'absolute', width, height, overflow: 'hidden', background: 'white'}}>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-home' ? undefined : 'hidden'}}>
-                <ProjectHome
-                    width={width}
-                    height={height}
-                />
+                {
+                    viewsThatHaveBeenVisible.includes('project-home') && (
+                        <ProjectHome
+                            width={width}
+                            height={height}
+                        />
+                    )
+                }
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-files' ? undefined : 'hidden'}}>
-                <ProjectFiles
-                    width={width}
-                    height={height}
-                    onRunBatchSpikeSorting={handleRunSpikeSorting}
-                    onOpenInNeurosift={handleOpenInNeurosift}
-                    onDandiUpload={handleDandiUpload}
-                    onUploadSmallFile={handleUploadSmallFile}
-                    onAction={handleAction}
-                />
+                {
+                    viewsThatHaveBeenVisible.includes('project-files') && (
+                        <ProjectFiles
+                            width={width}
+                            height={height}
+                            onRunBatchSpikeSorting={handleRunSpikeSorting}
+                            onOpenInNeurosift={handleOpenInNeurosift}
+                            onDandiUpload={handleDandiUpload}
+                            onUploadSmallFile={handleUploadSmallFile}
+                            onAction={handleAction}
+                        />
+                    )
+                }
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-jobs' ? undefined : 'hidden'}}>
-                <ProjectJobs
-                    width={width}
-                    height={height}
-                />
+                {
+                    viewsThatHaveBeenVisible.includes('project-jobs') && (
+                        <ProjectJobs
+                            width={width}
+                            height={height}
+                        />
+                    )
+                }
             </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-linked-analysis' ? undefined : 'hidden'}}>
-                <ProjectAnalysis
-                    width={width}
-                    height={height}
-                />
+                {
+                    viewsThatHaveBeenVisible.includes('project-linked-analysis') && (
+                        <ProjectAnalysis
+                            width={width}
+                            height={height}
+                        />
+                    )
+                }
             </div>
             {dandisetId && (
                 <div style={{position: 'absolute', width, height, visibility: currentView === 'dandi-import' ? undefined : 'hidden'}}>
-                    <DandisetView
-                        width={width}
-                        height={height}
-                        useStaging={staging}
-                        dandisetId={dandisetId}
-                        onImportItems={handleImportItems}
-                    />
+                    {
+                        viewsThatHaveBeenVisible.includes('dandi-import') && (
+                            <DandisetView
+                                width={width}
+                                height={height}
+                                useStaging={staging}
+                                dandisetId={dandisetId}
+                                onImportItems={handleImportItems}
+                            />
+                        )
+                    }
                 </div>
             )}
             {/* <div style={{position: 'absolute', width, height, visibility: currentView === 'manual-import' ? undefined : 'hidden'}}>
@@ -340,10 +367,14 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 />
             </div> */}
             <div style={{position: 'absolute', width, height, visibility: currentView === 'processors' ? undefined : 'hidden'}}>
-                <ProcessorsView
-                    width={width}
-                    height={height}
-                />
+                {
+                    viewsThatHaveBeenVisible.includes('processors') && (
+                        <ProcessorsView
+                            width={width}
+                            height={height}
+                        />
+                    )
+                }
             </div>
             <ModalWindow
                 visible={runSpikeSortingWindowVisible}
