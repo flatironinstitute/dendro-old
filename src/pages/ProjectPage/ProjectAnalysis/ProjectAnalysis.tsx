@@ -2,8 +2,9 @@ import { FunctionComponent, useEffect, useState } from "react"
 import { useProject } from "../ProjectPageContext"
 import AnalysisSourceClient from "./AnalysisSourceClient"
 import { Splitter } from "@fi-sci/splitter"
-import AnalysisSourceFileBrowser from "./AnalysisSourceFileBrowser"
+import AnalysisSourceFileBrowser, { AnalysisSourceFile } from "./AnalysisSourceFileBrowser"
 import AnalysisSourceFileView from "./AnalysisSourceFileView"
+import { joinPaths } from "./ClonedRepo"
 
 type ProjectAnalysisProps = {
     width: number
@@ -75,6 +76,52 @@ type ProjectAnalysisChildProps = {
 const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({width, height, analysisSourceClient}) => {
     const initialSplitterPosition = 250
     const [currentFileName, setCurrentFileName] = useState<string | undefined>(undefined)
+    const [allFiles, setAllFiles] = useState<AnalysisSourceFile[] | undefined>(undefined)
+
+    useEffect(() => {
+        let canceled = false
+        ; (async () => {
+            const ret: AnalysisSourceFile[] = []
+            const load = async (path: string) => {
+                const ff = await analysisSourceClient.readDirectory(path)
+                for (const f of ff.files) {
+                    ret.push({path: joinPaths(path, f)})
+                }
+                for (const d of ff.subdirectories) {
+                    await load(joinPaths(path, d))
+                }
+                if (canceled) return
+            }
+            await load('')
+            if (canceled) return
+            setAllFiles(ret)
+        })()
+        return () => {canceled = true}
+    }, [analysisSourceClient])
+
+    // if there is just one .ipynb file, open it by default
+    // or if there is just one main.ipynb file, open it by default
+    // of if there is just one index.ipynb file, open it by default
+    useEffect(() => {
+        if (currentFileName) return
+        if (!allFiles) return
+        const ipynbFiles = allFiles.filter(f => f.path.endsWith('.ipynb'))
+        if (ipynbFiles.length === 1) {
+            setCurrentFileName(ipynbFiles[0].path)
+            return
+        }
+        const mainIpynbFiles = allFiles.filter(f => f.path.endsWith('main.ipynb'))
+        if (mainIpynbFiles.length === 1) {
+            setCurrentFileName(mainIpynbFiles[0].path)
+            return
+        }
+        const indexIpynbFiles = allFiles.filter(f => f.path.endsWith('index.ipynb'))
+        if (indexIpynbFiles.length === 1) {
+            setCurrentFileName(indexIpynbFiles[0].path)
+            return
+        }
+    }, [allFiles, currentFileName])
+
     return (
         <Splitter
             width={width}
@@ -87,6 +134,7 @@ const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({wid
                 height={0}
                 analysisSourceClient={analysisSourceClient}
                 onOpenFile={setCurrentFileName}
+                allFiles={allFiles}
             />
             <AnalysisSourceFileView
                 width={0}

@@ -1,45 +1,22 @@
-import { FunctionComponent, useEffect, useMemo, useReducer, useState } from "react"
-import AnalysisSourceClient from "./AnalysisSourceClient"
-import { joinPaths } from "./ClonedRepo"
-import FileBrowserTable, { FileBrowserTableFile } from "../FileBrowser/FileBrowserTable"
+import { FunctionComponent, useMemo, useReducer } from "react"
 import { selectedStringsReducer } from "../FileBrowser/FileBrowser2"
+import FileBrowserTable, { FileBrowserTableFile } from "../FileBrowser/FileBrowserTable"
+import AnalysisSourceClient from "./AnalysisSourceClient"
 
 type AnalysisSourceFileBrowserProps = {
     width: number
     height: number
     analysisSourceClient: AnalysisSourceClient
     onOpenFile: (path: string) => void
+    allFiles?: AnalysisSourceFile[]
 }
 
-type AnalysisSourceFile = {
+export type AnalysisSourceFile = {
     path: string
 }
 
-const AnalysisSourceFileBrowser: FunctionComponent<AnalysisSourceFileBrowserProps> = ({width, height, analysisSourceClient, onOpenFile}) => {
-    const [allFiles, setAllFiles] = useState<AnalysisSourceFile[] | undefined>(undefined)
-
+const AnalysisSourceFileBrowser: FunctionComponent<AnalysisSourceFileBrowserProps> = ({width, height, analysisSourceClient, onOpenFile, allFiles}) => {
     const [selectedFileNames, selectedFileNamesDispatch] = useReducer(selectedStringsReducer, new Set<string>())
-
-    useEffect(() => {
-        let canceled = false
-        ; (async () => {
-            const ret: AnalysisSourceFile[] = []
-            const load = async (path: string) => {
-                const ff = await analysisSourceClient.readDirectory(path)
-                for (const f of ff.files) {
-                    ret.push({path: joinPaths(path, f)})
-                }
-                for (const d of ff.subdirectories) {
-                    await load(joinPaths(path, d))
-                }
-                if (canceled) return
-            }
-            await load('')
-            if (canceled) return
-            setAllFiles(ret)
-        })()
-        return () => {canceled = true}
-    }, [analysisSourceClient])
 
     const files2: FileBrowserTableFile[] | undefined = useMemo(() => {
         if (!allFiles) return undefined

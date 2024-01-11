@@ -68,11 +68,11 @@ const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = (
             }
             catch (err) {
                 content = <div>Error parsing ipynb file</div>
-                obj = undefined
+                obj = {}
             }
             // replace http text with links
             // the commented out code below is for embedding the content of the link in an iframe
-            for (const cell of obj.cells) {
+            for (const cell of (obj.cells || [])) {
                 const outputs = cell.outputs || []
                 const newOutputs = []
                 for (const output of outputs) {
