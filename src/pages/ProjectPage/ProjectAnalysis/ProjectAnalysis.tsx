@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useState } from "react"
 import { useProject } from "../ProjectPageContext"
 import AnalysisSourceClient from "./AnalysisSourceClient"
 import { Splitter } from "@fi-sci/splitter"
@@ -46,6 +46,7 @@ const ProjectAnalysis: FunctionComponent<ProjectAnalysisProps> = ({width, height
             width={width}
             height={height}
             analysisSourceClient={analysisSourceClient}
+            analysisSourceUrl={analysisSourceUrl}
         />
     )
 }
@@ -71,9 +72,10 @@ type ProjectAnalysisChildProps = {
     width: number
     height: number
     analysisSourceClient: AnalysisSourceClient
+    analysisSourceUrl: string
 }
 
-const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({width, height, analysisSourceClient}) => {
+const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({width, height, analysisSourceClient, analysisSourceUrl}) => {
     const initialSplitterPosition = 250
     const [currentFileName, setCurrentFileName] = useState<string | undefined>(undefined)
     const [allFiles, setAllFiles] = useState<AnalysisSourceFile[] | undefined>(undefined)
@@ -122,6 +124,11 @@ const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({wid
         }
     }, [allFiles, currentFileName])
 
+    const handleOpenInRepo = useCallback((fileName: string) => {
+        const url = `${analysisSourceUrl}/${fileName}`
+        window.open(url, '_blank')
+    }, [analysisSourceUrl])
+
     return (
         <Splitter
             width={width}
@@ -141,6 +148,8 @@ const ProjectAnalysisChild: FunctionComponent<ProjectAnalysisChildProps> = ({wid
                 height={0}
                 analysisSourceClient={analysisSourceClient}
                 fileName={currentFileName}
+                onOpenFile={setCurrentFileName}
+                onOpenInRepo={handleOpenInRepo}
             />
         </Splitter>
     )

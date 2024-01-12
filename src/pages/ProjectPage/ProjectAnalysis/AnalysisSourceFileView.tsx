@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useMemo, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react"
 import AnalysisSourceClient from "./AnalysisSourceClient"
 import ReactSyntaxHighlighter from "react-syntax-highlighter"
 import {IpynbRenderer} from "react-ipynb-renderer"
@@ -20,17 +20,21 @@ import "react-ipynb-renderer/dist/styles/default.css";
 
 import './AnalysisSourceFileView.css'
 import DOMPurify from "dompurify";
+import Markdown from "../../../Markdown/Markdown";
+import { Hyperlink } from "@fi-sci/misc";
 
 type AnalysisSourceFileViewProps = {
     width: number
     height: number
     analysisSourceClient: AnalysisSourceClient
     fileName: string | undefined
+    onOpenFile: (fileName: string) => void
+    onOpenInRepo: (fileName: string) => void
 }
 
 const topBarHeight = 18
 
-const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = ({width, height, analysisSourceClient, fileName}) => {
+const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = ({width, height, analysisSourceClient, fileName, onOpenFile, onOpenInRepo}) => {
     const [text, setText] = useState<string | undefined>(undefined)
     const isTextFileType = checkTextFileType(fileName || '')
     useEffect(() => {
@@ -48,6 +52,25 @@ const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = (
         if (!fileName) return 'text'
         return determineLanguageFromFileName(fileName)
     }, [fileName])
+
+    const handleLinkClick = useCallback((href: string) => {
+        if ((href.startsWith('http://')) || (href.startsWith('https://'))) {
+            window.open(href, '_blank')
+        }
+        else if (href.startsWith('#')) {
+            // not handled
+        }
+        else {
+            const newFileName = determineRelativePath(fileName || '', href)
+            if (newFileName) {
+                if (onOpenFile) onOpenFile(newFileName)
+            }
+        }
+    }, [fileName, onOpenFile])
+
+    const handleOpenInRepo = useCallback(() => {
+        onOpenInRepo(fileName || '')
+    }, [fileName, onOpenInRepo])
 
     let content
 
@@ -119,6 +142,17 @@ const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = (
                 </div>
             )
         }
+        else if (fileName.endsWith('.md')) {
+            content = (
+                <div style={{position: 'absolute', left: 10, width: width - 20, top: topBarHeight + 10, height: height - topBarHeight - 20, overflowY: 'auto'}}>
+                    <Markdown
+                        source={text}
+                        onLinkClick={handleLinkClick}
+                        callbackForAllLinks={true}
+                    />
+                </div>
+            )
+        }
         else {
             content = (
                 <div style={{position: 'absolute', width, top: topBarHeight, height: height - topBarHeight, overflowY: 'auto'}}>
@@ -132,11 +166,28 @@ const AnalysisSourceFileView: FunctionComponent<AnalysisSourceFileViewProps> = (
     return (
         <div style={{position: 'absolute', width, height}}>
             <div style={{position: 'absolute', width, height: topBarHeight, backgroundColor: '#555', color: 'white', paddingLeft: 10, paddingTop: 5, fontSize: 12}}>
-                {fileName}
+                {fileName} &nbsp;&nbsp;&nbsp; <Hyperlink onClick={handleOpenInRepo} color="lightblue">open in repo</Hyperlink>
             </div>
             {content}
         </div>
     )
+}
+
+const determineRelativePath = (fileName: string, href: string) => {
+    if (!fileName) return href
+    const parts = fileName.split('/')
+    parts.pop()
+    const parts2 = href.split('/')
+    for (let i = 0; i < parts2.length; i++) {
+        const part = parts2[i]
+        if (part === '..') {
+            parts.pop()
+        }
+        else {
+            parts.push(part)
+        }
+    }
+    return parts.join('/')
 }
 
 const checkTextFileType = (fileName: string) => {
