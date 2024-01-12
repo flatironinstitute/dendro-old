@@ -12,9 +12,13 @@ def make_app_spec_file_function(app_dir: str, spec_output_file: str):
 
     script_path = str(app_dir_path / 'main.py')
 
+    # check whther script path is executable
+    if not os.access(script_path, os.X_OK):
+        raise Exception(f"Script {script_path} is not executable")
+
     env = os.environ.copy()
     env['SPEC_OUTPUT_FILE'] = spec_output_file
-    subprocess.run(['python', script_path], env=env)
+    subprocess.run([script_path], env=env)
 
     # When we do it the following way, the inspection of type hints in the processor context does not work
 
