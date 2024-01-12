@@ -12,7 +12,7 @@ def make_app_spec_file_function(app_dir: str, spec_output_file: str):
 
     script_path = str(app_dir_path / 'main.py')
 
-    # check whther script path is executable
+    # check whether script path is executable
     if not os.access(script_path, os.X_OK):
         raise Exception(f"Script {script_path} is not executable")
 
