@@ -1,5 +1,4 @@
 import os
-from dendro.api_helpers.routers.gui.job_routes import ApproveJobResponse
 import pytest
 import time
 import tempfile
@@ -22,6 +21,7 @@ async def test_integration(tmp_path):
     from dendro.api_helpers.clients._get_mongo_client import _clear_mock_mongo_databases
     from dendro.common._api_request import _gui_post_api_request, _client_get_api_request
     from dendro.common.dendro_types import DendroJobRequiredResources
+    from dendro.api_helpers.routers.gui.job_routes import ApproveJobResponse
 
     tmpdir = str(tmp_path)
 
@@ -263,12 +263,12 @@ async def test_integration(tmp_path):
                 job_id_1 = resp.jobId
             else:
                 job_id_1_with_error = resp.jobId
-        
+
         if job_id_1:
             resp = _gui_post_api_request(url_path=f'/api/gui/jobs/{job_id_1}/approve', data={}, github_access_token=github_access_token)
             resp = ApproveJobResponse(**resp)
             assert resp.success
-        
+
         if job_id_1_with_error:
             resp = _gui_post_api_request(url_path=f'/api/gui/jobs/{job_id_1_with_error}/approve', data={}, github_access_token=github_access_token)
             resp = ApproveJobResponse(**resp)
