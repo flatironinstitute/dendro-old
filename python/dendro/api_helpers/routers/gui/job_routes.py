@@ -69,6 +69,7 @@ async def approve_job(job_id, github_access_token: str = Header(...)) -> Approve
     compute_resource_id = job.computeResourceId
 
     compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
+    assert compute_resource
 
     if compute_resource.ownerId != user_id:
         raise Exception('Only the compute resource owner can approve jobs')
