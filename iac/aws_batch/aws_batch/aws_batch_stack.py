@@ -42,10 +42,12 @@ class AwsBatchStack(Stack):
         create_efs: bool = False,
         **kwargs
     ) -> None:
+
         # get the default aws region
         boto_client = boto3.client("sts")
         aws_region = boto_client.meta.region_name
         print(f'Using default region: {aws_region}')
+
         # get the aws account id
         aws_account_id = boto_client.get_caller_identity()["Account"]
         print(f'Using account id: {aws_account_id}')
@@ -144,48 +146,14 @@ class AwsBatchStack(Stack):
             )
         )
 
-        # Define the launch template
-        # launch_template = ec2.LaunchTemplate(
-        #     scope=self,
-        #     id=launch_template_name,
-        #     launch_template_name=f"{stack_id}-EC2LaunchTemplate",
-        #     launch_template_data=ec2.CfnLaunchTemplate.LaunchTemplateDataProperty(
-        #         image_id="ami-0d625ab7e92ab3a43",
-        #         instance_type="g4dn.2xlarge",
-        #         # key_name="your-key-pair",
-        #         ebs_optimized=True,
-        #         block_device_mappings=[block_device],
-        #         # iam_instance_profile=ec2.CfnLaunchTemplate.IamInstanceProfileProperty(
-        #         #     arn=ecs_instance_role.role_arn
-        #         # ),
-        #         tag_specifications=[
-        #             ec2.CfnLaunchTemplate.TagSpecificationProperty(
-        #                 resource_type="instance",
-        #                 tags=[CfnTag(key="AWSBatchService", value="batch")]
-        #             )
-        #         ],
-        #         user_data=Fn.base64(
-        #             "#!/bin/bash\n" +
-        #             "mkfs -t ext4 /dev/xvda\n" +
-        #             "mkdir -p /tmp\n" +
-        #             "mount /dev/xvda /tmp\n"
-        #         )
-        #     )
-        # )
-        user_data_script = """MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+        # Launch template
+        multipart_user_data = ec2.MultipartUserData()
+        commands_user_data = ec2.UserData.for_linux()
+        multipart_user_data.add_user_data_part(commands_user_data, ec2.MultipartBody.SHELL_SCRIPT, True)
+        multipart_user_data.add_commands("mkfs -t ext4 /dev/xvda")
+        multipart_user_data.add_commands("mkdir -p /tmp")
+        multipart_user_data.add_commands("mount /dev/xvda /tmp")
 
---==BOUNDARY==
-Content-Type: text/x-shellscript; charset="us-ascii"
-
-#!/bin/bash
-mkfs -t ext4 /dev/xvda
-mkdir -p /tmp
-mount /dev/xvda /tmp
-
---==BOUNDARY==--
-"""
-        encoded_user_data = base64.b64encode(user_data_script.encode()).decode()
         launch_template = ec2.LaunchTemplate(
             scope=self,
             id="DendroEC2LaunchTemplate",
@@ -196,33 +164,33 @@ mount /dev/xvda /tmp
                 "us-east-2": "ami-0d625ab7e92ab3a43"
             }),
             ebs_optimized=True,
-            user_data=ec2.UserData.custom(encoded_user_data)
+            user_data=multipart_user_data
         )
         Tags.of(launch_template).add("AWSBatchService", "batch")
 
-        # Create an EFS filesystem
-        if create_efs:
-            file_system = efs.FileSystem(
-                scope=self,
-                id=efs_file_system_id,
-                file_system_name=f"{stack_id}-EfsFileSystem",
-                vpc=vpc,
-                security_group=security_group,
-                performance_mode=efs.PerformanceMode.GENERAL_PURPOSE,
-                lifecycle_policy=efs.LifecyclePolicy.AFTER_7_DAYS,
-                out_of_infrequent_access_policy=efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS,
-                throughput_mode=efs.ThroughputMode.BURSTING,
-                enable_automatic_backups=False,
-                allow_anonymous_access=True,
-                removal_policy=RemovalPolicy.DESTROY,
-            )
-            Tags.of(file_system).add("DendroName", f"{stack_id}-EfsFileSystem")
+        # # Create an EFS filesystem
+        # if create_efs:
+        #     file_system = efs.FileSystem(
+        #         scope=self,
+        #         id=efs_file_system_id,
+        #         file_system_name=f"{stack_id}-EfsFileSystem",
+        #         vpc=vpc,
+        #         security_group=security_group,
+        #         performance_mode=efs.PerformanceMode.GENERAL_PURPOSE,
+        #         lifecycle_policy=efs.LifecyclePolicy.AFTER_7_DAYS,
+        #         out_of_infrequent_access_policy=efs.OutOfInfrequentAccessPolicy.AFTER_1_ACCESS,
+        #         throughput_mode=efs.ThroughputMode.BURSTING,
+        #         enable_automatic_backups=False,
+        #         allow_anonymous_access=True,
+        #         removal_policy=RemovalPolicy.DESTROY,
+        #     )
+        #     Tags.of(file_system).add("DendroName", f"{stack_id}-EfsFileSystem")
 
-            # fs_access_point = file_system.add_access_point("AccessPoint",
-            #     path="/export",
-            #     create_acl=efs.Acl(owner_uid="1001", owner_gid="1001", permissions="750"),
-            #     posix_user=efs.PosixUser(uid="1001", gid="1001")
-            # )
+        #     # fs_access_point = file_system.add_access_point("AccessPoint",
+        #     #     path="/export",
+        #     #     create_acl=efs.Acl(owner_uid="1001", owner_gid="1001", permissions="750"),
+        #     #     posix_user=efs.PosixUser(uid="1001", gid="1001")
+        #     # )
 
         # generated using ../devel/create_ami_map.py
         # not able to get image ID for some regions due to invalid security token.
