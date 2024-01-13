@@ -9,7 +9,7 @@ app = cdk.App()
 
 aws_batch_stack = AwsBatchStack(
     scope=app,
-    create_efs=True,
+    create_efs=False,
 )
 
 app.synth()
