@@ -96,7 +96,7 @@ class AppManager:
             from ..aws_batch.aws_batch_job_definition import create_aws_batch_job_definition
             stack_id = 'DendroBatchStack'
             job_role_name = f"{stack_id}-BatchJobsAccessRole" # This must match with iac/aws_batch/aws_batch/stack_config.py
-            efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iac/aws_batch/aws_batch/stack_config.py
+            # efs_fs_name = f"{stack_id}-EfsFileSystem" # This must match with iac/aws_batch/aws_batch/stack_config.py
             print(f'Creating AWS batch job definition for app {app._name}')
             environment_variables = []
 
@@ -104,7 +104,7 @@ class AppManager:
                 dendro_app_name=app._name,
                 dendro_app_image_uri=app._app_image,
                 job_role_name=job_role_name,
-                efs_fs_name=efs_fs_name,
+                # efs_fs_name=efs_fs_name,
                 environment_variables=environment_variables
             )
 
