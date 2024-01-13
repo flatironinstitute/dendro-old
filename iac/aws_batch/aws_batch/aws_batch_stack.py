@@ -3,15 +3,12 @@ from aws_cdk import (
     Stack,
     RemovalPolicy,
     Tags,
-    Fn,
-    CfnTag,
     aws_iam as iam,
     aws_ec2 as ec2,
     aws_batch as batch,
     aws_efs as efs
 )
 import boto3
-import base64
 
 from .stack_config import (
     stack_id,
