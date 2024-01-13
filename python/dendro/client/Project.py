@@ -110,7 +110,7 @@ class ProjectFolder:
                 continue
             folder_path = '/'.join(a[:-1])
             if folder_path.startswith(self._path + '/'):
-                x = folder_path[len(self._path)+1:]
+                x = folder_path[len(self._path) + 1:]
                 if '/' in x:
                     x = x[:x.index('/')]
                 folder_paths.add(self._path + '/' + x)

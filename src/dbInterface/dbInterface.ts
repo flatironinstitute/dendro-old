@@ -452,6 +452,12 @@ export const deleteJob = async (jobId: string, auth: Auth): Promise<void> => {
     if (!resp.success) throw Error(`Error in deleteJob: ${resp.error}`)
 }
 
+export const approveJob = async (jobId: string, auth: Auth): Promise<void> => {
+    const url = `${apiBase}/api/gui/jobs/${jobId}/approve`
+    const resp = await postRequest(url, {}, auth)
+    if (!resp.success) throw Error(`Error in approveJob: ${resp.error}`)
+}
+
 export const fetchJobsForProject = async (projectId: string, auth: Auth): Promise<DendroJob[]> => {
     const url = `${apiBase}/api/gui/projects/${projectId}/jobs`
     const response = await getRequest(url, auth)

@@ -9,6 +9,8 @@ import UserIdComponent from "../../../UserIdComponent";
 import { selectedStringsReducer } from "../FileBrowser/FileBrowser2";
 import JobsTableMenuBar from "./JobsTableMenuBar";
 import { Checkbox } from "../FileBrowser/FileBrowserTable";
+import { approveJob } from "../../../dbInterface/dbInterface";
+import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";
 
 type Props = {
     width: number
@@ -18,6 +20,7 @@ type Props = {
     onJobClicked: (jobId: string) => void
     createJobEnabled?: boolean
     createJobTitle?: string
+    userCanApproveJobs?: boolean
 }
 
 const menuBarHeight = 30
@@ -36,7 +39,7 @@ type RowItem = {
     role: string
 }
 
-const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, onJobClicked, createJobEnabled, createJobTitle }) => {
+const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, onJobClicked, createJobEnabled, createJobTitle, userCanApproveJobs }) => {
     const sortedJobs = useMemo(() => {
         if (!jobs) return []
         return [...jobs].sort((a, b) => (b.timestampCreated - a.timestampCreated))
@@ -212,6 +215,18 @@ const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, on
         }
     }, [sortedJobs, selectedJobIds])
 
+    const pendingApprovalTitle = "This job is pending approval by the owner of the compute resource."
+
+    const [jobsApprovedInThisSession, jobsApprovedInThisSessionDispatch] = useReducer(selectedStringsReducer, new Set<string>())
+    
+    const auth = useGithubAuth()
+
+    const handleApproveJob = useCallback((jobId: string) => {
+        approveJob(jobId, auth).then(() => {
+            jobsApprovedInThisSessionDispatch({type: 'set', values: new Set([jobId])})
+        })
+    }, [auth])
+
     return (
         <div style={{position: 'relative', width, height}}>
             <div style={{position: 'absolute', width: width - hPadding * 2, height: menuBarHeight - vPadding * 2, paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>
@@ -273,6 +288,16 @@ const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, on
                                             </td>
                                             <td>{jj.processorName}</td>
                                             <td>{
+                                                jj.status === 'pending' && jj.pendingApproval && !jobsApprovedInThisSession.has(jj.jobId) ? (
+                                                    <>
+                                                        <span title={pendingApprovalTitle} style={{color: 'darkmagenta', cursor: 'pointer'}}>pending approval</span>
+                                                        {
+                                                            userCanApproveJobs && (
+                                                                <>&nbsp;<Hyperlink onClick={() => handleApproveJob(jj.jobId)}>approve</Hyperlink></>
+                                                            )
+                                                        }
+                                                    </>
+                                                ) :
                                                 jj.status !== 'failed' ? (
                                                     <span>{jj.status}</span>
                                                 ) : (
