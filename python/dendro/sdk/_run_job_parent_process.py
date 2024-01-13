@@ -5,6 +5,7 @@ from typing import Union, Optional, Dict, Any
 import subprocess
 from ..common._api_request import _processor_put_api_request
 from ..mock import using_mock
+from ..internal_job_monitoring.console_output_monitor import do_upload as _upload_final_console_output
 import shutil
 
 
@@ -154,6 +155,16 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                     _debug_log(f'WARNING: problem cleaning up DENDRO_JOB_CLEANUP_DIR: {str(e)}')
             else:
                 _debug_log('No DENDRO_JOB_CLEANUP_DIR environment variable set. Not cleaning up.')
+
+    _debug_log('Uploading final console output')
+    # this is needed because the console output monitor may get terminated before it has a chance to upload the final console output
+    ok = _upload_final_console_output(
+        job_id=job_id,
+        job_private_key=job_private_key,
+        console_out_file=console_out_fname
+    )
+    if not ok:
+        _debug_log('WARNING: problem uploading final console output')
 
     # Set the final job status
     _debug_log('Finalizing job')

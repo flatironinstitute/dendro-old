@@ -55,6 +55,9 @@ class ProjectFile:
         url = a[len('url:'):]
         resolved_url = self._get_resolved_url(url=url)
         return resolved_url
+    @property
+    def file_name(self) -> str:
+        return self._file_data.fileName
     def _get_resolved_url(self, url: str) -> str:
         if self._resolved_url is not None and self._resolved_url_timestamp is not None:
             if time.time() - self._resolved_url_timestamp < 120:
@@ -84,6 +87,9 @@ class ProjectFolder:
     def __init__(self, project: Project, path: str) -> None:
         self._project = project
         self._path = path
+    @property
+    def path(self) -> str:
+        return self._path
     def get_files(self) -> List[ProjectFile]:
         ret: List[ProjectFile] = []
         for f in self._project._files:
@@ -102,18 +108,12 @@ class ProjectFolder:
             a = f._file_data.fileName.split('/')
             if len(a) <= 1:
                 continue
-            parent_path = '/'.join(a[:-1]) # the parent path for this file
-            b = parent_path.split('/')
-            for i in range(1, len(b)):
-                b2 = b[:i]
-                ok = False
-                if len(b2) == 1:
-                    # if the parent path is only one level deep, then include it if the self._path is empty
-                    ok = (self._path == '')
-                else:
-                    ok = '/'.join(b2[:-1]) == self._path
-                if ok:
-                    folder_paths.add('/'.join(b2))
+            folder_path = '/'.join(a[:-1])
+            if folder_path.startswith(self._path + '/'):
+                x = folder_path[len(self._path)+1:]
+                if '/' in x:
+                    x = x[:x.index('/')]
+                folder_paths.add(self._path + '/' + x)
         sorted_folder_paths = sorted(list(folder_paths))
         return [
             ProjectFolder(self._project, p)

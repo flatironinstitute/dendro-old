@@ -55,7 +55,7 @@ def console_output_monitor(parent_pid: str):
 def do_upload(*, console_out_file, job_id, job_private_key):
     import requests
     if not os.path.exists(console_out_file):
-        return
+        return True
     with open(console_out_file, 'r') as f:
         console_text = f.read()
     console_text_lines = console_text.split('\n')
@@ -74,6 +74,8 @@ def do_upload(*, console_out_file, job_id, job_private_key):
         r = requests.put(console_output_upload_url, data=text_to_upload, timeout=5)
         if r.status_code != 200:
             raise Exception(f'Error uploading console output: {r.status_code} {r.text}')
+        return True
     except: # noqa
         print('Error uploading console output')
         traceback.print_exc()
+        return False

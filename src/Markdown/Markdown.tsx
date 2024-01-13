@@ -16,19 +16,20 @@ import { Hyperlink } from "@fi-sci/misc";
 type Props ={
 	source: string
 	onLinkClick?: (href: string) => void
+	callbackForAllLinks?: boolean
 }
 
-const Markdown: FunctionComponent<Props> = ({source, onLinkClick}) => {
+const Markdown: FunctionComponent<Props> = ({source, onLinkClick, callbackForAllLinks}) => {
 	const a = useCallback(
 		({node, children, href, ...props}: any) => {
-			if ((href) && (href.startsWith('#')) && (onLinkClick)) {
+			if ((href) && (href.startsWith('#') || callbackForAllLinks) && (onLinkClick)) {
 				return <Hyperlink onClick={() => onLinkClick(href)}>{children}</Hyperlink>
 			}
 			else {
 				return <a href={href} target="_blank" rel="noreferrer" {...props}>{children}</a>
 			}
 		}
-	, [onLinkClick])
+	, [onLinkClick, callbackForAllLinks])
 	const components: Partial<Omit<NormalComponents, keyof SpecialComponents> & SpecialComponents> = useMemo(() => (
 		{
 			code: ({inline, className, children, ...props}) => {
