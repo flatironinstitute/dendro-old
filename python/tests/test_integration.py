@@ -1,4 +1,5 @@
 import os
+from dendro.api_helpers.routers.gui.job_routes import ApproveJobResponse
 import pytest
 import time
 import tempfile
@@ -262,6 +263,16 @@ async def test_integration(tmp_path):
                 job_id_1 = resp.jobId
             else:
                 job_id_1_with_error = resp.jobId
+        
+        if job_id_1:
+            resp = _gui_post_api_request(url_path=f'/api/gui/jobs/{job_id_1}/approve', data={}, github_access_token=github_access_token)
+            resp = ApproveJobResponse(**resp)
+            assert resp.success
+        
+        if job_id_1_with_error:
+            resp = _gui_post_api_request(url_path=f'/api/gui/jobs/{job_id_1_with_error}/approve', data={}, github_access_token=github_access_token)
+            resp = ApproveJobResponse(**resp)
+            assert resp.success
 
         # gui: Create job for app 2 (which uses slurm)
         processor_name_2 = 'mock-processor2'
@@ -288,6 +299,11 @@ async def test_integration(tmp_path):
         assert resp.success
         job_id_2 = resp.jobId
         assert job_id_2
+
+        if job_id_2:
+            resp = _gui_post_api_request(url_path=f'/api/gui/jobs/{job_id_2}/approve', data={}, github_access_token=github_access_token)
+            resp = ApproveJobResponse(**resp)
+            assert resp.success
 
         # gui: Test not providing a required parameter
         processor_name_2 = 'mock-processor2'
