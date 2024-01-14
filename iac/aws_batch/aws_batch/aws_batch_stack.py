@@ -15,7 +15,9 @@ from .stack_config import (
     batch_service_role_id,
     ecs_instance_role_id,
     batch_jobs_access_role_id,
-    efs_file_system_id,
+    vpc_id,
+    security_group_id,
+    launch_template_id,
     compute_env_gpu_id,
     compute_env_cpu_id,
     job_queue_gpu_id,
@@ -96,42 +98,68 @@ class AwsBatchStack(Stack):
         Tags.of(batch_jobs_access_role).add("DendroName", f"{stack_id}-BatchJobsAccessRole")
 
         # Use the default VPC
-        ec2_client = boto3.client("ec2")
-        default_vpc_id = ec2_client.describe_vpcs(
-            Filters=[
-                {
-                    "Name": "isDefault",
-                    "Values": ["true"]
-                }
-            ]
-        )["Vpcs"][0]["VpcId"]
-        print(f'Using default vpc: {default_vpc_id}')
-        vpc = ec2.Vpc.from_lookup(
+        # ec2_client = boto3.client("ec2")
+        # default_vpc_id = ec2_client.describe_vpcs(
+        #     Filters=[
+        #         {
+        #             "Name": "isDefault",
+        #             "Values": ["true"]
+        #         }
+        #     ]
+        # )["Vpcs"][0]["VpcId"]
+        # print(f'Using default vpc: {default_vpc_id}')
+        # vpc = ec2.Vpc.from_lookup(
+        #     scope=self,
+        #     id=default_vpc_id,
+        #     is_default=True
+        # )
+        vpc = ec2.Vpc(
             scope=self,
-            id=default_vpc_id,
-            is_default=True
+            id=vpc_id,
+            max_azs=3,  # Default is all AZs in the region
+            subnet_configuration=[
+                ec2.SubnetConfiguration(
+                    name="Public",
+                    subnet_type=ec2.SubnetType.PUBLIC,
+                    cidr_mask=24
+                ),
+            ],
         )
 
         # Use the default Security Group
-        default_security_group_id = ec2_client.describe_security_groups(
-            Filters=[
-                {
-                    "Name": "vpc-id",
-                    "Values": [default_vpc_id]
-                },
-                {
-                    "Name": "group-name",
-                    "Values": ["default"]
-                }
-            ]
-        )["SecurityGroups"][0]["GroupId"]
-        print(f'Using default security group: {default_security_group_id}')
-        security_group = ec2.SecurityGroup.from_security_group_id(
+        # default_security_group_id = ec2_client.describe_security_groups(
+        #     Filters=[
+        #         {
+        #             "Name": "vpc-id",
+        #             "Values": [default_vpc_id]
+        #         },
+        #         {
+        #             "Name": "group-name",
+        #             "Values": ["default"]
+        #         }
+        #     ]
+        # )["SecurityGroups"][0]["GroupId"]
+        # print(f'Using default security group: {default_security_group_id}')
+        # security_group = ec2.SecurityGroup.from_security_group_id(
+        #     scope=self,
+        #     id=default_security_group_id,
+        #     security_group_id=default_security_group_id,
+        #     # allow_all_ipv6_outbound=True,
+        #     allow_all_outbound=True,
+        # )
+        security_group = ec2.SecurityGroup(
             scope=self,
-            id=default_security_group_id,
-            security_group_id=default_security_group_id,
-            # allow_all_ipv6_outbound=True,
-            allow_all_outbound=True
+            id=security_group_id,
+            vpc=vpc,
+            description="Security group for Dendro Batch Stack",
+            allow_all_outbound=True,
+        )
+        # Add inbound rules to the security group as required
+        # For example, to allow SSH access (not recommended for production)
+        security_group.add_ingress_rule(
+            peer=ec2.Peer.any_ipv4(),
+            connection=ec2.Port.tcp(22),
+            description="Allow SSH access from anywhere"
         )
 
         # Define the block device
@@ -153,8 +181,8 @@ class AwsBatchStack(Stack):
 
         launch_template = ec2.LaunchTemplate(
             scope=self,
-            id="DendroEC2LaunchTemplate",
-            launch_template_name="DendroEC2LaunchTemplate",
+            id=launch_template_id,
+            launch_template_name=launch_template_id,
             block_devices=[block_device],
             instance_type=ec2.InstanceType("g4dn.2xlarge"),
             machine_image=ec2.MachineImage.generic_linux({
@@ -241,7 +269,7 @@ class AwsBatchStack(Stack):
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
             instance_role=ecs_instance_role, # type: ignore because Role implements IRole
-            launch_template=launch_template
+            launch_template=launch_template,
         )
         Tags.of(compute_env_gpu).add("DendroName", f"{stack_id}-compute-env")
 
