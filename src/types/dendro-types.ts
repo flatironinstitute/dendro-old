@@ -237,6 +237,7 @@ export type DendroJob = {
     processorSpec: ComputeResourceSpecProcessor
     dandiApiKey?: string
     deleted?: boolean
+    pendingApproval?: boolean
 }
 
 export const isDendroJob = (x: any): x is DendroJob => {
@@ -270,7 +271,8 @@ export const isDendroJob = (x: any): x is DendroJob => {
         outputFileIds: optional(isArrayOf(isString)),
         processorSpec: isComputeResourceSpecProcessor,
         dandiApiKey: optional(isString),
-        deleted: optional(isBoolean)
+        deleted: optional(isBoolean),
+        pendingApproval: optional(isBoolean)
     }, {callback: (e) => {console.warn(e);}})
 }
 

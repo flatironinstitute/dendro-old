@@ -77,14 +77,10 @@ const Nh5FileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
 
     const [rootGroup, setRootGroup] = useState<RemoteNH5Group | undefined>(undefined)
     useEffect(() => {
-        console.log('--- 1')
         let canceled = false
         if (!nh5FileClient) return
-        console.log('--- 2')
         ; (async () => {
-            console.log('--- 3')
             const g = await nh5FileClient.getGroup('/')
-            console.log('--- 4', g)
             if (canceled) return
             setRootGroup(g)
         })()

@@ -24,7 +24,8 @@ async def create_job(*,
     user_id: str,
     dandi_api_key: Union[str, None] = None,
     required_resources: DendroJobRequiredResources,
-    run_method: Literal['local', 'aws_batch', 'slurm']
+    run_method: Literal['local', 'aws_batch', 'slurm'],
+    pending_approval: bool = False
 ):
     _check_job_is_consistent_with_processor_spec(
         processor_spec=processor_spec,
@@ -132,7 +133,8 @@ async def create_job(*,
         consoleOutputUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_console_output",
         resourceUtilizationLogUrl=f"{output_bucket_base_url}/dendro-outputs/{job_id}/_resource_utilization_log",
         requiredResources=required_resources,
-        runMethod=run_method
+        runMethod=run_method,
+        pendingApproval=pending_approval
     )
 
     await insert_job(job)

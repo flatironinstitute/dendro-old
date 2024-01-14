@@ -187,20 +187,18 @@ async def register_compute_resource(compute_resource_id: str, name: str, user_id
         )
         await compute_resources_collection.insert_one(_model_dump(new_compute_resource, exclude_none=True))
 
-async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[List[str], None], include_private_keys: bool = False) -> List[DendroJob]:
+async def fetch_compute_resource_jobs(compute_resource_id: str, statuses: Union[List[str], None], exclude_those_pending_approval: bool = False, include_private_keys: bool = False) -> List[DendroJob]:
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
+    query = {
+        'computeResourceId': compute_resource_id,
+        'deleted': {'$ne': True}
+    }
     if statuses is not None:
-        jobs = await jobs_collection.find({
-            'computeResourceId': compute_resource_id,
-            'status': {'$in': statuses},
-            'deleted': {'$ne': True}
-        }).to_list(length=None) # type: ignore
-    else:
-        jobs = await jobs_collection.find({
-            'computeResourceId': compute_resource_id,
-            'deleted': {'$ne': True}
-        }).to_list(length=None) # type: ignore
+        query['status'] = {'$in': statuses}
+    if exclude_those_pending_approval:
+        query['pendingApproval'] = {'$ne': True}
+    jobs = await jobs_collection.find(query).to_list(length=None) # type: ignore
     for job in jobs:
         _remove_id_field(job)
     jobs = [DendroJob(**job) for job in jobs] # validate jobs
@@ -266,6 +264,18 @@ async def delete_job(job_id: str):
     }, {
         '$set': {
             'deleted': True
+        }
+    })
+
+async def approve_job(job_id: str):
+    client = _get_mongo_client()
+    jobs_collection = client['dendro']['jobs']
+
+    await jobs_collection.update_one({
+        'jobId': job_id
+    }, {
+        '$set': {
+            'pendingApproval': False
         }
     })
 

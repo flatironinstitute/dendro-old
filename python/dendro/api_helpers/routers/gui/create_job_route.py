@@ -50,7 +50,8 @@ async def create_job_handler(
         user_id=user_id,
         dandi_api_key=dandi_api_key,
         required_resources=required_resources,
-        run_method=run_method
+        run_method=run_method,
+        pending_approval=True
     )
 
     return CreateJobResponse(

@@ -110,6 +110,7 @@ class DendroJob(BaseModel):
     processorSpec: ComputeResourceSpecProcessor
     dandiApiKey: Union[str, None] = None
     deleted: Union[bool, None] = None
+    pendingApproval: Union[bool, None] = None
 
 class DendroFile(BaseModel):
     projectId: str

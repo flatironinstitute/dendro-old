@@ -101,7 +101,7 @@ async def compute_resource_get_unfinished_jobs(
         expected_payload=expected_payload
     )
 
-    jobs = await fetch_compute_resource_jobs(compute_resource_id, statuses=['pending', 'queued', 'starting', 'running'], include_private_keys=True)
+    jobs = await fetch_compute_resource_jobs(compute_resource_id, statuses=['pending', 'queued', 'starting', 'running'], exclude_those_pending_approval=True, include_private_keys=True)
 
     return GetUnfinishedJobsResponse(jobs=jobs, success=True)
 

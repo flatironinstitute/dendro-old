@@ -72,8 +72,12 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
     const appsTableHeight = 200
     const jobsTableHeight = 500
 
+    const userOwnsComputeResource = useMemo(() => {
+        return computeResource?.ownerId === auth?.userId
+    }, [computeResource, auth])
+
     return (
-        <div style={{padding: 20}}>
+        <div style={{padding: 20, overflowY: 'auto', position: 'absolute', width, height}}>
             <h3>
                 Compute resource: {computeResource?.name}
             </h3>
@@ -118,6 +122,7 @@ const ComputeResourcesPage: FunctionComponent<Props> = ({width, height, computeR
                 jobs={sortedJobs}
                 fileName={""}
                 onJobClicked={() => {}}
+                userCanApproveJobs={userOwnsComputeResource}
             />
         </div>
     )
