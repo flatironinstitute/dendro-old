@@ -516,29 +516,23 @@ const FloatEdit: FunctionComponent<FloatEditProps> = ({value, setValue, setValid
         else {
             if (isFloatType(value)) {
                 setInternalValue(old => {
-                    if ((old !== undefined) && (stringIsValidFloat(old)) && (parseFloat(old) === value)) return old
+                    if ((old !== undefined) && (stringIsValidFloat(old)) && (parseFloat(old) === value)) {
+                        return old
+                    }
                     return `${value}`
                 })
             }
         }
     }, [value, optional])
 
-    useEffect(() => {
-        if (internalValue === undefined) return
-        if ((optional) && (internalValue === '')) {
-            setValue(null)
-            setValid(true)
+    const handleChange = useCallback((newString: string) => {
+        if (stringIsValidFloat(newString)) {
+            const newValue = parseFloat(newString)
+            if (newValue === value) return
+            setValue(newValue)
         }
-        else {
-            if (stringIsValidFloat(internalValue)) {
-                setValue(parseFloat(internalValue))
-                setValid(true)
-            }
-            else {
-                setValid(false)
-            }
-        }
-    }, [internalValue, setValue, setValid, optional])
+        setInternalValue(newString)
+    }, [setValue, value])
 
     const isValid = useMemo(() => {
         if (internalValue === undefined) return false
@@ -546,9 +540,13 @@ const FloatEdit: FunctionComponent<FloatEditProps> = ({value, setValue, setValid
         return stringIsValidFloat(internalValue)
     }, [internalValue, optional])
 
+    useEffect(() => {
+        setValid(isValid)
+    }, [isValid, setValid])
+
     return (
         <span className="FloatEdit">
-            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} style={numInputStyle} />
+            <input type="text" value={internalValue || ''} onChange={evt => {handleChange(evt.target.value)}} style={numInputStyle} />
             {
                 isValid ? null : <span style={{color: 'red'}}>x</span>
             }
@@ -584,29 +582,23 @@ const IntEdit: FunctionComponent<IntEditProps> = ({value, setValue, setValid, op
         else {
             if (isIntType(value)) {
                 setInternalValue(old => {
-                    if ((old !== undefined) && (stringIsValidInt(old)) && (parseInt(old) === value)) return old
+                    if ((old !== undefined) && (stringIsValidInt(old)) && (parseInt(old) === value)) {
+                        return old
+                    }
                     return `${value}`
                 })
             }
         }
     }, [value, optional])
 
-    useEffect(() => {
-        if (internalValue === undefined) return
-        if ((optional) && (internalValue === '')) {
-            setValue(null)
-            setValid(true)
+    const handleChange = useCallback((newString: string) => {
+        if (stringIsValidInt(newString)) {
+            const newValue = parseInt(newString)
+            if (newValue === value) return
+            setValue(newValue)
         }
-        else {
-            if (stringIsValidInt(internalValue)) {
-                setValue(parseInt(internalValue))
-                setValid(true)
-            }
-            else {
-                setValid(false)
-            }
-        }
-    }, [internalValue, setValue, setValid, optional])
+        setInternalValue(newString)
+    }, [setValue, value])
 
     const isValid = useMemo(() => {
         if (internalValue === undefined) return false
@@ -614,9 +606,13 @@ const IntEdit: FunctionComponent<IntEditProps> = ({value, setValue, setValid, op
         return stringIsValidInt(internalValue)
     }, [internalValue, optional])
 
+    useEffect(() => {
+        setValid(isValid)
+    }, [isValid, setValid])
+
     return (
         <span className="IntEdit">
-            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} style={numInputStyle} />
+            <input type="text" value={internalValue || ''} onChange={evt => {handleChange(evt.target.value)}} style={numInputStyle} />
             {
                 isValid ? null : <span style={{color: 'red'}}>x</span>
             }
@@ -707,35 +703,42 @@ function stringIsValidIntList(s: string) {
 }
 
 const IntListEdit: FunctionComponent<IntListEditProps> = ({value, setValue, setValid}) => {
-    const [internalValue, setInternalValue] = useState<string | undefined>(undefined)
+    const [internalValue, setInternalValue] = useState<string | undefined>(undefined) // value of undefined corresponds to internalValue of ''
     useEffect(() => {
         if (isIntListType(value)) {
             setInternalValue(old => {
-                if ((old !== undefined) && (stringIsValidIntList(old)) && (intListToString(value) === old)) return old
-                return intListToString(value)
+                if ((old !== undefined) && (stringIsValidIntList(old)) && (intListToString(stringToIntList(old)) === intListToString(value))) {
+                    return old
+                }
+                return `${value}`
             })
         }
     }, [value])
 
-    useEffect(() => {
-        if (internalValue === undefined) return
-        if (stringIsValidIntList(internalValue)) {
-            setValue(stringToIntList(internalValue))
-            setValid(true)
+    const handleChange = useCallback((newString: string) => {
+        if (stringIsValidIntList(newString)) {
+            const newValue = stringToIntList(newString)
+            if (intListToString(newValue) === intListToString(value)) return
+            setValue(newValue)
         }
-        else {
-            setValid(false)
-        }
-    }, [internalValue, setValue, setValid])
+        setInternalValue(newString)
+    }, [setValue, value])
 
     const isValid = useMemo(() => {
         if (internalValue === undefined) return false
         return stringIsValidIntList(internalValue)
     }, [internalValue])
 
+    useEffect(() => {
+        setValid(isValid)
+    }, [isValid, setValid])
+
     return (
-        <span>
-            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} />
+        <span className="IntListEdit">
+            <input type="text" value={internalValue || ''} onChange={evt => {handleChange(evt.target.value)}} style={numInputStyle} />
+            {
+                isValid ? null : <span style={{color: 'red'}}>x</span>
+            }
             {
                 isValid ? null : <span style={{color: 'red'}}>x</span>
             }
@@ -771,35 +774,42 @@ function stringIsValidFloatList(s: string) {
 }
 
 const FloatListEdit: FunctionComponent<FloatListEditProps> = ({value, setValue, setValid}) => {
-    const [internalValue, setInternalValue] = useState<string | undefined>(undefined)
+    const [internalValue, setInternalValue] = useState<string | undefined>(undefined) // value of undefined corresponds to internalValue of ''
     useEffect(() => {
         if (isFloatListType(value)) {
             setInternalValue(old => {
-                if ((old !== undefined) && (stringIsValidFloatList(old)) && (floatListToString(value) === old)) return old
-                return floatListToString(value)
+                if ((old !== undefined) && (stringIsValidFloatList(old)) && (floatListToString(stringToFloatList(old)) === floatListToString(value))) {
+                    return old
+                }
+                return `${value}`
             })
         }
     }, [value])
 
-    useEffect(() => {
-        if (internalValue === undefined) return
-        if (stringIsValidFloatList(internalValue)) {
-            setValue(stringToFloatList(internalValue))
-            setValid(true)
+    const handleChange = useCallback((newString: string) => {
+        if (stringIsValidFloatList(newString)) {
+            const newValue = stringToFloatList(newString)
+            if (floatListToString(newValue) === floatListToString(value)) return
+            setValue(newValue)
         }
-        else {
-            setValid(false)
-        }
-    }, [internalValue, setValue, setValid])
+        setInternalValue(newString)
+    }, [setValue, value])
 
     const isValid = useMemo(() => {
         if (internalValue === undefined) return false
         return stringIsValidFloatList(internalValue)
     }, [internalValue])
 
+    useEffect(() => {
+        setValid(isValid)
+    }, [isValid, setValid])
+
     return (
-        <span>
-            <input type="text" value={internalValue || ''} onChange={evt => {setInternalValue(evt.target.value)}} />
+        <span className="FloatListEdit">
+            <input type="text" value={internalValue || ''} onChange={evt => {handleChange(evt.target.value)}} style={numInputStyle} />
+            {
+                isValid ? null : <span style={{color: 'red'}}>x</span>
+            }
             {
                 isValid ? null : <span style={{color: 'red'}}>x</span>
             }

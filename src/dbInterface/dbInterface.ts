@@ -322,6 +322,12 @@ export type DendroProcessingJobDefinitionAction = {
     name: string
     value: any
 } | {
+    type: 'setInputParameters'
+    inputParameters: {
+        name: string
+        value: any
+    }[]
+} | {
     type: 'setOutputFile'
     name: string
     fileName: string
@@ -361,6 +367,27 @@ export const dendroJobDefinitionReducer = (state: DendroProcessingJobDefinition,
                 ...state,
                 inputParameters: state.inputParameters.map(p => p.name === action.name ? {...p, value: action.value} : p)
             }
+        case 'setInputParameters': {
+            const ips = action.inputParameters
+            let somethingChanged = false
+            const newInputParameters = state.inputParameters.map(p => {
+                const ip = ips.find(ip => ip.name === p.name)
+                if (ip) {
+                    if (!deepEqual(ip.value, p.value)) {
+                        somethingChanged = true
+                        return {...p, value: ip.value}
+                    }
+                }
+                return p
+            })
+            if (!somethingChanged) {
+                return state
+            }
+            return {
+                ...state,
+                inputParameters: newInputParameters
+            }
+        }
         case 'setOutputFile':
             // check if no change
             if (state.outputFiles.find(f => f.name === action.name && f.fileName === action.fileName)) {

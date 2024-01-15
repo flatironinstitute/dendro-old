@@ -39,15 +39,23 @@ const OtherFileEditor: FunctionComponent<FigurlFileEditorProps> = ({fileName, wi
     if (!content) return <div>Loading file content...</div>
 
     return (
-        <div>
-            <pre>
-                {content}
-            </pre>
+        <div style={{position: 'absolute', width, height, overflowY: 'auto'}}>
+            {
+                fileName.endsWith('.json') ? (
+                    <pre>
+                        {JSON.stringify(JSON.parse(content), null, 4)}
+                    </pre>
+                ) : (
+                    <pre>
+                        {content}
+                    </pre>
+                )
+            }
         </div>
     )
 }
 
-const fetchTextFile = async (url: string) => {
+export const fetchTextFile = async (url: string) => {
     const response = await fetch(url)
     if (!response.ok) {
         throw Error(`Unexpected response for ${url}: ${response.status}`)
