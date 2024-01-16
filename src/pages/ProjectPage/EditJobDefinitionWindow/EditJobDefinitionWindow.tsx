@@ -467,6 +467,9 @@ const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({paramet
     if (isElectricalSeriesPathParameter(name)) {
         return <ElectricalSeriesPathSelector value={value} nwbFile={nwbFile} setValue={setValue} setValid={setValid} />
     }
+    else if (parameter.options) {
+        return <SelectEdit value={value} setValue={setValue} setValid={setValid} options={parameter.options} />
+    }
     else if (type === 'str') {
         setValid(true)
         return <input type="text" value={value || ''} onChange={evt => {setValue(evt.target.value)}} style={{width: 250}} />
@@ -498,6 +501,39 @@ const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({paramet
     else {
         return <div>Unsupported type: {type}</div>
     }
+}
+
+type SelectEditProps = {
+    value: any
+    setValue: (value: any) => void
+    setValid: (valid: boolean) => void
+    options: string[]
+}
+
+const SelectEdit: FunctionComponent<SelectEditProps> = ({value, setValue, setValid, options}) => {
+    const isValid = useMemo(() => {
+        return options.includes(value)
+    }, [value, options])
+    useEffect(() => {
+        setValid(isValid)
+    }, [isValid, setValid])
+    return (
+        <select value={value || ''} onChange={evt => {
+            for (const option of options) {
+                if (option + '' === evt.target.value) {
+                    setValue(option)
+                    return
+                }
+            }
+        }}>
+            {
+                options.map(option => (
+                    <option key={option} value={option + ''}>{option}</option>
+                ))
+            }
+        </select>
+    
+    )
 }
 
 type FloatEditProps = {
