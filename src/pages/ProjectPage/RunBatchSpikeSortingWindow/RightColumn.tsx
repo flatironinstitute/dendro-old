@@ -114,6 +114,7 @@ const LoadParametersWindow: FunctionComponent<LoadParametersWindowProps> = ({onL
     return (
         <div>
             <h3>Load parameters</h3>
+            <div>From project file:</div>
             <ul>
                 {
                     candidateParameterSetNames.map(name => (
@@ -123,6 +124,30 @@ const LoadParametersWindow: FunctionComponent<LoadParametersWindowProps> = ({onL
                     ))
                 }
             </ul>
+            <div>Or upload .json file from computer:&nbsp;
+                <input type="file" onChange={e => {
+                    if (!e.target.files) return
+                    const file = e.target.files[0]
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                        const text = reader.result as string
+                        const xx = JSON.parse(text)
+                        if ((!xx.inputParameters) || !Array.isArray(xx.inputParameters)) {
+                            alert(`Unexpected file content`)
+                            return
+                        }
+                        for (const aaa of xx.inputParameters) {
+                            if ((typeof aaa.name !== 'string')) {
+                                alert(`Unexpected file content`)
+                                return
+                            }
+                        }
+                        onLoad(file.name, xx.inputParameters)
+                    }
+                    reader.readAsText(file)
+                }} />
+            </div>
+            <hr />
             <button onClick={onClose}>Cancel</button>
         </div>
     )
@@ -196,26 +221,30 @@ const SaveParametersWindow: FunctionComponent<SaveParametersProps> = ({jobDefini
     const {projectId, refreshFiles, files} = useProject()
     const auth = useGithubAuth()
     const projectFileName = `parameter-sets/${parameterSetName}.json`
-    const fileAlreadyExists = useMemo(() => (
+    const projectFileAlreadyExists = useMemo(() => (
         files && files.find(f => f.fileName === projectFileName)
     ), [files, projectFileName])
-    const handleSave = useCallback(() => {
-        if (!processor) return
-        if (!auth) return
-
-        if (fileAlreadyExists) {
-            const ok = window.confirm(`Parameter set already exists. Overwrite?`)
-            if (!ok) return
-        }
-
+    const parameterSetJsonText = useMemo(() => {
+        if (!processor) return undefined
         const parameterSetJson = {
+            type: 'dendro-parameter-set',
+            version: 1,
             processorName: jobDefinition.processorName,
             inputParameters: jobDefinition.inputParameters,
             processorSpecParameters: processor.parameters
         }
-        const parameterSetJsonText = JSON.stringify(parameterSetJson)
+        return JSON.stringify(parameterSetJson, null, 4)
+    }, [jobDefinition, processor])
+    const handleSaveToProject = useCallback(() => {
+        if (!parameterSetJsonText) return
+        if (!auth) return
 
-        ; (async () => {
+        if (projectFileAlreadyExists) {
+            const ok = window.confirm(`Parameter set already exists. Overwrite?`)
+            if (!ok) return
+        }
+
+        (async () => {
             const {uploadUrl} = await createFileAndInitiateUpload(
                 projectId,
                 projectFileName,
@@ -237,16 +266,30 @@ const SaveParametersWindow: FunctionComponent<SaveParametersProps> = ({jobDefini
         })()
 
         onClose()
-    }, [auth, jobDefinition, onClose, processor, projectId, projectFileName, refreshFiles, fileAlreadyExists])
+    }, [parameterSetJsonText, projectFileAlreadyExists, projectId, projectFileName, auth, refreshFiles, onClose])
+    const handleSaveToJson = useCallback(() => {
+        if (!parameterSetJsonText) return
+        downloadTextFile(parameterSetJsonText, `${parameterSetName}.json`)
+    }, [parameterSetJsonText, parameterSetName])
+    const isValidParameterSetName = useMemo(() => {
+        if (!parameterSetName) return false
+        if (!parameterSetName.match(/^[a-zA-Z0-9_.-]+$/)) return false
+        if (parameterSetName.endsWith('.json')) return false
+        return true
+    },  [parameterSetName])
     return (
         <div>
             <h3>Save parameters</h3>
             <div>
                 <label>Parameter set name: </label>
                 <input type="text" value={parameterSetName} onChange={e => setParameterSetName(e.target.value)} />
+                {!isValidParameterSetName && <span style={{color: 'red'}}>&nbsp;invalid name</span>}
             </div>
+            <div>&nbsp;</div>
             <div>
-                <button onClick={handleSave}>Save</button>
+                <button onClick={handleSaveToProject} disabled={!isValidParameterSetName}>Save to project</button>
+                &nbsp;
+                <button onClick={handleSaveToJson} disabled={!isValidParameterSetName}>Save to file</button>
                 &nbsp;
                 <button onClick={onClose}>Cancel</button>
             </div>
@@ -262,6 +305,15 @@ const inputParametersMatch = (a: {name: string, value: any}[], b: {name: string,
         if (pp.value !== a[i].value) return false
     }
     return true
+}
+
+const downloadTextFile = (text: string, fileName: string) => {
+    const element = document.createElement("a")
+    const file = new Blob([text], {type: 'text/plain'})
+    element.href = URL.createObjectURL(file)
+    element.download = fileName
+    document.body.appendChild(element) // Required for this to work in FireFox (according to gh copilot)
+    element.click()
 }
 
 export default RightColumn
