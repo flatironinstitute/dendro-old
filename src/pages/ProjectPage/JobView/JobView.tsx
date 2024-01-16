@@ -9,6 +9,7 @@ import { DendroJob } from "../../../types/dendro-types";
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow";
 import { ElapsedTimeComponent } from "../FileEditor/NwbFileEditor";
 import ResourceUtilizationView from "../ResourceUtilizationView/ResourceUtilizationView";
+import { SaveParametersBar } from "../RunBatchSpikeSortingWindow/RightColumn";
 
 type Props = {
     width: number,
@@ -143,14 +144,21 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
             </ExpandableSection>
             <hr />
             <ExpandableSection title="Parameters">
-                <EditJobDefinitionWindow
-                    processor={job.processorSpec}
-                    jobDefinition={jobDefinition}
-                    secretParameterNames={secretParameterNames}
-                    readOnly={true}
-                    show={'parameters'}
-                    fileLinks={true}
-                />
+                <div>
+                    <SaveParametersBar
+                        jobDefinition={jobDefinition}
+                        processor={job.processorSpec}
+                        onLoadParameters={undefined}
+                    />
+                    <EditJobDefinitionWindow
+                        processor={job.processorSpec}
+                        jobDefinition={jobDefinition}
+                        secretParameterNames={secretParameterNames}
+                        readOnly={true}
+                        show={'parameters'}
+                        fileLinks={true}
+                    />
+                </div>
             </ExpandableSection>
             <hr />
             <ExpandableSection title="Resource utilization" defaultExpanded={false}>
