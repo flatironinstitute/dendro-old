@@ -507,7 +507,7 @@ type SelectEditProps = {
     value: any
     setValue: (value: any) => void
     setValid: (valid: boolean) => void
-    options: string[]
+    options: any[]
 }
 
 const SelectEdit: FunctionComponent<SelectEditProps> = ({value, setValue, setValid, options}) => {
