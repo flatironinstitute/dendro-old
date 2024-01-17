@@ -128,7 +128,7 @@ class AwsBatchStack(Stack):
         # )
 
         # Define the block device
-        block_device = ec2.BlockDevice(
+        block_device_2T = ec2.BlockDevice(
             device_name="/dev/xvda",
             volume=ec2.BlockDeviceVolume.ebs(
                 volume_size=2000,
@@ -136,7 +136,7 @@ class AwsBatchStack(Stack):
             )
         )
 
-        # Launch template
+        # Launch templates
         multipart_user_data = ec2.MultipartUserData()
         commands_user_data = ec2.UserData.for_linux()
         multipart_user_data.add_user_data_part(commands_user_data, ec2.MultipartBody.SHELL_SCRIPT, True)
@@ -144,19 +144,32 @@ class AwsBatchStack(Stack):
         multipart_user_data.add_commands("mkdir -p /tmp")
         multipart_user_data.add_commands("mount /dev/xvda /tmp")
 
-        launch_template = ec2.LaunchTemplate(
+        launch_template_gpu = ec2.LaunchTemplate(
             scope=self,
-            id=launch_template_id,
-            launch_template_name=launch_template_id,
-            block_devices=[block_device],
-            instance_type=ec2.InstanceType("g4dn.2xlarge"),
+            id=launch_template_id + "-gpu",
+            launch_template_name=launch_template_id + "-gpu",
+            block_devices=[block_device_2T],
+            # instance_type=ec2.InstanceType("g4dn.2xlarge"),
             machine_image=ec2.MachineImage.generic_linux(
-                ami_map=ami_map
+                ami_map=ami_map_gpu
             ),
             ebs_optimized=True,
             user_data=multipart_user_data
         )
-        Tags.of(launch_template).add("AWSBatchService", "batch")
+        Tags.of(launch_template_gpu).add("AWSBatchService", "batch")
+
+        launch_template_cpu = ec2.LaunchTemplate(
+            scope=self,
+            id=launch_template_id + "-cpu",
+            launch_template_name=launch_template_id + "-cpu",
+            block_devices=[block_device_2T],
+            machine_image=ec2.MachineImage.generic_linux(
+                ami_map=ami_map_cpu
+            ),
+            ebs_optimized=True,
+            user_data=multipart_user_data
+        )
+        Tags.of(launch_template_cpu).add("AWSBatchService", "batch")
 
         # # Create an EFS filesystem
         # if create_efs:
@@ -182,21 +195,11 @@ class AwsBatchStack(Stack):
         #     #     posix_user=efs.PosixUser(uid="1001", gid="1001")
         #     # )
 
-        # Machine image for the GPU compute environment
-        machine_image_gpu = ec2.MachineImage.generic_linux(
-            ami_map=ami_map
-        )
+        # Compute environment for GPU
         ecs_machine_image_gpu = batch.EcsMachineImage(
-            image=machine_image_gpu,
+            image=ec2.MachineImage.generic_linux(ami_map=ami_map_gpu),
             image_type=batch.EcsMachineImageType.ECS_AL2_NVIDIA
         )
-
-        # Machine image for the CPU compute environment
-        ecs_machine_image_cpu = batch.EcsMachineImage(
-            image_type=batch.EcsMachineImageType.ECS_AL2
-        )
-
-        # Compute environment for GPU
         compute_env_gpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
             id=compute_env_gpu_id,
@@ -212,11 +215,15 @@ class AwsBatchStack(Stack):
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
             instance_role=ecs_instance_role, # type: ignore because Role implements IRole
-            launch_template=launch_template,
+            launch_template=launch_template_gpu,
         )
         Tags.of(compute_env_gpu).add("DendroName", f"{stack_id}-compute-env")
 
         # Compute environment for CPU
+        ecs_machine_image_cpu = batch.EcsMachineImage(
+            image=ec2.MachineImage.generic_linux(ami_map=ami_map_cpu),
+            image_type=batch.EcsMachineImageType.ECS_AL2
+        )
         compute_env_cpu = batch.ManagedEc2EcsComputeEnvironment(
             scope=self,
             id=compute_env_cpu_id,
@@ -230,6 +237,7 @@ class AwsBatchStack(Stack):
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
             instance_role=ecs_instance_role, # type: ignore because Role implements IRole
+            launch_template=launch_template_cpu,
         )
         Tags.of(compute_env_cpu).add("DendroName", f"{stack_id}-compute-env")
 
@@ -260,7 +268,7 @@ class AwsBatchStack(Stack):
 # generated using ../devel/create_ami_map.py
 # not able to get image ID for some regions due to invalid security token.
 # used this command: aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended --region us-east-1 --output json
-ami_map = {
+ami_map_gpu = {
     "ap-south-1": "ami-0622a76878be0b6c4",
     "ap-southeast-1": "ami-0ab04c2c315eb61e2",
     "ap-southeast-2": "ami-0ebb73c7ce7e9723b",
@@ -277,4 +285,23 @@ ami_map = {
     "us-east-2": "ami-0d625ab7e92ab3a43",
     "us-west-1": "ami-0a40523920cc84619",
     "us-west-2": "ami-00bba07182e3aeb24"
+}
+
+ami_map_cpu = {
+    "ap-south-1": "ami-0ac26d07e5b3dee2c",
+    "ap-southeast-1": "ami-04c2b121d2518d721",
+    "ap-southeast-2": "ami-0a6407061c6f43c25",
+    "ap-northeast-1": "ami-0a50b50d3f0255ea3",
+    "ap-northeast-2": "ami-03c5f630f6d2dd64b",
+    "ca-central-1": "ami-0f573ab699762ead1",
+    "eu-west-1": "ami-08452023a2c1a3bac",
+    "eu-west-2": "ami-0f3246ed2fef95399",
+    "eu-west-3": "ami-06dc37dc7de5f33d0",
+    "eu-north-1": "ami-00dc593afd34193fc",
+    "eu-central-1": "ami-04fc217f16fc2aceb",
+    "sa-east-1": "ami-00c6fb0d796b16790",
+    "us-east-1": "ami-014ff0fa8ac643097",
+    "us-east-2": "ami-01fb8a683bddd95be",
+    "us-west-1": "ami-0389998efa11239f6",
+    "us-west-2": "ami-026b024d2182d335f"
 }
