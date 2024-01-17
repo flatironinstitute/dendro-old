@@ -97,22 +97,7 @@ class AwsBatchStack(Stack):
         )
         Tags.of(batch_jobs_access_role).add("DendroName", f"{stack_id}-BatchJobsAccessRole")
 
-        # Use the default VPC
-        # ec2_client = boto3.client("ec2")
-        # default_vpc_id = ec2_client.describe_vpcs(
-        #     Filters=[
-        #         {
-        #             "Name": "isDefault",
-        #             "Values": ["true"]
-        #         }
-        #     ]
-        # )["Vpcs"][0]["VpcId"]
-        # print(f'Using default vpc: {default_vpc_id}')
-        # vpc = ec2.Vpc.from_lookup(
-        #     scope=self,
-        #     id=default_vpc_id,
-        #     is_default=True
-        # )
+        # VPC
         vpc = ec2.Vpc(
             scope=self,
             id=vpc_id,
@@ -126,27 +111,7 @@ class AwsBatchStack(Stack):
             ],
         )
 
-        # Use the default Security Group
-        # default_security_group_id = ec2_client.describe_security_groups(
-        #     Filters=[
-        #         {
-        #             "Name": "vpc-id",
-        #             "Values": [default_vpc_id]
-        #         },
-        #         {
-        #             "Name": "group-name",
-        #             "Values": ["default"]
-        #         }
-        #     ]
-        # )["SecurityGroups"][0]["GroupId"]
-        # print(f'Using default security group: {default_security_group_id}')
-        # security_group = ec2.SecurityGroup.from_security_group_id(
-        #     scope=self,
-        #     id=default_security_group_id,
-        #     security_group_id=default_security_group_id,
-        #     # allow_all_ipv6_outbound=True,
-        #     allow_all_outbound=True,
-        # )
+        # Security Group
         security_group = ec2.SecurityGroup(
             scope=self,
             id=security_group_id,
@@ -156,11 +121,11 @@ class AwsBatchStack(Stack):
         )
         # Add inbound rules to the security group as required
         # For example, to allow SSH access (not recommended for production)
-        security_group.add_ingress_rule(
-            peer=ec2.Peer.any_ipv4(),
-            connection=ec2.Port.tcp(22),
-            description="Allow SSH access from anywhere"
-        )
+        # security_group.add_ingress_rule(
+        #     peer=ec2.Peer.any_ipv4(),
+        #     connection=ec2.Port.tcp(22),
+        #     description="Allow SSH access from anywhere"
+        # )
 
         # Define the block device
         block_device = ec2.BlockDevice(
@@ -239,10 +204,10 @@ class AwsBatchStack(Stack):
             instance_types=[
                 ec2.InstanceType("g4dn.xlarge"), # 4 vCPUs, 16 GiB
                 ec2.InstanceType("g4dn.2xlarge"), # 8 vCPUs, 32 GiB
-                # ec2.InstanceType("g4dn.4xlarge"), # 16 vCPUs, 64 GiB
+                ec2.InstanceType("g4dn.4xlarge"), # 16 vCPUs, 64 GiB
             ],
             images=[ecs_machine_image_gpu],
-            maxv_cpus=32,
+            maxv_cpus=64,
             minv_cpus=0,
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
@@ -257,11 +222,10 @@ class AwsBatchStack(Stack):
             id=compute_env_cpu_id,
             vpc=vpc,
             instance_types=[
-                # tried using t4g.* instance types but there was an error during cdk deploy
                 ec2.InstanceType("optimal")
             ],
             images=[ecs_machine_image_cpu],
-            maxv_cpus=32,
+            maxv_cpus=128,
             minv_cpus=0,
             security_groups=[security_group],
             service_role=batch_service_role, # type: ignore because Role implements IRole
