@@ -16,6 +16,7 @@ def main():
     for region in regions:
         print(f'Region: {region}')
         cmd = f'aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended --region {region} --output json'
+        # cmd = f'aws ssm get-parameter --name /aws/service/ecs/optimized-ami/amazon-linux-2023/recommended --region {region} --output json'
         print(cmd)
         try:
             output = subprocess.check_output(cmd, shell=True)
