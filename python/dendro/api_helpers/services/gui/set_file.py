@@ -13,7 +13,8 @@ async def set_file(
     content: str, # for example, url:https://...
     job_id: Union[str, None],
     size: int,
-    metadata: dict
+    metadata: dict,
+    is_folder: bool = False
 ):
     existing_file = await fetch_file(project_id, file_name)
     if existing_file is not None:
@@ -31,6 +32,7 @@ async def set_file(
         timestampCreated=time.time(),
         content=content,
         metadata=metadata,
+        isFolder=is_folder,
         jobId=job_id
     )
     await insert_file(new_file)

@@ -23,6 +23,7 @@ class DendroJobInputFile(BaseModel):
     name: str
     fileId: str
     fileName: str
+    isFolder: Union[bool, None] = None
 
 class DendroJobInputParameter(BaseModel):
     name: str
@@ -33,6 +34,7 @@ class DendroJobOutputFile(BaseModel):
     name: str
     fileName: str
     fileId: Union[str, None] = None
+    isFolder: Union[bool, None] = None
 
 class ComputeResourceSpecProcessorParameter(BaseModel):
     name: str
@@ -47,7 +49,15 @@ class ComputeResourceSpecProcessorInput(BaseModel):
     description: str
     list: bool = False
 
+class ComputeResourceSpecProcessorInputFolder(BaseModel):
+    name: str
+    description: str
+
 class ComputeResourceSpecProcessorOutput(BaseModel):
+    name: str
+    description: str
+
+class ComputeResourceSpecProcessorOutputFolder(BaseModel):
     name: str
     description: str
 
@@ -62,7 +72,9 @@ class ComputeResourceSpecProcessor(BaseModel):
     name: str
     description: str
     inputs: List[ComputeResourceSpecProcessorInput]
+    inputFolders: Union[List[ComputeResourceSpecProcessorInputFolder], None] = None
     outputs: List[ComputeResourceSpecProcessorOutput]
+    outputFolders: Union[List[ComputeResourceSpecProcessorOutputFolder], None] = None
     parameters: List[ComputeResourceSpecProcessorParameter]
     attributes: List[ComputeResourceSpecProcessorAttribute]
     tags: List[ComputeResourceSpecProcessorTag]
@@ -121,6 +133,7 @@ class DendroFile(BaseModel):
     timestampCreated: float
     content: str # e.g., 'url:https://...'
     metadata: dict
+    isFolder: Union[bool, None] = None
     jobId: Union[str, None] = None # the job that produced this file
 
 # obsolete
@@ -173,7 +186,19 @@ class ProcessorGetJobResponseInput(BaseModel):
     name: str
     url: str
 
+class ProcessorGetJobResponseInputFolderFile(BaseModel):
+    name: str
+    url: str
+    size: Union[int, None] = None
+
+class ProcessorGetJobResponseInputFolder(BaseModel):
+    name: str
+    files: List[ProcessorGetJobResponseInputFolderFile]
+
 class ProcessorGetJobResponseOutput(BaseModel):
+    name: str
+
+class ProcessorGetJobResponseOutputFolder(BaseModel):
     name: str
 
 class ProcessorGetJobResponseParameter(BaseModel):
@@ -185,7 +210,9 @@ class ProcessorGetJobResponse(BaseModel):
     status: str
     processorName: str
     inputs: List[ProcessorGetJobResponseInput]
+    inputFolders: Union[List[ProcessorGetJobResponseInputFolder], None] = None
     outputs: List[ProcessorGetJobResponseOutput]
+    outputFolders: Union[List[ProcessorGetJobResponseOutputFolder], None] = None
     parameters: List[ProcessorGetJobResponseParameter]
 
 class DendroUser(BaseModel):
@@ -195,10 +222,12 @@ class DendroUser(BaseModel):
 class CreateJobRequestInputFile(BaseModel):
     name: str
     fileName: str
+    isFolder: Union[bool, None] = None
 
 class CreateJobRequestOutputFile(BaseModel):
     name: str
     fileName: str
+    isFolder: Union[bool, None] = None
 
 class CreateJobRequestInputParameter(BaseModel):
     name: str

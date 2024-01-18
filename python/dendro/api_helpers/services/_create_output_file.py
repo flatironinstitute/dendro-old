@@ -14,6 +14,7 @@ async def _create_output_file(*,
     project_id: str,
     user_id: str,
     job_id: str,
+    is_folder: bool = False,
     replace_pending: bool = False
 ) -> str: # returns the ID of the created file
     if url == 'pending':
@@ -67,6 +68,7 @@ async def _create_output_file(*,
         timestampCreated=time.time(),
         content=f'url:{url}' if url != 'pending' else 'pending',
         metadata={},
+        isFolder=is_folder,
         jobId=job_id
     )
     await files_collection.insert_one(_model_dump(new_file, exclude_none=True))

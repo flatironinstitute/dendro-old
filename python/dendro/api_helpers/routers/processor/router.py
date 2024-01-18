@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Header
 from .... import BaseModel
 from ...services.processor.update_job_status import update_job_status
 from ...services.processor.get_upload_url import get_upload_url, get_additional_upload_url
-from ....common.dendro_types import ProcessorGetJobResponse, ProcessorGetJobResponseInput, ProcessorGetJobResponseOutput, ProcessorGetJobResponseParameter
+from ....common.dendro_types import ProcessorGetJobResponse, ProcessorGetJobResponseInput, ProcessorGetJobResponseOutput, ProcessorGetJobResponseOutputFolder, ProcessorGetJobResponseParameter, ProcessorGetJobResponseInputFolder, ProcessorGetJobResponseInputFolderFile
 from ...clients.db import fetch_job, fetch_file
 
 router = APIRouter()
@@ -24,6 +24,7 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
         job.jobPrivateKey = ''
 
         inputs: List[ProcessorGetJobResponseInput] = []
+        input_folders: List[ProcessorGetJobResponseInputFolder] = []
         for input in job.inputFiles:
             file = await fetch_file(project_id=job.projectId, file_name=input.fileName)
             if file is None:
@@ -31,17 +32,46 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
             if not file.content.startswith('url:'):
                 raise Exception(f"Project file {input.fileName} is not a URL")
             url = file.content[len('url:'):]
-            url = await _resolve_dandi_url(url, dandi_api_key=job.dandiApiKey)
-            inputs.append(ProcessorGetJobResponseInput(
-                name=input.name,
-                url=url
-            ))
+            if not input.isFolder:
+                # regular file
+                if file.isFolder:
+                    raise Exception(f"Mismatch. input is regular file but project file {input.fileName} is a folder")
+                url = await _resolve_dandi_url(url, dandi_api_key=job.dandiApiKey)
+                inputs.append(ProcessorGetJobResponseInput(
+                    name=input.name,
+                    url=url
+                ))
+            else:
+                # folder
+                if not file.isFolder:
+                    raise Exception(f"Mismatch. input is folder but project file {input.fileName} is not a folder")
+                file_manifest_obj = _download_file_manifest_obj(url)
+                # get all files in the folder
+                folder_files: List[ProcessorGetJobResponseInputFolderFile] = []
+                for f in file_manifest_obj['files']:
+                    folder_files.append(ProcessorGetJobResponseInputFolderFile(
+                        name=f['name'],
+                        url=f'{url}/{f["name"]}',
+                        size=f.get('size', None)
+                    ))
+                input_folders.append(ProcessorGetJobResponseInputFolder(
+                    name=input.name,
+                    files=folder_files
+                ))
 
         outputs: List[ProcessorGetJobResponseOutput] = []
+        output_folders: List[ProcessorGetJobResponseOutputFolder] = []
         for output in job.outputFiles:
-            outputs.append(ProcessorGetJobResponseOutput(
-                name=output.name
-            ))
+            if not output.isFolder:
+                # regular file
+                outputs.append(ProcessorGetJobResponseOutput(
+                    name=output.name
+                ))
+            else:
+                # folder
+                output_folders.append(ProcessorGetJobResponseOutputFolder(
+                    name=output.name
+                ))
 
         parameters: List[ProcessorGetJobResponseParameter] = []
         for parameter in job.inputParameters:
@@ -55,7 +85,9 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
             status=job.status,
             processorName=job.processorName,
             inputs=inputs,
+            inputFolders=input_folders,
             outputs=outputs,
+            outputFolders=output_folders,
             parameters=parameters
         )
     except Exception as e:
@@ -155,3 +187,11 @@ async def processor_get_additional_upload_url(job_id: str, sha1: str, job_privat
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+def _download_file_manifest_obj(folder_url: str):
+    import requests
+    url = f'{folder_url}/file_manifest.json'
+    resp = requests.get(url)
+    if resp.status_code != 200:
+        raise Exception(f'Error downloading file manifest: {resp.status_code} {resp.reason}: {resp.text}')
+    return resp.json()

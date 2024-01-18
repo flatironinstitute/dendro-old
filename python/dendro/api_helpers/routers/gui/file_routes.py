@@ -42,6 +42,7 @@ class SetFileRequest(BaseModel):
     jobId: Union[str, None] = None
     size: Union[int, None] = None
     metadata: dict = {}
+    isFolder: bool = False
 
 class SetFileResponse(BaseModel):
     fileId: str
@@ -59,6 +60,7 @@ async def set_file(project_id, file_name, data: SetFileRequest, github_access_to
     job_id = data.jobId
     size = data.size
     metadata = data.metadata
+    is_folder = data.isFolder
 
     assert size is not None, "size must be specified"
 
@@ -67,7 +69,7 @@ async def set_file(project_id, file_name, data: SetFileRequest, github_access_to
 
     _check_user_can_edit_project(project, user_id)
 
-    file_id = await service_set_file(project_id=project_id, user_id=user_id, file_name=file_name, content=content, job_id=job_id, size=size, metadata=metadata)
+    file_id = await service_set_file(project_id=project_id, user_id=user_id, file_name=file_name, content=content, job_id=job_id, size=size, metadata=metadata, is_folder=is_folder)
 
     return SetFileResponse(fileId=file_id, success=True)
 

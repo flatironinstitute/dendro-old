@@ -302,6 +302,7 @@ export type DendroProcessingJobDefinition = {
     inputFiles: {
         name: string
         fileName: string
+        isFolder?: boolean
     }[],
     inputParameters: {
         name: string
@@ -310,6 +311,7 @@ export type DendroProcessingJobDefinition = {
     outputFiles: {
         name: string
         fileName: string
+        isFolder?: boolean
     }[]
 }
 
@@ -317,6 +319,7 @@ export type DendroProcessingJobDefinitionAction = {
     type: 'setInputFile'
     name: string
     fileName: string
+    isFolder?: boolean
 } | {
     type: 'setInputParameter'
     name: string
@@ -331,6 +334,7 @@ export type DendroProcessingJobDefinitionAction = {
     type: 'setOutputFile'
     name: string
     fileName: string
+    isFolder?: boolean
 } | {
     type: 'setProcessorName'
     processorName: string
@@ -351,12 +355,12 @@ export const dendroJobDefinitionReducer = (state: DendroProcessingJobDefinition,
     switch (action.type) {
         case 'setInputFile':
             // check if no change
-            if (state.inputFiles.find(f => f.name === action.name && f.fileName === action.fileName)) {
+            if (state.inputFiles.find(f => f.name === action.name && f.fileName === action.fileName && f.isFolder === action.isFolder)) {
                 return state
             }
             return {
                 ...state,
-                inputFiles: state.inputFiles.map(f => f.name === action.name ? {...f, fileName: action.fileName} : f)
+                inputFiles: state.inputFiles.map(f => f.name === action.name ? {...f, fileName: action.fileName, isFolder: action.isFolder} : f)
             }
         case 'setInputParameter':
             // check if no change
@@ -390,12 +394,12 @@ export const dendroJobDefinitionReducer = (state: DendroProcessingJobDefinition,
         }
         case 'setOutputFile':
             // check if no change
-            if (state.outputFiles.find(f => f.name === action.name && f.fileName === action.fileName)) {
+            if (state.outputFiles.find(f => f.name === action.name && f.fileName === action.fileName && f.isFolder === action.isFolder)) {
                 return state
             }
             return {
                 ...state,
-                outputFiles: state.outputFiles.map(f => f.name === action.name ? {...f, fileName: action.fileName} : f)
+                outputFiles: state.outputFiles.map(f => f.name === action.name ? {...f, fileName: action.fileName, isFolder: action.isFolder} : f)
             }
         case 'setProcessorName':
             // check if no change
