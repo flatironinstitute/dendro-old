@@ -13,12 +13,19 @@ async def _create_output_file(*,
     url: str,
     project_id: str,
     user_id: str,
-    job_id: str
+    job_id: str,
+    replace_pending: bool = False
 ) -> str: # returns the ID of the created file
-    if not using_mock():
-        size = await _get_size_for_remote_file(url)
+    if url == 'pending':
+        if replace_pending:
+            raise Exception('Cannot replace pending file with another pending file')
+        # this is the output of a job that has not completed yet
+        size = 0
     else:
-        size = 1 # size of mock file
+        if not using_mock():
+            size = await _get_size_for_remote_file(url)
+        else:
+            size = 1 # size of mock file
 
     client = _get_mongo_client()
     projects_collection = client['dendro']['projects']
@@ -28,23 +35,37 @@ async def _create_output_file(*,
         'projectId': project_id,
         'fileName': file_name
     })
+    existing_file = DendroFile(**existing_file) if existing_file is not None else None
+    deleted_old_file = False
     if existing_file is not None:
-        await files_collection.delete_one({
-            'projectId': project_id,
-            'fileName': file_name
-        })
-        deleted_old_file = True
+        if replace_pending:
+            if existing_file.content != 'pending':
+                raise Exception('Error replacing pending file: existing file is not pending')
+            file_id = existing_file.fileId # we will replace this file and it's important to use the same file ID
+            await files_collection.delete_one({
+                'projectId': project_id,
+                'fileId': file_id
+            })
+        else:
+            deleted_old_file = True
+            file_id = _create_random_id(8)
+            await files_collection.delete_one({
+                'projectId': project_id,
+                'fileName': file_name
+            })
     else:
-        deleted_old_file = False
+        if replace_pending:
+            raise Exception('Cannot replace pending file because it does not exist')
+        file_id = _create_random_id(8)
 
     new_file = DendroFile(
         projectId=project_id,
-        fileId=_create_random_id(8),
+        fileId=file_id,
         userId=user_id,
         fileName=file_name,
         size=size,
         timestampCreated=time.time(),
-        content=f'url:{url}',
+        content=f'url:{url}' if url != 'pending' else 'pending',
         metadata={},
         jobId=job_id
     )

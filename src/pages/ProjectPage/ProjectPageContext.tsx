@@ -113,7 +113,7 @@ type ProjectPageContextType = {
     projectId: string
     project?: DendroProject
     files?: DendroFile[]
-    filesIncludingPending?: DendroFile[]
+    // filesIncludingPending?: DendroFile[]
     openTabs: {
         tabName: string
         content?: string
@@ -244,11 +244,12 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
             if ((message.type === 'jobStatusChanged') || (message.type === 'newPendingJob')) {
                 if (message.projectId === projectId) {
                     refreshJobs()
+                    refreshFiles()
                 }
             }
         })
         return () => {cancel()}
-    }, [projectId, refreshJobs])
+    }, [projectId, refreshJobs, refreshFiles])
 
     const deleteJobHandler = useCallback(async (jobId: string) => {
         await deleteJob(jobId, auth)
@@ -284,37 +285,37 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         return tab.editedContent !== tab.content
     }), [openTabs])
 
-    const pendingFiles = useMemo(() => {
-        if (!jobs) return undefined
-        if (!files) return undefined
-        const fileNames = new Set(files.map(f => f.fileName))
-        const pf: DendroFile[] = []
-        for (const job of jobs) {
-            if (['pending', 'starting', 'queued', 'running', 'failed'].includes(job.status)) {
-                for (const out of job.outputFiles) {
-                    if (!fileNames.has(out.fileName)) {
-                        pf.push({
-                            projectId: job.projectId,
-                            fileId: '',
-                            userId: job.userId,
-                            fileName: out.fileName,
-                            size: 0,
-                            timestampCreated: 0,
-                            content: 'pending:' + job.status,
-                            metadata: {},
-                            jobId: job.jobId
-                        })
-                        fileNames.add(out.fileName)
-                    }
-                }
-            }
-        }
-        return pf
-    }, [files, jobs])
+    // const pendingFiles = useMemo(() => {
+    //     if (!jobs) return undefined
+    //     if (!files) return undefined
+    //     const fileNames = new Set(files.map(f => f.fileName))
+    //     const pf: DendroFile[] = []
+    //     for (const job of jobs) {
+    //         if (['pending', 'starting', 'queued', 'running', 'failed'].includes(job.status)) {
+    //             for (const out of job.outputFiles) {
+    //                 if (!fileNames.has(out.fileName)) {
+    //                     pf.push({
+    //                         projectId: job.projectId,
+    //                         fileId: '',
+    //                         userId: job.userId,
+    //                         fileName: out.fileName,
+    //                         size: 0,
+    //                         timestampCreated: 0,
+    //                         content: 'pending:' + job.status,
+    //                         metadata: {},
+    //                         jobId: job.jobId
+    //                     })
+    //                     fileNames.add(out.fileName)
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return pf
+    // }, [files, jobs])
 
-    const filesIncludingPending = useMemo(() => {
-        return files && pendingFiles ? [...files, ...pendingFiles] : undefined
-    }, [files, pendingFiles])
+    // const filesIncludingPending = useMemo(() => {
+    //     return files && pendingFiles ? [...files, ...pendingFiles] : undefined
+    // }, [files, pendingFiles])
 
     const [computeResource, setComputeResource] = React.useState<DendroComputeResource | undefined>(undefined)
     useEffect(() => {
@@ -356,7 +357,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         projectId,
         project,
         files,
-        filesIncludingPending,
+        // filesIncludingPending,
         openTabs: openTabs.openTabs,
         currentTabName: openTabs.currentTabName,
         jobs,
@@ -379,7 +380,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         deleteFile: deleteFileHandler,
         fileHasBeenEdited,
         refreshProject
-    }), [projectId, project, files, filesIncludingPending, openTabs, jobs, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited, refreshProject])
+    }), [projectId, project, files, openTabs, jobs, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited, refreshProject])
 
     return (
         <ProjectPageContext.Provider value={value}>

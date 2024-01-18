@@ -1,18 +1,9 @@
-import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
-import { useModalWindow } from "@fi-sci/modal-window"
-import { RemoteH5File, getRemoteH5File } from "../../../RemoteH5File/RemoteH5File";
 import { Hyperlink } from "@fi-sci/misc";
-import ModalWindow from "@fi-sci/modal-window";
 import { Splitter } from "@fi-sci/splitter";
-import JobsWindow from "../JobsWindow/JobsWindow";
-import LoadNwbInPythonWindow from "../LoadNwbInPythonWindow/LoadNwbInPythonWindow";
-import { useProject } from "../ProjectPageContext";
-import SpikeSortingOutputSection from "./SpikeSortingOutputSection/SpikeSortingOutputSection";
-import { DendroJob } from "../../../types/dendro-types";
-import { AssetResponse } from "../../DandiBrowser/types";
-import { getDandiApiHeaders } from "../../DandiBrowser/DandiBrowser";
-import ElectricalSeriesSection from "./ElectricalSeriesSection/ElectricalSeriesSection";
+import { FunctionComponent, useEffect, useMemo, useState } from "react";
 import { RemoteNH5FileClient, RemoteNH5Group } from "../../../nh5";
+import JobsWindow from "../JobsWindow/JobsWindow";
+import { useProject } from "../ProjectPageContext";
 import { ElapsedTimeComponent } from "./NwbFileEditor";
 
 
@@ -60,18 +51,18 @@ export const useNh5FileClient = (nh5Url?: string) => {
 }
 
 const Nh5FileEditorChild: FunctionComponent<Props> = ({fileName, width, height}) => {
-    const {jobs, filesIncludingPending, openTab} = useProject()
+    const {jobs, openTab, files} = useProject()
 
     const {projectId} = useProject()
 
     const nbFile = useMemo(() => {
-        if (!filesIncludingPending) return undefined
-        return filesIncludingPending.find(f => (f.fileName === fileName))
-    }, [filesIncludingPending, fileName])
+        if (!files) return undefined
+        return files.find(f => (f.fileName === fileName))
+    }, [files, fileName])
 
     // const metadata = nbFile?.metadata
     const cc = nbFile?.content || ''
-    const nh5Url = cc.startsWith('url:') ? cc.slice('url:'.length) : ''
+    const nh5Url = cc.startsWith('url:') ? cc.slice('url:'.length) : cc
 
     const nh5FileClient = useNh5FileClient(nh5Url)
 

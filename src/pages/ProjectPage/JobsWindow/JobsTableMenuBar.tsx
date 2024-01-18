@@ -14,7 +14,7 @@ type JobsTableMenuBarProps = {
 }
 
 const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, height, selectedJobIds, onResetSelection, createJobEnabled, createJobTitle}) => {
-    const {deleteJob, refreshJobs, projectRole} = useProject()
+    const {deleteJob, refreshJobs, refreshFiles, projectRole} = useProject()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {
         if (!['admin', 'editor'].includes(projectRole || '')) {
@@ -32,9 +32,10 @@ const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, heig
         finally {
             setOperating(false)
             refreshJobs()
+            refreshFiles
             onResetSelection()
         }
-    }, [selectedJobIds, deleteJob, refreshJobs, onResetSelection, projectRole])
+    }, [selectedJobIds, deleteJob, refreshJobs, refreshFiles, onResetSelection, projectRole])
 
     return (
         <div>

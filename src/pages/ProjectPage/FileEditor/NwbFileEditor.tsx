@@ -84,16 +84,16 @@ export const useElectricalSeriesPaths = (nwbFile: RemoteH5File | undefined) => {
 const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height}) => {
     const [assetResponse, setAssetResponse] = useState<AssetResponse | null>(null)
 
-    const {project, jobs, filesIncludingPending, openTab} = useProject()
+    const {project, jobs, openTab, files} = useProject()
 
     const nbFile = useMemo(() => {
-        if (!filesIncludingPending) return undefined
-        return filesIncludingPending.find(f => (f.fileName === fileName))
-    }, [filesIncludingPending, fileName])
+        if (!files) return undefined
+        return files.find(f => (f.fileName === fileName))
+    }, [files, fileName])
 
     const metadata = nbFile?.metadata
     const cc = nbFile?.content || ''
-    const nwbUrl = cc.startsWith('url:') ? cc.slice('url:'.length) : ''
+    const nwbUrl = cc.startsWith('url:') ? cc.slice('url:'.length) : cc
     // const nwbFile = useNwbFile(nwbUrl)
     // const electricalSeriesPaths = useElectricalSeriesPaths(nwbFile)
 

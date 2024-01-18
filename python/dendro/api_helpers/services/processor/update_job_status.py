@@ -49,7 +49,8 @@ async def update_job_status(job: DendroJob, status: str, error: Union[str, None]
                 url=output_file_url,
                 project_id=job.projectId,
                 user_id=job.userId,
-                job_id=job.jobId
+                job_id=job.jobId,
+                replace_pending=True
             )
             output_file_ids.append(output_file_id)
             output_file.fileId = output_file_id
@@ -70,9 +71,7 @@ async def update_job_status(job: DendroJob, status: str, error: Union[str, None]
     elif new_status == 'failed':
         update['timestampFinished'] = time.time()
 
-    # if update is non-empty, then update the job
-    if len(update) > 0:
-        await update_job(job_id=job.jobId, update=update)
+    await update_job(job_id=job.jobId, update=update)
 
     await publish_pubsub_message(
         channel=job.computeResourceId,

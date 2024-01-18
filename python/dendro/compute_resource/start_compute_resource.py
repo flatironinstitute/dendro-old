@@ -125,11 +125,15 @@ class Daemon:
             return
         if not self._compute_resource_private_key:
             return
-        resp = _compute_resource_get_api_request(
-            url_path=url_path,
-            compute_resource_id=self._compute_resource_id,
-            compute_resource_private_key=self._compute_resource_private_key
-        )
+        try:
+            resp = _compute_resource_get_api_request(
+                url_path=url_path,
+                compute_resource_id=self._compute_resource_id,
+                compute_resource_private_key=self._compute_resource_private_key
+            )
+        except Exception as e:
+            print(f'Error in compute resource get api request for {url_path}; {e}')
+            return
         jobs = resp['jobs']
         jobs = [DendroJob(**job) for job in jobs]
         self._job_manager.handle_jobs(jobs)

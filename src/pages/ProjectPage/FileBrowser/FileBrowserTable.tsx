@@ -6,6 +6,7 @@ import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "
 import { timeAgoString } from "../../../timeStrings"
 import { SelectedStrings, SelectedStringsAction, expandedFoldersReducer } from "./FileBrowser2"
 import formatByteCount from "./formatByteCount"
+import { DendroJob } from "../../../types/dendro-types"
 
 export type FileItem = {
     type: 'file'
@@ -15,6 +16,7 @@ export type FileItem = {
     size: number
     timestampCreated: number
     content?: string
+    associatedJob?: DendroJob
 } | {
     type: 'folder'
     id: string
@@ -26,6 +28,7 @@ export type FileBrowserTableFile = {
     size: number
     timestampCreated: number
     content?: string
+    associatedJob?: DendroJob
 }
 
 type TreeNode = {
@@ -44,11 +47,14 @@ type FileBrowserTableProps = {
     currentTabName?: string
     onOpenFile: (fileName: string) => void
     multiSelect: boolean
+    userCanApproveJobs?: boolean
+    onApproveJob?: (jobId: string) => void
+    jobsApprovedInThisSession?: Set<string>
 }
 
 const colWidth = 15
 
-const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeColumn, hideModifiedColumn, files, selectedFileNames, selectedFileNamesDispatch, currentTabName, onOpenFile, multiSelect}) => {
+const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeColumn, hideModifiedColumn, files, selectedFileNames, selectedFileNamesDispatch, currentTabName, onOpenFile, multiSelect, userCanApproveJobs, onApproveJob, jobsApprovedInThisSession}) => {
     const [expandedFolders, expandedFoldersDispatch] = useReducer(expandedFoldersReducer, new Set<string>())
     const itemIsVisible = useMemo(() => ((path: string) => {
         if (!path) return false
@@ -178,7 +184,8 @@ const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeCol
                     selected: 'file:' + node.name === currentTabName,
                     size: node.file?.size || 0,
                     timestampCreated: node.file?.timestampCreated || 0,
-                    content: node.file?.content
+                    content: node.file?.content,
+                    associatedJob: node.file?.associatedJob
                 })
             }
         }
@@ -189,6 +196,8 @@ const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeCol
     const handleClickFile = useCallback((fileName: string) => {
         onOpenFile(fileName)
     }, [onOpenFile])
+
+    const pendingApprovalTitle = "This job is pending approval by the owner of the compute resource."
 
     return (
         <table className="file-browser-table">
@@ -228,8 +237,21 @@ const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeCol
                                     x.type === 'file' ? (
                                         <Hyperlink
                                             onClick={() => handleClickFile(x.name)}
-                                            color={x.content?.startsWith('pending:') ? x.content === 'pending:failed' ? 'red' : 'gray' : undefined}
-                                        >{depthIndentation(x.name)}{baseName(x.name)}{x.content?.startsWith('pending:') ? ` (${x.content.slice('pending:'.length)})` : ""}</Hyperlink>
+                                            color={x.content === 'pending' ? x.associatedJob?.status === 'failed' ? 'red' : 'gray' : undefined}
+                                        >{depthIndentation(x.name)}{baseName(x.name)}{
+                                            x.content === 'pending' ? (
+                                                x.associatedJob?.pendingApproval ? (
+                                                    <>
+                                                        <span title={pendingApprovalTitle} style={{color: 'darkmagenta', cursor: 'pointer'}}>&nbsp;pending approval&nbsp;</span>
+                                                        {
+                                                            userCanApproveJobs && onApproveJob && !jobsApprovedInThisSession?.has(x.associatedJob?.jobId || '') && (
+                                                                <>&nbsp;<Hyperlink onClick={() => onApproveJob(x.associatedJob?.jobId || '')}>approve</Hyperlink></>
+                                                            )
+                                                        }
+                                                    </>
+                                                ) : ` (${x.associatedJob?.status})`
+                                             ) : ""
+                                        }</Hyperlink>
                                     ) : (
                                         <span style={{cursor: 'pointer'}} onClick={() => expandedFoldersDispatch({type: 'toggle', path: x.name})}>
                                             {depthIndentation(x.name)}

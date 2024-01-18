@@ -55,10 +55,29 @@ async def fetch_project(project_id: str, *, raise_on_not_found=False) -> Union[D
             return None
     return DendroProject(**project) # validate project
 
-async def fetch_project_files(project_id: str) -> List[DendroFile]:
+async def fetch_project_files(project_id: str, *, pending_only=False) -> List[DendroFile]:
     client = _get_mongo_client()
     files_collection = client['dendro']['files']
-    files = await files_collection.find({'projectId': project_id}).to_list(length=None) # type: ignore
+    query = {
+        'projectId': project_id
+    }
+    if pending_only:
+        query['content'] = 'pending'
+    files = await files_collection.find(query).to_list(length=None) # type: ignore
+    for file in files:
+        _remove_id_field(file)
+    files = [DendroFile(**file) for file in files] # validate files
+    return files
+
+async def fetch_multi_project_files(project_ids: List[str], *, pending_only=False) -> List[DendroFile]:
+    client = _get_mongo_client()
+    files_collection = client['dendro']['files']
+    query: dict = {
+        'projectId': {'$in': project_ids}
+    }
+    if pending_only:
+        query['content'] = 'pending'
+    files = await files_collection.find(query).to_list(length=None) # type: ignore
     for file in files:
         _remove_id_field(file)
     files = [DendroFile(**file) for file in files] # validate files
