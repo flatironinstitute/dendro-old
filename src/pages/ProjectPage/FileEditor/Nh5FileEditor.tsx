@@ -62,7 +62,7 @@ const Nh5FileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
 
     // const metadata = nbFile?.metadata
     const cc = nbFile?.content || ''
-    const nh5Url = cc.startsWith('url:') ? cc.slice('url:'.length) : ''
+    const nh5Url = cc.startsWith('url:') ? cc.slice('url:'.length) : cc
 
     const nh5FileClient = useNh5FileClient(nh5Url)
 

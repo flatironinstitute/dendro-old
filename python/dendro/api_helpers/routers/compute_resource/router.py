@@ -3,7 +3,7 @@ from .... import BaseModel
 from fastapi import APIRouter, Header
 from ...services._crypto_keys import _verify_signature_str
 from ....common.dendro_types import DendroComputeResourceApp, DendroFile, DendroJob, ComputeResourceSpec, PubsubSubscription
-from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, fetch_project_files, set_compute_resource_spec
+from ...clients.db import fetch_compute_resource, fetch_compute_resource_jobs, fetch_multi_project_files, set_compute_resource_spec
 from ...core.settings import get_settings
 from ....mock import using_mock
 from ..common import api_route_wrapper
@@ -104,7 +104,11 @@ async def compute_resource_get_unfinished_jobs(
     jobs = await fetch_compute_resource_jobs(compute_resource_id, statuses=['pending', 'queued', 'starting', 'running'], exclude_those_pending_approval=True, include_private_keys=True)
 
     # exclude those for which the input files are pending
-    pending_output_files: List[DendroFile] = await fetch_project_files(project_id=compute_resource_id, pending_only=True)
+    relevant_project_ids: list[str] = []
+    for job in jobs:
+        if job.projectId not in relevant_project_ids:
+            relevant_project_ids.append(job.projectId)
+    pending_output_files: List[DendroFile] = await fetch_multi_project_files(project_ids=relevant_project_ids, pending_only=True)
     pending_output_file_names = set([f.fileName for f in pending_output_files])
     ready_jobs: List[DendroJob] = []
     for job in jobs:

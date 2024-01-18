@@ -36,6 +36,7 @@ async def _create_output_file(*,
         'fileName': file_name
     })
     existing_file = DendroFile(**existing_file) if existing_file is not None else None
+    deleted_old_file = False
     if existing_file is not None:
         if replace_pending:
             if existing_file.content != 'pending':
@@ -55,7 +56,6 @@ async def _create_output_file(*,
     else:
         if replace_pending:
             raise Exception('Cannot replace pending file because it does not exist')
-        deleted_old_file = False
         file_id = _create_random_id(8)
 
     new_file = DendroFile(

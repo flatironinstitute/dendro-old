@@ -93,7 +93,7 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
 
     const metadata = nbFile?.metadata
     const cc = nbFile?.content || ''
-    const nwbUrl = cc.startsWith('url:') ? cc.slice('url:'.length) : ''
+    const nwbUrl = cc.startsWith('url:') ? cc.slice('url:'.length) : cc
     // const nwbFile = useNwbFile(nwbUrl)
     // const electricalSeriesPaths = useElectricalSeriesPaths(nwbFile)
 
