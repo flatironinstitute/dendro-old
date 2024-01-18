@@ -383,13 +383,19 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
                 secret=secret if secret is not None else False
             ))
         elif _is_pydantic_model_class(annotation):
-            inputs0, outputs0, parameters0 = _get_context_inputs_outputs_parameters_for_model(annotation)
+            inputs0, input_folders0, outputs0, output_folders0, parameters0 = _get_context_inputs_outputs_parameters_for_model(annotation)
             for input0 in inputs0:
                 input0.name = f'{name}.{input0.name}'
                 inputs.append(input0)
+            for input_folder0 in input_folders0:
+                input_folder0.name = f'{name}.{input_folder0.name}'
+                input_folders.append(input_folder0)
             for output0 in outputs0:
                 output0.name = f'{name}.{output0.name}'
                 outputs.append(output0)
+            for output_folder0 in output_folders0:
+                output_folder0.name = f'{name}.{output_folder0.name}'
+                output_folders.append(output_folder0)
             for parameter0 in parameters0:
                 parameter0.name = f'{name}.{parameter0.name}'
                 parameters.append(parameter0)

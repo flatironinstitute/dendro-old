@@ -241,7 +241,7 @@ def _check_job_is_consistent_with_processor_spec(
     for output in processor_spec.outputs:
         if not any(x.name == output.name and not x.isFolder for x in output_files_from_request):
             raise CreateJobException(f"Required output not found: {output.name}")
-    
+
     # check that the required output folders are present
     for output in processor_spec.outputFolders:
         if not any(x.name == output.name and x.isFolder for x in output_files_from_request):

@@ -7,7 +7,9 @@ from ._run_job_child_process import _run_job_child_process
 from ._load_spec_from_uri import _load_spec_from_uri
 from .ProcessorBase import ProcessorBase
 from .InputFile import InputFile
+from .InputFolder import InputFolder
 from .OutputFile import OutputFile
+from .OutputFolder import OutputFolder
 
 
 class DendroAppException(Exception):
@@ -120,6 +122,16 @@ class App:
                 else:
                     raise Exception(f'Input value for {input.name} must either be a URL or a local path starting with /, ./ or ../. Got: {input_value}')
 
+            # handle input folders coming in as url's
+            for input_folder in processor._input_folders:
+                input_folder_value = _get_in_dict_where_key_may_have_dots(context, input_folder.name)
+                if input_folder_value.startswith('http://') or input_folder_value.startswith('https://'):
+                    _set_in_dict_where_key_may_have_dots(context, input_folder.name, InputFolder(name=input_folder.name, url=input_folder_value))
+                elif input_folder_value.startswith('/') or input_folder_value.startswith('./') or input_folder_value.startswith('../'):
+                    _set_in_dict_where_key_may_have_dots(context, input_folder.name, InputFolder(name=input_folder.name, local_folder_name=input_folder_value))
+                else:
+                    raise Exception(f'Input folder value for {input_folder.name} must either be a URL or a local path starting with /, ./ or ../. Got: {input_folder_value}')
+
             # handle output files coming in as file paths
             for output in processor._outputs:
                 output_value = _get_in_dict_where_key_may_have_dots(context, output.name)
@@ -129,6 +141,16 @@ class App:
                     _set_in_dict_where_key_may_have_dots(context, output.name, OutputFile(name=output.name, output_file_name=output_value))
                 else:
                     raise Exception(f'Output value for {output.name} must be a local path starting with /, ./ or ../. Got: {output_value}')
+            
+            # handle output folders coming in as file paths
+            for output_folder in processor._output_folders:
+                output_folder_value = _get_in_dict_where_key_may_have_dots(context, output_folder.name)
+                if output_folder_value.startswith('https://') or output_folder_value.startswith('http://'):
+                    raise Exception(f'Output folder value for {output_folder.name} cannot be a URL. Should be local folder path. Got: {output_folder_value}')
+                elif output_folder_value.startswith('/') or output_folder_value.startswith('./') or output_folder_value.startswith('../'):
+                    _set_in_dict_where_key_may_have_dots(context, output_folder.name, OutputFolder(name=output_folder.name, output_folder_name=output_folder_value))
+                else:
+                    raise Exception(f'Output folder value for {output_folder.name} must be a local path starting with /, ./ or ../. Got: {output_folder_value}')
 
             processor_class = processor._processor_class
             assert processor_class, f'Processor does not have a processor_class: {PROCESSOR_NAME}'

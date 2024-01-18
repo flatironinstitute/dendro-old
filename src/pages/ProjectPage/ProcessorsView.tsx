@@ -89,7 +89,17 @@ const ProcessorParametersView: FunctionComponent<ProcessorParametersViewProps> =
                 </div>)}
             </div>
             <div>
+                {(processor.inputFolders || []).map((p, i) => <div key={i}>
+                    {p.name} - {p.description}
+                </div>)}
+            </div>
+            <div>
                 {processor.outputs.map((p, i) => <div key={i}>
+                    {p.name} - {p.description}
+                </div>)}
+            </div>
+            <div>
+                {(processor.outputFolders || []).map((p, i) => <div key={i}>
                     {p.name} - {p.description}
                 </div>)}
             </div>

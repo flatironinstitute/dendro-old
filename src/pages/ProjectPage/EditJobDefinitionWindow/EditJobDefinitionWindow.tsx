@@ -48,6 +48,7 @@ const validParametersReducer = (state: validParametersState, action: validParame
 type RowNode = {
     type: 'leaf'
     fieldType: 'input' | 'output' | 'parameter'
+    isFolder?: boolean
     name: string
     description: string
 } | {
@@ -66,7 +67,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
 
     const [validParameters, validParametersDispatch] = useReducer(validParametersReducer, {})
     const allParametersAreValid = useMemo(() => {
-        const allNames: string[] = [...processor.parameters.map(p => p.name), ...processor.inputs.map(i => i.name), ...processor.outputs.map(o => o.name)]
+        const allNames: string[] = [...processor.parameters.map(p => p.name), ...processor.inputs.map(i => i.name), ...(processor.inputFolders || []).map(i => i.name), ...processor.outputs.map(o => o.name), ...(processor.outputFolders || []).map(o => o.name)]
         for (const name of allNames) {
             if (!validParameters[name]) {
                 return false
@@ -103,6 +104,16 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                 description: input.description
             })
         })
+        ; (processor.inputFolders || []).forEach(inputFolder => {
+            addGroupNodes(inputFolder.name)
+            nodes.push({
+                type: 'leaf',
+                fieldType: 'input',
+                isFolder: true,
+                name: inputFolder.name,
+                description: inputFolder.description
+            })
+        })
         processor.outputs.forEach(output => {
             addGroupNodes(output.name)
             nodes.push({
@@ -110,6 +121,16 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                 fieldType: 'output',
                 name: output.name,
                 description: output.description
+            })
+        })
+        ; (processor.outputFolders || []).forEach(outputFolder => {
+            addGroupNodes(outputFolder.name)
+            nodes.push({
+                type: 'leaf',
+                fieldType: 'output',
+                isFolder: true,
+                name: outputFolder.name,
+                description: outputFolder.description
             })
         })
         processor.parameters.forEach(parameter => {

@@ -9,10 +9,12 @@ from ..common._api_request import _client_post_api_request
 class SubmitJobInputFile(BaseModel):
     name: str
     file_name: str
+    is_folder: Union[bool, None] = None
 
 class SubmitJobOutputFile(BaseModel):
     name: str
     file_name: str
+    is_folder: Union[bool, None] = None
 
 class SubmitJobParameter(BaseModel):
     name: str
@@ -72,14 +74,16 @@ def submit_job(*,
     request_input_files = [
         CreateJobRequestInputFile(
             name=x.name,
-            fileName=x.file_name
+            fileName=x.file_name,
+            isFolder=x.is_folder
         )
         for x in input_files
     ]
     request_output_files = [
         CreateJobRequestOutputFile(
             name=x.name,
-            fileName=x.file_name
+            fileName=x.file_name,
+            isFolder=x.is_folder
         )
         for x in output_files
     ]
@@ -169,22 +173,41 @@ def _check_consistency_with_processor_spec(
         raise KeyError(f'Processor name mismatch: {processor_spec.name} != {processor_name}')
     # check that the input files are consistent with the spec
     for input_file in input_files:
-        pp = next((x for x in processor_spec.inputs if x.name == input_file.name), None)
-        if not pp:
-            raise KeyError(f"Processor input not found: {input_file.name}")
+        if not input_file.is_folder:
+            pp = next((x for x in processor_spec.inputs if x.name == input_file.name), None)
+            if not pp:
+                raise KeyError(f"Processor input not found: {input_file.name}")
+        else:
+            pp = next((x for x in processor_spec.inputFolders if x.name == input_file.name), None)
+            if not pp:
+                raise KeyError(f"Processor input folder not found: {input_file.name}")
+        
     # check that no input files are missing
     for input in processor_spec.inputs:
-        if not any(x.name == input.name for x in input_files):
+        if not any(x.name == input.name and not x.is_folder for x in input_files):
             raise KeyError(f"Required input not found: {input.name}")
+    # check that no input folders are missing
+    for input_folder in processor_spec.inputFolders:
+        if not any(x.name == input_folder.name and x.is_folder for x in input_files):
+            raise KeyError(f"Required input folder not found: {input_folder.name}")
     # check that the output files are consistent with the spec
     for output_file in output_files:
-        pp = next((x for x in processor_spec.outputs if x.name == output_file.name), None)
-        if not pp:
-            raise KeyError(f"Processor output not found: {output_file.name}")
+        if not output_file.is_folder:
+            pp = next((x for x in processor_spec.outputs if x.name == output_file.name), None)
+            if not pp:
+                raise KeyError(f"Processor output not found: {output_file.name}")
+        else:
+            pp = next((x for x in processor_spec.outputFolders if x.name == output_file.name), None)
+            if not pp:
+                raise KeyError(f"Processor output folder not found: {output_file.name}")
     # check that no output files are missing
     for output in processor_spec.outputs:
-        if not any(x.name == output.name for x in output_files):
+        if not any(x.name == output.name and not x.is_folder for x in output_files):
             raise KeyError(f"Required output not found: {output.name}")
+    # check that no output folders are missing
+    for output_folder in processor_spec.outputFolders:
+        if not any(x.name == output_folder.name and x.is_folder for x in output_files):
+            raise KeyError(f"Required output folder not found: {output_folder.name}")
     # check that the input parameters are consistent with the spec
     for input_parameter in parameters:
         pp = next((x for x in processor_spec.parameters if x.name == input_parameter.name), None)
@@ -225,6 +248,8 @@ def _job_matches(*,
             return False
         if x.fileName != input_file.file_name:
             return False
+        if x.isFolder != input_file.is_folder:
+            return False
 
     # output files
     if len(job.outputFiles) != len(output_files):
@@ -234,6 +259,8 @@ def _job_matches(*,
         if not x:
             return False
         if x.fileName != output_file.file_name:
+            return False
+        if x.isFolder != output_file.is_folder:
             return False
 
     # input parameters

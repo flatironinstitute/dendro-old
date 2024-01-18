@@ -4,9 +4,9 @@ import aiohttp
 from fastapi import APIRouter, HTTPException, Header
 from .... import BaseModel
 from ...services.processor.update_job_status import update_job_status
-from ...services.processor.get_upload_url import get_upload_url, get_additional_upload_url
+from ...services.processor.get_upload_url import get_upload_url, get_additional_upload_url, get_upload_url_for_folder_file
 from ....common.dendro_types import ProcessorGetJobResponse, ProcessorGetJobResponseInput, ProcessorGetJobResponseOutput, ProcessorGetJobResponseOutputFolder, ProcessorGetJobResponseParameter, ProcessorGetJobResponseInputFolder, ProcessorGetJobResponseInputFolderFile
-from ...clients.db import fetch_job, fetch_file
+from ...clients.db import fetch_job, fetch_file, fetch_job_private_key
 
 router = APIRouter()
 
@@ -158,17 +158,37 @@ class ProcessorGetJobOutputUploadUrlResponse(BaseModel):
 @router.get("/jobs/{job_id}/outputs/{output_name}/upload_url")
 async def processor_get_upload_url(job_id: str, output_name: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputUploadUrlResponse:
     try:
-        job = await fetch_job(job_id, include_private_key=True)
-        assert job, f"No job with ID {job_id}"
-        if job.jobPrivateKey != job_private_key:
+        true_job_private_key = await fetch_job_private_key(job_id)
+        assert true_job_private_key, f"No job with ID {job_id}"
+        if true_job_private_key != job_private_key:
             raise ValueError(f"Invalid job private key for job {job_id}")
 
-        signed_upload_url = await get_upload_url(job=job, output_name=output_name)
+        signed_upload_url = await get_upload_url(job_id=job_id, output_name=output_name)
         return ProcessorGetJobOutputUploadUrlResponse(uploadUrl=signed_upload_url, success=True)
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+# get job output folder file upload url
+class ProcessorGetJobOutputFolderFileUploadUrlResponse(BaseModel):
+    uploadUrl: str
+    success: bool
+
+@router.get("/jobs/{job_id}/output_folders/{output_folder_name}/files/{file_name}/upload_url")
+async def processor_get_upload_url_for_output_folder_file(job_id: str, output_folder_name: str, file_name: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputFolderFileUploadUrlResponse:
+    try:
+        true_job_private_key = await fetch_job_private_key(job_id)
+        assert true_job_private_key, f"No job with ID {job_id}"
+        if true_job_private_key != job_private_key:
+            raise ValueError(f"Invalid job private key for job {job_id}")
+
+        signed_upload_url = await get_upload_url_for_folder_file(job_id=job_id, output_folder_name=output_folder_name, output_folder_file_name=file_name)
+        return ProcessorGetJobOutputFolderFileUploadUrlResponse(uploadUrl=signed_upload_url, success=True)
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+# get job output upload url for additional file
 class ProcessorGetJobOutputUploadUrlForAdditionalFileResponse(BaseModel):
     uploadUrl: str
     downloadUrl: str
@@ -177,12 +197,12 @@ class ProcessorGetJobOutputUploadUrlForAdditionalFileResponse(BaseModel):
 @router.get("/jobs/{job_id}/additional_uploads/sha1/{sha1}/upload_url")
 async def processor_get_additional_upload_url(job_id: str, sha1: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputUploadUrlForAdditionalFileResponse:
     try:
-        job = await fetch_job(job_id, include_private_key=True)
-        assert job, f"No job with ID {job_id}"
-        if job.jobPrivateKey != job_private_key:
+        true_job_private_key = await fetch_job_private_key(job_id)
+        assert true_job_private_key, f"No job with ID {job_id}"
+        if true_job_private_key != job_private_key:
             raise ValueError(f"Invalid job private key for job {job_id}")
 
-        signed_upload_url, download_url = await get_additional_upload_url(job=job, sha1=sha1)
+        signed_upload_url, download_url = await get_additional_upload_url(job_id=job_id, sha1=sha1)
         return ProcessorGetJobOutputUploadUrlForAdditionalFileResponse(uploadUrl=signed_upload_url, downloadUrl=download_url, success=True)
     except Exception as e:
         traceback.print_exc()

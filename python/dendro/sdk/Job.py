@@ -82,7 +82,7 @@ def _get_upload_url_for_output_file(*, name: str, job_id: str, job_private_key: 
 def _get_upload_url_for_output_folder_file(*, name: str, relative_file_name: str, job_id: str, job_private_key: str) -> str:
     """Get a signed upload URL for an output folder file"""
 
-    url_path = f'/api/processor/jobs/{job_id}/output-folders/{name}/files/{relative_file_name}/upload_url'
+    url_path = f'/api/processor/jobs/{job_id}/output_folders/{name}/files/{relative_file_name}/upload_url'
     headers = {
         'job-private-key': job_private_key
     }
