@@ -9,6 +9,7 @@ from ...clients.pubsub import publish_pubsub_message
 from .._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
 from ...core.settings import get_settings
 from ....common.dendro_types import CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter
+from .._create_output_file import _create_output_file
 
 class CreateJobException(Exception):
     pass
@@ -100,6 +101,18 @@ async def create_job(*,
     if something_was_deleted:
         await _remove_detached_files_and_jobs(project_id)
 
+    # Create output files in pending state
+    output_file_ids: list[str] = []
+    for output_file in output_files:
+        output_file_id = await _create_output_file(
+            file_name=output_file.fileName,
+            url='pending',
+            project_id=project_id,
+            user_id=user_id,
+            job_id=job_id
+        )
+        output_file_ids.append(output_file_id)
+
     input_parameters2: List[DendroJobInputParameter] = []
     for input_parameter in input_parameters:
         pp = next((x for x in processor_spec.parameters if x.name == input_parameter.name), None)
@@ -124,6 +137,7 @@ async def create_job(*,
         inputFileIds=[x.fileId for x in input_files],
         inputParameters=input_parameters2,
         outputFiles=output_files,
+        outputFileIds=output_file_ids,
         timestampCreated=time.time(),
         computeResourceId=compute_resource_id,
         status='pending',

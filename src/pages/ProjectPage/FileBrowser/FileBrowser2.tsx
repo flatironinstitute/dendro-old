@@ -1,11 +1,13 @@
-import { FunctionComponent, useMemo, useReducer } from "react";
+import { FunctionComponent, useCallback, useMemo, useReducer } from "react";
 import { PluginAction } from '../../../plugins/DendroFrontendPlugin';
-import { DendroFile } from '../../../types/dendro-types';
+import { DendroFile, DendroJob } from '../../../types/dendro-types';
 import { DandiUploadTask } from '../DandiUpload/prepareDandiUploadTask';
 import { useProject } from '../ProjectPageContext';
 import FileBrowserMenuBar from './FileBrowserMenuBar';
 import FileBrowserTable, { FileBrowserTableFile } from './FileBrowserTable';
 import './file-browser-table.css';
+import { approveJob } from "../../../dbInterface/dbInterface";
+import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";
 
 type Props = {
     width: number
@@ -96,7 +98,7 @@ export const expandedFoldersReducer = (state: ExpandedFoldersState, action: Expa
 }
 
 const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
-    const {currentTabName} = useProject()
+    const {currentTabName, jobs, computeResource} = useProject()
 
     const [selectedFileNames, selectedFileNamesDispatch] = useReducer(selectedStringsReducer, new Set<string>())
 
@@ -106,13 +108,35 @@ const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, file
 
     const files2: FileBrowserTableFile[] | undefined = useMemo(() => {
         if (!files) return undefined
+        if (!jobs) return undefined
+        const jobsById: {[key: string]: DendroJob} = {}
+        for (const job of jobs) {
+            jobsById[job.jobId] = job
+        }
         return files.map(file => ({
             fileName: file.fileName,
             size: file.size,
             timestampCreated: file.timestampCreated,
-            content: file.content
+            content: file.content,
+            associatedJob: file.jobId ? jobsById[file.jobId] : undefined
         }))
-    }, [files])
+    }, [files, jobs])
+
+    const [jobsApprovedInThisSession, jobsApprovedInThisSessionDispatch] = useReducer(selectedStringsReducer, new Set<string>())
+    
+    const auth = useGithubAuth()
+
+    const handleApproveJob = useCallback((jobId: string) => {
+        approveJob(jobId, auth).then(() => {
+            jobsApprovedInThisSessionDispatch({type: 'set', values: new Set([jobId])})
+        })
+    }, [auth])
+
+    const userIsComputeResourceOwner = useMemo(() => {
+        if (!computeResource) return false
+        if (!auth.userId) return false
+        return computeResource.ownerId === auth.userId
+    }, [computeResource, auth.userId])
     
     return (
         <div style={{position: 'absolute', width, height, userSelect: 'none'}}>
@@ -138,6 +162,9 @@ const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, file
                     currentTabName={currentTabName}
                     onOpenFile={onOpenFile}
                     multiSelect={true}
+                    userCanApproveJobs={userIsComputeResourceOwner}
+                    onApproveJob={handleApproveJob}
+                    jobsApprovedInThisSession={jobsApprovedInThisSession}
                 />
             </div>
         </div>

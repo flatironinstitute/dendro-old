@@ -1,6 +1,7 @@
 import { FunctionComponent, useMemo } from "react";
 import { useProject } from "../ProjectPageContext";
 import JobsTable from "./JobsTable";
+import { useGithubAuth } from "../../../GithubAuth/useGithubAuth";
 
 type Props = {
     width: number,
@@ -11,7 +12,7 @@ type Props = {
 }
 
 const JobsWindow: FunctionComponent<Props> = ({ width, height, fileName, createJobEnabled, createJobTitle }) => {
-    const {jobs, openTab} = useProject()
+    const {jobs, openTab, computeResource} = useProject()
 
     const filteredJobs = useMemo(() => {
         if (!jobs) return undefined
@@ -26,6 +27,14 @@ const JobsWindow: FunctionComponent<Props> = ({ width, height, fileName, createJ
 
     // const iconFontSize = 20
 
+    const auth = useGithubAuth()
+
+    const userIsComputeResourceOwner = useMemo(() => {
+        if (!computeResource) return false
+        if (!auth.userId) return false
+        return computeResource.ownerId === auth.userId
+    }, [computeResource, auth.userId])
+
     return (
         <JobsTable
             width={width}
@@ -35,6 +44,7 @@ const JobsWindow: FunctionComponent<Props> = ({ width, height, fileName, createJ
             onJobClicked={jobId => openTab(`job:${jobId}`)}
             createJobEnabled={createJobEnabled}
             createJobTitle={createJobTitle}
+            userCanApproveJobs={userIsComputeResourceOwner}
         />
         // <>
         //     <div>
