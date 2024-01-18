@@ -1,4 +1,3 @@
-from ast import Dict
 import time
 from typing import List, Union
 from ._get_mongo_client import _get_mongo_client
