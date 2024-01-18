@@ -244,11 +244,12 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
             if ((message.type === 'jobStatusChanged') || (message.type === 'newPendingJob')) {
                 if (message.projectId === projectId) {
                     refreshJobs()
+                    refreshFiles()
                 }
             }
         })
         return () => {cancel()}
-    }, [projectId, refreshJobs])
+    }, [projectId, refreshJobs, refreshFiles])
 
     const deleteJobHandler = useCallback(async (jobId: string) => {
         await deleteJob(jobId, auth)
