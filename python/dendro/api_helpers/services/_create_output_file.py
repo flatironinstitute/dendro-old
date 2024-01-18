@@ -49,10 +49,10 @@ async def _create_output_file(*,
         else:
             deleted_old_file = True
             file_id = _create_random_id(8)
-        await files_collection.delete_one({
-            'projectId': project_id,
-            'fileName': file_name
-        })
+            await files_collection.delete_one({
+                'projectId': project_id,
+                'fileName': file_name
+            })
     else:
         if replace_pending:
             raise Exception('Cannot replace pending file because it does not exist')

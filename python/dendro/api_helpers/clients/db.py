@@ -1,3 +1,4 @@
+from ast import Dict
 import time
 from typing import List, Union
 from ._get_mongo_client import _get_mongo_client
@@ -72,7 +73,7 @@ async def fetch_project_files(project_id: str, *, pending_only=False) -> List[De
 async def fetch_multi_project_files(project_ids: List[str], *, pending_only=False) -> List[DendroFile]:
     client = _get_mongo_client()
     files_collection = client['dendro']['files']
-    query = {
+    query: dict = {
         'projectId': {'$in': project_ids}
     }
     if pending_only:

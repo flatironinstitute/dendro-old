@@ -421,7 +421,7 @@ async def test_integration(tmp_path):
 
         # gui: Get files
         files = _get_project_files(project_id=project2_id, github_access_token=github_access_token)
-        assert len(files) == 1
+        assert len(files) == 2
         assert files[0].fileName == 'mock-input'
 
         # gui: Fail at deleting compute resource by unauthorized user
