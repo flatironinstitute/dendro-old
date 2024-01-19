@@ -206,9 +206,9 @@ class AppProcessor:
     @staticmethod
     def from_spec(spec):
         inputs = [AppProcessorInput.from_spec(i) for i in spec['inputs']]
-        input_folders = [AppProcessorInputFolder.from_spec(i) for i in spec['inputFolders']]
+        input_folders = [AppProcessorInputFolder.from_spec(i) for i in spec.get('inputFolders', [])]
         outputs = [AppProcessorOutput.from_spec(o) for o in spec['outputs']]
-        output_folders = [AppProcessorOutputFolder.from_spec(o) for o in spec['outputFolders']]
+        output_folders = [AppProcessorOutputFolder.from_spec(o) for o in spec.get('outputFolders', [])]
         parameters = [AppProcessorParameter.from_spec(p) for p in spec['parameters']]
         attributes = [AppProcessorAttribute.from_spec(a) for a in spec['attributes']]
         tags = [AppProcessorTag.from_spec(t) for t in spec['tags']]

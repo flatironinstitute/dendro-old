@@ -66,6 +66,18 @@ class OutputFolder(BaseModel):
 
         self.was_uploaded = True
 
+    # validator is needed to be an allowed pydantic type
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        if isinstance(value, cls):
+            return value
+        else:
+            raise ValueError(f'Unexpected type for OutputFolder: {type(value)}')
+
 def _get_all_relative_file_names(local_folder_name: str):
     import os
     ret: List[str] = []

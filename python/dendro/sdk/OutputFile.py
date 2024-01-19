@@ -47,3 +47,15 @@ class OutputFile(BaseModel):
                         raise SetOutputFileException(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
 
         self.was_uploaded = True
+
+    # validator is needed to be an allowed pydantic type
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, value):
+        if isinstance(value, cls):
+            return value
+        else:
+            raise ValueError(f'Unexpected type for OutputFile: {type(value)}')
