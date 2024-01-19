@@ -25,7 +25,10 @@ async def _create_output_file(*,
         size = 0
     else:
         if not using_mock():
-            size = await _get_size_for_remote_file(url)
+            if not is_folder:
+                size = await _get_size_for_remote_file(url)
+            else:
+                size = await _get_size_from_file_manifest_json(url)
         else:
             size = 1 # size of mock file
 
@@ -103,3 +106,20 @@ async def _head_request(url: str):
     async with aiohttp.ClientSession() as session:
         async with session.head(url) as response:
             return response
+
+async def _get_size_from_file_manifest_json(url: str) -> int:
+    file_manifest_url = url + '/file_manifest.json'
+    try:
+        # load the file manifest
+        async with aiohttp.ClientSession() as session:
+            async with session.get(file_manifest_url) as response:
+                if response.status != 200:
+                    raise Exception(f"Error getting file manifest: {response.status}")
+                file_manifest = await response.json()
+        size = 0
+        for f in file_manifest['files']:
+            size += f['size']
+        return size
+    except Exception as e:
+        print(f'Problem reading file manifest at {file_manifest_url}: {e}')
+        return 0

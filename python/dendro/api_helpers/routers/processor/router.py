@@ -45,7 +45,7 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
                 # folder
                 if not file.isFolder:
                     raise Exception(f"Mismatch. input is folder but project file {input.fileName} is not a folder")
-                file_manifest_obj = _download_file_manifest_obj(url)
+                file_manifest_obj = await _download_file_manifest_obj(url)
                 # get all files in the folder
                 folder_files: List[ProcessorGetJobResponseInputFolderFile] = []
                 for f in file_manifest_obj['files']:
@@ -208,10 +208,11 @@ async def processor_get_additional_upload_url(job_id: str, sha1: str, job_privat
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e)) from e
 
-def _download_file_manifest_obj(folder_url: str):
-    import requests
+async def _download_file_manifest_obj(folder_url: str):
     url = f'{folder_url}/file_manifest.json'
-    resp = requests.get(url)
-    if resp.status_code != 200:
-        raise Exception(f'Error downloading file manifest: {resp.status_code} {resp.reason}: {resp.text}')
-    return resp.json()
+    print(f'Downloading file manifest from {url}')
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status != 200:
+                raise Exception(f"Error getting file manifest: {resp.status}")
+            return await resp.json()
