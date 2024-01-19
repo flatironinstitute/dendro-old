@@ -174,7 +174,7 @@ class ProcessorGetJobOutputFolderFileUploadUrlResponse(BaseModel):
     uploadUrl: str
     success: bool
 
-@router.get("/jobs/{job_id}/output_folders/{output_folder_name}/files/{file_name}/upload_url")
+@router.get("/jobs/{job_id}/output_folders/{output_folder_name}/files/{file_name:path}/upload_url")
 async def processor_get_upload_url_for_output_folder_file(job_id: str, output_folder_name: str, file_name: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputFolderFileUploadUrlResponse:
     try:
         true_job_private_key = await fetch_job_private_key(job_id)
