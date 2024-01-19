@@ -211,8 +211,12 @@ async def processor_get_additional_upload_url(job_id: str, sha1: str, job_privat
 async def _download_file_manifest_obj(folder_url: str):
     url = f'{folder_url}/file_manifest.json'
     print(f'Downloading file manifest from {url}')
+    # first, we get the text content
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             if resp.status != 200:
                 raise Exception(f"Error getting file manifest: {resp.status}")
-            return await resp.json()
+            text = await resp.text()
+    # then we parse it
+    import json
+    return json.loads(text)
