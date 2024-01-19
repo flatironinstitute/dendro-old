@@ -8,8 +8,6 @@ import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitio
 import ModalWindow, { useModalWindow } from "@fi-sci/modal-window"
 import { useProject } from "../ProjectPageContext"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
-import { fetchTextFile } from "../FileView/OtherFileView"
-
 
 type RightColumnProps = {
     width: number
@@ -314,6 +312,14 @@ const downloadTextFile = (text: string, fileName: string) => {
     element.download = fileName
     document.body.appendChild(element) // Required for this to work in FireFox (according to gh copilot)
     element.click()
+}
+
+export const fetchTextFile = async (url: string) => {
+    const response = await fetch(url)
+    if (!response.ok) {
+        throw Error(`Unexpected response for ${url}: ${response.status}`)
+    }
+    return await response.text()
 }
 
 export default RightColumn

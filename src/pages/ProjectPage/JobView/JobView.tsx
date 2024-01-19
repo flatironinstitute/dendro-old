@@ -7,9 +7,9 @@ import UserIdComponent from "../../../UserIdComponent";
 import { DendroProcessingJobDefinition, defaultJobDefinition, fetchJob } from "../../../dbInterface/dbInterface";
 import { DendroJob } from "../../../types/dendro-types";
 import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitionWindow";
-import { ElapsedTimeComponent } from "../FileView/NwbFileView";
 import ResourceUtilizationView from "../ResourceUtilizationView/ResourceUtilizationView";
 import { SaveParametersBar } from "../RunBatchSpikeSortingWindow/RightColumn";
+import { ElapsedTimeComponent } from "../FileView/FileViewTable";
 
 type Props = {
     width: number,
