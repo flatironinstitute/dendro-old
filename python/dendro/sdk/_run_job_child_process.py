@@ -98,7 +98,7 @@ def _run_job_child_process(*, job_id: str, job_private_key: str, processors: Lis
         else:
             # this input folder is a list
             print(f'[dendro] Input folder (list): {input_folder.name}')
-            the_list: List[InputFolder] = []
+            the_folder_list: List[InputFolder] = []
             ii = 0
             while True:
                 # find a job input folder of the form <input_folder_name>[ii]
@@ -106,10 +106,10 @@ def _run_job_child_process(*, job_id: str, job_private_key: str, processors: Lis
                 if input_folder_object is None:
                     # if not found, we must be at the end of the list
                     break
-                the_list.append(input_folder_object)
+                the_folder_list.append(input_folder_object)
                 ii += 1
-            print(f'[dendro] Input folder (list): {input_folder.name} (found {len(the_list)} folders)')
-            context._dendro_set_attribute(input_folder.name, the_list)
+            print(f'[dendro] Input folder (list): {input_folder.name} (found {len(the_folder_list)} folders)')
+            context._dendro_set_attribute(input_folder.name, the_folder_list)
     for output in processor._outputs:
         print(f'[dendro] Output: {output.name}')
         output_file = next((o for o in job.outputs if o.name == output.name), None)

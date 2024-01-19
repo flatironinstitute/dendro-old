@@ -141,7 +141,7 @@ class App:
                     _set_in_dict_where_key_may_have_dots(context, output.name, OutputFile(name=output.name, output_file_name=output_value))
                 else:
                     raise Exception(f'Output value for {output.name} must be a local path starting with /, ./ or ../. Got: {output_value}')
-            
+
             # handle output folders coming in as file paths
             for output_folder in processor._output_folders:
                 output_folder_value = _get_in_dict_where_key_may_have_dots(context, output_folder.name)

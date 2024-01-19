@@ -277,7 +277,7 @@ def _expire_job_private_key_cache():
         job_private_key_cache_last_expiration_time = time.time()
 
 async def fetch_job_private_key(job_id: str):
-    _expire_job_private_key_cache()    
+    _expire_job_private_key_cache()
     if job_id in job_private_key_cache:
         return job_private_key_cache[job_id]
     job = await fetch_job(job_id, include_private_key=True)

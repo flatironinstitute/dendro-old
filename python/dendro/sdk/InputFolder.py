@@ -43,7 +43,7 @@ class InputFolder(BaseModel):
                 raise Exception('Unexpected: name is None in InputFolder')
             from .Job import _get_file_manifest_for_input_folder # avoid circular import
             if self._file_manifest is None:
-                self._file_manifest: FileManifest = _get_file_manifest_for_input_folder(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+                self._file_manifest = _get_file_manifest_for_input_folder(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
             ff = next((f for f in self._file_manifest.files if f.name == relative_file_name), None)
             if ff is None:
                 raise Exception(f'Input folder file not found when trying to get download URL: {self.name} {relative_file_name}')
@@ -56,9 +56,15 @@ class InputFolder(BaseModel):
             import shutil
             shutil.copytree(self.local_folder_name, dest_folder_path)
             return
+        if self.job_id is None:
+            raise Exception('Unexpected: job_id is None')
+        if self.job_private_key is None:
+            raise Exception('Unexpected: job_private_key is None')
+        if self.name is None:
+            raise Exception('Unexpected: name is None in InputFolder')
         from .Job import _get_file_manifest_for_input_folder # avoid circular import
         if self._file_manifest is None:
-            self._file_manifest: FileManifest = _get_file_manifest_for_input_folder(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+            self._file_manifest = _get_file_manifest_for_input_folder(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
         os.mkdir(dest_folder_path)
         for ff in self._file_manifest.files:
             file_name = ff.name

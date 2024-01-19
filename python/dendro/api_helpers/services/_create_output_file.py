@@ -1,3 +1,4 @@
+from typing import Union
 import time
 import aiohttp
 from ..clients._get_mongo_client import _get_mongo_client
@@ -14,7 +15,7 @@ async def _create_output_file(*,
     project_id: str,
     user_id: str,
     job_id: str,
-    is_folder: bool = False,
+    is_folder: Union[bool, None] = None,
     replace_pending: bool = False
 ) -> str: # returns the ID of the created file
     if url == 'pending':

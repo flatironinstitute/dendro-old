@@ -52,6 +52,7 @@ class ComputeResourceSpecProcessorInput(BaseModel):
 class ComputeResourceSpecProcessorInputFolder(BaseModel):
     name: str
     description: str
+    list: bool = False
 
 class ComputeResourceSpecProcessorOutput(BaseModel):
     name: str

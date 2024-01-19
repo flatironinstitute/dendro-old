@@ -178,16 +178,16 @@ def _check_consistency_with_processor_spec(
             if not pp:
                 raise KeyError(f"Processor input not found: {input_file.name}")
         else:
-            pp = next((x for x in processor_spec.inputFolders if x.name == input_file.name), None)
+            pp = next((x for x in (processor_spec.inputFolders or []) if x.name == input_file.name), None)
             if not pp:
                 raise KeyError(f"Processor input folder not found: {input_file.name}")
-        
+
     # check that no input files are missing
     for input in processor_spec.inputs:
         if not any(x.name == input.name and not x.is_folder for x in input_files):
             raise KeyError(f"Required input not found: {input.name}")
     # check that no input folders are missing
-    for input_folder in processor_spec.inputFolders:
+    for input_folder in processor_spec.inputFolders or []:
         if not any(x.name == input_folder.name and x.is_folder for x in input_files):
             raise KeyError(f"Required input folder not found: {input_folder.name}")
     # check that the output files are consistent with the spec
@@ -197,7 +197,7 @@ def _check_consistency_with_processor_spec(
             if not pp:
                 raise KeyError(f"Processor output not found: {output_file.name}")
         else:
-            pp = next((x for x in processor_spec.outputFolders if x.name == output_file.name), None)
+            pp = next((x for x in (processor_spec.outputFolders or []) if x.name == output_file.name), None)
             if not pp:
                 raise KeyError(f"Processor output folder not found: {output_file.name}")
     # check that no output files are missing
@@ -205,7 +205,7 @@ def _check_consistency_with_processor_spec(
         if not any(x.name == output.name and not x.is_folder for x in output_files):
             raise KeyError(f"Required output not found: {output.name}")
     # check that no output folders are missing
-    for output_folder in processor_spec.outputFolders:
+    for output_folder in processor_spec.outputFolders or []:
         if not any(x.name == output_folder.name and x.is_folder for x in output_files):
             raise KeyError(f"Required output folder not found: {output_folder.name}")
     # check that the input parameters are consistent with the spec

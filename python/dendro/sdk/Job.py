@@ -30,9 +30,9 @@ class Job:
         resp = _job_info_manager.get_job_info(job_id=job_id, job_private_key=job_private_key)
         # important to set these only once here because these objects will be passed into the processor function
         self._inputs = [InputFile(name=i.name, job_id=self._job_id, job_private_key=self._job_private_key) for i in resp.inputs]
-        self._input_folders = [InputFolder(name=i.name, job_id=self._job_id, job_private_key=self._job_private_key) for i in resp.inputFolders]
+        self._input_folders = [InputFolder(name=i.name, job_id=self._job_id, job_private_key=self._job_private_key) for i in resp.inputFolders] if resp.inputFolders else None
         self._outputs = [OutputFile(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key) for o in resp.outputs]
-        self._output_folders = [OutputFolder(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key) for o in resp.outputFolders]
+        self._output_folders = [OutputFolder(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key) for o in resp.outputFolders] if resp.outputFolders else None
         self._parameters = [JobParameter(name=p.name, value=p.value) for p in resp.parameters]
         self._processor_name = resp.processorName
     @property
@@ -51,7 +51,7 @@ class Job:
     @property
     def input_folders(self) -> List[InputFolder]:
         """The input folders of the job"""
-        return self._input_folders
+        return self._input_folders if self._input_folders is not None else []
     @property
     def outputs(self) -> List[OutputFile]:
         """The output files of the job"""
@@ -59,7 +59,7 @@ class Job:
     @property
     def output_folders(self) -> List[OutputFolder]:
         """The output folders of the job"""
-        return self._output_folders
+        return self._output_folders if self._output_folders is not None else []
     @property
     def parameters(self) -> List[JobParameter]:
         """The parameters of the job"""
