@@ -265,6 +265,26 @@ async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include
         job.jobPrivateKey = ''
     return job
 
+job_private_key_cache: dict[str, str] = {}
+# expire it every hour
+job_private_key_cache_expiration_time = 60 * 60
+job_private_key_cache_last_expiration_time = time.time()
+def _expire_job_private_key_cache():
+    global job_private_key_cache_last_expiration_time
+    global job_private_key_cache
+    if time.time() - job_private_key_cache_last_expiration_time > job_private_key_cache_expiration_time:
+        job_private_key_cache = {}
+        job_private_key_cache_last_expiration_time = time.time()
+
+async def fetch_job_private_key(job_id: str):
+    _expire_job_private_key_cache()
+    if job_id in job_private_key_cache:
+        return job_private_key_cache[job_id]
+    job = await fetch_job(job_id, include_private_key=True)
+    assert job is not None, f"No job with ID {job_id}"
+    job_private_key_cache[job_id] = job.jobPrivateKey
+    return job.jobPrivateKey
+
 async def update_job(job_id: str, update: dict):
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']

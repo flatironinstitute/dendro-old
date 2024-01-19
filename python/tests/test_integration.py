@@ -376,9 +376,10 @@ async def test_integration(tmp_path):
         url = _get_job_output_upload_url(job_id=job.jobId, job_private_key=job.jobPrivateKey, output_name='output_file')
         assert url
 
-        # processor: Fail getting job output upload url for unknown output
-        with pytest.raises(Exception):
-            _get_job_output_upload_url(job_id=job.jobId, job_private_key=job.jobPrivateKey, output_name='unknown-output')
+        # Not enforcing this for now
+        # # processor: Fail getting job output upload url for unknown output
+        # with pytest.raises(Exception):
+        #     _get_job_output_upload_url(job_id=job.jobId, job_private_key=job.jobPrivateKey, output_name='unknown-output')
 
         # processor: Fail getting job output upload url do to incorrect private key
         with pytest.raises(Exception):

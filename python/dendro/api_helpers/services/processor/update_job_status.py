@@ -50,7 +50,8 @@ async def update_job_status(job: DendroJob, status: str, error: Union[str, None]
                 project_id=job.projectId,
                 user_id=job.userId,
                 job_id=job.jobId,
-                replace_pending=True
+                replace_pending=True,
+                is_folder=output_file.isFolder
             )
             output_file_ids.append(output_file_id)
             output_file.fileId = output_file_id

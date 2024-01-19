@@ -1,31 +1,38 @@
 from typing import Optional
 from dendro.mock import using_mock
-from ....common.dendro_types import DendroJob
 from ...core.settings import get_settings
 from ._get_signed_upload_url import _get_signed_upload_url
 
 
 # note that output_name of "_console_output" and "_resource_utilization_log" are special cases
-async def get_upload_url(job: DendroJob, output_name: str):
+async def get_upload_url(job_id: str, output_name: str):
     if output_name == "_console_output":
         pass
     elif output_name == "_resource_utilization_log":
         pass
     else:
-        aa = [x for x in job.outputFiles if x.name == output_name]
-        if len(aa) == 0:
-            raise Exception(f"No output with name {output_name} **")
+        pass
+        # not going to check this because it would require excessive database queries to get the job - there may be a way around it
+        # aa = [x for x in job.outputFiles if x.name == output_name]
+        # if len(aa) == 0:
+        #     raise Exception(f"No output with name {output_name} **")
 
-    object_key = f"dendro-outputs/{job.jobId}/{output_name}"
+    object_key = f"dendro-outputs/{job_id}/{output_name}"
 
     upload_url, download_url = await _get_upload_url_for_object_key(object_key)
     return upload_url
 
-async def get_additional_upload_url(*, job: DendroJob, sha1: str):
+async def get_upload_url_for_folder_file(job_id: str, output_folder_name: str, output_folder_file_name: str):
+    object_key = f"dendro-outputs/{job_id}/{output_folder_name}/{output_folder_file_name}"
+
+    upload_url, download_url = await _get_upload_url_for_object_key(object_key)
+    return upload_url
+
+async def get_additional_upload_url(*, job_id: str, sha1: str):
     if not _is_valid_sha1(sha1):
         raise Exception('Invalid sha1 string')
 
-    object_key = f"dendro-outputs/{job.jobId}/sha1/{sha1}"
+    object_key = f"dendro-outputs/{job_id}/sha1/{sha1}"
 
     upload_url, download_url = await _get_upload_url_for_object_key(object_key)
     return upload_url, download_url

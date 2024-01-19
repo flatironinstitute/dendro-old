@@ -47,11 +47,11 @@ class AppManager:
             if not matching_app:
                 try:
                     self._load_app(cr_app_from_response)
-                except Exception as e:
+                except Exception:
+                    # print traceback
+                    import traceback
+                    traceback.print_exc()
                     print(f'Error loading app {cr_app_from_response.specUri}')
-                    print(e)
-                    print('')
-                    print('')
                     continue
                 something_changed = True
         if something_changed:

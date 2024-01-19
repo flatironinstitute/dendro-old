@@ -1,5 +1,6 @@
 from typing import List
 from .InputFile import InputFile
+from .InputFolder import InputFolder
 from .Job import Job
 from .AppProcessor import AppProcessor
 from ..common._api_request import _processor_get_api_request
@@ -86,12 +87,41 @@ def _run_job_child_process(*, job_id: str, job_private_key: str, processors: Lis
                 ii += 1
             print(f'[dendro] Input (list): {input.name} (found {len(the_list)} files)')
             context._dendro_set_attribute(input.name, the_list)
+    for input_folder in processor._input_folders:
+        if not input_folder.list:
+            # this input folder is not a list
+            print(f'[dendro] Input folder: {input_folder.name}')
+            input_folder_object = next((i for i in job.input_folders if i.name == input_folder.name), None)
+            if not input_folder_object:
+                raise Exception(f'Input folder not found: {input_folder.name}')
+            context._dendro_set_attribute(input_folder.name, input_folder_object)
+        else:
+            # this input folder is a list
+            print(f'[dendro] Input folder (list): {input_folder.name}')
+            the_folder_list: List[InputFolder] = []
+            ii = 0
+            while True:
+                # find a job input folder of the form <input_folder_name>[ii]
+                input_folder_object = next((i for i in job.input_folders if i.name == f'{input_folder.name}[{ii}]'), None)
+                if input_folder_object is None:
+                    # if not found, we must be at the end of the list
+                    break
+                the_folder_list.append(input_folder_object)
+                ii += 1
+            print(f'[dendro] Input folder (list): {input_folder.name} (found {len(the_folder_list)} folders)')
+            context._dendro_set_attribute(input_folder.name, the_folder_list)
     for output in processor._outputs:
         print(f'[dendro] Output: {output.name}')
         output_file = next((o for o in job.outputs if o.name == output.name), None)
         if not output_file:
             raise Exception(f'Output not found: {output.name}')
         context._dendro_set_attribute(output.name, output_file)
+    for output_folder in processor._output_folders:
+        print(f'[dendro] Output folder: {output_folder.name}')
+        output_folder_object = next((o for o in job.output_folders if o.name == output_folder.name), None)
+        if not output_folder_object:
+            raise Exception(f'Output folder not found: {output_folder.name}')
+        context._dendro_set_attribute(output_folder.name, output_folder_object)
     for parameter in processor._parameters:
         job_parameter = next((p for p in job.parameters if p.name == parameter.name), None)
         if job_parameter is None:

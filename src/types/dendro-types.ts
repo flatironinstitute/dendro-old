@@ -46,13 +46,15 @@ export type DendroJobInputFile = {
     name: string
     fileId: string
     fileName: string
+    isFolder?: boolean
 }
 
 export const isDendroJobInputFile = (x: any): x is DendroJobInputFile => {
     return validateObject(x, {
         name: isString,
         fileId: isString,
-        fileName: isString
+        fileName: isString,
+        isFolder: optional(isBoolean)
     })
 }
 
@@ -74,13 +76,15 @@ export type DendroJobOutputFile = {
     name: string
     fileName: string
     fileId?: string
+    isFolder?: boolean
 }
 
 export const isDendroJobOutputFile = (x: any): x is DendroJobOutputFile => {
     return validateObject(x, {
         name: isString,
         fileName: isString,
-        fileId: optional(isString)
+        fileId: optional(isString),
+        isFolder: optional(isBoolean)
     })
 }
 
@@ -118,12 +122,38 @@ export const isComputeResourceSpecProcessorInput = (x: any): x is ComputeResourc
     })
 }
 
+export type ComputeResourceSpecProcessorInputFolder = {
+    name: string
+    description: string
+    list: boolean
+}
+
+export const isComputeResourceSpecProcessorInputFolder = (x: any): x is ComputeResourceSpecProcessorInputFolder => {
+    return validateObject(x, {
+        name: isString,
+        description: isString,
+        list: isBoolean
+    })
+}
+
 export type ComputeResourceSpecProcessorOutput = {
     name: string
     description: string
 }
 
 export const isComputeResourceSpecProcessorOutput = (x: any): x is ComputeResourceSpecProcessorOutput => {
+    return validateObject(x, {
+        name: isString,
+        description: isString
+    })
+}
+
+export type ComputeResourceSpecProcessorOutputFolder = {
+    name: string
+    description: string
+}
+
+export const isComputeResourceSpecProcessorOutputFolder = (x: any): x is ComputeResourceSpecProcessorOutputFolder => {
     return validateObject(x, {
         name: isString,
         description: isString
@@ -156,7 +186,9 @@ export type ComputeResourceSpecProcessor = {
     name: string
     description: string
     inputs: ComputeResourceSpecProcessorInput[]
+    inputFolders?: ComputeResourceSpecProcessorInputFolder[]
     outputs: ComputeResourceSpecProcessorOutput[]
+    outputFolders?: ComputeResourceSpecProcessorOutputFolder[]
     parameters: ComputeResourceSpecProcessorParameter[]
     attributes: ComputeResourceSpecProcessorAttribute[]
     tags: ComputeResourceSpecProcessorTag[]
@@ -167,7 +199,9 @@ export const isComputeResourceSpecProcessor = (x: any): x is ComputeResourceSpec
         name: isString,
         description: isString,
         inputs: isArrayOf(isComputeResourceSpecProcessorInput),
+        inputFolders: optional(isArrayOf(isComputeResourceSpecProcessorInputFolder)),
         outputs: isArrayOf(isComputeResourceSpecProcessorOutput),
+        outputFolders: optional(isArrayOf(isComputeResourceSpecProcessorOutputFolder)),
         parameters: isArrayOf(isComputeResourceSpecProcessorParameter),
         attributes: isArrayOf(isComputeResourceSpecProcessorAttribute),
         tags: isArrayOf(isComputeResourceSpecProcessorTag)
@@ -285,6 +319,7 @@ export type DendroFile = {
     timestampCreated: number
     content: string
     metadata: any
+    isFolder?: boolean
     jobId?: string | null
 }
 
@@ -298,6 +333,7 @@ export const isDendroFile = (x: any): x is DendroFile => {
         timestampCreated: isNumber,
         content: isString,
         metadata: () => true,
+        isFolder: optional(isBoolean),
         jobId: optional(isOneOf([isString, isNull]))
     })
 }
@@ -435,11 +471,47 @@ export const isProcessorGetJobResponseInput = (x: any): x is ProcessorGetJobResp
     })
 }
 
+export type ProcessorGetJobResponseInputFolderFile = {
+    name: string
+    url: string
+    size?: number
+}
+
+export const isProcessorGetJobResponseInputFolderFile = (x: any): x is ProcessorGetJobResponseInputFolderFile => {
+    return validateObject(x, {
+        name: isString,
+        url: isString,
+        size: optional(isNumber)
+    })
+}
+
+export type ProcessorGetJobResponseInputFolder = {
+    name: string
+    files: ProcessorGetJobResponseInputFolderFile[]
+}
+
+export const isProcessorGetJobResponseInputFolder = (x: any): x is ProcessorGetJobResponseInputFolder => {
+    return validateObject(x, {
+        name: isString,
+        files: isArrayOf(isProcessorGetJobResponseInputFolderFile)
+    })
+}
+
 export type ProcessorGetJobResponseOutput = {
     name: string
 }
 
 export const isProcessorGetJobResponseOutput = (x: any): x is ProcessorGetJobResponseOutput => {
+    return validateObject(x, {
+        name: isString
+    })
+}
+
+export type ProcessorGetJobResponseOutputFolder = {
+    name: string
+}
+
+export const isProcessorGetJobResponseOutputFolder = (x: any): x is ProcessorGetJobResponseOutputFolder => {
     return validateObject(x, {
         name: isString
     })
@@ -462,7 +534,9 @@ export type ProcessorGetJobResponse = {
     status: string
     processorName: string
     inputs: ProcessorGetJobResponseInput[]
+    inputFolders?: ProcessorGetJobResponseInputFolder[]
     outputs: ProcessorGetJobResponseOutput[]
+    outputFolders?: ProcessorGetJobResponseOutputFolder[]
     parameters: ProcessorGetJobResponseParameter[]
 }
 
@@ -472,7 +546,9 @@ export const isProcessorGetJobResponse = (x: any): x is ProcessorGetJobResponse 
         status: isString,
         processorName: isString,
         inputs: isArrayOf(isProcessorGetJobResponseInput),
+        inputFolders: optional(isArrayOf(isProcessorGetJobResponseInputFolder)),
         outputs: isArrayOf(isProcessorGetJobResponseOutput),
+        outputFolders: optional(isArrayOf(isProcessorGetJobResponseOutputFolder)),
         parameters: isArrayOf(isProcessorGetJobResponseParameter)
     })
 }

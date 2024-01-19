@@ -55,7 +55,8 @@ async def create_job(*,
             DendroJobInputFile(
                 name=input_file.name,
                 fileId=file.fileId,
-                fileName=file.fileName
+                fileName=file.fileName,
+                isFolder=input_file.isFolder
             )
         )
 
@@ -71,7 +72,8 @@ async def create_job(*,
         output_files.append(
             DendroJobOutputFile(
                 name=output_file.name,
-                fileName=filter_output_file_name(output_file.fileName)
+                fileName=filter_output_file_name(output_file.fileName),
+                isFolder=output_file.isFolder
             )
         )
 
@@ -109,7 +111,8 @@ async def create_job(*,
             url='pending',
             project_id=project_id,
             user_id=user_id,
-            job_id=job_id
+            job_id=job_id,
+            is_folder=output_file.isFolder
         )
         output_file_ids.append(output_file_id)
 
@@ -179,34 +182,70 @@ def _check_job_is_consistent_with_processor_spec(
 
     # check that the input files are consistent with the spec
     for input_file in input_files_from_request:
-        if input_file.name.endswith(']'):
-            base_name = input_file.name.split('[')[0]
-            xx = next((x for x in processor_spec.inputs if x.name == base_name), None)
-            if not xx:
-                raise CreateJobException(f"Processor input not found: {base_name}")
-            if not xx.list:
-                raise CreateJobException(f"Processor input is not a list: {base_name}")
+        if not input_file.isFolder:
+            if input_file.name.endswith(']'):
+                base_name = input_file.name.split('[')[0]
+                xx = next((x for x in processor_spec.inputs if x.name == base_name), None)
+                if not xx:
+                    raise CreateJobException(f"Processor input not found: {base_name}")
+                if not xx.list:
+                    raise CreateJobException(f"Processor input is not a list: {base_name}")
+            else:
+                xx = next((x for x in processor_spec.inputs if x.name == input_file.name), None)
+                if not xx:
+                    raise CreateJobException(f"Processor input not found: {input_file.name}")
         else:
-            xx = next((x for x in processor_spec.inputs if x.name == input_file.name), None)
-            if not xx:
-                raise CreateJobException(f"Processor input not found: {input_file.name}")
+            # folder
+            if input_file.name.endswith(']'):
+                base_name = input_file.name.split('[')[0]
+                if not processor_spec.inputFolders:
+                    raise CreateJobException(f"Processor input folder not found (*): {base_name}")
+                xx = next((x for x in processor_spec.inputFolders if x.name == base_name), None)
+                if not xx:
+                    raise CreateJobException(f"Processor input folder not found: {base_name}")
+                if not xx.list:
+                    raise CreateJobException(f"Processor input folder is not a list: {base_name}")
+            else:
+                if not processor_spec.inputFolders:
+                    raise CreateJobException(f"Processor input folder not found: {input_file.name}")
+                xx = next((x for x in processor_spec.inputFolders if x.name == input_file.name), None)
+                if not xx:
+                    raise CreateJobException(f"Processor input folder not found: {input_file.name}")
 
     # check that all the required inputs are present
     for input in processor_spec.inputs:
         if not input.list:
-            if not any(x.name == input.name for x in input_files_from_request):
+            if not any(x.name == input.name and not x.isFolder for x in input_files_from_request):
                 raise CreateJobException(f"Required input not found: {input.name}")
+
+    # check that all the required input folders are present
+    if processor_spec.inputFolders:
+        for input in processor_spec.inputFolders:
+            if not input.list:
+                if not any(x.name == input.name and x.isFolder for x in input_files_from_request):
+                    raise CreateJobException(f"Required input folder not found: {input.name}")
 
     # check that the output files are consistent with the spec
     for output_file in output_files_from_request:
-        xx = next((x for x in processor_spec.outputs if x.name == output_file.name), None)
-        if not xx:
-            raise CreateJobException(f"Processor output not found: {output_file.name}")
+        if not output_file.isFolder:
+            xx = next((x for x in processor_spec.outputs if x.name == output_file.name), None)
+            if not xx:
+                raise CreateJobException(f"Processor output not found: {output_file.name}")
+        else:
+            # folder
+            xx = next((x for x in (processor_spec.outputFolders or []) if x.name == output_file.name), None)
+            if not xx:
+                raise CreateJobException(f"Processor output folder not found: {output_file.name}")
 
     # check that the required output files are present
     for output in processor_spec.outputs:
-        if not any(x.name == output.name for x in output_files_from_request):
+        if not any(x.name == output.name and not x.isFolder for x in output_files_from_request):
             raise CreateJobException(f"Required output not found: {output.name}")
+
+    # check that the required output folders are present
+    for output in processor_spec.outputFolders or []:
+        if not any(x.name == output.name and x.isFolder for x in output_files_from_request):
+            raise CreateJobException(f"Required output folder not found: {output.name}")
 
     # check that the input parameters are consistent with the spec
     for input_parameter in input_parameters:

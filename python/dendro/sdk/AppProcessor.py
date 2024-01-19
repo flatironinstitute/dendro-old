@@ -9,7 +9,9 @@ except ImportError:
     PydanticUndefined = None
 from .ProcessorBase import ProcessorBase
 from .InputFile import InputFile
+from .InputFolder import InputFolder
 from .OutputFile import OutputFile
+from .OutputFolder import OutputFolder
 
 @dataclass
 class AppProcessorInput:
@@ -34,6 +36,28 @@ class AppProcessorInput:
         )
 
 @dataclass
+class AppProcessorInputFolder:
+    """An input folder of a processor in an app"""
+    name: str
+    description: str
+    list: bool
+    def get_spec(self):
+        ret: Dict[str, Any] = {
+            'name': self.name,
+            'description': self.description
+        }
+        if self.list:
+            ret['list'] = True
+        return ret
+    @staticmethod
+    def from_spec(spec):
+        return AppProcessorInputFolder(
+            name=spec['name'],
+            description=spec['description'],
+            list=spec.get('list', False)
+        )
+
+@dataclass
 class AppProcessorOutput:
     """An output file of a processor in an app"""
     name: str
@@ -46,6 +70,23 @@ class AppProcessorOutput:
     @staticmethod
     def from_spec(spec):
         return AppProcessorOutput(
+            name=spec['name'],
+            description=spec['description']
+        )
+
+@dataclass
+class AppProcessorOutputFolder:
+    """An output folder of a processor in an app"""
+    name: str
+    description: str
+    def get_spec(self):
+        return {
+            'name': self.name,
+            'description': self.description
+        }
+    @staticmethod
+    def from_spec(spec):
+        return AppProcessorOutputFolder(
             name=spec['name'],
             description=spec['description']
         )
@@ -127,7 +168,9 @@ class AppProcessor:
         description: str,
         label: str,
         inputs: List[AppProcessorInput],
+        input_folders: List[AppProcessorInputFolder],
         outputs: List[AppProcessorOutput],
+        output_folders: List[AppProcessorOutputFolder],
         parameters: List[AppProcessorParameter],
         attributes: List[AppProcessorAttribute],
         tags: List[AppProcessorTag],
@@ -140,7 +183,9 @@ class AppProcessor:
         self._description = description
         self._label = label
         self._inputs = inputs
+        self._input_folders = input_folders
         self._outputs = outputs
+        self._output_folders = output_folders
         self._parameters = parameters
         self._attributes = attributes
         self._tags = tags
@@ -151,7 +196,9 @@ class AppProcessor:
             'description': self._description,
             'label': self._label,
             'inputs': [i.get_spec() for i in self._inputs],
+            'inputFolders': [i.get_spec() for i in self._input_folders],
             'outputs': [o.get_spec() for o in self._outputs],
+            'outputFolders': [o.get_spec() for o in self._output_folders],
             'parameters': [p.get_spec() for p in self._parameters],
             'attributes': [a.get_spec() for a in self._attributes],
             'tags': [t.get_spec() for t in self._tags]
@@ -159,7 +206,9 @@ class AppProcessor:
     @staticmethod
     def from_spec(spec):
         inputs = [AppProcessorInput.from_spec(i) for i in spec['inputs']]
+        input_folders = [AppProcessorInputFolder.from_spec(i) for i in spec.get('inputFolders', [])]
         outputs = [AppProcessorOutput.from_spec(o) for o in spec['outputs']]
+        output_folders = [AppProcessorOutputFolder.from_spec(o) for o in spec.get('outputFolders', [])]
         parameters = [AppProcessorParameter.from_spec(p) for p in spec['parameters']]
         attributes = [AppProcessorAttribute.from_spec(a) for a in spec['attributes']]
         tags = [AppProcessorTag.from_spec(t) for t in spec['tags']]
@@ -168,7 +217,9 @@ class AppProcessor:
             description=spec['description'],
             label=spec['label'],
             inputs=inputs,
+            input_folders=input_folders,
             outputs=outputs,
+            output_folders=output_folders,
             parameters=parameters,
             attributes=attributes,
             tags=tags
@@ -189,14 +240,16 @@ class AppProcessor:
             ))
         _tags = [AppProcessorTag(tag=tag) for tag in tags]
 
-        inputs, outputs, parameters = _get_context_inputs_outputs_parameters_for_processor(processor_class)
+        inputs, input_folders, outputs, output_folders, parameters = _get_context_inputs_outputs_parameters_for_processor(processor_class)
 
         return AppProcessor(
             name=name,
             description=description,
             label=label,
             inputs=inputs,
+            input_folders=input_folders,
             outputs=outputs,
+            output_folders=output_folders,
             parameters=parameters,
             attributes=_attributes,
             tags=_tags,
@@ -257,7 +310,9 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
         })
 
     inputs: List[AppProcessorInput] = []
+    input_folders: List[AppProcessorInputFolder] = []
     outputs: List[AppProcessorOutput] = []
+    output_folders: List[AppProcessorOutputFolder] = []
     parameters: List[AppProcessorParameter] = []
     for context_field in context_fields:
         name: str = context_field['name']
@@ -280,6 +335,20 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
                 raise AppProcessorException(f"Input {name} has secret set - only parameters can have secret set")
             if default is not PydanticUndefined and default is not None: # None case only necessary for pydantic v1
                 raise AppProcessorException(f"Input {name} has default set - only parameters can have default set")
+        elif annotation == InputFolder or annotation == List[InputFolder]:
+            is_list = annotation == List[InputFolder]
+            input_folders.append(AppProcessorInputFolder(
+                name=name,
+                description=description,
+                list=is_list
+            ))
+            # check to make sure other fields are not set
+            if options is not None:
+                raise AppProcessorException(f"Input folder {name} has options set - only parameters can have options")
+            if secret is not None:
+                raise AppProcessorException(f"Input folder {name} has secret set - only parameters can have secret set")
+            if default is not PydanticUndefined and default is not None: # None case only necessary for pydantic v1
+                raise AppProcessorException(f"Input folder {name} has default set - only parameters can have default set")
         elif annotation == OutputFile:
             outputs.append(AppProcessorOutput(
                 name=name,
@@ -287,11 +356,23 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
             ))
             # check to make sure other fields are not set
             if options is not None:
-                raise AppProcessorException(f"Input {name} has options set - only parameters can have options")
+                raise AppProcessorException(f"Output {name} has options set - only parameters can have options")
             if secret is not None:
-                raise AppProcessorException(f"Input {name} has secret set - only parameters can have secret set")
+                raise AppProcessorException(f"Output {name} has secret set - only parameters can have secret set")
             if default is not PydanticUndefined and default is not None: # None case only necessary for pydantic v1
-                raise AppProcessorException(f"Input {name} has default set - only parameters can have default set")
+                raise AppProcessorException(f"Output {name} has default set - only parameters can have default set")
+        elif annotation == OutputFolder:
+            output_folders.append(AppProcessorOutputFolder(
+                name=name,
+                description=description
+            ))
+            # check to make sure other fields are not set
+            if options is not None:
+                raise AppProcessorException(f"Output folder {name} has options set - only parameters can have options")
+            if secret is not None:
+                raise AppProcessorException(f"Output folder {name} has secret set - only parameters can have secret set")
+            if default is not PydanticUndefined and default is not None:
+                raise AppProcessorException(f"Output folder {name} has default set - only parameters can have default set")
         elif _is_valid_parameter_type(annotation):
             parameters.append(AppProcessorParameter(
                 name=name,
@@ -302,19 +383,25 @@ def _get_context_inputs_outputs_parameters_for_model(context_class: Type[BaseMod
                 secret=secret if secret is not None else False
             ))
         elif _is_pydantic_model_class(annotation):
-            inputs0, outputs0, parameters0 = _get_context_inputs_outputs_parameters_for_model(annotation)
+            inputs0, input_folders0, outputs0, output_folders0, parameters0 = _get_context_inputs_outputs_parameters_for_model(annotation)
             for input0 in inputs0:
                 input0.name = f'{name}.{input0.name}'
                 inputs.append(input0)
+            for input_folder0 in input_folders0:
+                input_folder0.name = f'{name}.{input_folder0.name}'
+                input_folders.append(input_folder0)
             for output0 in outputs0:
                 output0.name = f'{name}.{output0.name}'
                 outputs.append(output0)
+            for output_folder0 in output_folders0:
+                output_folder0.name = f'{name}.{output_folder0.name}'
+                output_folders.append(output_folder0)
             for parameter0 in parameters0:
                 parameter0.name = f'{name}.{parameter0.name}'
                 parameters.append(parameter0)
         else:
             raise AppProcessorException(f"Unsupported type for {name}: {annotation}")
-    return inputs, outputs, parameters
+    return inputs, input_folders, outputs, output_folders, parameters
 
 def _is_pydantic_model_class(type: Any):
     return inspect.isclass(type) and issubclass(type, BaseModel)
