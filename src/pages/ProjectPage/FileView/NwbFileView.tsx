@@ -1,45 +1,20 @@
-import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
-import { useModalWindow } from "@fi-sci/modal-window"
-import { RemoteH5File, getRemoteH5File } from "../../../RemoteH5File/RemoteH5File";
 import { Hyperlink } from "@fi-sci/misc";
-import ModalWindow from "@fi-sci/modal-window";
-import { Splitter } from "@fi-sci/splitter";
-import JobsWindow from "../JobsWindow/JobsWindow";
+import ModalWindow, { useModalWindow } from "@fi-sci/modal-window";
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
+import { RemoteH5File, getRemoteH5File } from "../../../RemoteH5File/RemoteH5File";
+import { getDandiApiHeaders } from "../../DandiBrowser/DandiBrowser";
+import { AssetResponse } from "../../DandiBrowser/types";
 import LoadNwbInPythonWindow from "../LoadNwbInPythonWindow/LoadNwbInPythonWindow";
 import { useProject } from "../ProjectPageContext";
-import SpikeSortingOutputSection from "./SpikeSortingOutputSection/SpikeSortingOutputSection";
-import { DendroJob } from "../../../types/dendro-types";
-import { AssetResponse } from "../../DandiBrowser/types";
-import { getDandiApiHeaders } from "../../DandiBrowser/DandiBrowser";
 import ElectricalSeriesSection from "./ElectricalSeriesSection/ElectricalSeriesSection";
+import { ElapsedTimeComponent } from "./FileViewTable";
+import SpikeSortingOutputSection from "./SpikeSortingOutputSection/SpikeSortingOutputSection";
 
 
 type Props = {
     fileName: string
     width: number
     height: number
-}
-
-const NwbFileEditor: FunctionComponent<Props> = ({fileName, width, height}) => {
-    return (
-        <Splitter
-            width={width}
-            height={height}
-            initialPosition={height * 2 / 3}
-            direction="vertical"
-        >
-            <NwbFileEditorChild
-                width={0}
-                height={0}
-                fileName={fileName}
-            />
-            <JobsWindow
-                width={0}
-                height={0}
-                fileName={fileName}
-            />
-        </Splitter>
-    )
 }
 
 export const useNwbFile = (nwbUrl?: string) => {
@@ -81,10 +56,81 @@ export const useElectricalSeriesPaths = (nwbFile: RemoteH5File | undefined) => {
     return electricalSeriesPaths
 }
 
-const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height}) => {
+type FileViewTableProps = {
+    fileName: string
+    additionalRows: {
+        label: string
+        value: any
+    }[]
+}
+
+const FileViewTable: FunctionComponent<FileViewTableProps> = ({fileName, additionalRows}) => {
+    const {files, jobs, openTab} = useProject()
+    const theFile = useMemo(() => {
+        if (!files) return undefined
+        return files.find(f => (f.fileName === fileName))
+    }, [files, fileName])
+
+    const cc = theFile?.content || ''
+    const theUrl = cc.startsWith('url:') ? cc.slice('url:'.length) : cc
+
+    const jobProducingThisFile = useMemo(() => {
+        if (!jobs) return undefined
+        if (!theFile) return undefined
+        if (!theFile.jobId) return undefined
+        const job = jobs.find(j => (j.jobId === theFile.jobId))
+        if (!job) return
+        return job
+    }, [jobs, theFile])
+
+    return (
+        <table className="table1">
+            <tbody>
+                <tr>
+                    <td>Path:</td>
+                    <td>{fileName}</td>
+                </tr>
+                <tr>
+                    <td>URL:</td>
+                    <td>{theUrl}</td>
+                </tr>
+                {
+                    jobProducingThisFile && (
+                        <>
+                            <tr>
+                                <td>Job status:</td>
+                                <td>
+                                    <Hyperlink onClick={() => {openTab(`job:${jobProducingThisFile.jobId}`)}}>
+                                        {jobProducingThisFile.status}
+                                    </Hyperlink>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Elapsed time (sec):</td>
+                                <td><ElapsedTimeComponent job={jobProducingThisFile} /></td>
+                            </tr>
+                        </>
+                    )
+                }
+                {
+                    additionalRows.map(row => (
+                        <tr key={row.label}>
+                            <td>{row.label}</td>
+                            <td>{row.value}</td>
+                        </tr>
+                    ))
+                }
+                <tr>
+                </tr>
+            </tbody>
+        </table>
+    )
+}
+
+const NwbFileView: FunctionComponent<Props> = ({fileName, width, height}) => {
     const [assetResponse, setAssetResponse] = useState<AssetResponse | null>(null)
 
-    const {project, jobs, openTab, files} = useProject()
+    const {project, jobs, files} = useProject()
 
     const nbFile = useMemo(() => {
         if (!files) return undefined
@@ -159,72 +205,21 @@ const NwbFileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
         return undefined
     }, [jobs, nbFile])
 
-    const jobProducingThisFile = useMemo(() => {
-        if (!jobs) return undefined
-        if (!nbFile) return undefined
-        if (!nbFile.jobId) return undefined
-        const job = jobs.find(j => (j.jobId === nbFile.jobId))
-        if (!job) return
-        return job
-    }, [jobs, nbFile])
 
     return (
         <div style={{position: 'absolute', width, height, background: 'white'}}>
             <hr />
-            <table className="table1">
-                <tbody>
-                    <tr>
-                        <td>Path:</td>
-                        <td>{fileName}</td>
-                    </tr>
-                    <tr>
-                        <td>URL:</td>
-                        <td>{nwbUrl}</td>
-                    </tr>
-                    {
-                        jobProducingThisFile && (
-                            <>
-                                <tr>
-                                    <td>Job status:</td>
-                                    <td>
-                                        <Hyperlink onClick={() => {openTab(`job:${jobProducingThisFile.jobId}`)}}>
-                                            {jobProducingThisFile.status}
-                                        </Hyperlink>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Elapsed time (sec):</td>
-                                    <td><ElapsedTimeComponent job={jobProducingThisFile} /></td>
-                                </tr>
-                            </>
-                        )
-                    }
-                    {
-                        dandisetId && (
-                            <tr>
-                                <td>Dandiset:</td>
-                                <td>
-                                    {dandisetId && <a href={`https://${stagingStr2}dandiarchive.org/dandiset/${dandisetId}/${dandisetVersion}`} target="_blank" rel="noreferrer">
-                                        {dandisetId} ({dandisetVersion || ''})
-                                    </a>}
-                                </td>
-                            </tr>
-                        )
-                    }
-                    {
-                        assetResponse?.path && (
-                            <tr>
-                                <td>DANDI Path:</td>
-                                <td>
-                                    {assetResponse?.path || ''}
-                                </td>
-                            </tr>
-                        )
-                    }
-                    <tr>
-                    </tr>
-                </tbody>
-            </table>
+            <FileViewTable
+                fileName={fileName}
+                additionalRows={[
+                    {label: 'Dandiset', value: <>{
+                        dandisetId && <a href={`https://${stagingStr2}dandiarchive.org/dandiset/${dandisetId}/${dandisetVersion}`} target="_blank" rel="noreferrer">
+                            {dandisetId} ({dandisetVersion || ''})
+                        </a>
+                    }</>},
+                    {label: 'DANDI Path', value: assetResponse?.path},
+                ]}
+            />
             <div>&nbsp;</div>
             <ul>
             {
@@ -347,43 +342,4 @@ const isDandiAssetUrl = (url: string) => {
     }
 }
 
-type ElapsedTimeComponentProps = {
-    job: DendroJob
-}
-
-export const ElapsedTimeComponent: FunctionComponent<ElapsedTimeComponentProps> = ({job}) => {
-
-    // if job.status is 'running', then we want to refresh ever 30 seconds
-    const [refreshCode, setRefreshCode] = useState(0)
-    const refreshInterval = 30000
-    useEffect(() => {
-        let canceled = false
-        if (['running'].includes(job.status)) {
-            const timer = setInterval(() => {
-                if (canceled) return
-                setRefreshCode(rc => rc + 1)
-            }, refreshInterval)
-            return () => {
-                canceled = true
-                clearInterval(timer)
-            }
-        }
-    }, [job.status])
-
-    const truncateToThreeDigits = (x: number) => {
-        return Math.floor(x * 1000) / 1000
-    }
-    if (['completed', 'failed'].includes(job.status)) {
-        const elapsed = (job.timestampFinished || 0) - (job.timestampStarted || 0)
-        return <span>{truncateToThreeDigits(elapsed)}</span>
-    }
-    else if (['running'].includes(job.status)) {
-        const elapsed = (Date.now() / 1000) - (job.timestampStarted || 0)
-        return <span>{Math.floor(elapsed)}</span>
-    }
-    else {
-        return <span></span>
-    }
-}
-
-export default NwbFileEditor
+export default NwbFileView

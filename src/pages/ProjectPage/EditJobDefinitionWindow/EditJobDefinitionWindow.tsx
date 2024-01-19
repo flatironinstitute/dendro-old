@@ -5,7 +5,7 @@ import { RemoteH5File } from "../../../RemoteH5File/RemoteH5File";
 import { ComputeResourceSpecProcessor, ComputeResourceSpecProcessorParameter } from "../../../types/dendro-types";
 import useRoute from "../../../useRoute";
 import { useProject } from "../ProjectPageContext";
-import { useElectricalSeriesPaths } from "../FileEditor/NwbFileEditor";
+import { useElectricalSeriesPaths } from "../FileView/NwbFileView";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown, faCaretRight } from "@fortawesome/free-solid-svg-icons";
 import { expandedFoldersReducer } from "../FileBrowser/FileBrowser2";

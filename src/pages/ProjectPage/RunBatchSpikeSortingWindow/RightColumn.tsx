@@ -8,7 +8,7 @@ import EditJobDefinitionWindow from "../EditJobDefinitionWindow/EditJobDefinitio
 import ModalWindow, { useModalWindow } from "@fi-sci/modal-window"
 import { useProject } from "../ProjectPageContext"
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
-import { fetchTextFile } from "../FileEditor/OtherFileEditor"
+import { fetchTextFile } from "../FileView/OtherFileView"
 
 
 type RightColumnProps = {

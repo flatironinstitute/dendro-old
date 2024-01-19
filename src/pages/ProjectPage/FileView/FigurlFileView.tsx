@@ -1,13 +1,13 @@
 import { FunctionComponent, useEffect, useMemo, useState } from "react"
 import { useProject } from "../ProjectPageContext"
 
-type FigurlFileEditorProps = {
+type FigurlFileViewProps = {
     fileName: string
     width: number
     height: number
 }
 
-const FigurlFileEditor: FunctionComponent<FigurlFileEditorProps> = ({fileName, width, height}) => {
+const FigurlFileView: FunctionComponent<FigurlFileViewProps> = ({fileName, width, height}) => {
     if (!fileName.endsWith('.figurl')) {
         throw Error('Unexpected file extension: ' + fileName)
     }
@@ -52,4 +52,4 @@ const fetchTextFile = async (url: string) => {
     return await response.text()
 }
 
-export default FigurlFileEditor
+export default FigurlFileView

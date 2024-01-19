@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useEffect, useMemo, useReducer, useStat
 import { useGithubAuth } from "../../../GithubAuth/useGithubAuth"
 import { DendroProcessingJobDefinition, createJob, defaultJobDefinition, dendroJobDefinitionReducer, fetchFile } from "../../../dbInterface/dbInterface"
 import { ComputeResourceSpecApp, ComputeResourceSpecProcessor, DendroComputeResourceApp, DendroFile, DendroJobRequiredResources } from "../../../types/dendro-types"
-import { useNwbFile } from "../FileEditor/NwbFileEditor"
+import { useNwbFile } from "../FileView/NwbFileView"
 import { useProject } from "../ProjectPageContext"
 import LeftColumn from "./LeftColumn"
 import RightColumn from "./RightColumn"

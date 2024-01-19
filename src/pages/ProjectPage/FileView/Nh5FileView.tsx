@@ -1,38 +1,14 @@
 import { Hyperlink } from "@fi-sci/misc";
-import { Splitter } from "@fi-sci/splitter";
 import { FunctionComponent, useEffect, useMemo, useState } from "react";
 import { RemoteNH5FileClient, RemoteNH5Group } from "../../../nh5";
-import JobsWindow from "../JobsWindow/JobsWindow";
 import { useProject } from "../ProjectPageContext";
-import { ElapsedTimeComponent } from "./NwbFileEditor";
+import FileViewTable from "./FileViewTable";
 
 
 type Props = {
     fileName: string
     width: number
     height: number
-}
-
-const Nh5FileEditor: FunctionComponent<Props> = ({fileName, width, height}) => {
-    return (
-        <Splitter
-            width={width}
-            height={height}
-            initialPosition={height * 2 / 3}
-            direction="vertical"
-        >
-            <Nh5FileEditorChild
-                width={0}
-                height={0}
-                fileName={fileName}
-            />
-            <JobsWindow
-                width={0}
-                height={0}
-                fileName={fileName}
-            />
-        </Splitter>
-    )
 }
 
 export const useNh5FileClient = (nh5Url?: string) => {
@@ -50,8 +26,8 @@ export const useNh5FileClient = (nh5Url?: string) => {
     return client
 }
 
-const Nh5FileEditorChild: FunctionComponent<Props> = ({fileName, width, height}) => {
-    const {jobs, openTab, files} = useProject()
+const Nh5FileView: FunctionComponent<Props> = ({fileName, width, height}) => {
+    const {files} = useProject()
 
     const {projectId} = useProject()
 
@@ -88,56 +64,13 @@ const Nh5FileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
         }
     }, [rootGroup])
 
-    const jobProducingThisFile = useMemo(() => {
-        if (!jobs) return undefined
-        if (!nbFile) return undefined
-        if (!nbFile.jobId) return undefined
-        const job = jobs.find(j => (j.jobId === nbFile.jobId))
-        if (!job) return
-        return job
-    }, [jobs, nbFile])
-
     return (
         <div style={{position: 'absolute', width, height, background: 'white'}}>
             <hr />
-            <table className="table1">
-                <tbody>
-                    <tr>
-                        <td>Path:</td>
-                        <td>{fileName}</td>
-                    </tr>
-                    <tr>
-                        <td>URL:</td>
-                        <td>{nh5Url}</td>
-                    </tr>
-                    {
-                        jobProducingThisFile && (
-                            <>
-                                <tr>
-                                    <td>Job status:</td>
-                                    <td>
-                                        <Hyperlink onClick={() => {openTab(`job:${jobProducingThisFile.jobId}`)}}>
-                                            {jobProducingThisFile.status}
-                                        </Hyperlink>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Elapsed time (sec):</td>
-                                    <td><ElapsedTimeComponent job={jobProducingThisFile} /></td>
-                                </tr>
-                            </>
-                        )
-                    }
-                    <tr>
-                        <td>File type:</td>
-                        <td>{fileType}</td>
-                    </tr>
-                    <tr>
-                        <td>File format version:</td>
-                        <td>{fileFormatVersion}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <FileViewTable fileName={fileName} additionalRows={[
+                {label: 'File type', value: fileType},
+                {label: 'File format version', value: fileFormatVersion}
+            ]} />
             <div>&nbsp;</div>
             <div>
                 {
@@ -159,4 +92,4 @@ const Nh5FileEditorChild: FunctionComponent<Props> = ({fileName, width, height})
     )
 }
 
-export default Nh5FileEditor
+export default Nh5FileView

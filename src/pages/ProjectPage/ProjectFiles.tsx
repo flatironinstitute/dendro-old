@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback } from "react";
 import { Splitter } from "@fi-sci/splitter";
 import TabWidget from "../../TabWidget/TabWidget";
 import FileBrowser2 from "./FileBrowser/FileBrowser2";
-import FileEditor from "./FileEditor/FileEditor";
+import FileView from "./FileView/FileView";
 import { useProject } from "./ProjectPageContext";
 import JobView from "./JobView/JobView";
 import { confirm } from "../../confirm_prompt_alert";
@@ -86,7 +86,7 @@ const ProjectTabWidget: FunctionComponent<{width: number, height: number}> = ({w
         >
             {openTabs.map(({tabName}) => (
                 tabName.startsWith('file:') ? (
-                    <FileEditor
+                    <FileView
                         key={tabName}
                         fileName={tabName.slice('file:'.length)}
                         width={0}

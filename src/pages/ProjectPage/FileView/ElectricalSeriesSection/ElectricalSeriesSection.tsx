@@ -1,5 +1,5 @@
 import { FunctionComponent, useCallback, useState } from "react"
-import { useElectricalSeriesPaths, useNwbFile } from "../NwbFileEditor"
+import { useElectricalSeriesPaths, useNwbFile } from "../NwbFileView"
 import { Hyperlink } from "@fi-sci/misc";
 import ModalWindow from "@fi-sci/modal-window";
 import { useModalWindow } from "@fi-sci/modal-window"
