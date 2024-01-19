@@ -28,7 +28,10 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, 
     useEffect(() => {
         setMarkdownSource('')
         let sourcePath = ''
-        if (route.page === 'dandisets') {
+        if (route.page === 'home') {
+            sourcePath = '/help/home.md'
+        }
+        else if (route.page === 'dandisets') {
             sourcePath = '/help/dandisets.md'
         }
         else if (route.page === 'dandiset') {

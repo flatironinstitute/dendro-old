@@ -5,3 +5,8 @@
     height: 100vh;
     font-size: 20px;
 }
+
+p {
+    padding: 0px;
+    margin: 7px;
+}

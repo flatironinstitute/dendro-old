@@ -20,6 +20,7 @@ const ProjectsPage: FunctionComponent<Props> = ({width, height}) => {
     const handleAdd = useCallback(async () => {
         if (!auth.signedIn) {
             alert('You must be signed in to create a project')
+            return
         }
         const projectName = prompt('Enter a name for your project', 'untitled')
         if (!projectName) return
