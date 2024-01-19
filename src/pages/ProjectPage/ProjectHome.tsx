@@ -1,5 +1,5 @@
 import { Edit, Settings } from "@mui/icons-material";
-import { FunctionComponent, useCallback, useMemo } from "react";
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
 import { useModalWindow } from "@fi-sci/modal-window"
 import { Hyperlink } from "@fi-sci/misc";
 import ModalWindow from "@fi-sci/modal-window";
@@ -13,6 +13,7 @@ import ComputeResourceSection from "./ComputeResourceSection";
 import { IconButton } from "@mui/material";
 import { setProjectAnalysisSourceUrl } from "../../dbInterface/dbInterface";
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
+import Markdown from "../../Markdown/Markdown";
 
 type Props = {
     width: number
@@ -124,9 +125,18 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
 
             <div>&nbsp;</div><hr /><div>&nbsp;</div>
 
-            <div style={headingStyle}>Project description</div>
+            <div style={headingStyle}>Description</div>
+            <br />
             <div>
-                {project?.description}
+                <div style={{maxHeight: 300, overflowY: 'auto'}}>
+                    <Markdown
+                        source={project?.description || ''}
+                    />
+                </div>
+                <br />
+                {['editor', 'admin'].includes(projectRole || '') && (
+                    <EditProjectDescription />
+                )}
             </div>
             
             <div>&nbsp;</div><hr /><div>&nbsp;</div>
@@ -152,6 +162,46 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
             </ModalWindow>
         </div>
     )
+}
+
+const EditProjectDescription: FunctionComponent = () => {
+    const {project, setProjectDescription} = useProject()
+    const description = project?.description || ''
+    const [editing, setEditing] = useState<boolean>(false)
+    const [editedDescription, setEditedDescription] = useState<string>('')
+    useEffect(() => {
+        setEditedDescription(description)
+    }, [description])
+    const handleSave = useCallback(async () => {
+        await setProjectDescription(editedDescription)
+        setEditing(false)
+    }, [editedDescription, setProjectDescription])
+    if (editing) {
+        return (
+            <div>
+                <textarea
+                    style={{width: 800, height: 200}}
+                    value={editedDescription}
+                    onChange={e => setEditedDescription(e.target.value)}
+                />
+                <div>&nbsp;</div>
+                <button onClick={() => {
+                    setEditedDescription(description)
+                    setEditing(false)
+                }}>Cancel</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button onClick={handleSave}>Save</button>
+            </div>
+        )
+    }
+    else {
+        return (
+            <Hyperlink onClick={() => {
+                setEditedDescription(description)
+                setEditing(true)
+            }}>Edit</Hyperlink>
+        )
+    }
 }
 
 export default ProjectHome

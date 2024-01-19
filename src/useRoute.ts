@@ -2,6 +2,8 @@ import { useCallback, useMemo } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
 export type Route = {
+    page: 'home'
+} | {
     page: 'dandisets'
 } | {
     page: 'dandiset'
@@ -127,7 +129,7 @@ const useRoute = () => {
         }
         else {
             return {
-                page: 'dandisets'
+                page: 'home'
             }
         }
     }, [p, searchParams])
@@ -183,6 +185,9 @@ const useRoute = () => {
         }
         else if (r.page === 'admin') {
             navigate('/admin' + queryString)
+        }
+        else {
+            navigate('/' + queryString)
         }
     }, [navigate, staging, deployedApi])
 

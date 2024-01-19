@@ -1,0 +1,7 @@
+.HomePage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    font-size: 20px;
+}

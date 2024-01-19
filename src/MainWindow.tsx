@@ -17,6 +17,7 @@ import useRoute from "./useRoute";
 import useWindowDimensions from "./useWindowDimensions";
 import ImportDandiAssetPage from "./pages/ImportDandiAssetPage/ImportDandiAssetPage";
 import { DendroProject } from "./types/dendro-types";
+import HomePage from "./pages/HomePage/HomePage";
 
 type Props = {
     // none
@@ -126,7 +127,9 @@ type MainContent2Props = {
 const MainContent2: FunctionComponent<MainContent2Props> = ({width, height, onCurrentProjectChanged}) => {
     const {route} = useRoute()
     return (
-        (route.page === 'dandisets' || route.page === 'dandiset') ? (
+        route.page === 'home' ? (
+            <HomePage width={width} height={height} />
+        ) : (route.page === 'dandisets' || route.page === 'dandiset') ? (
             <DandiBrowser width={width} height={height} />
         ) : route.page === 'project' ? (
             <ProjectPage width={width} height={height} onCurrentProjectChanged={onCurrentProjectChanged} />
