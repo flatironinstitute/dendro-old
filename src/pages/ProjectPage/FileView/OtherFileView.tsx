@@ -1,7 +1,4 @@
-import { Hyperlink } from "@fi-sci/misc";
-import { FunctionComponent, useEffect, useMemo, useState } from "react";
-import { RemoteNH5Group } from "../../../nh5";
-import { useProject } from "../ProjectPageContext";
+import { FunctionComponent } from "react";
 import FileViewTable from "./FileViewTable";
 
 
