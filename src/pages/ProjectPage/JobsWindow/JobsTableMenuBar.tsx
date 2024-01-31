@@ -1,5 +1,5 @@
 import { SmallIconButton } from "@fi-sci/misc";
-import { Delete, Refresh } from "@mui/icons-material";
+import { Check, Delete, Refresh } from "@mui/icons-material";
 import { FunctionComponent, useCallback, useState } from "react";
 import { confirm } from "../../../confirm_prompt_alert";
 import { useProject } from "../ProjectPageContext";
@@ -11,9 +11,10 @@ type JobsTableMenuBarProps = {
     onResetSelection: () => void
     createJobEnabled?: boolean
     createJobTitle?: string
+    onApprovalAll?: () => void
 }
 
-const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, height, selectedJobIds, onResetSelection, createJobEnabled, createJobTitle}) => {
+const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, height, selectedJobIds, onResetSelection, createJobEnabled, createJobTitle, onApprovalAll}) => {
     const {deleteJob, refreshJobs, refreshFiles, projectRole} = useProject()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {
@@ -51,6 +52,17 @@ const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, heig
                 title={selectedJobIds.length > 0 ? `Delete these ${selectedJobIds.length} jobs` : ''}
                 onClick={handleDelete}
             />
+            {
+                onApprovalAll && (
+                    <SmallIconButton
+                        icon={<Check />}
+                        disabled={operating}
+                        title='Approval all jobs'
+                        label="Approval all jobs"
+                        onClick={onApprovalAll}
+                    />
+                )
+            }
         </div>
     )
 }

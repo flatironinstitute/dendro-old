@@ -35,6 +35,9 @@ export type SelectedStringsAction = {
     type: 'set-multiple'
     paths: string[]
     selected: boolean
+} | {
+    type: 'add'
+    value: string
 }
 
 export const selectedStringsReducer = (state: SelectedStrings, action: SelectedStringsAction): SelectedStrings => {
@@ -61,6 +64,11 @@ export const selectedStringsReducer = (state: SelectedStrings, action: SelectedS
                 if (ret.has(path)) ret.delete(path)
             }
         }
+        return ret
+    }
+    else if (action.type === 'add') {
+        const ret = new Set(state)
+        ret.add(action.value)
         return ret
     }
     else {
