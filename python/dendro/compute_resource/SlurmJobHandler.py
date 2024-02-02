@@ -82,35 +82,30 @@ class SlurmJobHandler:
         slurm_group_id = f'{timestamp}_{random_str}'
         slurm_script_fname = f'slurm_scripts/slurm_batch_{slurm_group_id}.sh'
         script_has_at_least_one_job = False # important to do this so we don't ever run an empty script
-        with open(slurm_script_fname, 'w', encoding='utf8') as f:
-            f.write('#!/bin/bash\n')
-            f.write('\n')
-            f.write('set -e\n')
-            f.write('\n')
-            for ii, job in enumerate(jobs):
-                # doesn't actually start the job - just returns the shell command - but sets the job status to 'starting'
-                # so it's important to run this slurm script right away so that the job doesn't get caught in a starting state
-                # forever, for example if the compute resource is restarted
-                cmd = self._job_manager._start_job(job, run_process=False, return_shell_command=True)
-                if cmd:
-                    if not using_mock():
-                        # this is how we make sure one and only one job is run in each process
-                        f.write(f'if [ "$SLURM_PROCID" == "{ii}" ]; then\n')
-                        f.write(f'    {cmd}\n')
-                        f.write('fi\n')
-                        f.write('\n')
-                    else:
-                        f.write(f'{cmd}\n')
-                        f.write('\n')
-                    script_has_at_least_one_job = True
+        job_lines_in_script = []
+        for ii, job in enumerate(jobs):
+            # doesn't actually start the job - just returns the shell command - but sets the job status to 'starting'
+            # so it's important to run this slurm script right away so that the job doesn't get caught in a starting state
+            # forever, for example if the compute resource is restarted
+            cmd = self._job_manager._start_job(job, run_process=False, return_shell_command=True)
+            if cmd:
+                if not using_mock():
+                    # this is how we make sure one and only one job is run in each process
+                    job_lines_in_script.append(f'if [ "$SLURM_PROCID" == "{ii}" ]; then\n')
+                    job_lines_in_script.append(f'    {cmd}\n')
+                    job_lines_in_script.append('fi\n')
+                    job_lines_in_script.append('\n')
+                else:
+                    job_lines_in_script.append(f'{cmd}\n')
+                    job_lines_in_script.append('\n')
+                script_has_at_least_one_job = True
 
-                    # we need to record which slurm group this job went to so we can
-                    # later know how many running groups there are
-                    with open(f'slurm_group_assignments/{job.jobId}', 'w', encoding='utf8') as f2:
-                        f2.write(slurm_group_id)
-            f.write('\n')
+                # we need to record which slurm group this job went to so we can
+                # later know how many running groups there are
+                with open(f'slurm_group_assignments/{job.jobId}', 'w', encoding='utf8') as f2:
+                    f2.write(slurm_group_id)
         if script_has_at_least_one_job:
-            # run the slurm script with srun
+            # run the slurm script with sbatch
             # slurm_cpus_per_task = self._slurm_opts.cpusPerTask
             # slurm_partition = self._slurm_opts.partition
             # slurm_time = self._slurm_opts.time
@@ -142,9 +137,22 @@ class SlurmJobHandler:
             mem_per_cpu = int(memory_gb_per_job * 1024 / num_cpus_per_job)
             oo.append(f'--mem-per-cpu={mem_per_cpu}')
 
-            slurm_opts_str = ' '.join(oo)
+            with open(slurm_script_fname, 'w', encoding='utf8') as f:
+                f.write('#!/bin/bash\n')
+                f.write('\n')
+                for slurm_opt in oo:
+                    f.write(f'#SBATCH {slurm_opt}\n')
+                f.write('\n')
+                f.write('set -e\n')
+                f.write('\n')
+                for job_line in job_lines_in_script:
+                    f.write(job_line)
+                f.write('\n')
+
+            # slurm_opts_str = ' '.join(oo)
             if not using_mock():
-                cmd = f'srun {slurm_opts_str} bash {slurm_script_fname}'
+                # cmd = f'srun {slurm_opts_str} bash {slurm_script_fname}'
+                cmd = f'sbatch {slurm_script_fname}'
             else:
                 cmd = f'bash {slurm_script_fname}'
 
