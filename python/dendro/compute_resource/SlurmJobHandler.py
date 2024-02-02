@@ -117,9 +117,13 @@ class SlurmJobHandler:
             # slurm_other_opts = self._slurm_opts.otherOpts
 
             if num_gpus_per_job > 0:
-                slurm_partition = 'gpu' # hard-coded for flatiron setup - TODO: make this configurable
+                slurm_partition = os.environ.get('SLURM_GPU_PARTITION', None)
+                if not slurm_partition:
+                    raise Exception('SLURM_GPU_PARTITION environment variable must be set')
             else:
-                slurm_partition = 'ccm' # hard-coded for flatiron setup - TODO: make this configurable
+                slurm_partition = os.environ.get('SLURM_PARTITION', None)
+                if not slurm_partition:
+                    raise Exception('SLURM_PARTITION environment variable must be set')
 
             slurm_time = _format_time_for_slurm(timeout_sec_per_job)
             if slurm_time is None:
