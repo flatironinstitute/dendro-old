@@ -229,6 +229,8 @@ def _run_container_job(*,
         cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
         for k, v in env_vars.items():
             cmd2.extend(['-e', f'{k}={v}'])
+        # we want kachery temporary files to be stored in the /tmp/.kachery-cloud directory
+        cmd2.extend(['-e', 'KACHERY_CLOUD_DIR=/tmp/.kachery-cloud'])
         if num_cpus is not None:
             cmd2.extend(['--cpus', str(num_cpus)])
         if use_gpu:
@@ -276,6 +278,8 @@ def _run_container_job(*,
             cmd2.extend(['--nv'])
         for k, v in env_vars.items():
             cmd2.extend(['--env', f'{k}={v}'])
+        # we want kachery temporary files to be stored in the /tmp/.kachery-cloud directory
+        cmd2.extend(['--env', 'KACHERY_CLOUD_DIR=/tmp/.kachery-cloud'])
 
         # don't use --cpus for now because we run into cgroups issues and the container fails to start
         # if num_cpus is not None:

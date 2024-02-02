@@ -223,9 +223,28 @@ const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, on
 
     const handleApproveJob = useCallback((jobId: string) => {
         approveJob(jobId, auth).then(() => {
-            jobsApprovedInThisSessionDispatch({type: 'set', values: new Set([jobId])})
+            jobsApprovedInThisSessionDispatch({type: 'add', value: jobId})
         })
     }, [auth])
+
+    const handleApproveAllJobs = useCallback(() => {
+        (async () => {
+            const jobIds = sortedJobs.filter(jj => jj.status === 'pending' && jj.pendingApproval && !jobsApprovedInThisSession.has(jj.jobId)).map(jj => jj.jobId)
+            for (const jobId of jobIds) {
+                await approveJob(jobId, auth)
+                jobsApprovedInThisSessionDispatch({type: 'add', value: jobId})
+            }
+        })()
+    }, [sortedJobs, jobsApprovedInThisSession, auth])
+
+    const atLeastOneJobPendingApproval = useMemo(() => {
+        for (const jj of sortedJobs) {
+            if (jj.status === 'pending' && jj.pendingApproval && !jobsApprovedInThisSession.has(jj.jobId)) {
+                return true
+            }
+        }
+        return false
+    }, [sortedJobs, jobsApprovedInThisSession])
 
     return (
         <div style={{position: 'relative', width, height}}>
@@ -237,6 +256,7 @@ const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, on
                     onResetSelection={() => selectedJobIdsDispatch({type: 'set', values: new Set<string>()})}
                     createJobEnabled={createJobEnabled}
                     createJobTitle={createJobTitle}
+                    onApprovalAll={userCanApproveJobs && atLeastOneJobPendingApproval ? handleApproveAllJobs : undefined}
                 />
             </div>
             <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>

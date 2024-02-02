@@ -35,11 +35,11 @@ class Project:
         ]
 
         self._compute_resource = compute_resource
-    def get_file(self, file_name: str) -> 'ProjectFile':
+    def get_file(self, file_name: str) -> Union['ProjectFile', None]:
         for f in self._files:
             if f._file_data.fileName == file_name:
                 return f
-        raise ProjectException(f'File not found: {file_name}')
+        return None
     def get_folder(self, path: str) -> 'ProjectFolder':
         return ProjectFolder(self, path)
 
