@@ -152,7 +152,9 @@ class SlurmJobHandler:
             # slurm_opts_str = ' '.join(oo)
             if not using_mock():
                 # cmd = f'srun {slurm_opts_str} bash {slurm_script_fname}'
-                cmd = f'sbatch {slurm_script_fname}'
+                if not os.path.exists('slurm_logs'):
+                    os.mkdir('slurm_logs')
+                cmd = f'sbatch {slurm_script_fname} --output=slurm_logs/slurm_logs/%A.out'
             else:
                 cmd = f'bash {slurm_script_fname}'
 
