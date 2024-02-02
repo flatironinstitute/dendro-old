@@ -23,6 +23,9 @@ async def test_integration(tmp_path):
     from dendro.common.dendro_types import DendroJobRequiredResources
     from dendro.api_helpers.routers.gui.job_routes import ApproveJobResponse
 
+    os.environ['SLURM_PARTITION'] = 'default'
+    os.environ['SLURM_GPU_PARTITION'] = 'default'
+
     tmpdir = str(tmp_path)
 
     from fastapi.testclient import TestClient
