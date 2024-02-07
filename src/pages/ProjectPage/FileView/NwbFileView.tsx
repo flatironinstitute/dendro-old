@@ -64,12 +64,12 @@ export const useUnitsPaths = (nwbFile: RemoteH5File | undefined) => {
         ; (async () => {
             const foundPaths: string[] = []
             if (!nwbFile) return
-            const grp = await nwbFile.getGroup('units')
+            const grp = await tryGetGroup(nwbFile, '/units')
             if (canceled) return
             if (grp) {
                 foundPaths.push('/units')
             }
-            const processingEcephysGroup = await nwbFile.getGroup('processing/ecephys')
+            const processingEcephysGroup = await tryGetGroup(nwbFile, '/processing/ecephys')
             if (canceled) return
             if (processingEcephysGroup) {
                 for (const sg of processingEcephysGroup.subgroups) {
@@ -368,6 +368,17 @@ const isDandiAssetUrl = (url: string) => {
     }
     if (url.startsWith('https://api.dandiarchive.org/api/')) {
       return true
+    }
+}
+
+const tryGetGroup = async (nwbFile: RemoteH5File | undefined, path: string) => {
+    if (!nwbFile) return undefined
+    if (!path) return
+    try {
+        return await nwbFile.getGroup(path)
+    }
+    catch(err: any) {
+        return undefined
     }
 }
 
