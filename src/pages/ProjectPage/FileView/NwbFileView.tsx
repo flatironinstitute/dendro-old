@@ -69,10 +69,10 @@ export const useUnitsPaths = (nwbFile: RemoteH5File | undefined) => {
             if (grp) {
                 foundPaths.push('/units')
             }
-            const processingGroup = await nwbFile.getGroup('processing')
+            const processingEcephysGroup = await nwbFile.getGroup('processing/ecephys')
             if (canceled) return
-            if (processingGroup) {
-                for (const sg of processingGroup.subgroups) {
+            if (processingEcephysGroup) {
+                for (const sg of processingEcephysGroup.subgroups) {
                     if (sg.attrs['neurodata_type'] === 'Units') {
                         foundPaths.push(sg.path)
                     }
