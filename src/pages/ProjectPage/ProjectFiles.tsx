@@ -14,13 +14,14 @@ type ProjectFilesProps = {
     width: number
     height: number
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
+    onGenerateSpikeSortingSummary?: (filePaths: string[]) => void
     onOpenInNeurosift?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
     onAction?: (action: PluginAction) => void
 }
 
-const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
+const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onGenerateSpikeSortingSummary, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
     const {files, openTab, deleteFile, closeTab, openTabs, refreshFiles} = useProject()
 
     const handleOpenFile = useCallback((fileName: string) => {
@@ -52,6 +53,7 @@ const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRu
                 onDeleteFile={handleDeleteFile}
                 hideSizeColumn={false}
                 onRunBatchSpikeSorting={onRunBatchSpikeSorting}
+                onGenerateSpikeSortingSummary={onGenerateSpikeSortingSummary}
                 onOpenInNeurosift={onOpenInNeurosift}
                 onDandiUpload={onDandiUpload}
                 onUploadSmallFile={onUploadSmallFile}

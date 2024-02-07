@@ -15,6 +15,7 @@ type FileBrowserMenuBarProps = {
     selectedFileNames: string[]
     onResetSelection: () => void
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
+    onGenerateSpikeSortingSummary?: (filePaths: string[]) => void
     onOpenInNeurosift?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
@@ -23,7 +24,7 @@ type FileBrowserMenuBarProps = {
 
 const {actions} = initializePlugins()
 
-const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction }) => {
+const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onGenerateSpikeSortingSummary, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
     const {route, setRoute} = useRoute()
     const [operating, setOperating] = useState(false)
@@ -56,6 +57,10 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
     ), [selectedFileNames])
 
     const okayToOpenInNeurosift = useMemo(() => (
+        selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.endsWith('.nwb')) && selectedFileNames.length <= 5
+    ), [selectedFileNames])
+
+    const okayToGenerateSpikeSortingSummary = useMemo(() => (
         selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.endsWith('.nwb')) && selectedFileNames.length <= 5
     ), [selectedFileNames])
 
@@ -115,6 +120,20 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
                             title={selectedFileNames.length > 0 ? `Run spike sorting on these ${selectedFileNames.length} files` : ''}
                             onClick={() => onRunBatchSpikeSorting(selectedFileNames)}
                             label="Run spike sorting"
+                        />
+                    </>
+                )
+            }
+            {
+                okayToGenerateSpikeSortingSummary && onGenerateSpikeSortingSummary && (
+                    <>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        <SmallIconButton
+                            icon={<Settings />}
+                            disabled={(selectedFileNames.length === 0) || operating}
+                            title={selectedFileNames.length > 0 ? `Generate spike sorting summary for these ${selectedFileNames.length} files` : ''}
+                            onClick={() => onGenerateSpikeSortingSummary(selectedFileNames)}
+                            label="SSS"
                         />
                     </>
                 )

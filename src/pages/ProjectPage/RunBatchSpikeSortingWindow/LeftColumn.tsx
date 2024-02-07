@@ -10,11 +10,11 @@ type LeftColumnProps = {
     height: number
     overwriteExistingOutputs: boolean
     setOverwriteExistingOutputs: (val: boolean) => void
-    descriptionString: string
-    setDescriptionString: (val: string) => void
-    descriptionStringIsValid: boolean
+    descriptionString?: string
+    setDescriptionString?: (val: string) => void
+    descriptionStringIsValid?: boolean
     filePaths: string[]
-    selectedSpikeSortingProcessor: string
+    selectedProcessorName: string
     valid: boolean
     setValid: (val: boolean) => void
     okayToSubmit: boolean
@@ -36,7 +36,7 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
     width, height,
     overwriteExistingOutputs, setOverwriteExistingOutputs,
     descriptionString, setDescriptionString, descriptionStringIsValid,
-    filePaths, selectedSpikeSortingProcessor,
+    filePaths, selectedProcessorName: selectedSpikeSortingProcessor,
     valid,
     okayToSubmit, handleSubmit,
     operatingMessage,
@@ -49,7 +49,7 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
 }) => {
     return (
         <div className="leftColumn" style={{position: 'absolute', width, height, overflowY: 'auto', overflowX: 'hidden'}}>
-            <h3>Batch spike sorting of {filePaths.length === 1 ? `1 file` : `${filePaths.length} files`} using {selectedSpikeSortingProcessor}</h3>
+            <h3>Batch processing of {filePaths.length === 1 ? `1 file` : `${filePaths.length} files`} using {selectedSpikeSortingProcessor}</h3>
             <div>&nbsp;</div>
             <div>
                 <table className="table1" style={{maxWidth: 500}}>
@@ -60,7 +60,7 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
                                 <input type="checkbox" checked={overwriteExistingOutputs} onChange={evt => setOverwriteExistingOutputs(evt.target.checked)} />
                             </td>
                         </tr>
-                        <tr>
+                        {descriptionString !== undefined && setDescriptionString !== undefined && <tr>
                             <td>Description string in output file name</td>
                             <td>
                                 <input type="text" value={descriptionString} onChange={evt => setDescriptionString(evt.target.value)} />
@@ -70,7 +70,7 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
                                     )
                                 }
                             </td>
-                        </tr>
+                        </tr>}
                     </tbody>
                 </table>
             </div>
@@ -98,7 +98,7 @@ const LeftColumn: FunctionComponent<LeftColumnProps> = ({
                         cursor: okayToSubmit ? 'pointer' : 'default'
                     }}
                 >
-                    Submit spike sorting job(s)
+                    Submit job(s)
                 </button>
                 &nbsp;
                 {/* Large cancel button */}

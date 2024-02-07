@@ -17,6 +17,7 @@ type Props = {
     onDeleteFile: (path: string) => void
     hideSizeColumn?: boolean
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
+    onGenerateSpikeSortingSummary?: (filePaths: string[]) => void
     onOpenInNeurosift?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
@@ -105,7 +106,7 @@ export const expandedFoldersReducer = (state: ExpandedFoldersState, action: Expa
     }
 }
 
-const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
+const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, files, hideSizeColumn, onRunBatchSpikeSorting, onGenerateSpikeSortingSummary, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
     const {currentTabName, jobs, computeResource} = useProject()
 
     const [selectedFileNames, selectedFileNamesDispatch] = useReducer(selectedStringsReducer, new Set<string>())
@@ -155,6 +156,7 @@ const FileBrowser2: FunctionComponent<Props> = ({width, height, onOpenFile, file
                     selectedFileNames={Array.from(selectedFileNames)}
                     onResetSelection={() => selectedFileNamesDispatch({type: 'set', values: new Set()})}
                     onRunBatchSpikeSorting={onRunBatchSpikeSorting}
+                    onGenerateSpikeSortingSummary={onGenerateSpikeSortingSummary}
                     onOpenInNeurosift={onOpenInNeurosift}
                     onDandiUpload={onDandiUpload}
                     onUploadSmallFile={onUploadSmallFile}

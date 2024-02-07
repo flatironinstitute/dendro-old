@@ -24,6 +24,7 @@ import { HBoxLayout } from "@fi-sci/misc";
 import openFilesInNeurosift from "./openFilesInNeurosift";
 import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
 import { DendroProject } from "../../types/dendro-types";
+import GenerateSpikeSortingSummaryWindow from "./GenerateSpikeSortingSummaryWindow/GenerateSpikeSortingSummaryWindow";
 
 type Props = {
     width: number
@@ -202,6 +203,13 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         openRunSpikeSortingWindow()
     }, [openRunSpikeSortingWindow])
 
+    const {visible: generateSpikeSortingSummaryWindowVisible, handleOpen: openGenerateSpikeSortingSummaryWindow, handleClose: closeGenerateSpikeSortingSummaryWindow} = useModalWindow()
+    const [spikeSortingSummaryFilePaths, setSpikeSortingSummaryFilePaths] = useState<string[]>([])
+    const handleGenerateSpikeSortingSummary = useCallback((filePaths: string[]) => {
+        setSpikeSortingSummaryFilePaths(filePaths)
+        openGenerateSpikeSortingSummaryWindow()
+    }, [openGenerateSpikeSortingSummaryWindow])
+
     const handleOpenInNeurosift = useCallback((filePaths: string[]) => {
         if (!files) {
             console.warn('No files')
@@ -316,6 +324,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                             width={width}
                             height={height}
                             onRunBatchSpikeSorting={handleRunSpikeSorting}
+                            onGenerateSpikeSortingSummary={handleGenerateSpikeSortingSummary}
                             onOpenInNeurosift={handleOpenInNeurosift}
                             onDandiUpload={handleDandiUpload}
                             onUploadSmallFile={handleUploadSmallFile}
@@ -384,6 +393,16 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     height={0}
                     filePaths={spikeSortingFilePaths}
                     onClose={closeRunSpikeSortingWindow}
+                />
+            </ModalWindow>
+            <ModalWindow
+                visible={generateSpikeSortingSummaryWindowVisible}
+            >
+                <GenerateSpikeSortingSummaryWindow
+                    width={0}
+                    height={0}
+                    filePaths={spikeSortingSummaryFilePaths}
+                    onClose={closeGenerateSpikeSortingSummaryWindow}
                 />
             </ModalWindow>
             <ModalWindow

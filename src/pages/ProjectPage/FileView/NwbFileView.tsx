@@ -56,6 +56,35 @@ export const useElectricalSeriesPaths = (nwbFile: RemoteH5File | undefined) => {
     return electricalSeriesPaths
 }
 
+export const useUnitsPaths = (nwbFile: RemoteH5File | undefined) => {
+    const [unitsPaths, setUnitsPaths] = useState<string[] | undefined>(undefined)
+    useEffect(() => {
+        let canceled = false
+        setUnitsPaths(undefined)
+        ; (async () => {
+            const foundPaths: string[] = []
+            if (!nwbFile) return
+            const grp = await nwbFile.getGroup('units')
+            if (canceled) return
+            if (grp) {
+                foundPaths.push('/units')
+            }
+            const processingGroup = await nwbFile.getGroup('processing')
+            if (canceled) return
+            if (processingGroup) {
+                for (const sg of processingGroup.subgroups) {
+                    if (sg.attrs['neurodata_type'] === 'Units') {
+                        foundPaths.push(sg.path)
+                    }
+                }
+            }
+            setUnitsPaths(foundPaths)
+        })()
+        return () => {canceled = true}
+    }, [nwbFile])
+    return unitsPaths
+}
+
 type FileViewTableProps = {
     fileName: string
     additionalRows: {
