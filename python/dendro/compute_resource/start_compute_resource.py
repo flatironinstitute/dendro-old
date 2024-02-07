@@ -125,14 +125,24 @@ class Daemon:
             return
         if not self._compute_resource_private_key:
             return
-        try:
-            resp = _compute_resource_get_api_request(
-                url_path=url_path,
-                compute_resource_id=self._compute_resource_id,
-                compute_resource_private_key=self._compute_resource_private_key
-            )
-        except Exception as e:
-            print(f'Error in compute resource get api request for {url_path}; {e}')
+        num_tries = 3
+        for try_num in range(1, num_tries + 1):
+            if try_num > 1:
+                print(f'Trying compute resource get api request for {url_path} again. Try number {try_num}')
+            try:
+                resp = _compute_resource_get_api_request(
+                    url_path=url_path,
+                    compute_resource_id=self._compute_resource_id,
+                    compute_resource_private_key=self._compute_resource_private_key
+                )
+                break
+            except Exception as e:
+                print(f'Error in compute resource get api request for {url_path}; {e}')
+                if try_num < num_tries:
+                    print('Waiting 10 seconds before trying again')
+                    time.sleep(10)
+                resp = None
+        if resp is None:
             return
         jobs = resp['jobs']
         jobs = [DendroJob(**job) for job in jobs]
