@@ -710,9 +710,9 @@ const ElectricalSeriesPathSelector: FunctionComponent<ElectricalSeriesPathSelect
     const electricalSeriesPaths = useElectricalSeriesPaths(nwbFile)
 
     useEffect(() => {
-        if (value) return
         if (!electricalSeriesPaths) return
         if (electricalSeriesPaths.length === 0) return
+        if ((value) && (electricalSeriesPaths.includes(value))) return
         setValue(electricalSeriesPaths[0])
     }, [value, electricalSeriesPaths, setValue])
 
@@ -749,9 +749,9 @@ const UnitsPathSelector: FunctionComponent<UnitsPathSelectorProps> = ({value, nw
     const unitsPaths = useUnitsPaths(nwbFile)
 
     useEffect(() => {
-        if (value) return
         if (!unitsPaths) return
         if (unitsPaths.length === 0) return
+        if ((value) && (unitsPaths.includes(value))) return
         setValue(unitsPaths[0])
     }, [value, unitsPaths, setValue])
 
