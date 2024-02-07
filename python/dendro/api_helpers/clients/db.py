@@ -246,7 +246,7 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
 class JobNotFoundError(Exception):
     pass
 
-async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False, include_private_key: bool = False, raise_on_not_found=False):
+async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False, include_private_key: bool = False, raise_on_not_found=False, include_deleted=False):
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
     job = await jobs_collection.find_one({'jobId': job_id})
@@ -257,6 +257,11 @@ async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include
         else:
             return None # pragma: no cover (not ever run with raise_on_not_found=False)
     job = DendroJob(**job) # validate job
+    if job.deleted and not include_deleted:
+        if raise_on_not_found:
+            raise JobNotFoundError(f"Job with ID {job_id} has been deleted")
+        else:
+            return None
     if not include_dandi_api_key:
         job.dandiApiKey = None
     if not include_secret_params:
