@@ -126,6 +126,7 @@ class Daemon:
         if not self._compute_resource_private_key:
             return
         num_tries = 3
+        resp = None
         for try_num in range(1, num_tries + 1):
             if try_num > 1:
                 print(f'Trying compute resource get api request for {url_path} again. Try number {try_num}')
