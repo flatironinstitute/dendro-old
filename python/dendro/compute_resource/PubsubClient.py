@@ -24,6 +24,7 @@ class PubsubClient:
         pnconfig = PNConfiguration()
         pnconfig.subscribe_key = pubnub_subscribe_key # type: ignore (not sure why we need to type ignore this)
         pnconfig.user_id = pubnub_user
+        pnconfig.uuid = compute_resource_id
         self._pubnub = PubNub(pnconfig)
         self._listener = MySubscribeCallback(message_queue=self._message_queue, compute_resource_id=compute_resource_id)
         self._pubnub.add_listener(self._listener)
