@@ -18,6 +18,19 @@ class InputFile(BaseModel):
     job_private_key: Union[str, None] = None
 
     def get_url(self) -> str:
+        url, project_file_name = self._get_url_and_project_file_name()
+        return url
+
+    def get_project_file_name(self) -> str:
+        if self.local_file_name:
+            # Technically this is not the project file name, but we provide this
+            # for the sake of processors that make decisions based on the
+            # extension of the file name of the input.
+            return self.local_file_name
+        url, project_file_name = self._get_url_and_project_file_name()
+        return project_file_name
+
+    def _get_url_and_project_file_name(self):
         if self.url is not None:
             if self.local_file_name is not None:
                 raise Exception('Cannot specify both url and local_file_name in InputFile')
@@ -25,22 +38,23 @@ class InputFile(BaseModel):
                 raise Exception('Cannot specify both url and job_id in InputFile')
             if self.job_private_key is not None:
                 raise Exception('Cannot specify both url and job_private_key in InputFile')
-            return self.url
+            return self.url, ''
         elif self.local_file_name is not None:
             if self.job_id is not None:
                 raise Exception('Cannot specify both local_file_name and job_id in InputFile')
             if self.job_private_key is not None:
                 raise Exception('Cannot specify both local_file_name and job_private_key in InputFile')
-            raise Exception('Cannot get url for local_file in InputFile')
+            raise Exception('Cannot get url for local file in InputFile')
         else:
             if self.job_id is None:
                 raise Exception('Unexpected: job_id is None')
             if self.job_private_key is None:
                 raise Exception('Unexpected: job_private_key is None')
-            from .Job import _get_download_url_for_input_file # avoid circular import
+            from .Job import _get_download_url_and_label_for_input_file_v2 # avoid circular import
             if self.name is None:
                 raise Exception('Unexpected: name is None in InputFile')
-            return _get_download_url_for_input_file(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+            download_url, label = _get_download_url_and_label_for_input_file_v2(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+            return download_url, label
 
     def download(self, dest_file_path: str):
         if self.local_file_name is not None:

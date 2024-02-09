@@ -216,6 +216,29 @@ class ProcessorGetJobResponse(BaseModel):
     outputFolders: Union[List[ProcessorGetJobResponseOutputFolder], None] = None
     parameters: List[ProcessorGetJobResponseParameter]
 
+class ProcessorGetJobV2ResponseInput(BaseModel):
+    name: str
+    dendro_uri: str
+
+class ProcessorGetJobV2ResponseInputFolder(BaseModel):
+    name: str
+    dendro_uri: str
+
+class ProcessorGetJobV2Response(BaseModel):
+    jobId: str
+    status: str
+    processorName: str
+    inputs: List[ProcessorGetJobV2ResponseInput]
+    inputFolders: Union[List[ProcessorGetJobV2ResponseInputFolder], None] = None
+    outputs: List[ProcessorGetJobResponseOutput]
+    outputFolders: Union[List[ProcessorGetJobResponseOutputFolder], None] = None
+    parameters: List[ProcessorGetJobResponseParameter]
+
+class GetJobFileInfoResponse(BaseModel):
+    downloadUrl: str
+    isFolder: bool
+    success: bool
+
 class DendroUser(BaseModel):
     userId: str
     dendroApiKey: Union[str, None] = None
