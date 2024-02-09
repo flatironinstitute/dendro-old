@@ -329,7 +329,7 @@ async def get_job_file_info(job_id: str, file_id: str, job_private_key: str = He
     url = file.content[len('url:'):]
     if dandi_api_key:
         url = await _resolve_dandi_url(url, dandi_api_key=dandi_api_key)
-    return GetJobFileInfoResponse(downloadUrl=url, isFolder=file.isFolder, success=True)
+    return GetJobFileInfoResponse(downloadUrl=url, isFolder=file.isFolder if file.isFolder is not None else False, success=True)
 
 async def fetch_file_by_id(project_id: str, file_id: str):
     client = _get_mongo_client()
