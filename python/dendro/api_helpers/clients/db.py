@@ -341,6 +341,19 @@ async def fetch_file(project_id: str, file_name: str):
     file = DendroFile(**file) # validate file
     return file
 
+async def fetch_file_by_id(project_id: str, file_id: str):
+    client = _get_mongo_client()
+    files_collection = client['dendro']['files']
+    file = await files_collection.find_one({
+        'projectId': project_id,
+        'fileId': file_id
+    })
+    _remove_id_field(file)
+    if file is None:
+        return None
+    file = DendroFile(**file) # validate file
+    return file
+
 async def delete_file(project_id: str, file_name: str):
     client = _get_mongo_client()
     files_collection = client['dendro']['files']

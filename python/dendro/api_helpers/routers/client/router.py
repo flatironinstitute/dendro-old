@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Optional
 from .... import BaseModel
 from fastapi import APIRouter, Header
 from ....common.dendro_types import DendroProject, DendroFile, DendroJob
@@ -7,6 +7,8 @@ from ..common import api_route_wrapper
 from ....common.dendro_types import CreateJobRequest, CreateJobResponse, DendroComputeResource
 from ..gui.create_job_route import create_job_handler
 from ...core.settings import get_settings
+from ..processor.router import _resolve_dandi_url
+from ...clients.db import fetch_file_by_id, fetch_job
 
 router = APIRouter()
 
@@ -76,3 +78,41 @@ async def get_compute_resource(compute_resource_id) -> GetComputeResourceRespons
     compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
     assert compute_resource
     return GetComputeResourceResponse(computeResource=compute_resource, success=True)
+
+# get project file download url
+class GetProjectFileDownloadUrlResponse(BaseModel):
+    downloadUrl: str
+    success: bool
+
+@router.get("/projects/{project_id}/files/{file_id}/download_url")
+@api_route_wrapper
+async def get_project_file_download_url(project_id, file_id, job_id: Optional[str] = Header(...), job_private_key: Optional[str] = Header(...), dandi_api_key: Optional[str] = Header(...)) -> GetProjectFileDownloadUrlResponse:
+    # we use the file id rather than its name within the project in case we want
+    # to support renaming of files in the future
+    if job_id:
+        if dandi_api_key:
+            raise Exception("Dandi API key should not be provided when job ID is provided")
+        job: DendroJob = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True, include_private_key=True)
+        if job is None:
+            raise Exception(f"No job with ID {job_id}")
+        if job.privateKey != job_private_key:
+            raise Exception("Invalid job private key")
+        if job.projectId != project_id:
+            raise Exception(f"Job {job_id} does not belong to project {project_id}")
+        # IMPORTANT: Ideally we would check that the job has access to the file.
+        # Primarily we want to allow the job to access all of its inputs. But we
+        # also want to allow it to access other files that are ancestors of the
+        # inputs, because it could be that the files are json files with
+        # embedded URIs that point to those other files. But this is somewhat
+        # annoying to implement efficiently, so for now the job will have access
+        # to all files in the project. That's not such a huge deal. It's
+        # read-only access. So it will probably stay like this for a while, I am
+        # guessing.
+        dandi_api_key = job.dandiApiKey
+    file: DendroFile = await fetch_file_by_id(project_id=project_id, file_id=file_id)
+    if not file.content.startswith('url:'):
+        raise Exception(f"Project file {file_id} is not a URL")
+    url = file.content[len('url:'):]
+    if dandi_api_key:
+        url = await _resolve_dandi_url(url, dandi_api_key=dandi_api_key)
+    return GetProjectFileDownloadUrlResponse(downloadUrl=url, success=True)

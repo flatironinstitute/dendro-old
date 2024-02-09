@@ -6,6 +6,7 @@ from .... import BaseModel
 from ...services.processor.update_job_status import update_job_status
 from ...services.processor.get_upload_url import get_upload_url, get_additional_upload_url, get_upload_url_for_folder_file
 from ....common.dendro_types import ProcessorGetJobResponse, ProcessorGetJobResponseInput, ProcessorGetJobResponseOutput, ProcessorGetJobResponseOutputFolder, ProcessorGetJobResponseParameter, ProcessorGetJobResponseInputFolder, ProcessorGetJobResponseInputFolderFile
+from ....common.dendro_types import ProcessorGetJobV2Response, ProcessorGetJobV2ResponseInput, ProcessorGetJobV2ResponseInputFolder
 from ...clients.db import fetch_job, fetch_file, fetch_job_private_key
 
 router = APIRouter()
@@ -81,6 +82,80 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
             ))
 
         return ProcessorGetJobResponse(
+            jobId=job.jobId,
+            status=job.status,
+            processorName=job.processorName,
+            inputs=inputs,
+            inputFolders=input_folders,
+            outputs=outputs,
+            outputFolders=output_folders,
+            parameters=parameters
+        )
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+# get job v2
+# we are going to keep the old one for backward compatibility for the time being
+# because existing processor images are built with the old one
+# but eventually we will replace it with this one
+@router.get("/jobs_v2/{job_id}")
+async def processor_get_job_v2(job_id: str, job_private_key: str = Header(...)) -> ProcessorGetJobResponse:
+    try:
+        job = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True, include_private_key=True)
+        if job is None:
+            raise Exception(f"No job with ID {job_id}")
+
+        if job.jobPrivateKey != job_private_key:
+            raise Exception(f"Invalid job private key for job {job_id}")
+        # after we are done with it, let's delete the private key from the job object for safety
+        job.jobPrivateKey = ''
+
+        inputs: List[ProcessorGetJobV2ResponseInput] = []
+        input_folders: List[ProcessorGetJobV2ResponseInputFolder] = []
+        for input in job.inputFiles:
+            file = await fetch_file(project_id=job.projectId, file_name=input.fileName)
+            if file is None:
+                raise Exception(f"Project file not found: {input.fileName}")
+            if not input.isFolder:
+                # regular file
+                if file.isFolder:
+                    raise Exception(f"Mismatch. input is regular file but project file {input.fileName} is a folder")
+                inputs.append(ProcessorGetJobV2ResponseInput(
+                    name=input.name,
+                    dendro_uri=f'dendro:?project={job.projectId}&id={file.fileId}&label={file.fileName}'
+                ))
+            else:
+                # folder
+                if not file.isFolder:
+                    raise Exception(f"Mismatch. input is folder but project file {input.fileName} is not a folder")
+                input_folders.append(ProcessorGetJobV2ResponseInputFolder(
+                    name=input.name,
+                    dendro_uri=f'dendro:?project={job.projectId}&id={file.fileId}&label={file.fileName}&folder=true',
+                ))
+
+        outputs: List[ProcessorGetJobResponseOutput] = []
+        output_folders: List[ProcessorGetJobResponseOutputFolder] = []
+        for output in job.outputFiles:
+            if not output.isFolder:
+                # regular file
+                outputs.append(ProcessorGetJobResponseOutput(
+                    name=output.name
+                ))
+            else:
+                # folder
+                output_folders.append(ProcessorGetJobResponseOutputFolder(
+                    name=output.name
+                ))
+
+        parameters: List[ProcessorGetJobResponseParameter] = []
+        for parameter in job.inputParameters:
+            parameters.append(ProcessorGetJobResponseParameter(
+                name=parameter.name,
+                value=parameter.value
+            ))
+
+        return ProcessorGetJobV2Response(
             jobId=job.jobId,
             status=job.status,
             processorName=job.processorName,
