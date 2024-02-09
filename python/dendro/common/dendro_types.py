@@ -234,6 +234,11 @@ class ProcessorGetJobV2Response(BaseModel):
     outputFolders: Union[List[ProcessorGetJobResponseOutputFolder], None] = None
     parameters: List[ProcessorGetJobResponseParameter]
 
+class GetJobFileInfoResponse(BaseModel):
+    downloadUrl: str
+    isFolder: bool
+    success: bool
+
 class DendroUser(BaseModel):
     userId: str
     dendroApiKey: Union[str, None] = None

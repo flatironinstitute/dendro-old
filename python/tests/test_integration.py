@@ -393,7 +393,8 @@ async def test_integration(tmp_path):
 
         # gui: Check that first job succeeded
         job = _get_job(job_id=job_id_1, github_access_token=github_access_token)
-        assert job.status == 'completed'
+        if job.status != 'completed':
+            raise Exception(f'First job did not succeed: {job.status} {job.error}')
 
         # gui: Get output file for first job
         file = _get_project_file(project_id=project2_id, file_name='mock-output', github_access_token=github_access_token)
@@ -405,7 +406,8 @@ async def test_integration(tmp_path):
 
         # gui: Check that job from slurm app succeeded
         job = _get_job(job_id=job_id_2, github_access_token=github_access_token)
-        assert job.status == 'completed'
+        if job.status != 'completed':
+            raise Exception(f'Slurm job did not succeed: {job.status} {job.error}')
 
         # Check whether the appropriate compute resource spec was uploaded to the api
         compute_resource = _get_compute_resource(compute_resource_id=compute_resource_id, github_access_token=github_access_token)
@@ -785,7 +787,7 @@ def _compute_resource_get_unfinished_jobs(compute_resource_id: str, compute_reso
     jobs = [DendroJob(**job) for job in jobs]
     return jobs
 
-def _get_job_output_upload_url(job_id: str, job_private_key: str, output_name: str):
+def _get_job_output_upload_url(*, job_id: str, job_private_key: str, output_name: str):
     from dendro.api_helpers.routers.processor.router import ProcessorGetJobOutputUploadUrlResponse
     from dendro.common._api_request import _processor_get_api_request
     headers = {

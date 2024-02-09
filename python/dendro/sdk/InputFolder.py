@@ -41,13 +41,15 @@ class InputFolder(BaseModel):
                 raise Exception('Unexpected: job_private_key is None')
             if self.name is None:
                 raise Exception('Unexpected: name is None in InputFolder')
-            from .Job import _get_file_manifest_for_input_folder # avoid circular import
-            if self._file_manifest is None:
-                self._file_manifest = _get_file_manifest_for_input_folder(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
-            ff = next((f for f in self._file_manifest.files if f.name == relative_file_name), None)
-            if ff is None:
-                raise Exception(f'Input folder file not found when trying to get download URL: {self.name} {relative_file_name}')
-            return ff.url
+            from .Job import _get_download_url_for_input_folder_file_v2
+            return _get_download_url_for_input_folder_file_v2(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key, relative_file_name=relative_file_name)
+            # from .Job import _get_file_manifest_for_input_folder_v1 # avoid circular import
+            # if self._file_manifest is None:
+            #     self._file_manifest = _get_file_manifest_for_input_folder_v1(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+            # ff = next((f for f in self._file_manifest.files if f.name == relative_file_name), None)
+            # if ff is None:
+            #     raise Exception(f'Input folder file not found when trying to get download URL: {self.name} {relative_file_name}')
+            # return ff.url
 
     def download(self, dest_folder_path: str):
         if self.local_folder_name is not None:
@@ -62,9 +64,9 @@ class InputFolder(BaseModel):
             raise Exception('Unexpected: job_private_key is None')
         if self.name is None:
             raise Exception('Unexpected: name is None in InputFolder')
-        from .Job import _get_file_manifest_for_input_folder # avoid circular import
+        from .Job import _get_file_manifest_for_input_folder_v1 # avoid circular import
         if self._file_manifest is None:
-            self._file_manifest = _get_file_manifest_for_input_folder(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+            self._file_manifest = _get_file_manifest_for_input_folder_v1(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
         os.mkdir(dest_folder_path)
         for ff in self._file_manifest.files:
             file_name = ff.name

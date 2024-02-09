@@ -37,10 +37,10 @@ class InputFile(BaseModel):
                 raise Exception('Unexpected: job_id is None')
             if self.job_private_key is None:
                 raise Exception('Unexpected: job_private_key is None')
-            from .Job import _get_download_url_for_input_file # avoid circular import
+            from .Job import _get_download_url_for_input_file_v2 # avoid circular import
             if self.name is None:
                 raise Exception('Unexpected: name is None in InputFile')
-            return _get_download_url_for_input_file(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+            return _get_download_url_for_input_file_v2(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
 
     def download(self, dest_file_path: str):
         if self.local_file_name is not None:
