@@ -1,7 +1,7 @@
 {
   "name": "dendro",
   "private": true,
-  "version": "0.1.50",
+  "version": "0.2.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
