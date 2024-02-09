@@ -100,7 +100,7 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
 # because existing processor images are built with the old one
 # but eventually we will replace it with this one
 @router.get("/jobs_v2/{job_id}")
-async def processor_get_job_v2(job_id: str, job_private_key: str = Header(...)) -> ProcessorGetJobResponse:
+async def processor_get_job_v2(job_id: str, job_private_key: str = Header(...)) -> ProcessorGetJobV2Response:
     try:
         job = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True, include_private_key=True)
         if job is None:

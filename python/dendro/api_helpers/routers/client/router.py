@@ -92,10 +92,10 @@ async def get_project_file_download_url(project_id, file_id, job_id: Optional[st
     if job_id:
         if dandi_api_key:
             raise Exception("Dandi API key should not be provided when job ID is provided")
-        job: DendroJob = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True, include_private_key=True)
+        job = await fetch_job(job_id, include_dandi_api_key=True, include_secret_params=True, include_private_key=True)
         if job is None:
             raise Exception(f"No job with ID {job_id}")
-        if job.privateKey != job_private_key:
+        if job.jobPrivateKey != job_private_key:
             raise Exception("Invalid job private key")
         if job.projectId != project_id:
             raise Exception(f"Job {job_id} does not belong to project {project_id}")
@@ -109,7 +109,9 @@ async def get_project_file_download_url(project_id, file_id, job_id: Optional[st
         # read-only access. So it will probably stay like this for a while, I am
         # guessing.
         dandi_api_key = job.dandiApiKey
-    file: DendroFile = await fetch_file_by_id(project_id=project_id, file_id=file_id)
+    file = await fetch_file_by_id(project_id=project_id, file_id=file_id)
+    if not file:
+        raise Exception(f"No file with ID {file_id} in project {project_id}")
     if not file.content.startswith('url:'):
         raise Exception(f"Project file {file_id} is not a URL")
     url = file.content[len('url:'):]
