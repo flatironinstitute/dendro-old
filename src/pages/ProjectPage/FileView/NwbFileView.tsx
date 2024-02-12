@@ -102,6 +102,7 @@ const FileViewTable: FunctionComponent<FileViewTableProps> = ({fileName, additio
 
     const cc = theFile?.content || ''
     const theUrl = cc.startsWith('url:') ? cc.slice('url:'.length) : cc
+    const theUri = theFile ? `dendro:?file_id=${theFile.fileId}&project=${theFile.projectId}&label=${theFile.fileName}` : ''
 
     const jobProducingThisFile = useMemo(() => {
         if (!jobs) return undefined
@@ -122,6 +123,10 @@ const FileViewTable: FunctionComponent<FileViewTableProps> = ({fileName, additio
                 <tr>
                     <td>URL:</td>
                     <td>{theUrl}</td>
+                </tr>
+                <tr>
+                    <td>URI:</td>
+                    <td>{theUri}</td>
                 </tr>
                 {
                     jobProducingThisFile && (

@@ -220,7 +220,7 @@ def _get_download_url_for_input_file_v1(*, name: str, job_id: str, job_private_k
     download_url = input.url
     return download_url
 
-def _get_download_url_and_label_for_input_file_v2(*, name: str, job_id: str, job_private_key: str):
+def _get_uri_and_label_for_input_file(*, name: str, job_id: str, job_private_key: str):
     resp = _job_info_manager.get_job_info_v2(job_id=job_id, job_private_key=job_private_key)
     input = next((i for i in resp.inputs if i.name == name), None)
     if input is None:
@@ -228,8 +228,12 @@ def _get_download_url_and_label_for_input_file_v2(*, name: str, job_id: str, job
     file_id, is_folder, label = _parse_dendro_uri(input.dendro_uri)
     if is_folder:
         raise Exception(f'Input is a folder when trying to get download URL: {name}')
+    return input.dendro_uri, label
+
+def _get_download_url_for_uri(*, uri: str, job_id: str, job_private_key: str):
+    file_id, is_folder, label = _parse_dendro_uri(uri)
     download_url = _job_info_manager.get_file_download_url(file_id=file_id, job_id=job_id, job_private_key=job_private_key)
-    return download_url, label
+    return download_url
 
 def _get_download_url_and_label_for_input_folder_file_v2(*, name: str, job_id: str, job_private_key: str, relative_file_name: str):
     resp = _job_info_manager.get_job_info_v2(job_id=job_id, job_private_key=job_private_key)
