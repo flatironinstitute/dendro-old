@@ -1,7 +1,7 @@
 import os
 
 
-def get_project_file(uri: str):
+def get_project_file_from_uri(uri: str):
     from .Job import _parse_dendro_uri
     from .InputFile import InputFile
 
