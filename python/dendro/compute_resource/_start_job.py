@@ -37,6 +37,7 @@ def _set_job_status_to_starting(*,
 def _start_job(*,
     job_id: str,
     job_private_key: str,
+    project_id: str,
     processor_name: str,
     run_method: Literal['local', 'slurm', 'aws_batch'],
     app: App,
@@ -80,11 +81,11 @@ def _start_job(*,
             raise JobException(f'Error running job in AWS Batch: {e}') from e
         return ''
 
-    # WARNING!!! The working_dir is going to get cleaned up after the job is finished
+    # WARNING!!! The job_dir is going to get cleaned up after the job is finished
     # so it's very important to not set the working directory to a directory that is
     # used for other purposes
-    working_dir = os.getcwd() + '/jobs/' + job_id
-    os.makedirs(working_dir, exist_ok=True)
+    job_dir = os.getcwd() + '/jobs/' + job_id
+    os.makedirs(job_dir, exist_ok=True)
 
     env_vars = {
         'PYTHONUNBUFFERED': '1',
@@ -106,13 +107,16 @@ def _start_job(*,
 
     if not app_image:
         # for safety, verify that cleanup directory is as expected
-        dendro_job_cleanup_dir = working_dir
-        assert dendro_job_cleanup_dir.endswith('/jobs/' + job_id), f'Unexpected dendro_job_cleanup_dir: {dendro_job_cleanup_dir}'
+        dendro_job_cleanup_dir = job_dir + '/tmp'
+        assert dendro_job_cleanup_dir.endswith('/jobs/' + job_id + '/tmp'), f'Unexpected dendro_job_cleanup_dir: {dendro_job_cleanup_dir}'
         env_vars['DENDRO_JOB_CLEANUP_DIR'] = dendro_job_cleanup_dir # see the warning above
+        project_file_cache_dir = os.path.join(os.getcwd(), 'file_cache', 'projects', project_id, 'files')
+        os.makedirs(project_file_cache_dir, exist_ok=True)
+        env_vars['DENDRO_FILE_CACHE_DIR'] = project_file_cache_dir
         return _run_local_job(
             app_executable=app_executable,
             env_vars=env_vars,
-            working_dir=working_dir,
+            job_dir=job_dir,
             run_process=run_process,
             return_shell_command=return_shell_command
         )
@@ -121,7 +125,8 @@ def _start_job(*,
         app_executable=app_executable,
         app_image=app_image,
         env_vars=env_vars,
-        working_dir=working_dir,
+        project_id=project_id,
+        job_dir=job_dir,
         run_process=run_process,
         return_shell_command=return_shell_command,
         num_cpus=required_resources.numCpus,
@@ -153,10 +158,11 @@ def _start_job(*,
 def _run_local_job(*,
     app_executable: str,
     env_vars: dict,
-    working_dir: str,
+    job_dir: str,
     run_process: bool,
     return_shell_command: bool,
 ):
+    os.makedirs(job_dir + '/tmp/working', exist_ok=True)
     if using_mock():
         print('Running job directly for mock testing')
 
@@ -189,7 +195,7 @@ def _run_local_job(*,
         print(f'Running: {app_executable}')
         subprocess.Popen(
             [app_executable],
-            cwd=working_dir,
+            cwd=job_dir + '/tmp/working',
             start_new_session=True, # This is important so it keeps running even if the compute resource is stopped
             # Important to set output to devnull so that we don't get a broken pipe error if this parent process is closed
             stdout=subprocess.DEVNULL,
@@ -202,7 +208,7 @@ def _run_local_job(*,
         return ''
     elif return_shell_command:
         env_vars_str = ' '.join([f'{k}={v}' for k, v in env_vars.items()])
-        return f'cd {working_dir} && {env_vars_str} APP_EXECUTABLE={app_executable} {app_executable}'
+        return f'cd {job_dir}/tmp/working && {env_vars_str} APP_EXECUTABLE={app_executable} {app_executable}'
     else:
         return ''
 
@@ -210,22 +216,28 @@ def _run_container_job(*,
     app_executable: str,
     app_image: str,
     env_vars: dict,
-    working_dir: str,
+    project_id: str,
+    job_dir: str,
     run_process: bool,
     return_shell_command: bool,
     num_cpus: Union[int, None],
     use_gpu: bool
 ):
+    project_file_cache_dir = os.path.join(os.getcwd(), 'file_cache', 'projects', project_id, 'files')
+    os.makedirs(project_file_cache_dir, exist_ok=True)
+
     container_method = os.environ.get('CONTAINER_METHOD', 'docker')
     if container_method == 'docker':
-        tmpdir = working_dir + '/tmp'
+        tmpdir = job_dir + '/tmp'
         os.makedirs(tmpdir, exist_ok=True)
         os.makedirs(tmpdir + '/working', exist_ok=True)
         cmd2 = [
             'docker', 'run', '-it'
         ]
         cmd2.extend(['-v', f'{tmpdir}:/tmp'])
-        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp/working'
+        cmd2.extend(['-v', f'{project_file_cache_dir}:/file_cache'])
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp'
+        env_vars['DENDRO_FILE_CACHE_DIR'] = '/file_cache'
         cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
         for k, v in env_vars.items():
             cmd2.extend(['-e', f'{k}={v}'])
@@ -243,7 +255,7 @@ def _run_container_job(*,
             print(f'Running: {" ".join(cmd2)}')
             subprocess.Popen(
                 cmd2,
-                cwd=working_dir,
+                cwd=job_dir,
                 start_new_session=True, # This is important so it keeps running even if the compute resource is stopped
                 # Important to set output to devnull so that we don't get a broken pipe error if this parent process is closed
                 stdout=subprocess.DEVNULL,
@@ -251,11 +263,11 @@ def _run_container_job(*,
             )
             return ''
         elif return_shell_command:
-            return f'cd {working_dir} && {" ".join(cmd2)}'
+            return f'cd {job_dir} && {" ".join(cmd2)}'
         else:
             return ''
     elif container_method == 'singularity' or container_method == 'apptainer':
-        tmpdir = working_dir + '/tmp' # important to provide a /tmp directory for singularity or apptainer so that it doesn't run out of disk space
+        tmpdir = job_dir + '/tmp' # important to provide a /tmp directory for singularity or apptainer so that it doesn't run out of disk space
         os.makedirs(tmpdir, exist_ok=True)
         os.makedirs(tmpdir + '/working', exist_ok=True)
 
@@ -269,8 +281,10 @@ def _run_container_job(*,
 
         cmd2 = [executable, 'exec']
         cmd2.extend(['--bind', f'{tmpdir}:/tmp'])
+        cmd2.extend(['--bind', f'{project_file_cache_dir}:/file_cache'])
         # The working directory should be /tmp/working so that if the container wants to write to the working directory, it will not run out of space
-        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp/working'
+        env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp'
+        env_vars['DENDRO_FILE_CACHE_DIR'] = '/file_cache'
         cmd2.extend(['--pwd', '/tmp/working'])
         cmd2.extend(['--cleanenv']) # this is important to prevent singularity or apptainer from passing environment variables to the container
         cmd2.extend(['--contain']) # we don't want singularity or apptainer to mount the home or tmp directories of the host
@@ -291,7 +305,7 @@ def _run_container_job(*,
             print(f'Running: {" ".join(cmd2)}')
             subprocess.Popen(
                 cmd2,
-                cwd=working_dir,
+                cwd=job_dir,
                 start_new_session=True, # This is important so it keeps running even if the compute resource is stopped
                 # Important to set output to devnull so that we don't get a broken pipe error if this parent process is closed
                 stdout=subprocess.DEVNULL,
@@ -299,7 +313,7 @@ def _run_container_job(*,
             )
             return ''
         elif return_shell_command:
-            return f'cd {working_dir} && {" ".join(cmd2)}'
+            return f'cd {job_dir} && {" ".join(cmd2)}'
         else:
             return ''
     else:

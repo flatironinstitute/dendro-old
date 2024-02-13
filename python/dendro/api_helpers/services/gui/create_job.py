@@ -114,6 +114,7 @@ async def create_job(*,
             job_id=job_id,
             is_folder=output_file.isFolder
         )
+        output_file.fileId = output_file_id
         output_file_ids.append(output_file_id)
 
     input_parameters2: List[DendroJobInputParameter] = []

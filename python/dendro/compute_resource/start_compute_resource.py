@@ -66,6 +66,11 @@ class Daemon:
         else:
             pubsub_client = None
 
+        # Create file cache directory if needed
+        file_cache_dir = os.path.join(os.getcwd(), 'file_cache')
+        if not os.path.exists(file_cache_dir):
+            os.makedirs(file_cache_dir)
+
         # Start cleaning up old job directories
         # It's important to do this in a separate process
         # because it can take a long time to delete all the files in the tmp directories (remfile is the culprit)

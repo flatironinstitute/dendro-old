@@ -49,7 +49,7 @@ class MockProcessor1(ProcessorBase):
         time.sleep(0.001) # important not to wait too long because we are calling this synchronously during testing
         with open('mock-output-file.txt', 'w') as f:
             f.write('mock output')
-        context.output_file.set('mock-output-file.txt')
+        context.output_file.upload('mock-output-file.txt')
         print('End mock processor1 in mock app')
 
 app = App(

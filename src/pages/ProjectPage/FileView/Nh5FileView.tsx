@@ -74,7 +74,7 @@ const Nh5FileView: FunctionComponent<Props> = ({fileName, width, height}) => {
             <div>&nbsp;</div>
             <div>
                 {
-                    ['tuning_curves_2d', 'spike_sorting_summary'].includes(fileType) && (
+                    ['tuning_curves_2d', 'spike_sorting_summary', 'ecephys_summary'].includes(fileType) && (
                         <Hyperlink onClick={() => {
                             const viewData = encodeURI(JSON.stringify({
                                 nh5: nh5Url
