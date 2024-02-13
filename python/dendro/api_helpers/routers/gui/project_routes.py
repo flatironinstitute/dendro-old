@@ -5,10 +5,10 @@ import time
 from fastapi import APIRouter, Header
 from .... import BaseModel
 from ...core._create_random_id import _create_random_id
-from ....common.dendro_types import DendroJob, DendroProject, DendroProjectUser
+from ....common.dendro_types import DendroJob, DendroProject, DendroProjectUser, DendroScript
 from ._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project, _check_user_is_project_admin
-from ...clients.db import fetch_project, insert_project, update_project, fetch_project_jobs, fetch_projects_for_user, fetch_all_projects, fetch_projects_with_tag
+from ...clients.db import fetch_project, fetch_project_scripts, insert_project, update_project, fetch_project_jobs, fetch_projects_for_user, fetch_all_projects, fetch_projects_with_tag, insert_script
 from ...services.gui.delete_project import delete_project as service_delete_project
 from ..common import api_route_wrapper
 
@@ -197,6 +197,55 @@ class GetJobsResponse(BaseModel):
 async def get_jobs(project_id):
     jobs = await fetch_project_jobs(project_id, include_private_keys=False)
     return GetJobsResponse(jobs=jobs, success=True)
+
+# get scripts
+class GetScriptsResponse(BaseModel):
+    scripts: List[DendroScript]
+    success: bool
+
+@router.get("/{project_id}/scripts")
+@api_route_wrapper
+async def get_scripts(project_id):
+    scripts = await fetch_project_scripts(project_id)
+    return GetScriptsResponse(scripts=scripts, success=True)
+
+# add script
+class AddScriptRequest(BaseModel):
+    name: str
+
+class AddScriptResponse(BaseModel):
+    scriptId: str
+    success: bool
+
+@router.post("/{project_id}/scripts")
+@api_route_wrapper
+async def add_script(project_id, data: AddScriptRequest, github_access_token: str = Header(...)) -> AddScriptResponse:
+    # authenticate the request
+    user_id = await _authenticate_gui_request(github_access_token=github_access_token, raise_on_not_authenticated=True)
+    assert user_id
+
+    project = await fetch_project(project_id, raise_on_not_found=True)
+    assert project
+
+    _check_user_can_edit_project(project, user_id)
+
+    # parse the request
+    name = data.name
+
+    script_id = _create_random_id(8)
+    script = DendroScript(
+        scriptId=script_id,
+        projectId=project_id,
+        userId=user_id,
+        scriptName=name,
+        content='',
+        timestampCreated=time.time(),
+        timestampModified=time.time()
+    )
+
+    await insert_script(script)
+
+    return AddScriptResponse(scriptId=script_id, success=True)
 
 # set project publicly readable
 class SetProjectPubliclyReadableRequest(BaseModel):

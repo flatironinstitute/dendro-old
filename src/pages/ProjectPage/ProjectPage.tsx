@@ -25,6 +25,7 @@ import openFilesInNeurosift from "./openFilesInNeurosift";
 import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
 import { DendroProject } from "../../types/dendro-types";
 import RunFileActionWindow from "./RunFileActionWindow/RunFileActionWindow";
+import ProjectScripts from "./ProjectScripts";
 
 type Props = {
     width: number
@@ -49,7 +50,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height, onCurrentProjectC
     )
 }
 
-export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-linked-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
+export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-scripts' | 'project-linked-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
 
 type ProjectPageView = {
     type: ProjectPageViewType
@@ -72,6 +73,10 @@ const projectPageViews: ProjectPageView[] = [
     {
         type: 'project-linked-analysis',
         label: 'Linked analysis'
+    },
+    {
+        type: 'project-scripts',
+        label: 'Scripts'
     },
     {
         type: 'dandi-import',
@@ -347,6 +352,16 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 {
                     viewsThatHaveBeenVisible.includes('project-jobs') && (
                         <ProjectJobs
+                            width={width}
+                            height={height}
+                        />
+                    )
+                }
+            </div>
+            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-scripts' ? undefined : 'hidden'}}>
+                {
+                    viewsThatHaveBeenVisible.includes('project-scripts') && (
+                        <ProjectScripts
                             width={width}
                             height={height}
                         />

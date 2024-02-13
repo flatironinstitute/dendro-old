@@ -137,6 +137,15 @@ class DendroFile(BaseModel):
     isFolder: Union[bool, None] = None
     jobId: Union[str, None] = None # the job that produced this file
 
+class DendroScript(BaseModel):
+    projectId: str
+    scriptId: str
+    scriptName: str
+    userId: str
+    content: str
+    timestampCreated: float
+    timestampModified: float
+
 # obsolete
 class ComputeResourceAwsBatchOpts(BaseModel):
     jobQueue: Optional[str] = None # obsolete

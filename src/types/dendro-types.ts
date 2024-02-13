@@ -338,6 +338,28 @@ export const isDendroFile = (x: any): x is DendroFile => {
     })
 }
 
+export type DendroScript = {
+    projectId: string
+    scriptId: string
+    scriptName: string
+    userId: string
+    content: string
+    timestampCreated: number
+    timestampModified: number
+}
+
+export const isDendroScript = (x: any): x is DendroScript => {
+    return validateObject(x, {
+        projectId: isString,
+        scriptId: isString,
+        scriptName: isString,
+        userId: isString,
+        content: isString,
+        timestampCreated: isNumber,
+        timestampModified: isNumber
+    })
+}
+
 // obsolete
 export type ComputeResourceAwsBatchOpts = {
     jobQueue?: string // obsolete

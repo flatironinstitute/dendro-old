@@ -51,6 +51,9 @@ const HelpPanel: FunctionComponent<HelpPanelProps> = ({width, height, expanded, 
             else if (tab === 'project-linked-analysis') {
                 sourcePath = '/help/project-project-linked-analysis.md'
             }
+            else if (tab === 'project-scripts') {
+                sourcePath = '/help/project-project-scripts.md'
+            }
             else if (tab === 'dandi-import') {
                 sourcePath = '/help/project-dandi-import.md'
             }
