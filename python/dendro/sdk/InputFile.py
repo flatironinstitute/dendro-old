@@ -14,6 +14,7 @@ class InputFile(BaseModel):
     name: Union[str, None] = None # the name of the input within the context of the processor (not needed when one of url or local_file_name is specified directly)
     url: Union[str, None] = None
     local_file_name: Union[str, None] = None
+    project_file_uri: Union[str, None] = None
     project_file_name: str = ''
     job_id: Union[str, None] = None
     job_private_key: Union[str, None] = None
@@ -37,14 +38,17 @@ class InputFile(BaseModel):
         return self.project_file_name
 
     def get_project_file_uri(self) -> str:
+        if self.project_file_uri:
+            return self.project_file_uri
         if self.job_id is None:
             raise Exception('Unexpected: job_id is None')
         if self.job_private_key is None:
             raise Exception('Unexpected: job_private_key is None')
         from .Job import _get_uri_and_label_for_input_file # avoid circular import
         if self.name is None:
-            raise Exception('Unexpected: name is None in InputFile')
+            raise Exception('name is None in InputFile and project_file_uri is also None')
         uri, label = _get_uri_and_label_for_input_file(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+        self.project_file_uri = uri
         return uri
 
     def download(self, dest_file_path: Union[str, None] = None):
@@ -111,6 +115,9 @@ class InputFile(BaseModel):
     def is_local(self) -> bool:
         return self.local_file_name is not None
 
+    def get_local_file_name(self) -> Union[str, None]:
+        return self.local_file_name
+
     def get_file(self, *, download: bool = False):
         if self.local_file_name is not None:
             # In the case of a local file, we just return a file object
@@ -119,13 +126,7 @@ class InputFile(BaseModel):
             return f
 
         if download:
-            if not os.path.exists('_download_inputs'):
-                os.mkdir('_download_inputs')
-            tmp_fname = f'_download_inputs/{self.name}'
-            self.download(tmp_fname)
-            f = open(tmp_fname, 'rb')
-            # An issue here is that this file is never closed. Not sure how to fix that.
-            return f
+            self.download()
 
         # self has a get_url() method
         # It's important to do it this way so that the url can renew as needed

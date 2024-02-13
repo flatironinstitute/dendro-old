@@ -106,7 +106,9 @@ const GenerateSpikeSortingSummaryWindow: FunctionComponent<Props> = ({ filePaths
         const batchId = createRandomId(8)
         for (let i = 0; i < filePaths.length; i++) {
             const filePath = filePaths[i]
-            const filePath2 = filePath.startsWith('imported/') ? filePath.slice('imported/'.length) : filePath
+            let filePath2 = filePath
+            if (filePath2.startsWith('imported/')) filePath2 = filePath2.slice('imported/'.length)
+            if (filePath2.startsWith('generated/')) filePath2 = filePath2.slice('generated/'.length)
             const jobDefinition2: DendroProcessingJobDefinition = deepCopy(jobDefinition)
             const outputFileName = `generated/${filePath2}/spike_sorting_summary.nh5`
             const outputExists = files.find(f => (f.fileName === outputFileName))
