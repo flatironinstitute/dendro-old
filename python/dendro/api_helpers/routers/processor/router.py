@@ -247,6 +247,30 @@ async def processor_get_upload_url(job_id: str, output_name: str, job_private_ke
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e)) from e
 
+# get job output file ID
+class ProcessorGetJobOutputFileIdResponse(BaseModel):
+    fileId: str
+    success: bool
+
+@router.get("/jobs/{job_id}/outputs/{output_name}/file_id")
+async def processor_get_output_file_id(job_id: str, output_name: str, job_private_key: str = Header(...)) -> ProcessorGetJobOutputFileIdResponse:
+    try:
+        job = await fetch_job(job_id, include_private_key=True)
+        if job is None:
+            raise Exception(f"No job with ID {job_id}")
+        if job.jobPrivateKey != job_private_key:
+            raise Exception(f"Invalid job private key for job {job_id}")
+        output_file = next((x for x in job.outputFiles if x.name == output_name), None)
+        if output_file is None:
+            raise Exception(f"No output with name {output_name}")
+        file_id = output_file.fileId
+        if file_id is None:
+            raise Exception(f"Output file ID is None for output {output_name}")
+        return ProcessorGetJobOutputFileIdResponse(fileId=file_id, success=True)
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
 # get job output folder file upload url
 class ProcessorGetJobOutputFolderFileUploadUrlResponse(BaseModel):
     uploadUrl: str

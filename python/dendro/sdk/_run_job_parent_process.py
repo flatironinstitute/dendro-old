@@ -139,6 +139,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                 _debug_log(f'Cleaning up DENDRO_JOB_CLEANUP_DIR: {dendro_job_cleanup_dir}')
                 try:
                     # delete files in the cleanup dir but do not delete the cleanup dir itself
+                    # and also don't delete the internal log folder _dendro
                     def _delete_files_in_dir(dir: str):
                         for fname in os.listdir(dir):
                             fpath = os.path.join(dir, fname)

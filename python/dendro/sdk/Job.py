@@ -35,6 +35,9 @@ class Job:
         self._output_folders = [OutputFolder(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key) for o in resp.outputFolders] if resp.outputFolders else None
         self._parameters = [JobParameter(name=p.name, value=p.value) for p in resp.parameters]
         self._processor_name = resp.processorName
+
+        for input in self._inputs:
+            input._check_file_cache()
     @property
     def job_id(self) -> str:
         """The ID of the job"""
@@ -78,6 +81,20 @@ def _get_upload_url_for_output_file(*, name: str, job_id: str, job_private_key: 
     )
     upload_url = resp['uploadUrl'] # This will be a presigned AWS S3 URL
     return upload_url
+
+def _get_file_id_for_output_file(*, name: str, job_id: str, job_private_key: str) -> str:
+    """Get the file ID for an output file"""
+
+    url_path = f'/api/processor/jobs/{job_id}/outputs/{name}/file_id'
+    headers = {
+        'job-private-key': job_private_key
+    }
+    resp = _processor_get_api_request(
+        url_path=url_path,
+        headers=headers
+    )
+    file_id = resp['fileId']
+    return file_id
 
 def _get_upload_url_for_output_folder_file(*, name: str, relative_file_name: str, job_id: str, job_private_key: str) -> str:
     """Get a signed upload URL for an output folder file"""
@@ -251,7 +268,7 @@ def _get_download_url_and_label_for_input_folder_file_v2(*, name: str, job_id: s
     return download_url, label
 
 def _parse_dendro_uri(dendro_uri: str):
-    """Parse a Dendro URI and return the file ID"""
+    """Parse a Dendro URI and return the file ID, whether it's a folder, and the label"""
     # dendro uri looks like this: dendro:?file_id=[file_id]&label=[label]&folder=[true/false]
     parts = dendro_uri.split('?')
     if len(parts) != 2:
