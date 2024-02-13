@@ -147,6 +147,7 @@ class InputFile(BaseModel):
         if file_id and FILE_CACHE_DIR:
             cached_file_path = os.path.join(FILE_CACHE_DIR, file_id)
             if os.path.exists(cached_file_path):
+                print(f'Using input file {self.name} from cache: {cached_file_path}')
                 self.local_file_name = cached_file_path
 
     # validator is needed to be an allowed pydantic type
