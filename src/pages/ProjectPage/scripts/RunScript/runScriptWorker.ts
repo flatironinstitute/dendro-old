@@ -13,9 +13,29 @@ const runScript = (_script: string, _files: any[]) => {
     inputs: { [key: string]: string },
     outputs: { [key: string]: string },
     parameters: { [key: string]: any },
-    requiredResources: RunScriptAddJobRequiredResources
+    requiredResources: RunScriptAddJobRequiredResources,
+    runMethod: 'local' | 'aws_batch' | 'slurm'
   }) => {
-    const { processorName, inputs, outputs, parameters, requiredResources } = a;
+    // validate parameters - this is being called by the user's javascript code which doesn't enforce types
+    if (!a.processorName) throw new Error("In addJob, processorName is required");
+    if (typeof a.processorName !== "string") throw new Error("In addJob, processorName must be a string");
+    if (!a.inputs) throw new Error("In addJob, inputs is required");
+    if (typeof a.inputs !== "object") throw new Error("In addJob, inputs must be an object");
+    if (!a.outputs) throw new Error("In addJob, outputs is required");
+    if (typeof a.outputs !== "object") throw new Error("In addJob, outputs must be an object");
+    if (!a.parameters) throw new Error("In addJob, parameters is required");
+    if (typeof a.parameters !== "object") throw new Error("In addJob, parameters must be an object");
+    if (!a.requiredResources) throw new Error("In addJob, requiredResources is required");
+    if (typeof a.requiredResources !== "object") throw new Error("In addJob, requiredResources must be an object");
+    if (!('numCpus' in a.requiredResources)) throw new Error("In addJob, requiredResources.numCpus is required");
+    if (!('numGpus' in a.requiredResources)) throw new Error("In addJob, requiredResources.numGpus is required");
+    if (!('memoryGb' in a.requiredResources)) throw new Error("In addJob, requiredResources.memoryGb is required");
+    if (!('timeSec' in a.requiredResources)) throw new Error("In addJob, requiredResources.timeSec is required");
+    if (!a.runMethod) throw new Error("In addJob, runMethod is required");
+    if (typeof a.runMethod !== "string") throw new Error("In addJob, runMethod must be a string");
+    if (!['local', 'aws_batch', 'slurm'].includes(a.runMethod)) throw new Error("In addJob, runMethod must be one of 'local', 'aws_batch', 'slurm'");
+    ///////////////////////////////////////////////////////////////////////////
+    const { processorName, inputs, outputs, parameters, requiredResources, runMethod } = a;
     context.print(`Adding job. Processor ${processorName}`);
     result.jobs.push({
       processorName: processorName,
@@ -41,6 +61,7 @@ const runScript = (_script: string, _files: any[]) => {
           } as RunScriptAddJobParameter)
       ),
       requiredResources: requiredResources,
+      runMethod: runMethod
     });
   };
 
@@ -61,7 +82,6 @@ const runScript = (_script: string, _files: any[]) => {
 };
 
 self.onmessage = function (e) {
-  console.log("--- msg", e, e.data);
   if (e.data.type === "run") {
     runScript(e.data.script, e.data.files);
   }

@@ -28,6 +28,7 @@ export type RunScriptAddJob = {
     outputFiles: RunScriptAddJobOutputFile[]
     inputParameters: RunScriptAddJobParameter[]
     requiredResources: RunScriptAddJobRequiredResources
+    runMethod: 'local' | 'aws_batch' | 'slurm'
 }
 
 export type RunScriptResult = {
