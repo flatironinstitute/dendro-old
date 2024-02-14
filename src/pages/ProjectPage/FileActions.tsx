@@ -16,11 +16,11 @@ export const fileActions: FileAction[] = [
         outputFileBaseName: 'spike_sorting_summary.nh5',
         icon: <Settings />
     },
-    {
-        name: 'ecephys_summary',
-        label: 'Ecephys Summary',
-        processorName: 'dandi-vis-1.ecephys_summary',
-        outputFileBaseName: 'ecephys_summary.nh5',
-        icon: <Settings />
-    }
+    // {
+    //     name: 'ecephys_summary',
+    //     label: 'Ecephys Summary',
+    //     processorName: 'dandi-vis-1.ecephys_summary',
+    //     outputFileBaseName: 'ecephys_summary.nh5',
+    //     icon: <Settings />
+    // }
 ]
