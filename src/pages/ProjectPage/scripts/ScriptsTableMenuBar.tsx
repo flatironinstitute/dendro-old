@@ -16,7 +16,7 @@ type ScriptsTableMenuBarProps = {
 }
 
 const ScriptsTableMenuBar: FunctionComponent<ScriptsTableMenuBarProps> = ({width, height, selectedScriptIds, onResetSelection, createScriptEnabled, createScriptTitle}) => {
-    const {deleteScript, refreshScripts, refreshFiles, projectRole, projectId} = useProject()
+    const {deleteScript, refreshScripts, refreshFiles, projectRole, projectId, scripts} = useProject()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {
         if (!['admin', 'editor'].includes(projectRole || '')) {
@@ -43,13 +43,24 @@ const ScriptsTableMenuBar: FunctionComponent<ScriptsTableMenuBarProps> = ({width
 
     const handleCreateScript = useCallback(async () => {
         if (!auth.signedIn) return
-        const scriptName = prompt('Enter a name for the new script', 'untitled.js')
+        let scriptName: string | null
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            scriptName = prompt('Enter a name for the new script', 'untitled.js')
+            if (!scriptName) return
+            if (scripts?.find(s => s.scriptName === scriptName)) {
+                alert('A script with that name already exists. Please choose a different name.')
+            }
+            else {
+                break
+            }
+        }
         if (!scriptName) return
         setOperating(true)
         await addScript(projectId, scriptName, auth)
         setOperating(false)
         refreshScripts()
-    }, [refreshScripts, projectId, auth])
+    }, [refreshScripts, projectId, auth, scripts])
 
     return (
         <div>

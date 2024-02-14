@@ -71,12 +71,12 @@ const projectPageViews: ProjectPageView[] = [
         label: 'Jobs'
     },
     {
-        type: 'project-linked-analysis',
-        label: 'Linked analysis'
-    },
-    {
         type: 'project-scripts',
         label: 'Scripts'
+    },
+    {
+        type: 'project-linked-analysis',
+        label: 'Linked analysis'
     },
     {
         type: 'dandi-import',
@@ -94,12 +94,13 @@ const projectPageViews: ProjectPageView[] = [
 
 const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({width, height}) => {
     const leftMenuPanelWidth = 150
+    const statusBarHeight = 16
     return (
         <SetupComputeResources>
-            <div style={{position: 'absolute', width, height, overflow: 'hidden'}}>
+            <div style={{position: 'absolute', width, height: height - statusBarHeight, overflow: 'hidden'}}>
                 <HBoxLayout
                     widths={[leftMenuPanelWidth, width - leftMenuPanelWidth]}
-                    height={height}
+                    height={height - statusBarHeight}
                 >
                     <LeftMenuPanel
                         width={0}
@@ -110,6 +111,9 @@ const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({w
                         height={0}
                     />
                 </HBoxLayout>
+            </div>
+            <div style={{position: 'absolute', width, height: statusBarHeight, bottom: 0, background: '#ddd', borderTop: 'solid 1px #aaa', fontSize: 12, paddingRight: 10, textAlign: 'right'}}>
+                <StatusBar />
             </div>
         </SetupComputeResources>
     )
@@ -500,6 +504,16 @@ const DandisetIdSelector: FunctionComponent<DandisetIdSelectorProps> = ({dandise
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             <Hyperlink onClick={handleAdd}>Add new dandiset to project</Hyperlink>
         </div>
+    )
+}
+
+const StatusBar: FunctionComponent = () => {
+    const {statusStrings} = useProject()
+    const statusStringsSorted = useMemo(() => (statusStrings || []).sort((a, b) => a.localeCompare(b)), [statusStrings])
+    return (
+        <span>
+            {statusStringsSorted.join(' ')}
+        </span>
     )
 }
 

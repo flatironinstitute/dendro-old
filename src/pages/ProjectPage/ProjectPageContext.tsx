@@ -146,6 +146,7 @@ type ProjectPageContextType = {
     setScriptContent: (scriptId: string, content: string) => Promise<void>
     renameScript: (scriptId: string, name: string) => Promise<void>
     addScript: (name: string) => Promise<void>
+    statusStrings: string[]
 }
 
 const ProjectPageContext = React.createContext<ProjectPageContextType>({
@@ -172,10 +173,12 @@ const ProjectPageContext = React.createContext<ProjectPageContextType>({
     refreshScripts: () => {},
     setScriptContent: async () => {},
     renameScript: async () => {},
-    addScript: async () => {}
+    addScript: async () => {},
+    statusStrings: []
 })
 
 export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({children, projectId, onCurrentProjectChanged}) => {
+    const {statusStrings, addStatusString, removeStatusString} = useStatusStrings()
     const [project, setProject] = React.useState<DendroProject | undefined>()
     const [files, setFiles] = React.useState<DendroFile[] | undefined>()
     const [refreshFilesCode, setRefreshFilesCode] = React.useState(0)
@@ -208,46 +211,63 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
     }, [project?.computeResourceId])
 
     useEffect(() => {
-        (async () => {
-            setProject(undefined)
+        let canceled = false
+        ;(async () => {
+            // important not to set it to undefined
+            // setProject(undefined)
             if (!projectId) return
+            addStatusString('Loading project...')
             const project = await fetchProject(projectId, auth)
+            if (canceled) return
+            removeStatusString('Loading project...')
             setProject(project)
         })()
-    }, [projectId, auth, refreshProjectCode])
-
-    useEffect(() => {
-        (async () => {
-            setFiles(undefined)
-            if (!projectId) return
-            const af = await fetchFiles(projectId, auth)
-            setFiles(af)
-        })()
-    }, [refreshFilesCode, projectId, auth])
+        return () => {canceled = true}
+    }, [projectId, auth, refreshProjectCode, addStatusString, removeStatusString])
 
     useEffect(() => {
         let canceled = false
         ;(async () => {
-            setJobs(undefined)
+            // setFiles(undefined)
             if (!projectId) return
+            addStatusString('Loading files...')
+            const af = await fetchFiles(projectId, auth)
+            if (canceled) return
+            removeStatusString('Loading files...')
+            setFiles(af)
+        })()
+        return () => {canceled = true}
+    }, [refreshFilesCode, projectId, auth, addStatusString, removeStatusString])
+
+    useEffect(() => {
+        let canceled = false
+        ;(async () => {
+            // setJobs(undefined)
+            if (!projectId) return
+            addStatusString('Loading jobs...')
             const x = await fetchJobsForProject(projectId, auth)
             if (canceled) return
+            removeStatusString('Loading jobs...')
             setJobs(x)
         })()
         return () => {canceled = true}
-    }, [refreshJobsCode, projectId, auth])
+    }, [refreshJobsCode, projectId, auth, addStatusString, removeStatusString])
 
     useEffect(() => {
         let canceled = false
         ;(async () => {
-            setScripts(undefined)
+            // important not to set it to undefined
+            // because if we do, then we get an unmounting and remounting of the component
+            // setScripts(undefined)
             if (!projectId) return
+            addStatusString('Loading scripts...')
             const x = await fetchScriptsForProject(projectId, auth)
             if (canceled) return
+            removeStatusString('Loading scripts...')
             setScripts(x)
         })()
         return () => {canceled = true}
-    }, [refreshScriptsCode, projectId, auth])
+    }, [refreshScriptsCode, projectId, auth, addStatusString, removeStatusString])
 
     // if any jobs are newly completed, refresh the files
     const [previousJobs, setPreviousJobs] = React.useState<DendroJob[] | undefined>(undefined)
@@ -396,7 +416,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         reportLoadedProject(project)
     }, [project, reportLoadedProject])
 
-    const value: ProjectPageContextType = React.useMemo(() => ({
+    const value: ProjectPageContextType = {
         projectId,
         project,
         files,
@@ -428,14 +448,43 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         refreshScripts,
         setScriptContent: setScriptContentHandler,
         renameScript: renameScriptHandler,
-        addScript: addScriptHandler
-    }), [projectId, project, files, openTabs, jobs, refreshScripts, deleteScriptHandler, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited, refreshProject, scripts, setScriptContentHandler, renameScriptHandler, addScriptHandler])
+        addScript: addScriptHandler,
+        statusStrings
+    }
 
     return (
         <ProjectPageContext.Provider value={value}>
             {children}
         </ProjectPageContext.Provider>
     )
+}
+
+type StatusStringsAction = {
+    type: 'add'
+    statusString: string
+} | {
+    type: 'remove'
+    statusString: string
+}
+
+const statusStringsReducer = (state: string[], action: StatusStringsAction) => {
+    switch (action.type) {
+        case 'add':
+            return [...state, action.statusString]
+        case 'remove':
+            return state.filter(s => s !== action.statusString)
+    }
+}
+
+const useStatusStrings = () => {
+    const [statusStrings, dispatch] = React.useReducer(statusStringsReducer, [])
+    const addStatusString = useCallback((statusString: string) => {
+        dispatch({type: 'add', statusString})
+    }, [])
+    const removeStatusString = useCallback((statusString: string) => {
+        dispatch({type: 'remove', statusString})
+    }, [])
+    return {statusStrings, addStatusString, removeStatusString}
 }
 
 export const useProject = () => {

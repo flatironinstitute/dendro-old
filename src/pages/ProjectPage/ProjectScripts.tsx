@@ -1,14 +1,29 @@
 import { Splitter } from "@fi-sci/splitter";
-import { FunctionComponent, useState } from "react";
+import { FunctionComponent, useCallback, useMemo, useState } from "react";
 import { useProject } from "./ProjectPageContext";
 import ScriptsTable from "./scripts/ScriptsTable";
 import ScriptView from "./scripts/ScriptView";
+import { setScriptContent } from "../../dbInterface/dbInterface";
+import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 
 const ProjectScripts: FunctionComponent<{width: number, height: number}> = ({width, height}) => {
-    const {scripts, projectRole} = useProject()
+    const {scripts, projectRole, refreshScripts} = useProject()
     const [selectedScriptId, setSelectedScriptId] = useState<string | undefined>(undefined)
 
     const createScriptEnabled = projectRole === 'admin' || projectRole === 'editor'
+
+    const selectedScript = useMemo(() => {
+        if (!selectedScriptId) return undefined
+        return scripts?.find(s => s.scriptId === selectedScriptId)
+    }, [selectedScriptId, scripts])
+
+    const auth = useGithubAuth()
+
+    const handleSetScriptContent = useCallback(async (content: string) => {
+        if (!selectedScriptId) return
+        await setScriptContent(selectedScriptId, content, auth)
+        refreshScripts()
+    }, [selectedScriptId, auth, refreshScripts])
 
     return (
         <Splitter
@@ -29,7 +44,8 @@ const ProjectScripts: FunctionComponent<{width: number, height: number}> = ({wid
             <ScriptView
                 width={0}
                 height={0}
-                scriptId={selectedScriptId || ''}
+                script={selectedScript}
+                onSetContent={handleSetScriptContent}
             />
         </Splitter>
     )
