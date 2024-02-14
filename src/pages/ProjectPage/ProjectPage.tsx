@@ -25,6 +25,7 @@ import openFilesInNeurosift from "./openFilesInNeurosift";
 import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
 import { DendroProject } from "../../types/dendro-types";
 import RunFileActionWindow from "./RunFileActionWindow/RunFileActionWindow";
+import ProjectScripts from "./ProjectScripts";
 
 type Props = {
     width: number
@@ -49,7 +50,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height, onCurrentProjectC
     )
 }
 
-export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-linked-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
+export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-scripts' | 'project-linked-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
 
 type ProjectPageView = {
     type: ProjectPageViewType
@@ -68,6 +69,10 @@ const projectPageViews: ProjectPageView[] = [
     {
         type: 'project-jobs',
         label: 'Jobs'
+    },
+    {
+        type: 'project-scripts',
+        label: 'Scripts'
     },
     {
         type: 'project-linked-analysis',
@@ -89,12 +94,13 @@ const projectPageViews: ProjectPageView[] = [
 
 const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({width, height}) => {
     const leftMenuPanelWidth = 150
+    const statusBarHeight = 16
     return (
         <SetupComputeResources>
-            <div style={{position: 'absolute', width, height, overflow: 'hidden'}}>
+            <div style={{position: 'absolute', width, height: height - statusBarHeight, overflow: 'hidden'}}>
                 <HBoxLayout
                     widths={[leftMenuPanelWidth, width - leftMenuPanelWidth]}
-                    height={height}
+                    height={height - statusBarHeight}
                 >
                     <LeftMenuPanel
                         width={0}
@@ -105,6 +111,9 @@ const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({w
                         height={0}
                     />
                 </HBoxLayout>
+            </div>
+            <div style={{position: 'absolute', width, height: statusBarHeight, bottom: 0, background: '#ddd', borderTop: 'solid 1px #aaa', fontSize: 12, paddingRight: 10, textAlign: 'right'}}>
+                <StatusBar />
             </div>
         </SetupComputeResources>
     )
@@ -353,6 +362,16 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     )
                 }
             </div>
+            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-scripts' ? undefined : 'hidden'}}>
+                {
+                    viewsThatHaveBeenVisible.includes('project-scripts') && (
+                        <ProjectScripts
+                            width={width}
+                            height={height}
+                        />
+                    )
+                }
+            </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-linked-analysis' ? undefined : 'hidden'}}>
                 {
                     viewsThatHaveBeenVisible.includes('project-linked-analysis') && (
@@ -485,6 +504,16 @@ const DandisetIdSelector: FunctionComponent<DandisetIdSelectorProps> = ({dandise
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             <Hyperlink onClick={handleAdd}>Add new dandiset to project</Hyperlink>
         </div>
+    )
+}
+
+const StatusBar: FunctionComponent = () => {
+    const {statusStrings} = useProject()
+    const statusStringsSorted = useMemo(() => (statusStrings || []).sort((a, b) => a.localeCompare(b)), [statusStrings])
+    return (
+        <span>
+            {statusStringsSorted.join(' ')}
+        </span>
     )
 }
 

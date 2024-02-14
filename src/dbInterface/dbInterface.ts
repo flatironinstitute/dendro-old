@@ -1,5 +1,5 @@
 import { GithubAuthData } from "../GithubAuth/GithubAuthContext";
-import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, DendroComputeResource, DendroFile, DendroJob, DendroJobRequiredResources, DendroProject, isDendroFile, isDendroJob, isDendroProject } from "../types/dendro-types";
+import { ComputeResourceAwsBatchOpts, ComputeResourceSlurmOpts, ComputeResourceSpecProcessor, DendroComputeResource, DendroFile, DendroJob, DendroJobRequiredResources, DendroProject, DendroScript, isDendroFile, isDendroJob, isDendroProject, isDendroScript } from "../types/dendro-types";
 import getAuthorizationHeaderForUrl from "./getAuthorizationHeaderForUrl";
 
 type Auth = GithubAuthData
@@ -514,6 +514,44 @@ export const fetchJob = async (jobId: string, auth: Auth): Promise<DendroJob | u
     const response = await getRequest(url, auth)
     if (!response.success) throw Error(`Error in fetchJob: ${response.error}`)
     return response.job
+}
+
+export const fetchScriptsForProject = async (projectId: string, auth: Auth): Promise<DendroScript[]> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}/scripts`
+    const response = await getRequest(url, auth)
+    if (!response.success) throw Error(`Error in fetchScriptsForProject: ${response.error}`)
+    for (const script of response.scripts) {
+        if (!isDendroScript(script)) {
+            console.warn(script)
+            throw Error('Invalid script.')
+        }
+    }
+    return response.scripts
+}
+
+export const deleteScript = async (scriptId: string, auth: Auth): Promise<void> => {
+    const url = `${apiBase}/api/gui/scripts/${scriptId}`
+    const resp = await deleteRequest(url, auth)
+    if (!resp.success) throw Error(`Error in deleteScript: ${resp.error}`)
+}
+
+export const setScriptContent = async (scriptId: string, content: string, auth: Auth): Promise<void> => {
+    const url = `${apiBase}/api/gui/scripts/${scriptId}/content`
+    const response = await putRequest(url, {content}, auth)
+    if (!response.success) throw Error(`Error in setScriptContent: ${response.error}`)
+}
+
+export const renameScript = async (scriptId: string, name: string, auth: Auth): Promise<void> => {
+    const url = `${apiBase}/api/gui/scripts/${scriptId}/name`
+    const response = await putRequest(url, {name}, auth)
+    if (!response.success) throw Error(`Error in renameScript: ${response.error}`)
+}
+
+export const addScript = async (projectId: string, name: string, auth: Auth): Promise<string> => {
+    const url = `${apiBase}/api/gui/projects/${projectId}/scripts`
+    const response = await postRequest(url, {name}, auth)
+    if (!response.success) throw Error(`Error in addScript: ${response.error}`)
+    return response.scriptId
 }
 
 export const getComputeResource = async (computeResourceId: string): Promise<any> => {
