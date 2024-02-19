@@ -11,10 +11,10 @@ type JobsTableMenuBarProps = {
     onResetSelection: () => void
     createJobEnabled?: boolean
     createJobTitle?: string
-    onApprovalAll?: () => void
+    onApproveAll?: () => void
 }
 
-const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, height, selectedJobIds, onResetSelection, createJobEnabled, createJobTitle, onApprovalAll}) => {
+const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, height, selectedJobIds, onResetSelection, createJobEnabled, createJobTitle, onApproveAll: onApproveAll}) => {
     const {deleteJob, refreshJobs, refreshFiles, projectRole} = useProject()
     const [operating, setOperating] = useState(false)
     const handleDelete = useCallback(async () => {
@@ -33,7 +33,7 @@ const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, heig
         finally {
             setOperating(false)
             refreshJobs()
-            refreshFiles
+            refreshFiles()
             onResetSelection()
         }
     }, [selectedJobIds, deleteJob, refreshJobs, refreshFiles, onResetSelection, projectRole])
@@ -53,13 +53,13 @@ const JobsTableMenuBar: FunctionComponent<JobsTableMenuBarProps> = ({width, heig
                 onClick={handleDelete}
             />
             {
-                onApprovalAll && (
+                onApproveAll && (
                     <SmallIconButton
                         icon={<Check />}
                         disabled={operating}
-                        title='Approval all jobs'
-                        label="Approval all jobs"
-                        onClick={onApprovalAll}
+                        title='Approve all jobs'
+                        label="Approve all jobs"
+                        onClick={onApproveAll}
                     />
                 )
             }

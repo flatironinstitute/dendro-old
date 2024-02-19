@@ -256,7 +256,7 @@ const JobsTable: FunctionComponent<Props> = ({ width, height, fileName, jobs, on
                     onResetSelection={() => selectedJobIdsDispatch({type: 'set', values: new Set<string>()})}
                     createJobEnabled={createJobEnabled}
                     createJobTitle={createJobTitle}
-                    onApprovalAll={userCanApproveJobs && atLeastOneJobPendingApproval ? handleApproveAllJobs : undefined}
+                    onApproveAll={userCanApproveJobs && atLeastOneJobPendingApproval ? handleApproveAllJobs : undefined}
                 />
             </div>
             <div style={{position: 'absolute', width: width - hPadding * 2, height: height - menuBarHeight - vPadding * 2, top: menuBarHeight, overflowY: 'scroll', paddingLeft: hPadding, paddingRight: hPadding, paddingTop: vPadding, paddingBottom: vPadding}}>

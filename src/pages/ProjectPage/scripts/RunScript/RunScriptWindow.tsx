@@ -148,7 +148,7 @@ const RunScriptWindow: FunctionComponent<RunScriptWindowProps> = ({width, height
                                                         handleSubmitJobs(newJobs)
                                                     }}
                                                 >
-                                                    Submit these {newJobs.length} new jobs
+                                                    {newJobs.length > 1 ? `Submit these ${newJobs.length} new jobs` : `Submit this one new job?`}
                                                 </Hyperlink>
                                             </div>
                                         ) : (

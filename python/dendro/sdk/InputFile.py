@@ -4,7 +4,6 @@ import requests
 import h5py
 from pydantic import BaseModel
 import remfile
-from zmq import has
 
 
 class InputFileDownloadError(Exception):
