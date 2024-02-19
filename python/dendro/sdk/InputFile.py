@@ -148,16 +148,18 @@ class InputFile(BaseModel):
     def _check_file_cache(self):
         if self.local_file_name is not None:
             return
-        if hasattr(self, '_cache_has_been_checked') and self._cache_has_been_checked:
-            return
         file_id = self._get_project_file_id()
+        if not file_id:
+            return
+        if cache_checker.is_cache_checked(file_id):
+            return
         FILE_CACHE_DIR = os.getenv('DENDRO_FILE_CACHE_DIR', None)
         if file_id and FILE_CACHE_DIR:
             cached_file_path = os.path.join(FILE_CACHE_DIR, file_id)
             if os.path.exists(cached_file_path):
                 print(f'Using input file {self.name if self.name is not None else self.project_file_uri} from cache: {cached_file_path}')
                 self.local_file_name = cached_file_path
-        self._cache_has_been_checked = True
+        cache_checker.set_cache_checked(file_id)
 
     # validator is needed to be an allowed pydantic type
     @classmethod
@@ -170,6 +172,18 @@ class InputFile(BaseModel):
             return value
         else:
             raise ValueError(f'Unexpected type for InputFile: {type(value)}')
+
+class CacheChecker:
+    def __init__(self):
+        self.cache_checked = {}
+
+    def set_cache_checked(self, file_id: str):
+        self.cache_checked[file_id] = True
+
+    def is_cache_checked(self, file_id: str):
+        return self.cache_checked.get(file_id, False)
+
+cache_checker = CacheChecker()
 
 def _download_file(url: str, dest_file_path: str):
     # stream the download
