@@ -275,7 +275,7 @@ const getJobProblem = (j: RunScriptAddJob, p: ComputeResourceSpecProcessor) => {
     }
     // make sure we have all the required parameters
     for (const x1 of p.parameters) {
-        if ((x1.default !== undefined) && (x1.default !== null)) continue
+        if ((x1.default !== undefined)) continue
         const x2 = j.inputParameters.find(x => x.name === x1.name)
         if (!x2) return `Parameter "${x1.name}" not found for processor ${j.processorName}`
     }
