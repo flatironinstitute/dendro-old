@@ -105,10 +105,10 @@ const RunScriptWindow: FunctionComponent<RunScriptWindowProps> = ({width, height
                 files,
                 batchId,
                 requiredResources: {
-                    numCpus: 2,
-                    numGpus: 0,
-                    memoryGb: 4,
-                    timeSec: 60 * 60
+                    numCpus: j.requiredResources.numCpus,
+                    numGpus: j.requiredResources.numGpus,
+                    memoryGb: j.requiredResources.memoryGb,
+                    timeSec: j.requiredResources.timeSec
                 },
                 runMethod: 'local'
             }, auth)
