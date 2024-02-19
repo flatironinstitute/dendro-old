@@ -18,6 +18,7 @@ class InputFile(BaseModel):
     project_file_name: str = ''
     job_id: Union[str, None] = None
     job_private_key: Union[str, None] = None
+    _cache_has_been_checked: bool = False
 
     def get_url(self) -> str:
         if self.url is not None:
@@ -113,12 +114,15 @@ class InputFile(BaseModel):
                 return
 
     def is_local(self) -> bool:
+        self._check_file_cache()
         return self.local_file_name is not None
 
     def get_local_file_name(self) -> Union[str, None]:
+        self._check_file_cache()
         return self.local_file_name
 
     def get_file(self, *, download: bool = False):
+        self._check_file_cache()
         if self.local_file_name is not None:
             # In the case of a local file, we just return a file object
             f = open(self.local_file_name, 'rb')
@@ -143,6 +147,10 @@ class InputFile(BaseModel):
         return file_id
 
     def _check_file_cache(self):
+        if self.local_file_name is not None:
+            return
+        if self._cache_has_been_checked:
+            return
         file_id = self._get_project_file_id()
         FILE_CACHE_DIR = os.getenv('DENDRO_FILE_CACHE_DIR', None)
         if file_id and FILE_CACHE_DIR:
@@ -150,6 +158,7 @@ class InputFile(BaseModel):
             if os.path.exists(cached_file_path):
                 print(f'Using input file {self.name} from cache: {cached_file_path}')
                 self.local_file_name = cached_file_path
+        self._cache_has_been_checked = True
 
     # validator is needed to be an allowed pydantic type
     @classmethod
