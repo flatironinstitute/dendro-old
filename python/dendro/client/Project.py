@@ -50,9 +50,12 @@ class ProjectFile:
         self._resolved_url_timestamp: Union[float, None] = None
     def get_url(self) -> str:
         a = self._file_data.content
-        if not a.startswith('url:'):
-            raise ProjectException(f'Unexpected content for file {self._file_data.fileName}: {a}')
-        url = a[len('url:'):]
+        if a.startswith('dendro:?'):
+            raise Exception(f'Cannot get url for file with content: {a}')
+        else:
+            if not a.startswith('url:'):
+                raise ProjectException(f'Unexpected content for file {self._file_data.fileName}: {a}')
+            url = a[len('url:'):]
         resolved_url = self._get_resolved_url(url=url)
         return resolved_url
     @property

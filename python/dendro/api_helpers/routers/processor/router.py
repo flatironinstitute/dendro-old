@@ -33,9 +33,13 @@ async def processor_get_job(job_id: str, job_private_key: str = Header(...)) -> 
             file = await fetch_file(project_id=job.projectId, file_name=input.fileName)
             if file is None:
                 raise Exception(f"Project file not found: {input.fileName}")
-            if not file.content.startswith('url:'):
-                raise Exception(f"Project file {input.fileName} is not a URL")
-            url = file.content[len('url:'):]
+            if file.content.startswith('dendro:?'):
+                # this applies to the case where skipCloudUpload is true for the output in the job creating this input file
+                url = file.content
+            else:
+                if not file.content.startswith('url:'):
+                    raise Exception(f"Project file content for {input.fileName} is not a URL")
+                url = file.content[len('url:'):]
             if not input.isFolder:
                 # regular file
                 if file.isFolder:
@@ -351,9 +355,13 @@ async def get_job_file_info(job_id: str, file_id: str, job_private_key: str = He
     file = await fetch_file_by_id(project_id=project_id, file_id=file_id)
     if not file:
         raise Exception(f"No file with ID {file_id} in project {project_id}")
-    if not file.content.startswith('url:'):
-        raise Exception(f"Project file {file_id} is not a URL")
-    url = file.content[len('url:'):]
+    if file.content.startswith('dendro:?'):
+        # this applies to the case where skipCloudUpload is true for the output in the job creating this input file
+        url = file.content
+    else:
+        if not file.content.startswith('url:'):
+            raise Exception(f"Project file content for {file_id} is not a URL")
+        url = file.content[len('url:'):]
     if dandi_api_key:
         url = await _resolve_dandi_url(url, dandi_api_key=dandi_api_key)
     return GetJobFileInfoResponse(downloadUrl=url, isFolder=file.isFolder if file.isFolder is not None else False, success=True)
