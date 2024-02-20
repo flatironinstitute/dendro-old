@@ -77,6 +77,7 @@ export type DendroJobOutputFile = {
     fileName: string
     fileId?: string
     isFolder?: boolean
+    skipCloudUpload?: boolean
 }
 
 export const isDendroJobOutputFile = (x: any): x is DendroJobOutputFile => {
@@ -84,7 +85,8 @@ export const isDendroJobOutputFile = (x: any): x is DendroJobOutputFile => {
         name: isString,
         fileName: isString,
         fileId: optional(isString),
-        isFolder: optional(isBoolean)
+        isFolder: optional(isBoolean),
+        skipCloudUpload: optional(isBoolean)
     })
 }
 

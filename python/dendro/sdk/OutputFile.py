@@ -13,8 +13,10 @@ class OutputFile(BaseModel):
     name: Union[str, None] = None # the name of the output within the context of the processor (not needed when output_file_name is specified for local testing)
     job_id: Union[str, None] = None
     job_private_key: Union[str, None] = None
+    skip_cloud_upload: Union[bool, None] = None
     was_uploaded: bool = False
     output_file_name: Union[str, None] = None # for local testing
+    size: Union[int, None] = None
     def set(self, local_file_name: str):
         print('output.set() is deprecated. Please use output.upload() instead.')
         self.upload(local_file_name)
@@ -47,16 +49,19 @@ class OutputFile(BaseModel):
                 raise Exception('Unexpected: job_id is None in OutputFile')
             if self.job_private_key is None:
                 raise Exception('Unexpected: job_private_key is None in OutputFile')
-            upload_url = _get_upload_url_for_output_file(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
+            if not self.skip_cloud_upload:
+                upload_url = _get_upload_url_for_output_file(name=self.name, job_id=self.job_id, job_private_key=self.job_private_key)
 
-            # Upload the file to the URL
-            print(f'Uploading output file {self.name}') # it could be a security issue to provide the url in this print statement
-            with open(local_file_name, 'rb') as f:
-                if not using_mock():
-                    resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
-                    if resp_upload.status_code != 200:
-                        print(upload_url)
-                        raise SetOutputFileException(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
+                # Upload the file to the URL
+                print(f'Uploading output file {self.name}') # it could be a security issue to provide the url in this print statement
+                with open(local_file_name, 'rb') as f:
+                    if not using_mock():
+                        resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
+                        if resp_upload.status_code != 200:
+                            print(upload_url)
+                            raise SetOutputFileException(f'Error uploading file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
+            else:
+                print(f'Skipping cloud upload for output file {self.name}')
 
             # Write to the file cache
             if FILE_CACHE_DIR:
@@ -65,6 +70,13 @@ class OutputFile(BaseModel):
                 if not os.path.exists(file_cache_path):
                     print(f'Moving {local_file_name} to {file_cache_path}')
                     shutil.move(local_file_name, file_cache_path)
+
+            # Determine the size of the file
+            # This is important for the case of skipCloudUpload=True
+            if os.path.exists(local_file_name):
+                self.size = os.path.getsize(local_file_name)
+            else:
+                self.size = 0
 
             # In all cases we delete the local file because then we don't have different behavior in different cases
             print(f'Deleting local file {local_file_name}')

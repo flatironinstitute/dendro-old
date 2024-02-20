@@ -10,9 +10,9 @@ const runScript = (_script: string, _files: any[]) => {
   const result: RunScriptResult = { jobs: [] };
   const _addJob = (a: {
     processorName: string;
-    inputs: { [key: string]: string };
-    outputs: { [key: string]: string };
-    parameters: { [key: string]: any };
+    inputs: RunScriptAddJobInputFile[];
+    outputs: RunScriptAddJobOutputFile[];
+    parameters: RunScriptAddJobParameter[];
     requiredResources: RunScriptAddJobRequiredResources;
     runMethod: "local" | "aws_batch" | "slurm";
   }) => {
@@ -22,14 +22,40 @@ const runScript = (_script: string, _files: any[]) => {
     if (typeof a.processorName !== "string")
       throw new Error("In addJob, processorName must be a string");
     if (!a.inputs) throw new Error("In addJob, inputs is required");
-    if (typeof a.inputs !== "object")
-      throw new Error("In addJob, inputs must be an object");
+    if (!Array.isArray(a.inputs))
+      throw new Error("In addJob, inputs must be an array");
+    for (const input of a.inputs) {
+      if (!input.name) throw new Error("In addJob, input.name is required");
+      if (typeof input.name !== "string")
+        throw new Error("In addJob, input.name must be a string");
+      if (!input.fileName)
+        throw new Error("In addJob, input.fileName is required");
+      if (typeof input.fileName !== "string")
+        throw new Error("In addJob, input.fileName must be a string");
+    }
     if (!a.outputs) throw new Error("In addJob, outputs is required");
-    if (typeof a.outputs !== "object")
-      throw new Error("In addJob, outputs must be an object");
+    if (!Array.isArray(a.outputs))
+      throw new Error("In addJob, outputs must be an array");
+    for (const output of a.outputs) {
+      if (!output.name) throw new Error("In addJob, output.name is required");
+      if (typeof output.name !== "string")
+        throw new Error("In addJob, output.name must be a string");
+      if (!output.fileName)
+        throw new Error("In addJob, output.fileName is required");
+      if (typeof output.fileName !== "string")
+        throw new Error("In addJob, output.fileName must be a string");
+    }
     if (!a.parameters) throw new Error("In addJob, parameters is required");
-    if (typeof a.parameters !== "object")
-      throw new Error("In addJob, parameters must be an object");
+    if (!Array.isArray(a.parameters))
+      throw new Error("In addJob, parameters must be an array");
+    for (const parameter of a.parameters) {
+      if (!parameter.name)
+        throw new Error("In addJob, parameter.name is required");
+      if (typeof parameter.name !== "string")
+        throw new Error("In addJob, parameter.name must be a string");
+      if (!('value' in parameter))
+        throw new Error("In addJob, parameter.value is required");
+    }
     if (!a.requiredResources)
       throw new Error("In addJob, requiredResources is required");
     if (typeof a.requiredResources !== "object")
@@ -61,33 +87,9 @@ const runScript = (_script: string, _files: any[]) => {
     context.print(`Adding job. Processor ${processorName}`);
     result.jobs.push({
       processorName: processorName,
-      inputFiles: Object.entries(inputs)
-        .sort()
-        .map(
-          ([name, fileName]) =>
-            ({
-              name: name,
-              fileName: fileName,
-            } as RunScriptAddJobInputFile)
-        ),
-      outputFiles: Object.entries(outputs)
-        .sort()
-        .map(
-          ([name, fileName]) =>
-            ({
-              name: name,
-              fileName: fileName,
-            } as RunScriptAddJobOutputFile)
-        ),
-      inputParameters: Object.entries(parameters)
-        .sort()
-        .map(
-          ([name, value]) =>
-            ({
-              name: name,
-              value: value,
-            } as RunScriptAddJobParameter)
-        ),
+      inputFiles: inputs,
+      outputFiles: outputs,
+      inputParameters: parameters,
       requiredResources: requiredResources,
       runMethod: runMethod,
     });

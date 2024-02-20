@@ -15,6 +15,7 @@ class SubmitJobOutputFile(BaseModel):
     name: str
     file_name: str
     is_folder: Union[bool, None] = None
+    skip_cloud_upload: Union[bool, None] = None
 
 class SubmitJobParameter(BaseModel):
     name: str
@@ -83,7 +84,8 @@ def submit_job(*,
         CreateJobRequestOutputFile(
             name=x.name,
             fileName=x.file_name,
-            isFolder=x.is_folder
+            isFolder=x.is_folder,
+            skipCloudUpload=x.skip_cloud_upload
         )
         for x in output_files
     ]
