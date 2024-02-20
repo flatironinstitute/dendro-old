@@ -143,12 +143,14 @@ async def processor_get_job_v2(job_id: str, job_private_key: str = Header(...)) 
             if not output.isFolder:
                 # regular file
                 outputs.append(ProcessorGetJobResponseOutput(
-                    name=output.name
+                    name=output.name,
+                    skipCloudUpload=output.skipCloudUpload
                 ))
             else:
                 # folder
                 output_folders.append(ProcessorGetJobResponseOutputFolder(
-                    name=output.name
+                    name=output.name,
+                    skipCloudUpload=output.skipCloudUpload
                 ))
 
         parameters: List[ProcessorGetJobResponseParameter] = []
@@ -188,6 +190,7 @@ class ProcessorUpdateJobStatusRequest(BaseModel):
     status: str
     error: Union[str, None] = None
     force_update: Union[bool, None] = None
+    output_file_sizes: Union[dict, None] = None
 
 class ProcessorUpdateJobStatusResponse(BaseModel):
     success: bool
@@ -201,7 +204,7 @@ async def processor_update_job_status(job_id: str, data: ProcessorUpdateJobStatu
         if job.jobPrivateKey != job_private_key:
             raise Exception(f"Invalid job private key for job {job_id}")
 
-        await update_job_status(job=job, status=data.status, error=data.error, force_update=data.force_update)
+        await update_job_status(job=job, status=data.status, error=data.error, force_update=data.force_update, output_file_sizes=data.output_file_sizes)
 
         return ProcessorUpdateJobStatusResponse(success=True)
     except Exception as e:

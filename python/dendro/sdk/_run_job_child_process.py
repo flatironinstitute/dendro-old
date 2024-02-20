@@ -1,4 +1,6 @@
 from typing import List
+import os
+import json
 from .InputFile import InputFile
 from .InputFolder import InputFolder
 from .Job import Job
@@ -145,6 +147,25 @@ def _run_job_child_process(*, job_id: str, job_private_key: str, processors: Lis
         assert output_file is not None, f'Output not found: {output.name}'
         if not output_file.was_uploaded:
             raise Exception(f'Output was not uploaded: {output.name}')
+
+    # Write the output_file_sizes.json file
+    # This is especially important for the case of skipCloudUpload=True
+    print('[dendro] Writing output_file_sizes.json')
+    if os.path.exists('_dendro'):
+        output_file_sizes_fname = '_dendro/output_file_sizes.json'
+        output_file_sizes = {}
+        for output in processor._outputs:
+            output_file = next((o for o in job.outputs if o.name == output.name), None)
+            if output_file is not None and output_file.size is not None:
+                output_file_sizes[output.name] = output_file.size
+        for output in processor._output_folders:
+            output_folder = next((o for o in job.output_folders if o.name == output.name), None)
+            if output_folder is not None and output_folder.size is not None:
+                output_file_sizes[output.name] = output_folder.size
+        with open(output_file_sizes_fname, 'w') as f:
+            json.dump(output_file_sizes, f)
+    else:
+        print(f'WARNING: Cannot write output_file_sizes.json: _dendro directory does not exist in current working directory: {os.getcwd()}')
 
     # Print a message indicating that the job is complete
     print(f'[dendro] Job complete: {job_id}')

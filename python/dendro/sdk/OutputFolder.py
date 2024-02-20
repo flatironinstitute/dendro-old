@@ -13,10 +13,14 @@ class OutputFolder(BaseModel):
     name: Union[str, None] = None # the name of the output within the context of the processor (not needed when output_folder_name is specified for local testing)
     job_id: Union[str, None] = None
     job_private_key: Union[str, None] = None
+    skip_cloud_upload: Union[bool, None] = None
     was_uploaded: bool = False
     output_folder_name: Union[str, None] = None # for local testing
+    size: Union[int, None] = None
     def upload(self, local_folder_name: str):
         from .Job import _get_upload_url_for_output_folder_file # avoid circular import
+
+        self.size = _recursive_compute_size_of_folder(local_folder_name)
 
         if self.output_folder_name is not None:
             if self.job_id is not None:
@@ -50,19 +54,22 @@ class OutputFolder(BaseModel):
                 import json
                 json.dump(file_manifest, f)
             all_relative_file_names.append('file_manifest.json')
-            for relative_file_name in all_relative_file_names:
-                local_file_name = local_folder_name + '/' + relative_file_name
-                upload_url = _get_upload_url_for_output_folder_file(name=self.name, relative_file_name=relative_file_name, job_id=self.job_id, job_private_key=self.job_private_key)
+            if not self.skip_cloud_upload:
+                for relative_file_name in all_relative_file_names:
+                    local_file_name = local_folder_name + '/' + relative_file_name
+                    upload_url = _get_upload_url_for_output_folder_file(name=self.name, relative_file_name=relative_file_name, job_id=self.job_id, job_private_key=self.job_private_key)
 
-                # Upload the file to the URL
-                print(f'Uploading output file {self.name} {relative_file_name}')
+                    # Upload the file to the URL
+                    print(f'Uploading output file {self.name} {relative_file_name}')
 
-                with open(local_file_name, 'rb') as f:
-                    if not using_mock():
-                        resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
-                        if resp_upload.status_code != 200:
-                            print(upload_url)
-                            raise SetOutputFolderException(f'Error uploading folder file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
+                    with open(local_file_name, 'rb') as f:
+                        if not using_mock():
+                            resp_upload = requests.put(upload_url, data=f, timeout=60 * 60 * 24 * 7)
+                            if resp_upload.status_code != 200:
+                                print(upload_url)
+                                raise SetOutputFolderException(f'Error uploading folder file to bucket ({resp_upload.status_code}) {resp_upload.reason}: {resp_upload.text}')
+            else:
+                print(f'Skipping cloud upload for output folder {self.name}')
 
         self.was_uploaded = True
 
@@ -86,3 +93,12 @@ def _get_all_relative_file_names(local_folder_name: str):
             relative_file_name = os.path.relpath(os.path.join(root, file), local_folder_name)
             ret.append(relative_file_name)
     return ret
+
+def _recursive_compute_size_of_folder(local_folder_name: str):
+    import os
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(local_folder_name):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size

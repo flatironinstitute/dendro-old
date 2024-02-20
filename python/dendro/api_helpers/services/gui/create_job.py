@@ -73,7 +73,8 @@ async def create_job(*,
             DendroJobOutputFile(
                 name=output_file.name,
                 fileName=filter_output_file_name(output_file.fileName),
-                isFolder=output_file.isFolder
+                isFolder=output_file.isFolder,
+                skipCloudUpload=output_file.skipCloudUpload
             )
         )
 

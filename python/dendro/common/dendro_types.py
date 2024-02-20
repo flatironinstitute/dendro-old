@@ -35,6 +35,7 @@ class DendroJobOutputFile(BaseModel):
     fileName: str
     fileId: Union[str, None] = None
     isFolder: Union[bool, None] = None
+    skipCloudUpload: Union[bool, None] = None
 
 class ComputeResourceSpecProcessorParameter(BaseModel):
     name: str
@@ -207,9 +208,11 @@ class ProcessorGetJobResponseInputFolder(BaseModel):
 
 class ProcessorGetJobResponseOutput(BaseModel):
     name: str
+    skipCloudUpload: Union[bool, None] = None
 
 class ProcessorGetJobResponseOutputFolder(BaseModel):
     name: str
+    skipCloudUpload: Union[bool, None] = None
 
 class ProcessorGetJobResponseParameter(BaseModel):
     name: str
@@ -261,6 +264,7 @@ class CreateJobRequestOutputFile(BaseModel):
     name: str
     fileName: str
     isFolder: Union[bool, None] = None
+    skipCloudUpload: Union[bool, None] = None
 
 class CreateJobRequestInputParameter(BaseModel):
     name: str

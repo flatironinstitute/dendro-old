@@ -8,6 +8,7 @@ export type RunScriptAddJobOutputFile = {
     name: string
     fileName: string
     isFolder?: boolean
+    skipCloudUpload?: boolean
 }
 
 export type RunScriptAddJobParameter = {

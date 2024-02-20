@@ -66,11 +66,14 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
         const ret: DendroProcessingJobDefinition = {
             inputFiles: job.inputFiles.map(f => ({
                 name: f.name,
-                fileName: f.fileName
+                fileName: f.fileName,
+                isFolder: f.isFolder
             })),
             outputFiles: job.outputFiles.map(f => ({
                 name: f.name,
-                fileName: f.fileName
+                fileName: f.fileName,
+                isFolder: f.isFolder,
+                skipCloudUpload: f.skipCloudUpload
             })),
             inputParameters: job.inputParameters.map(p => ({
                 name: p.name,

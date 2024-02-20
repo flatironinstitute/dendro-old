@@ -31,8 +31,8 @@ class Job:
         # important to set these only once here because these objects will be passed into the processor function
         self._inputs = [InputFile(name=i.name, job_id=self._job_id, job_private_key=self._job_private_key) for i in resp.inputs]
         self._input_folders = [InputFolder(name=i.name, job_id=self._job_id, job_private_key=self._job_private_key) for i in resp.inputFolders] if resp.inputFolders else None
-        self._outputs = [OutputFile(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key) for o in resp.outputs]
-        self._output_folders = [OutputFolder(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key) for o in resp.outputFolders] if resp.outputFolders else None
+        self._outputs = [OutputFile(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key, skip_cloud_upload=o.skipCloudUpload) for o in resp.outputs]
+        self._output_folders = [OutputFolder(name=o.name, job_id=self._job_id, job_private_key=self._job_private_key, skip_cloud_upload=o.skipCloudUpload) for o in resp.outputFolders] if resp.outputFolders else None
         self._parameters = [JobParameter(name=p.name, value=p.value) for p in resp.parameters]
         self._processor_name = resp.processorName
 

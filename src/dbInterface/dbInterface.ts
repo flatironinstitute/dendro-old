@@ -312,6 +312,7 @@ export type DendroProcessingJobDefinition = {
         name: string
         fileName: string
         isFolder?: boolean
+        skipCloudUpload?: boolean
     }[]
 }
 
@@ -335,6 +336,7 @@ export type DendroProcessingJobDefinitionAction = {
     name: string
     fileName: string
     isFolder?: boolean
+    skipCloudUpload?: boolean
 } | {
     type: 'setProcessorName'
     processorName: string
@@ -399,7 +401,7 @@ export const dendroJobDefinitionReducer = (state: DendroProcessingJobDefinition,
             }
             return {
                 ...state,
-                outputFiles: state.outputFiles.map(f => f.name === action.name ? {...f, fileName: action.fileName, isFolder: action.isFolder} : f)
+                outputFiles: state.outputFiles.map(f => f.name === action.name ? {...f, fileName: action.fileName, isFolder: action.isFolder, skipCloudUpload: action.skipCloudUpload} : f)
             }
         case 'setProcessorName':
             // check if no change
