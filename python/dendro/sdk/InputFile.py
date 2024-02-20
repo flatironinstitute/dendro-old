@@ -18,7 +18,7 @@ class InputFile(BaseModel):
     project_file_name: str = ''
     job_id: Union[str, None] = None
     job_private_key: Union[str, None] = None
-    _not_found_in_file_cache: Union[bool, None] = None
+    not_found_in_file_cache: Union[bool, None] = None
 
     def get_url(self) -> str:
         if self.url is not None:
@@ -149,7 +149,7 @@ class InputFile(BaseModel):
     def _check_file_cache(self):
         if self.local_file_name is not None:
             return
-        if self._not_found_in_file_cache:
+        if self.not_found_in_file_cache:
             return
 
         file_id = self._get_project_file_id()
@@ -164,7 +164,7 @@ class InputFile(BaseModel):
                 self.local_file_name = cached_file_path
 
         if self.local_file_name is None:
-            self._not_found_in_file_cache = True
+            self.not_found_in_file_cache = True
 
     # validator is needed to be an allowed pydantic type
     @classmethod
