@@ -18,6 +18,7 @@ class InputFile(BaseModel):
     project_file_name: str = ''
     job_id: Union[str, None] = None
     job_private_key: Union[str, None] = None
+    _not_found_in_file_cache: Union[bool, None] = None
 
     def get_url(self) -> str:
         if self.url is not None:
@@ -122,14 +123,14 @@ class InputFile(BaseModel):
 
     def get_file(self, *, download: bool = False):
         self._check_file_cache()
+        if download:
+            self.download()
+
         if self.local_file_name is not None:
             # In the case of a local file, we just return a file object
             f = open(self.local_file_name, 'rb')
             # An issue here is that this file is never closed. Not sure how to fix that.
             return f
-
-        if download:
-            self.download()
 
         # self has a get_url() method
         # It's important to do it this way so that the url can renew as needed
@@ -148,18 +149,22 @@ class InputFile(BaseModel):
     def _check_file_cache(self):
         if self.local_file_name is not None:
             return
+        if self._not_found_in_file_cache:
+            return
+
         file_id = self._get_project_file_id()
         if not file_id:
             return
-        if cache_checker.is_cache_checked(file_id):
-            return
+
         FILE_CACHE_DIR = os.getenv('DENDRO_FILE_CACHE_DIR', None)
         if file_id and FILE_CACHE_DIR:
             cached_file_path = os.path.join(FILE_CACHE_DIR, file_id)
             if os.path.exists(cached_file_path):
                 print(f'Using input file {self.name if self.name is not None else self.project_file_uri} from cache: {cached_file_path}')
                 self.local_file_name = cached_file_path
-        cache_checker.set_cache_checked(file_id)
+
+        if self.local_file_name is None:
+            self._not_found_in_file_cache = True
 
     # validator is needed to be an allowed pydantic type
     @classmethod
@@ -172,18 +177,6 @@ class InputFile(BaseModel):
             return value
         else:
             raise ValueError(f'Unexpected type for InputFile: {type(value)}')
-
-class CacheChecker:
-    def __init__(self):
-        self.cache_checked = {}
-
-    def set_cache_checked(self, file_id: str):
-        self.cache_checked[file_id] = True
-
-    def is_cache_checked(self, file_id: str):
-        return self.cache_checked.get(file_id, False)
-
-cache_checker = CacheChecker()
 
 def _download_file(url: str, dest_file_path: str):
     # stream the download
