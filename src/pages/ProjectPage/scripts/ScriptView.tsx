@@ -1,9 +1,9 @@
-import { FunctionComponent, useEffect, useMemo, useState } from "react"
-import CodeEditor from "./CodeEditor"
-import { Splitter } from "@fi-sci/splitter"
-import { DendroScript } from "../../../types/dendro-types"
 import { SmallIconButton } from "@fi-sci/misc"
+import { Splitter } from "@fi-sci/splitter"
 import { Save } from "@mui/icons-material"
+import { FunctionComponent, useEffect, useMemo, useState } from "react"
+import { DendroScript } from "../../../types/dendro-types"
+import CodeEditor from "./CodeEditor"
 import RunScriptWindow from "./RunScript/RunScriptWindow"
 
 type ScriptViewProps = {
@@ -25,21 +25,25 @@ const ScriptView: FunctionComponent<ScriptViewProps> = ({ width, height, script,
         return internalContent !== script.content
     }, [script, internalContent])
 
-    const topBarHeight = 35
+    const topBarHeight = 25
     if (!script) return <span />
     if (internalContent === undefined) return <span />
     return (
         <div style={{position: 'absolute', width, height}}>
             <div style={{position: 'absolute', width, height: topBarHeight, display: 'flex'}}>
-                <div style={{fontSize: 14, fontWeight: 'bold'}}>{script.scriptName}{modified ? ' *' : ''}</div>
-                <div>
-                    {modified && <SmallIconButton
+                <div style={{fontSize: 14, fontWeight: 'bold'}}>
+                    {script.scriptName}
+                </div>
+                <div style={{visibility: modified ? undefined : 'hidden'}}>
+                    *&nbsp;&nbsp;&nbsp;
+                    <SmallIconButton
                         icon={<Save />}
                         title='Save this script'
                         onClick={() => {
                             onSetContent && onSetContent(internalContent)
                         }}
-                    />}
+                        disabled={!modified}
+                    />
                 </div>
             </div>
             <div style={{position: 'absolute', width, height: height - topBarHeight, top: topBarHeight, overflow: 'hidden'}}>
