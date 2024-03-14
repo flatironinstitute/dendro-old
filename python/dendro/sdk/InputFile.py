@@ -141,6 +141,11 @@ class InputFile(BaseModel):
         return h5py.File(remf, 'r')
 
     def _get_project_file_id(self) -> Union[str, None]:
+        if self.job_id is None:
+            # This can happen when using test-app-processor. In this case, there
+            # is no project file id and so we return None. Otherwise,
+            # self.get_project_file_uri() would raise an exception.
+            return None
         uri = self.get_project_file_uri()
         from .Job import _parse_dendro_uri # avoid circular import
         file_id, is_folder, label = _parse_dendro_uri(uri)
