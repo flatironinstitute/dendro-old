@@ -9,7 +9,7 @@ class DendroProjectUser(BaseModel):
 class DendroProject(BaseModel):
     projectId: str
     name: str
-    description: str
+    description: Union[str, None] = None
     ownerId: str
     users: List[DendroProjectUser]
     publiclyReadable: bool
@@ -39,7 +39,7 @@ class DendroJobOutputFile(BaseModel):
 
 class ComputeResourceSpecProcessorParameter(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     type: str
     default: Union[Any, None] = None
     options: Union[List[str], List[int], None] = None
@@ -47,21 +47,21 @@ class ComputeResourceSpecProcessorParameter(BaseModel):
 
 class ComputeResourceSpecProcessorInput(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     list: bool = False
 
 class ComputeResourceSpecProcessorInputFolder(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     list: bool = False
 
 class ComputeResourceSpecProcessorOutput(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
 
 class ComputeResourceSpecProcessorOutputFolder(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
 
 class ComputeResourceSpecProcessorAttribute(BaseModel):
     name: str
@@ -72,7 +72,7 @@ class ComputeResourceSpecProcessorTag(BaseModel):
 
 class ComputeResourceSpecProcessor(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     inputs: List[ComputeResourceSpecProcessorInput]
     inputFolders: Union[List[ComputeResourceSpecProcessorInputFolder], None] = None
     outputs: List[ComputeResourceSpecProcessorOutput]
@@ -170,7 +170,7 @@ class DendroComputeResourceApp(BaseModel):
 
 class ComputeResourceSpecApp(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     processors: List[ComputeResourceSpecProcessor]
     appImage: Union[str, None] = None
     appExecutable: Union[str, None] = None
