@@ -7,6 +7,7 @@ def _load_spec_from_uri(uri: str) -> dict:
     # Convert github blob URL to raw URL
     if (uri.startswith('https://github.com/')) and ('/blob/' in uri):
         raw_url = uri.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/') + f'?cachebust={os.urandom(16).hex()}'
+        print(f'URL: {raw_url}')
     else:
         raw_url = uri
 

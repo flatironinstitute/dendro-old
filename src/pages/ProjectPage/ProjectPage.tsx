@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "re
 import { useModalWindow } from "@fi-sci/modal-window"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 import ModalWindow from "@fi-sci/modal-window";
-import { setUrlFile } from "../../dbInterface/dbInterface";
+import { setProjectTags, setUrlFile } from "../../dbInterface/dbInterface";
 import useRoute from "../../useRoute";
 // import ManualNwbSelector from "./ManualNwbSelector/ManualNwbSelector";
 import { PluginAction } from "../../plugins/DendroFrontendPlugin";
@@ -20,10 +20,12 @@ import ProjectJobs from "./ProjectJobs";
 import { SetupProjectPage, useProject } from "./ProjectPageContext";
 import RunBatchSpikeSortingWindow from "./RunBatchSpikeSortingWindow/RunBatchSpikeSortingWindow";
 import UploadSmallFileWindow from "./UploadSmalFileWindow/UploadSmallFileWindow";
-import { HBoxLayout } from "@fi-sci/misc";
+import { HBoxLayout, Hyperlink } from "@fi-sci/misc";
 import openFilesInNeurosift from "./openFilesInNeurosift";
 import ProjectAnalysis from "./ProjectAnalysis/ProjectAnalysis";
 import { DendroProject } from "../../types/dendro-types";
+import RunFileActionWindow from "./RunFileActionWindow/RunFileActionWindow";
+import ProjectScripts from "./ProjectScripts";
 
 type Props = {
     width: number
@@ -48,7 +50,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height, onCurrentProjectC
     )
 }
 
-export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-linked-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
+export type ProjectPageViewType = 'project-home' | 'project-files' | 'project-jobs' | 'project-scripts' | 'project-linked-analysis' | 'dandi-import' /*| 'manual-import'*/ | 'processors'
 
 type ProjectPageView = {
     type: ProjectPageViewType
@@ -67,6 +69,10 @@ const projectPageViews: ProjectPageView[] = [
     {
         type: 'project-jobs',
         label: 'Jobs'
+    },
+    {
+        type: 'project-scripts',
+        label: 'Scripts'
     },
     {
         type: 'project-linked-analysis',
@@ -88,12 +94,13 @@ const projectPageViews: ProjectPageView[] = [
 
 const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({width, height}) => {
     const leftMenuPanelWidth = 150
+    const statusBarHeight = 16
     return (
         <SetupComputeResources>
-            <div style={{position: 'absolute', width, height, overflow: 'hidden'}}>
+            <div style={{position: 'absolute', width, height: height - statusBarHeight, overflow: 'hidden'}}>
                 <HBoxLayout
                     widths={[leftMenuPanelWidth, width - leftMenuPanelWidth]}
-                    height={height}
+                    height={height - statusBarHeight}
                 >
                     <LeftMenuPanel
                         width={0}
@@ -104,6 +111,9 @@ const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({w
                         height={0}
                     />
                 </HBoxLayout>
+            </div>
+            <div style={{position: 'absolute', width, height: statusBarHeight, bottom: 0, background: '#ddd', borderTop: 'solid 1px #aaa', fontSize: 12, paddingRight: 10, textAlign: 'right'}}>
+                <StatusBar />
             </div>
         </SetupComputeResources>
     )
@@ -142,7 +152,7 @@ type MainPanelProps = {
 }
 
 const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
-    const {project, projectId, refreshFiles, files} = useProject()
+    const {project, projectId, refreshFiles, files, refreshProject} = useProject()
     const auth = useGithubAuth()
     const {route, staging} = useRoute()
     if (route.page !== 'project') throw Error(`Unexpected route ${JSON.stringify(route)}`)
@@ -202,6 +212,15 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         openRunSpikeSortingWindow()
     }, [openRunSpikeSortingWindow])
 
+    const {visible: runFileActionWindowVisible, handleOpen: openRunFileActionWindow, handleClose: closeRunFileActionWindow} = useModalWindow()
+    const [runActionFilePaths, setRunActionFilePaths] = useState<string[]>([])
+    const [runActionActionName, setRunActionActionName] = useState<string>('')
+    const handleRunFileAction = useCallback((actionName: string, filePaths: string[]) => {
+        setRunActionActionName(actionName)
+        setRunActionFilePaths(filePaths)
+        openRunFileActionWindow()
+    }, [openRunFileActionWindow])
+
     const handleOpenInNeurosift = useCallback((filePaths: string[]) => {
         if (!files) {
             console.warn('No files')
@@ -237,24 +256,6 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
     const handleUploadSmallFile = useCallback(() => {
         openUploadSmallFileWindow()
     }, [openUploadSmallFileWindow])
-
-    const dandisetId = useMemo(() => {
-        if (!project) return undefined
-        if (project.tags.length === 0) return undefined
-        const t = project.tags[0]
-        if (!staging) {
-            if (t.startsWith('dandiset.')) {
-                return t.slice('dandiset.'.length)
-            }
-        }
-        else {
-            if (t.startsWith('dandiset-staging.')) {
-                return t.slice('dandiset-staging.'.length)
-            }
-        }
-        return undefined
-
-    }, [project, staging])
 
     const stagingStr = staging ? '-staging' : ''
     const handleImportItems = useCallback(async (items: {dandisetId: string, dandisetVersion: string, assetItem: AssetsResponseItem}[]) => {
@@ -297,6 +298,32 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         }
     }, [currentView, viewsThatHaveBeenVisible])
 
+    const taggedDandisetIds = useMemo(() => {
+        if (!project) return []
+        if (!staging) {
+            return project.tags.filter(tag => tag.startsWith('dandiset.')).map(tag => tag.slice('dandiset.'.length))
+        }
+        else {
+            return project.tags.filter(tag => tag.startsWith('dandiset-staging.')).map(tag => tag.slice('dandiset-staging.'.length))
+        }
+    }, [project, staging])
+
+    const handleAddDandisetId = useCallback((dandisetId: string) => {
+        if (!auth) return
+        const newTag = staging ? `dandiset-staging.${dandisetId}` : `dandiset.${dandisetId}`
+        if (!project) return
+        setProjectTags(project.projectId, [...project.tags, newTag], auth).then(() => {
+            refreshProject()
+        })
+    }, [project, staging, auth, refreshProject])
+
+    const [selectedDandisetId, setSelectedDandisetId] = useState<string>('')
+    useEffect(() => {
+        if (selectedDandisetId) return
+        if (taggedDandisetIds.length === 0) return
+        setSelectedDandisetId(taggedDandisetIds[0])
+    }, [selectedDandisetId, taggedDandisetIds])
+
     return (
         <div style={{position: 'absolute', width, height, overflow: 'hidden', background: 'white'}}>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-home' ? undefined : 'hidden'}}>
@@ -315,6 +342,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                         <ProjectFiles
                             width={width}
                             height={height}
+                            onRunFileAction={handleRunFileAction}
                             onRunBatchSpikeSorting={handleRunSpikeSorting}
                             onOpenInNeurosift={handleOpenInNeurosift}
                             onDandiUpload={handleDandiUpload}
@@ -334,6 +362,16 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     )
                 }
             </div>
+            <div style={{position: 'absolute', width, height, visibility: currentView === 'project-scripts' ? undefined : 'hidden'}}>
+                {
+                    viewsThatHaveBeenVisible.includes('project-scripts') && (
+                        <ProjectScripts
+                            width={width}
+                            height={height}
+                        />
+                    )
+                }
+            </div>
             <div style={{position: 'absolute', width, height, visibility: currentView === 'project-linked-analysis' ? undefined : 'hidden'}}>
                 {
                     viewsThatHaveBeenVisible.includes('project-linked-analysis') && (
@@ -344,21 +382,26 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     )
                 }
             </div>
-            {dandisetId && (
-                <div style={{position: 'absolute', width, height, visibility: currentView === 'dandi-import' ? undefined : 'hidden'}}>
-                    {
-                        viewsThatHaveBeenVisible.includes('dandi-import') && (
-                            <DandisetView
-                                width={width}
-                                height={height}
-                                useStaging={staging}
-                                dandisetId={dandisetId}
-                                onImportItems={handleImportItems}
-                            />
-                        )
-                    }
-                </div>
-            )}
+            <div style={{position: 'absolute', width, height, visibility: currentView === 'dandi-import' ? undefined : 'hidden'}}>
+                {
+                    viewsThatHaveBeenVisible.includes('dandi-import') && (
+                        <div>
+                            <div style={{position: 'absolute', width, height: 40, overflowY: 'auto'}}>
+                                <DandisetIdSelector dandisetId={selectedDandisetId} setDandisetId={setSelectedDandisetId} taggedDandisetIds={taggedDandisetIds} onAddDandisetId={handleAddDandisetId} />
+                            </div>
+                            <div style={{position: 'absolute', width, top: 40, height: height - 40, overflow: 'hidden'}}>
+                                {selectedDandisetId && <DandisetView
+                                    width={width}
+                                    height={height - 60}
+                                    useStaging={staging}
+                                    onImportItems={handleImportItems}
+                                    dandisetId={selectedDandisetId}
+                                />}
+                            </div>
+                        </div>
+                    )
+                }
+            </div>
             {/* <div style={{position: 'absolute', width, height, visibility: currentView === 'manual-import' ? undefined : 'hidden'}}>
                 <ManualNwbSelector
                     width={width}
@@ -384,6 +427,17 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     height={0}
                     filePaths={spikeSortingFilePaths}
                     onClose={closeRunSpikeSortingWindow}
+                />
+            </ModalWindow>
+            <ModalWindow
+                visible={runFileActionWindowVisible}
+            >
+                <RunFileActionWindow
+                    width={0}
+                    height={0}
+                    actionName={runActionActionName}
+                    filePaths={runActionFilePaths}
+                    onClose={closeRunFileActionWindow}
                 />
             </ModalWindow>
             <ModalWindow
@@ -418,6 +472,48 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                 />
             </ModalWindow>
         </div>
+    )
+}
+
+type DandisetIdSelectorProps = {
+    dandisetId: string
+    setDandisetId: (dandisetId: string) => void
+    taggedDandisetIds: string[]
+    onAddDandisetId: (dandisetId: string) => void
+}
+
+const DandisetIdSelector: FunctionComponent<DandisetIdSelectorProps> = ({dandisetId, setDandisetId, taggedDandisetIds, onAddDandisetId}) => {
+    const handleAdd = useCallback(() => {
+        const newDandisetId = prompt('Enter dandiset ID')
+        if (!newDandisetId) return
+        onAddDandisetId(newDandisetId)
+    }, [onAddDandisetId])
+    // radio buttons
+    return (
+        <div>
+            <span style={{fontWeight: 'bold'}}>Select a dandiset: </span>
+            {
+                taggedDandisetIds.map(taggedDandsetId => (
+                    <span key={taggedDandsetId}>
+                        <input type="radio" id={taggedDandsetId} name="dandiset" value={taggedDandsetId} checked={dandisetId === taggedDandsetId} onChange={() => setDandisetId(taggedDandsetId)} />
+                        <label htmlFor={taggedDandsetId}>{taggedDandsetId}</label>
+                        &nbsp;&nbsp;
+                    </span>
+                ))
+            }
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <Hyperlink onClick={handleAdd}>Add new dandiset to project</Hyperlink>
+        </div>
+    )
+}
+
+const StatusBar: FunctionComponent = () => {
+    const {statusStrings} = useProject()
+    const statusStringsSorted = useMemo(() => (statusStrings || []).sort((a, b) => a.localeCompare(b)), [statusStrings])
+    return (
+        <span>
+            {statusStringsSorted.join(' ')}
+        </span>
     )
 }
 

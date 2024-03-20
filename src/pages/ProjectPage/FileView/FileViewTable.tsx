@@ -1,7 +1,8 @@
-import { Hyperlink } from "@fi-sci/misc";
-import { FunctionComponent, useEffect, useMemo, useState } from "react";
+import { Hyperlink, SmallIconButton } from "@fi-sci/misc";
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react";
 import { useProject } from "../ProjectPageContext";
 import { DendroJob } from "../../../types/dendro-types";
+import { Download } from "@mui/icons-material";
 
 
 type FileViewTableProps = {
@@ -40,7 +41,16 @@ const FileViewTable: FunctionComponent<FileViewTableProps> = ({fileName, additio
                 </tr>
                 <tr>
                     <td>URL:</td>
-                    <td>{theUrl}</td>
+                    <td>
+                        {theUrl}
+                        {theFile && theFile.size && theFile.size < 50e6 && (
+                            <>&nbsp;&nbsp;<DownloadLink url={theUrl} baseFileName={getBaseFileName(theFile.fileName)} /></>
+                        )}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Size:</td>
+                    <td>{theFile?.size || ''}</td>
                 </tr>
                 {
                     jobProducingThisFile && (
@@ -111,6 +121,48 @@ export const ElapsedTimeComponent: FunctionComponent<ElapsedTimeComponentProps> 
     else {
         return <span></span>
     }
+}
+
+const DownloadLink: FunctionComponent<{url: string, baseFileName: string}> = ({url, baseFileName}) => {
+    const [status, setStatus] = useState<'idle' | 'downloading' | 'downloaded'>('idle')
+    const handleDownload = useCallback(() => {
+        if (status === 'downloading') return
+        setStatus('downloading')
+        ;(async () => {
+            const binaryBuf = await fetchBinaryData(url)
+            setStatus('downloaded')
+            triggerDownload(binaryBuf, baseFileName)
+        })()
+    }, [url, baseFileName, status])
+    if (status === 'downloading') {
+        return (
+            <span>Downloading...</span>
+        )
+    }
+    return (
+        <SmallIconButton icon={<Download />} onClick={handleDownload} />
+    )
+}
+
+const getBaseFileName = (path: string) => {
+    const parts = path.split('/')
+    return parts[parts.length - 1]
+}
+
+const fetchBinaryData = async (url: string) => {
+    const response = await fetch(url)
+    const buf = await response.arrayBuffer()
+    return new Uint8Array(buf)
+}
+
+const triggerDownload = (binaryBuf: Uint8Array, baseFileName: string) => {
+    const blob = new Blob([binaryBuf], {type: 'application/octet-stream'})
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = baseFileName
+    a.click()
+    URL.revokeObjectURL(url)
 }
 
 export default FileViewTable

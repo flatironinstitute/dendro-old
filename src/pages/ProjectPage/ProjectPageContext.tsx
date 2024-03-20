@@ -1,8 +1,8 @@
 import React, { FunctionComponent, PropsWithChildren, useCallback, useEffect, useMemo } from 'react';
-import { deleteFile, deleteJob, deleteProject, fetchFiles, fetchJobsForProject, fetchProject, setProjectName, setProjectDescription, getComputeResource, setProjectComputeResourceId } from '../../dbInterface/dbInterface';
+import { deleteFile, deleteJob, deleteProject, deleteScript, fetchFiles, fetchJobsForProject, fetchProject, setProjectName, setProjectDescription, getComputeResource, setProjectComputeResourceId, fetchScriptsForProject, setScriptContent, renameScript, addScript } from '../../dbInterface/dbInterface';
 import { useGithubAuth } from '../../GithubAuth/useGithubAuth';
 import { onPubsubMessage, setPubNubListenChannel } from '../../pubnub/pubnub';
-import { DendroComputeResource, DendroFile, DendroJob, DendroProject } from '../../types/dendro-types';
+import { DendroComputeResource, DendroFile, DendroJob, DendroProject, DendroScript } from '../../types/dendro-types';
 import { useDendro } from '../../DendroContext/DendroContext';
 
 const queryParameters = new URLSearchParams(window.location.search)
@@ -139,7 +139,14 @@ type ProjectPageContextType = {
     refreshJobs: () => void
     deleteFile: (fileName: string) => Promise<void>
     fileHasBeenEdited: (fileName: string) => boolean
-    refreshProject: () => void
+    refreshProject: () => void,
+    scripts?: DendroScript[]
+    deleteScript: (scriptId: string) => Promise<void>
+    refreshScripts: () => void
+    setScriptContent: (scriptId: string, content: string) => Promise<void>
+    renameScript: (scriptId: string, name: string) => Promise<void>
+    addScript: (name: string) => Promise<void>
+    statusStrings: string[]
 }
 
 const ProjectPageContext = React.createContext<ProjectPageContextType>({
@@ -161,10 +168,17 @@ const ProjectPageContext = React.createContext<ProjectPageContextType>({
     refreshJobs: () => {},
     deleteFile: async () => {},
     fileHasBeenEdited: () => false,
-    refreshProject: () => {}
+    refreshProject: () => {},
+    deleteScript: async () => {},
+    refreshScripts: () => {},
+    setScriptContent: async () => {},
+    renameScript: async () => {},
+    addScript: async () => {},
+    statusStrings: []
 })
 
 export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({children, projectId, onCurrentProjectChanged}) => {
+    const {statusStrings, addStatusString, removeStatusString} = useStatusStrings()
     const [project, setProject] = React.useState<DendroProject | undefined>()
     const [files, setFiles] = React.useState<DendroFile[] | undefined>()
     const [refreshFilesCode, setRefreshFilesCode] = React.useState(0)
@@ -173,6 +187,10 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
     const [jobs, setJobs] = React.useState<DendroJob[] | undefined>(undefined)
     const [refreshJobsCode, setRefreshJobsCode] = React.useState(0)
     const refreshJobs = useCallback(() => setRefreshJobsCode(c => c + 1), [])
+
+    const [scripts, setScripts] = React.useState<DendroScript[] | undefined>(undefined)
+    const [refreshScriptsCode, setRefreshScriptsCode] = React.useState(0)
+    const refreshScripts = useCallback(() => setRefreshScriptsCode(c => c + 1), [])
 
     const [refreshProjectCode, setRefreshProjectCode] = React.useState(0)
     const refreshProject = useCallback(() => setRefreshProjectCode(rac => rac + 1), [])
@@ -193,34 +211,63 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
     }, [project?.computeResourceId])
 
     useEffect(() => {
-        (async () => {
-            setProject(undefined)
+        let canceled = false
+        ;(async () => {
+            // important not to set it to undefined
+            // setProject(undefined)
             if (!projectId) return
+            addStatusString('Loading project...')
             const project = await fetchProject(projectId, auth)
+            if (canceled) return
+            removeStatusString('Loading project...')
             setProject(project)
         })()
-    }, [projectId, auth, refreshProjectCode])
-
-    useEffect(() => {
-        (async () => {
-            setFiles(undefined)
-            if (!projectId) return
-            const af = await fetchFiles(projectId, auth)
-            setFiles(af)
-        })()
-    }, [refreshFilesCode, projectId, auth])
+        return () => {canceled = true}
+    }, [projectId, auth, refreshProjectCode, addStatusString, removeStatusString])
 
     useEffect(() => {
         let canceled = false
         ;(async () => {
-            setJobs(undefined)
+            // setFiles(undefined)
             if (!projectId) return
+            addStatusString('Loading files...')
+            const af = await fetchFiles(projectId, auth)
+            if (canceled) return
+            removeStatusString('Loading files...')
+            setFiles(af)
+        })()
+        return () => {canceled = true}
+    }, [refreshFilesCode, projectId, auth, addStatusString, removeStatusString])
+
+    useEffect(() => {
+        let canceled = false
+        ;(async () => {
+            // setJobs(undefined)
+            if (!projectId) return
+            addStatusString('Loading jobs...')
             const x = await fetchJobsForProject(projectId, auth)
             if (canceled) return
+            removeStatusString('Loading jobs...')
             setJobs(x)
         })()
         return () => {canceled = true}
-    }, [refreshJobsCode, projectId, auth])
+    }, [refreshJobsCode, projectId, auth, addStatusString, removeStatusString])
+
+    useEffect(() => {
+        let canceled = false
+        ;(async () => {
+            // important not to set it to undefined
+            // because if we do, then we get an unmounting and remounting of the component
+            // setScripts(undefined)
+            if (!projectId) return
+            addStatusString('Loading scripts...')
+            const x = await fetchScriptsForProject(projectId, auth)
+            if (canceled) return
+            removeStatusString('Loading scripts...')
+            setScripts(x)
+        })()
+        return () => {canceled = true}
+    }, [refreshScriptsCode, projectId, auth, addStatusString, removeStatusString])
 
     // if any jobs are newly completed, refresh the files
     const [previousJobs, setPreviousJobs] = React.useState<DendroJob[] | undefined>(undefined)
@@ -258,6 +305,22 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
     const deleteProjectHandler = useMemo(() => (async () => {
         await deleteProject(projectId, auth)
     }), [projectId, auth])
+
+    const deleteScriptHandler = useCallback(async (scriptId: string) => {
+        await deleteScript(scriptId, auth)
+    }, [auth])
+
+    const setScriptContentHandler = useCallback(async (scriptId: string, content: string) => {
+        await setScriptContent(scriptId, content, auth)
+    }, [auth])
+
+    const renameScriptHandler = useCallback(async (scriptId: string, name: string) => {
+        await renameScript(scriptId, name, auth)
+    }, [auth])
+
+    const addScriptHandler = useCallback(async (name: string) => {
+        await addScript(projectId, name, auth)
+    }, [projectId, auth])
 
     const setProjectNameHandler = useCallback(async (name: any) => {
         await setProjectName(projectId, name, auth)
@@ -353,7 +416,7 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         reportLoadedProject(project)
     }, [project, reportLoadedProject])
 
-    const value: ProjectPageContextType = React.useMemo(() => ({
+    const value: ProjectPageContextType = {
         projectId,
         project,
         files,
@@ -379,14 +442,49 @@ export const SetupProjectPage: FunctionComponent<PropsWithChildren<Props>> = ({c
         deleteJob: deleteJobHandler,
         deleteFile: deleteFileHandler,
         fileHasBeenEdited,
-        refreshProject
-    }), [projectId, project, files, openTabs, jobs, computeResource, projectRole, openTabsDispatch, refreshFiles, deleteProjectHandler, setProjectNameHandler, setProjectDescriptionHandler, setProjectComputeResourceIdHandler, refreshJobs, deleteJobHandler, deleteFileHandler, fileHasBeenEdited, refreshProject])
+        refreshProject,
+        scripts,
+        deleteScript: deleteScriptHandler,
+        refreshScripts,
+        setScriptContent: setScriptContentHandler,
+        renameScript: renameScriptHandler,
+        addScript: addScriptHandler,
+        statusStrings
+    }
 
     return (
         <ProjectPageContext.Provider value={value}>
             {children}
         </ProjectPageContext.Provider>
     )
+}
+
+type StatusStringsAction = {
+    type: 'add'
+    statusString: string
+} | {
+    type: 'remove'
+    statusString: string
+}
+
+const statusStringsReducer = (state: string[], action: StatusStringsAction) => {
+    switch (action.type) {
+        case 'add':
+            return [...state, action.statusString]
+        case 'remove':
+            return state.filter(s => s !== action.statusString)
+    }
+}
+
+const useStatusStrings = () => {
+    const [statusStrings, dispatch] = React.useReducer(statusStringsReducer, [])
+    const addStatusString = useCallback((statusString: string) => {
+        dispatch({type: 'add', statusString})
+    }, [])
+    const removeStatusString = useCallback((statusString: string) => {
+        dispatch({type: 'remove', statusString})
+    }, [])
+    return {statusStrings, addStatusString, removeStatusString}
 }
 
 export const useProject = () => {

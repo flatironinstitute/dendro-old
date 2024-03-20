@@ -10,7 +10,13 @@ from ...clients.db import update_job
 from ...clients.pubsub import publish_pubsub_message
 
 
-async def update_job_status(job: DendroJob, status: str, error: Union[str, None], force_update: Union[bool, None] = None):
+async def update_job_status(
+    job: DendroJob,
+    status: str,
+    error: Union[str, None],
+    force_update: Union[bool, None] = None,
+    output_file_sizes: Union[dict, None] = None
+):
     old_status = job.status
 
     new_status = status
@@ -43,7 +49,16 @@ async def update_job_status(job: DendroJob, status: str, error: Union[str, None]
             raise Exception('Environment variable not set: OUTPUT_BUCKET_BASE_URL')
         output_file_ids = []
         for output_file in job.outputFiles:
-            output_file_url = f"{output_bucket_base_url}/dendro-outputs/{job.jobId}/{output_file.name}"
+            if not output_file.skipCloudUpload:
+                output_file_url = f"{output_bucket_base_url}/dendro-outputs/{job.jobId}/{output_file.name}"
+            else:
+                # file_id will be filled in
+                output_file_url = f'dendro:?project={job.projectId}&file_id=$file_id$&label={output_file.fileName}&compute_resource={job.computeResourceId}'
+                if output_file_sizes is not None:
+                    if output_file.name in output_file_sizes:
+                        output_file_url += f'&size={output_file_sizes[output_file.name]}'
+                if output_file.isFolder:
+                    output_file_url += '&folder=true'
             output_file_id = await _create_output_file(
                 file_name=output_file.fileName,
                 url=output_file_url,

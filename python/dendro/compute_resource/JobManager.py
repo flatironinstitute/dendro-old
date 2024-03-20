@@ -77,6 +77,7 @@ class JobManager:
             return _start_job(
                 job_id=job_id,
                 job_private_key=job_private_key,
+                project_id=job.projectId,
                 processor_name=processor_name,
                 run_method=job.runMethod,
                 app=app,

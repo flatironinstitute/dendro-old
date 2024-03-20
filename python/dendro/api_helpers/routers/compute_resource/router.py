@@ -166,6 +166,6 @@ def _authenticate_compute_resource_request(
     expected_payload: str
 ):
     if compute_resource_payload != expected_payload:
-        raise UnexpectedException('Unexpected payload')
+        raise UnexpectedException('Unexpected payload: ' + compute_resource_payload)
     if not _verify_signature_str(compute_resource_payload, compute_resource_id, compute_resource_signature):
-        raise InvalidSignatureException('Invalid signature')
+        raise InvalidSignatureException(f'Invalid signature: {compute_resource_signature}')

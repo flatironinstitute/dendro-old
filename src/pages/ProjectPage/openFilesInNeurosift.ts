@@ -1,10 +1,16 @@
+import { url } from "inspector";
 import { DendroFile } from "../../types/dendro-types";
 
 const openFilesInNeurosift = async (files: DendroFile[], dendroProjectId: string) => {
     const urls = files.map((file) => urlFromFileContent(file.content));
-    const urlQuery = urls.map((url) => `url=${url}`).join('&');
-    const fileNameQuery = files.map((file) => `fileName=${file.fileName}`).join('&');
-    const neurosiftUrl = `https://flatironinstitute.github.io/neurosift/?p=/nwb&${urlQuery}&dendroProjectId=${dendroProjectId}&${fileNameQuery}`;
+    let urlQuery = urls.map((url) => `url=${url}`).join('&');
+    // const fileNameQuery = files.map((file) => `fileName=${file.fileName}`).join('&');
+    // const neurosiftUrl = `https://flatironinstitute.github.io/neurosift/?p=/nwb&${urlQuery}&dendroProjectId=${dendroProjectId}&${fileNameQuery}`;
+    const dandisetId = files[0]?.metadata.dandisetId;
+    const dandisetVersion = files[0]?.metadata.dandisetVersion;
+    if (dandisetId) urlQuery += `&dandisetId=${dandisetId}`;
+    if (dandisetVersion) urlQuery += `&dandisetVersion=${dandisetVersion}`;
+    const neurosiftUrl = `https://flatironinstitute.github.io/neurosift/?p=/nwb&${urlQuery}`;
     window.open(neurosiftUrl, '_blank');
 }
 

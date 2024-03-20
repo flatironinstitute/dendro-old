@@ -1,6 +1,7 @@
 import sys
 import os
 import time
+import json
 from typing import Union, Optional, Dict, Any
 import subprocess
 from ..common._api_request import _processor_put_api_request
@@ -139,6 +140,7 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
                 _debug_log(f'Cleaning up DENDRO_JOB_CLEANUP_DIR: {dendro_job_cleanup_dir}')
                 try:
                     # delete files in the cleanup dir but do not delete the cleanup dir itself
+                    # and also don't delete the internal log folder _dendro
                     def _delete_files_in_dir(dir: str):
                         for fname in os.listdir(dir):
                             fpath = os.path.join(dir, fname)
@@ -167,9 +169,18 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
         if not ok:
             _debug_log('WARNING: problem uploading final console output')
 
+    # get the output file sizes
+    # this is important for the case of skipCloudUpload=True
+    _debug_log('Reading output file sizes')
+    output_file_sizes_fname = f'{dendro_internal_folder}/output_file_sizes.json'
+    output_file_sizes = None
+    if os.path.exists(output_file_sizes_fname):
+        with open(output_file_sizes_fname, 'r') as f:
+            output_file_sizes = json.load(f)
+
     # Set the final job status
     _debug_log('Finalizing job')
-    _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message)
+    _finalize_job(job_id=job_id, job_private_key=job_private_key, succeeded=succeeded, error_message=error_message, output_file_sizes=output_file_sizes)
 
     _debug_log('Exiting')
 
@@ -230,13 +241,13 @@ def _launch_job_child_process(*, job_id: str, job_private_key: str, app_executab
             if 'main' in sys.modules:
                 del sys.modules['main'] # important to do this so that at a later time we can load a different main.py
 
-def _finalize_job(*, job_id: str, job_private_key: str, succeeded: bool, error_message: str):
+def _finalize_job(*, job_id: str, job_private_key: str, succeeded: bool, error_message: str, output_file_sizes: Union[dict, None] = None):
     try:
         if succeeded:
             # The job has completed successfully - update the status accordingly
             _debug_log('Setting job status to completed')
             print('Job completed')
-            _set_job_status(job_id=job_id, job_private_key=job_private_key, status='completed')
+            _set_job_status(job_id=job_id, job_private_key=job_private_key, status='completed', output_file_sizes=output_file_sizes)
         else:
             # The job has failed - update the status accordingly and set the error message
             _debug_log('Setting job status to failed: ' + error_message)
@@ -250,7 +261,13 @@ def _finalize_job(*, job_id: str, job_private_key: str, succeeded: bool, error_m
 class SetJobStatusError(Exception):
     pass
 
-def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Optional[str] = None):
+def _set_job_status(*,
+    job_id: str,
+    job_private_key: str,
+    status: str,
+    error: Optional[str] = None,
+    output_file_sizes: Union[dict, None] = None
+):
     """Set the status of a job in the dendro API"""
     url_path = f'/api/processor/jobs/{job_id}/status'
     headers = {
@@ -263,6 +280,8 @@ def _set_job_status(*, job_id: str, job_private_key: str, status: str, error: Op
         data['error'] = error
     if os.environ.get('DENDRO_FORCE_STATUS_UPDATES', None) == '1':
         data['force_update'] = True
+    if output_file_sizes is not None:
+        data['output_file_sizes'] = output_file_sizes
     resp = _processor_put_api_request(
         url_path=url_path,
         headers=headers,

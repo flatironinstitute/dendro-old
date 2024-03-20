@@ -8,6 +8,7 @@ import useRoute from "../../../useRoute"
 import prepareDandiUploadTask, { DandiUploadTask } from "../DandiUpload/prepareDandiUploadTask"
 import { useProject } from "../ProjectPageContext"
 import DropdownMenu from "./DropdownMenu"
+import { fileActions } from "../FileActions";
 
 type FileBrowserMenuBarProps = {
     width: number
@@ -15,6 +16,7 @@ type FileBrowserMenuBarProps = {
     selectedFileNames: string[]
     onResetSelection: () => void
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
+    onRunFileAction?: (actionName: string, filePaths: string[]) => void
     onOpenInNeurosift?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
@@ -23,7 +25,7 @@ type FileBrowserMenuBarProps = {
 
 const {actions} = initializePlugins()
 
-const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction }) => {
+const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width, height, selectedFileNames, onResetSelection, onRunBatchSpikeSorting, onRunFileAction, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction }) => {
     const {deleteFile, refreshFiles, projectRole} = useProject()
     const {route, setRoute} = useRoute()
     const [operating, setOperating] = useState(false)
@@ -56,6 +58,10 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
     ), [selectedFileNames])
 
     const okayToOpenInNeurosift = useMemo(() => (
+        selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.endsWith('.nwb')) && selectedFileNames.length <= 5
+    ), [selectedFileNames])
+
+    const okayToRunFileAction = useMemo(() => (
         selectedFileNames.length > 0 && selectedFileNames.every(fn => fn.endsWith('.nwb')) && selectedFileNames.length <= 5
     ), [selectedFileNames])
 
@@ -114,8 +120,28 @@ const FileBrowserMenuBar: FunctionComponent<FileBrowserMenuBarProps> = ({ width,
                             disabled={(selectedFileNames.length === 0) || operating}
                             title={selectedFileNames.length > 0 ? `Run spike sorting on these ${selectedFileNames.length} files` : ''}
                             onClick={() => onRunBatchSpikeSorting(selectedFileNames)}
-                            label="Run spike sorting"
+                            label="Spike sorting"
                         />
+                    </>
+                )
+            }
+            {
+                okayToRunFileAction && onRunFileAction && (
+                    <>
+                        {
+                            fileActions.map(action => (
+                                <span key={action.name}>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <SmallIconButton
+                                        icon={action.icon}
+                                        disabled={(selectedFileNames.length === 0) || operating}
+                                        title={selectedFileNames.length > 0 ? `Run ${action.label} on these ${selectedFileNames.length} files` : ''}
+                                        onClick={() => onRunFileAction(action.name, selectedFileNames)}
+                                        label={action.label}
+                                    />
+                                </span>
+                            ))
+                        }
                     </>
                 )
             }

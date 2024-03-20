@@ -23,6 +23,8 @@ async def _create_output_file(*,
             raise Exception('Cannot replace pending file with another pending file')
         # this is the output of a job that has not completed yet
         size = 0
+    elif url.startswith('dendro:?'):  # case of skipCloudUpload3
+        size = _parse_size_from_dendro_uri(url)
     else:
         if not using_mock():
             if not is_folder:
@@ -63,6 +65,13 @@ async def _create_output_file(*,
             raise Exception('Cannot replace pending file because it does not exist')
         file_id = _create_random_id(8)
 
+    if url == 'pending':
+        content = 'pending'
+    elif url.startswith('dendro:?'):
+        # replace $file_id$ with file_id
+        content = url.replace('$file_id$', file_id)
+    else:
+        content = f'url:{url}'
     new_file = DendroFile(
         projectId=project_id,
         fileId=file_id,
@@ -70,7 +79,7 @@ async def _create_output_file(*,
         fileName=file_name,
         size=size,
         timestampCreated=time.time(),
-        content=f'url:{url}' if url != 'pending' else 'pending',
+        content=content,
         metadata={},
         isFolder=is_folder,
         jobId=job_id
@@ -123,3 +132,14 @@ async def _get_size_from_file_manifest_json(url: str) -> int:
     except Exception as e:
         print(f'Problem reading file manifest at {file_manifest_url}: {e}')
         return 0
+
+def _parse_size_from_dendro_uri(uri: str) -> int:
+    if not uri.startswith('dendro:?'):
+        raise Exception(f'Unexpected uri: {uri}')
+    query = uri[len('dendro:?'):]
+    parts = query.split('&')
+    for part in parts:
+        if part.startswith('size='):
+            size_str = part[len('size='):]
+            return int(size_str)
+    return 0

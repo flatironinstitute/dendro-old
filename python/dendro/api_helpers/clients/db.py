@@ -2,7 +2,7 @@ import time
 from typing import List, Union
 from ._get_mongo_client import _get_mongo_client
 from ._remove_id_field import _remove_id_field
-from ...common.dendro_types import DendroProject, DendroFile, DendroJob, DendroComputeResource, ComputeResourceSpec, DendroUser
+from ...common.dendro_types import DendroProject, DendroFile, DendroJob, DendroComputeResource, ComputeResourceSpec, DendroScript, DendroUser
 from ..core._get_project_role import _project_has_user
 from ..core._model_dump import _model_dump
 from ..core._hide_secret_params_in_job import _hide_secret_params_in_job
@@ -100,6 +100,15 @@ async def fetch_project_jobs(project_id: str, include_private_keys=False) -> Lis
         job.dandiApiKey = None # hide the DANDI API key
         _hide_secret_params_in_job(job)
     return jobs
+
+async def fetch_project_scripts(project_id: str) -> List[DendroScript]:
+    client = _get_mongo_client()
+    scripts_collection = client['dendro']['scripts']
+    scripts = await scripts_collection.find({
+        'projectId': project_id
+    }).to_list(length=None) # type: ignore
+    scripts = [DendroScript(**script) for script in scripts] # validate scripts
+    return scripts
 
 async def update_project(project_id: str, update: dict):
     client = _get_mongo_client()
@@ -246,7 +255,7 @@ async def set_compute_resource_spec(compute_resource_id: str, spec: ComputeResou
 class JobNotFoundError(Exception):
     pass
 
-async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False, include_private_key: bool = False, raise_on_not_found=False):
+async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include_secret_params: bool = False, include_private_key: bool = False, raise_on_not_found=False, include_deleted=False):
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
     job = await jobs_collection.find_one({'jobId': job_id})
@@ -257,6 +266,11 @@ async def fetch_job(job_id: str, *, include_dandi_api_key: bool = False, include
         else:
             return None # pragma: no cover (not ever run with raise_on_not_found=False)
     job = DendroJob(**job) # validate job
+    if job.deleted and not include_deleted:
+        if raise_on_not_found:
+            raise JobNotFoundError(f"Job with ID {job_id} has been deleted")
+        else:
+            return None
     if not include_dandi_api_key:
         job.dandiApiKey = None
     if not include_secret_params:
@@ -400,3 +414,52 @@ async def fetch_files_with_content_string(content_string: str) -> List[DendroFil
         _remove_id_field(file)
     files = [DendroFile(**file) for file in files] # validate files
     return files
+
+class ScriptNotFoundException(Exception):
+    pass
+
+async def fetch_script(script_id: str) -> DendroScript:
+    client = _get_mongo_client()
+    scripts_collection = client['dendro']['scripts']
+    script = await scripts_collection.find_one({
+        'scriptId': script_id
+    })
+    if script is None:
+        raise ScriptNotFoundException(f"No script with ID {script_id}")
+    _remove_id_field(script)
+    script = DendroScript(**script) # validate script
+    return script
+
+async def delete_script(script_id: str):
+    client = _get_mongo_client()
+    scripts_collection = client['dendro']['scripts']
+    await scripts_collection.delete_one({
+        'scriptId': script_id
+    })
+
+async def set_script_content(script_id: str, content: str):
+    client = _get_mongo_client()
+    scripts_collection = client['dendro']['scripts']
+    await scripts_collection.update_one({
+        'scriptId': script_id
+    }, {
+        '$set': {
+            'content': content
+        }
+    })
+
+async def rename_script(script_id: str, new_name: str):
+    client = _get_mongo_client()
+    scripts_collection = client['dendro']['scripts']
+    await scripts_collection.update_one({
+        'scriptId': script_id
+    }, {
+        '$set': {
+            'scriptName': new_name
+        }
+    })
+
+async def insert_script(script: DendroScript):
+    client = _get_mongo_client()
+    scripts_collection = client['dendro']['scripts']
+    await scripts_collection.insert_one(_model_dump(script, exclude_none=True))

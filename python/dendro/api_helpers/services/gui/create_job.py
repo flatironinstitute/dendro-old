@@ -73,7 +73,8 @@ async def create_job(*,
             DendroJobOutputFile(
                 name=output_file.name,
                 fileName=filter_output_file_name(output_file.fileName),
-                isFolder=output_file.isFolder
+                isFolder=output_file.isFolder,
+                skipCloudUpload=output_file.skipCloudUpload
             )
         )
 
@@ -83,7 +84,7 @@ async def create_job(*,
     for output_file in output_files:
         existing_file = await fetch_file(project_id, output_file.fileName)
         if existing_file is not None:
-            await delete_file(project_id, output_file.fileName)
+            await delete_file(project_id=project_id, file_name=output_file.fileName)
             something_was_deleted = True
 
     # delete any jobs that are expected to produce the output files
@@ -114,6 +115,7 @@ async def create_job(*,
             job_id=job_id,
             is_folder=output_file.isFolder
         )
+        output_file.fileId = output_file_id
         output_file_ids.append(output_file_id)
 
     input_parameters2: List[DendroJobInputParameter] = []

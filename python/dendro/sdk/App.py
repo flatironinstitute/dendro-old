@@ -10,6 +10,7 @@ from .InputFile import InputFile
 from .InputFolder import InputFolder
 from .OutputFile import OutputFile
 from .OutputFolder import OutputFolder
+from ..common.dendro_types import ComputeResourceSpecApp
 
 
 class DendroAppException(Exception):
@@ -181,6 +182,11 @@ class App:
             'executable': self._app_executable,
             'processors': processors
         }
+        # Validate the spec
+        try:
+            ComputeResourceSpecApp(**spec)
+        except Exception as e:
+            raise Exception(f'Error validating spec:\n {e}')
         return spec
 
     @staticmethod

@@ -4,10 +4,9 @@ import { DendroProcessingJobDefinition, createJob, defaultJobDefinition, dendroJ
 import { ComputeResourceSpecApp, ComputeResourceSpecProcessor, DendroComputeResourceApp, DendroFile, DendroJobRequiredResources } from "../../../types/dendro-types"
 import { useNwbFile } from "../FileView/NwbFileView"
 import { useProject } from "../ProjectPageContext"
-import LeftColumn from "./LeftColumn"
-import RightColumn from "./RightColumn"
-import SelectProcessorComponent from "./SelectProcessorComponent"
-import getDefaultRequiredResources from "./getDefaultRequiredResources"
+import LeftColumn from "../RunBatchSpikeSortingWindow/LeftColumn"
+import RightColumn from "../RunBatchSpikeSortingWindow/RightColumn"
+import getDefaultRequiredResources from "../RunBatchSpikeSortingWindow/getDefaultRequiredResources"
 import { Splitter } from "@fi-sci/splitter";
 
 type Props = {
@@ -17,36 +16,28 @@ type Props = {
     height: number
 }
 
-const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClose, width, height }) => {
+const GenerateSpikeSortingSummaryWindow: FunctionComponent<Props> = ({ filePaths, onClose, width, height }) => {
     const {projectId, files, projectRole, computeResource} = useProject()
     const auth = useGithubAuth()
 
     const [operating, setOperating] = useState(false)
     const [operatingMessage, setOperatingMessage] = useState<string | undefined>(undefined)
 
-    const [selectedSpikeSortingProcessor, setSelectedSpikeSortingProcessor] = useState<string | undefined>(undefined)
-
-    const spikeSorterProcessors = useMemo(() => {
-        const ret: {appSpec: ComputeResourceSpecApp, app?: DendroComputeResourceApp, processor: ComputeResourceSpecProcessor}[] = []
+    const processorInfo: {appSpec: ComputeResourceSpecApp, app?: DendroComputeResourceApp, processor: ComputeResourceSpecProcessor} | undefined = useMemo(() => {
         for (const appSpec of computeResource?.spec?.apps || []) {
             const app = computeResource?.apps.find(a => (a.name === appSpec.name))
             for (const p of appSpec.processors || []) {
-                if (p.tags.map(t => t.tag).includes('spike_sorter')) {
-                    ret.push({appSpec, app, processor: p})
+                if (p.name === 'dandi-vis-1.spike_sorting_summary') {
+                    return {appSpec, app, processor: p}
                 }
             }
         }
-        return ret
+        return undefined
     }, [computeResource])
-
-    const processor = useMemo(() => {
-        if (!selectedSpikeSortingProcessor) return undefined
-        return spikeSorterProcessors.find(p => (p.processor.name === selectedSpikeSortingProcessor))
-    }, [spikeSorterProcessors, selectedSpikeSortingProcessor])
 
     const [jobDefinition, jobDefinitionDispatch] = useReducer(dendroJobDefinitionReducer, defaultJobDefinition)
     useEffect(() => {
-        if (!processor) return
+        if (!processorInfo) return
         const jd: DendroProcessingJobDefinition = {
             inputFiles: [
                 {
@@ -60,17 +51,17 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                     fileName: `*`
                 }
             ],
-            inputParameters: processor.processor.parameters.map(p => ({
+            inputParameters: processorInfo.processor.parameters.map(p => ({
                 name: p.name,
                 value: p.default
             })),
-            processorName: processor.processor.name
+            processorName: processorInfo.processor.name
         }
         jobDefinitionDispatch({
             type: 'setJobDefinition',
             jobDefinition: jd
         })
-    }, [processor])
+    }, [processorInfo])
 
     const [representativeDendroFile, setRepresentativeDendroFile] = useState<DendroFile | undefined>(undefined)
     useEffect(() => {
@@ -91,18 +82,13 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
     const [valid, setValid] = useState(false)
 
     const [overwriteExistingOutputs, setOverwriteExistingOutputs] = useState(true)
-    const [descriptionString, setDescriptionString] = useState('')
-    useEffect(() => {
-        if (!processor) return
-        setDescriptionString(formDescriptionStringFromProcessorName(processor.processor.name))
-    }, [processor])
 
     const [requiredResources, setRequiredResources] = useState<DendroJobRequiredResources | undefined>(undefined)
     useEffect(() => {
-        if (!processor) return
-        const rr = getDefaultRequiredResources(processor.processor)
+        if (!processorInfo) return
+        const rr = getDefaultRequiredResources(processorInfo.processor)
         setRequiredResources(rr)
-    }, [processor])
+    }, [processorInfo])
 
     const defaultRunMethod = computeResource?.spec?.defaultJobRunMethod
     const [runMethod, setRunMethod] = useState<'local' | 'aws_batch' | 'slurm'>(defaultRunMethod || 'local')
@@ -112,18 +98,19 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
     }, [computeResource])
 
     const handleSubmit = useCallback(async () => {
-        if (!processor) return
+        if (!processorInfo) return
         if (!files) return
-        if (!selectedSpikeSortingProcessor) return
         if (!requiredResources) return
         setOperating(true)
         setOperatingMessage('Preparing...')
         const batchId = createRandomId(8)
         for (let i = 0; i < filePaths.length; i++) {
             const filePath = filePaths[i]
-            const filePath2 = filePath.startsWith('imported/') ? filePath.slice('imported/'.length) : filePath
+            let filePath2 = filePath
+            if (filePath2.startsWith('imported/')) filePath2 = filePath2.slice('imported/'.length)
+            if (filePath2.startsWith('generated/')) filePath2 = filePath2.slice('generated/'.length)
             const jobDefinition2: DendroProcessingJobDefinition = deepCopy(jobDefinition)
-            const outputFileName = `generated/${appendDescToNwbPath(filePath2, descriptionString)}`
+            const outputFileName = `generated/${filePath2}/spike_sorting_summary.nh5`
             const outputExists = files.find(f => (f.fileName === outputFileName))
             if (outputExists && !overwriteExistingOutputs) {
                 continue
@@ -135,7 +122,7 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
             const job = {
                 projectId,
                 jobDefinition: jobDefinition2,
-                processorSpec: processor.processor,
+                processorSpec: processorInfo.processor,
                 files,
                 batchId,
                 requiredResources,
@@ -147,22 +134,14 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
         setOperatingMessage(undefined)
         setOperating(false)
         onClose()
-    }, [projectId, jobDefinition, processor, filePaths, files, overwriteExistingOutputs, descriptionString, auth, onClose, selectedSpikeSortingProcessor, requiredResources, runMethod])
-
-    const descriptionStringIsValid = useMemo(() => {
-        // description string must be alphanumeric with dashes but not underscores
-        if (!descriptionString) return false
-        if (!descriptionString.match(/^[a-zA-Z0-9-]+$/)) return false
-        return true
-    }, [descriptionString])
+    }, [projectId, jobDefinition, processorInfo, filePaths, files, overwriteExistingOutputs, auth, onClose, requiredResources, runMethod])
 
     const okayToSubmit = useMemo(() => {
         if (!valid) return false
         if (operating) return false
-        if (!processor) return false
-        if (!descriptionStringIsValid) return false
+        if (!processorInfo) return false
         return true
-    }, [valid, operating, processor, descriptionStringIsValid])
+    }, [valid, operating, processorInfo])
 
     const cancelButton = useMemo(() => {
         return (
@@ -176,23 +155,21 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
     if (!['editor', 'admin'].includes(projectRole || '')) {
         return (
             <div>
-                <span style={{color: 'red'}}>You are not authorized to run spike sorting in this project</span>
+                <span style={{color: 'red'}}>You are not authorized to run jobs in this project</span>
                 {cancelButton}
             </div>
         )
     }
 
-    if (!selectedSpikeSortingProcessor) {
+    if (!processorInfo) {
         return (
             <div>
-                <SelectProcessorComponent
-                    processors={spikeSorterProcessors}
-                    onSelected={setSelectedSpikeSortingProcessor}
-                />
+                <span style={{color: 'red'}}>No processor found for spike sorting summary</span>
                 {cancelButton}
             </div>
         )
     }
+
     const W1 = Math.min(500, width / 2)
     return (
         <Splitter
@@ -203,13 +180,10 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
             <LeftColumn
                 width={0}
                 height={0}
+                selectedProcessorName={processorInfo?.processor.name || ''}
                 overwriteExistingOutputs={overwriteExistingOutputs}
                 setOverwriteExistingOutputs={setOverwriteExistingOutputs}
-                descriptionString={descriptionString}
-                setDescriptionString={setDescriptionString}
-                descriptionStringIsValid={descriptionStringIsValid}
                 filePaths={filePaths}
-                selectedProcessorName={selectedSpikeSortingProcessor}
                 valid={valid}
                 setValid={setValid}
                 operating={operating}
@@ -218,8 +192,8 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                 handleSubmit={handleSubmit}
                 requiredResources={requiredResources}
                 setRequiredResources={setRequiredResources}
-                app={processor?.app}
-                appSpec={processor?.appSpec}
+                app={processorInfo?.app}
+                appSpec={processorInfo?.appSpec}
                 onClose={onClose}
                 runMethod={runMethod}
                 setRunMethod={setRunMethod}
@@ -230,13 +204,13 @@ const RunBatchSpikeSortingWindow: FunctionComponent<Props> = ({ filePaths, onClo
                 width={0}
                 height={0}
                 operating={operating}
-                processor={processor?.processor}
+                processor={processorInfo?.processor}
                 valid={valid}
                 setValid={setValid}
                 jobDefinition={jobDefinition}
                 jobDefinitionDispatch={jobDefinitionDispatch}
                 representativeNwbFile={representativeNwbFile}
-                processorName={selectedSpikeSortingProcessor}
+                processorName={processorInfo?.processor.name || ''}
             />
         </Splitter>
     )
@@ -256,18 +230,6 @@ const createRandomId = (numChars: number) => {
     return ret
 }
 
-const appendDescToNwbPath = (nwbPath: string, desc: string) => {
-    // for example, sub-paired-english_ses-paired-english-m26-190524-100859-cell3_ecephys.nwb goes to sub-paired-english_ses-paired-english-m26-190524-100859-cell3_desc-{processorName}_ecephys.nwb
-    const desc2 = replaceUnderscoreWithDash(desc)
-    const parts = nwbPath.split('_')
-    const lastPart = parts.pop()
-    return `${parts.join('_')}_desc-${desc2}_${lastPart}`
-}
-
-const replaceUnderscoreWithDash = (x: string) => {
-    return x.split('_').join('-')
-}
-
 export const formDescriptionStringFromProcessorName = (processorName: string) => {
     let ret = processorName
     // replace spaces and underscores with dashes
@@ -278,4 +240,4 @@ export const formDescriptionStringFromProcessorName = (processorName: string) =>
     return ret
 }
 
-export default RunBatchSpikeSortingWindow
+export default GenerateSpikeSortingSummaryWindow

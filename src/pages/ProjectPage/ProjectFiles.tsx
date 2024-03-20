@@ -14,14 +14,15 @@ type ProjectFilesProps = {
     width: number
     height: number
     onRunBatchSpikeSorting?: (filePaths: string[]) => void
+    onRunFileAction?: (actionName: string, filePaths: string[]) => void
     onOpenInNeurosift?: (filePaths: string[]) => void
     onDandiUpload?: (dandiUploadTask: DandiUploadTask) => void
     onUploadSmallFile?: () => void
     onAction?: (action: PluginAction) => void
 }
 
-const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
-    const {files, openTab, deleteFile, closeTab, openTabs, refreshFiles} = useProject()
+const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRunBatchSpikeSorting, onRunFileAction, onOpenInNeurosift, onDandiUpload, onUploadSmallFile, onAction}) => {
+    const {files, openTab, deleteFile, closeTab, openTabs, refreshFiles, refreshJobs} = useProject()
 
     const handleOpenFile = useCallback((fileName: string) => {
         openTab(`file:${fileName}`)
@@ -30,9 +31,12 @@ const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRu
     const handleDeleteFile = useCallback(async (fileName: string) => {
         const okay = await confirm(`Delete ${fileName}?`)
         if (!okay) return
-        deleteFile(fileName).then(() => refreshFiles())
+        deleteFile(fileName).then(() => {
+            refreshFiles();
+            refreshJobs(); // some jobs may have been affected by the file deletion
+        })
         closeTab(`file:${fileName}`)
-    }, [deleteFile, closeTab, refreshFiles])
+    }, [deleteFile, closeTab, refreshFiles, refreshJobs])
 
     if (!files) return <div>Loading project files...</div>
 
@@ -52,6 +56,7 @@ const ProjectFiles: FunctionComponent<ProjectFilesProps> = ({width, height, onRu
                 onDeleteFile={handleDeleteFile}
                 hideSizeColumn={false}
                 onRunBatchSpikeSorting={onRunBatchSpikeSorting}
+                onRunFileAction={onRunFileAction}
                 onOpenInNeurosift={onOpenInNeurosift}
                 onDandiUpload={onDandiUpload}
                 onUploadSmallFile={onUploadSmallFile}

@@ -9,7 +9,7 @@ class DendroProjectUser(BaseModel):
 class DendroProject(BaseModel):
     projectId: str
     name: str
-    description: str
+    description: Union[str, None] = None
     ownerId: str
     users: List[DendroProjectUser]
     publiclyReadable: bool
@@ -35,10 +35,11 @@ class DendroJobOutputFile(BaseModel):
     fileName: str
     fileId: Union[str, None] = None
     isFolder: Union[bool, None] = None
+    skipCloudUpload: Union[bool, None] = None
 
 class ComputeResourceSpecProcessorParameter(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     type: str
     default: Union[Any, None] = None
     options: Union[List[str], List[int], None] = None
@@ -46,21 +47,21 @@ class ComputeResourceSpecProcessorParameter(BaseModel):
 
 class ComputeResourceSpecProcessorInput(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     list: bool = False
 
 class ComputeResourceSpecProcessorInputFolder(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     list: bool = False
 
 class ComputeResourceSpecProcessorOutput(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
 
 class ComputeResourceSpecProcessorOutputFolder(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
 
 class ComputeResourceSpecProcessorAttribute(BaseModel):
     name: str
@@ -71,7 +72,7 @@ class ComputeResourceSpecProcessorTag(BaseModel):
 
 class ComputeResourceSpecProcessor(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     inputs: List[ComputeResourceSpecProcessorInput]
     inputFolders: Union[List[ComputeResourceSpecProcessorInputFolder], None] = None
     outputs: List[ComputeResourceSpecProcessorOutput]
@@ -137,6 +138,15 @@ class DendroFile(BaseModel):
     isFolder: Union[bool, None] = None
     jobId: Union[str, None] = None # the job that produced this file
 
+class DendroScript(BaseModel):
+    projectId: str
+    scriptId: str
+    scriptName: str
+    userId: str
+    content: str
+    timestampCreated: float
+    timestampModified: float
+
 # obsolete
 class ComputeResourceAwsBatchOpts(BaseModel):
     jobQueue: Optional[str] = None # obsolete
@@ -160,7 +170,7 @@ class DendroComputeResourceApp(BaseModel):
 
 class ComputeResourceSpecApp(BaseModel):
     name: str
-    description: str
+    description: Union[str, None] = None
     processors: List[ComputeResourceSpecProcessor]
     appImage: Union[str, None] = None
     appExecutable: Union[str, None] = None
@@ -198,9 +208,11 @@ class ProcessorGetJobResponseInputFolder(BaseModel):
 
 class ProcessorGetJobResponseOutput(BaseModel):
     name: str
+    skipCloudUpload: Union[bool, None] = None
 
 class ProcessorGetJobResponseOutputFolder(BaseModel):
     name: str
+    skipCloudUpload: Union[bool, None] = None
 
 class ProcessorGetJobResponseParameter(BaseModel):
     name: str
@@ -216,6 +228,29 @@ class ProcessorGetJobResponse(BaseModel):
     outputFolders: Union[List[ProcessorGetJobResponseOutputFolder], None] = None
     parameters: List[ProcessorGetJobResponseParameter]
 
+class ProcessorGetJobV2ResponseInput(BaseModel):
+    name: str
+    dendro_uri: str
+
+class ProcessorGetJobV2ResponseInputFolder(BaseModel):
+    name: str
+    dendro_uri: str
+
+class ProcessorGetJobV2Response(BaseModel):
+    jobId: str
+    status: str
+    processorName: str
+    inputs: List[ProcessorGetJobV2ResponseInput]
+    inputFolders: Union[List[ProcessorGetJobV2ResponseInputFolder], None] = None
+    outputs: List[ProcessorGetJobResponseOutput]
+    outputFolders: Union[List[ProcessorGetJobResponseOutputFolder], None] = None
+    parameters: List[ProcessorGetJobResponseParameter]
+
+class GetJobFileInfoResponse(BaseModel):
+    downloadUrl: str
+    isFolder: bool
+    success: bool
+
 class DendroUser(BaseModel):
     userId: str
     dendroApiKey: Union[str, None] = None
@@ -229,6 +264,7 @@ class CreateJobRequestOutputFile(BaseModel):
     name: str
     fileName: str
     isFolder: Union[bool, None] = None
+    skipCloudUpload: Union[bool, None] = None
 
 class CreateJobRequestInputParameter(BaseModel):
     name: str

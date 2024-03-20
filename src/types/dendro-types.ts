@@ -77,6 +77,7 @@ export type DendroJobOutputFile = {
     fileName: string
     fileId?: string
     isFolder?: boolean
+    skipCloudUpload?: boolean
 }
 
 export const isDendroJobOutputFile = (x: any): x is DendroJobOutputFile => {
@@ -84,7 +85,8 @@ export const isDendroJobOutputFile = (x: any): x is DendroJobOutputFile => {
         name: isString,
         fileName: isString,
         fileId: optional(isString),
-        isFolder: optional(isBoolean)
+        isFolder: optional(isBoolean),
+        skipCloudUpload: optional(isBoolean)
     })
 }
 
@@ -335,6 +337,28 @@ export const isDendroFile = (x: any): x is DendroFile => {
         metadata: () => true,
         isFolder: optional(isBoolean),
         jobId: optional(isOneOf([isString, isNull]))
+    })
+}
+
+export type DendroScript = {
+    projectId: string
+    scriptId: string
+    scriptName: string
+    userId: string
+    content: string
+    timestampCreated: number
+    timestampModified: number
+}
+
+export const isDendroScript = (x: any): x is DendroScript => {
+    return validateObject(x, {
+        projectId: isString,
+        scriptId: isString,
+        scriptName: isString,
+        userId: isString,
+        content: isString,
+        timestampCreated: isNumber,
+        timestampModified: isNumber
     })
 }
 

@@ -5,7 +5,7 @@ import { RemoteH5File } from "../../../RemoteH5File/RemoteH5File";
 import { ComputeResourceSpecProcessor, ComputeResourceSpecProcessorParameter } from "../../../types/dendro-types";
 import useRoute from "../../../useRoute";
 import { useProject } from "../ProjectPageContext";
-import { useElectricalSeriesPaths } from "../FileView/NwbFileView";
+import { useElectricalSeriesPaths, useUnitsPaths } from "../FileView/NwbFileView";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCaretDown, faCaretRight } from "@fortawesome/free-solid-svg-icons";
 import { expandedFoldersReducer } from "../FileBrowser/FileBrowser2";
@@ -483,10 +483,20 @@ export const isElectricalSeriesPathParameter = (name: string) => {
     return (last === 'electrical_series_path')
 }
 
+export const isUnitsPathParameter = (name: string) => {
+    const aa = name.split('.')
+    if (aa.length === 0) return false
+    const last = aa[aa.length - 1]
+    return (last === 'units_path')
+}
+
 const EditParameterValue: FunctionComponent<EditParameterValueProps> = ({parameter, value, nwbFile, setValue, setValid}) => {
     const {type, name} = parameter
     if (isElectricalSeriesPathParameter(name)) {
         return <ElectricalSeriesPathSelector value={value} nwbFile={nwbFile} setValue={setValue} setValid={setValid} />
+    }
+    else if (isUnitsPathParameter(name)) {
+        return <UnitsPathSelector value={value} nwbFile={nwbFile} setValue={setValue} setValid={setValid} />
     }
     else if (parameter.options) {
         return <SelectEdit value={value} setValue={setValue} setValid={setValid} options={parameter.options} />
@@ -700,9 +710,9 @@ const ElectricalSeriesPathSelector: FunctionComponent<ElectricalSeriesPathSelect
     const electricalSeriesPaths = useElectricalSeriesPaths(nwbFile)
 
     useEffect(() => {
-        if (value) return
         if (!electricalSeriesPaths) return
         if (electricalSeriesPaths.length === 0) return
+        if ((value) && (electricalSeriesPaths.includes(value))) return
         setValue(electricalSeriesPaths[0])
     }, [value, electricalSeriesPaths, setValue])
 
@@ -721,6 +731,45 @@ const ElectricalSeriesPathSelector: FunctionComponent<ElectricalSeriesPathSelect
         <select value={value || ''} onChange={evt => {setValue(evt.target.value)}}>
             {
                 [...electricalSeriesPaths].map(path => (
+                    <option key={path} value={path}>{path}</option>
+                ))
+            }
+        </select>
+    )
+}
+
+type UnitsPathSelectorProps = {
+    value?: string
+    nwbFile?: RemoteH5File
+    setValue: (value: string) => void
+    setValid?: (valid: boolean) => void
+}
+
+const UnitsPathSelector: FunctionComponent<UnitsPathSelectorProps> = ({value, nwbFile, setValue, setValid}) => {
+    const unitsPaths = useUnitsPaths(nwbFile)
+
+    useEffect(() => {
+        if (!unitsPaths) return
+        if (unitsPaths.length === 0) return
+        if ((value) && (unitsPaths.includes(value))) return
+        setValue(unitsPaths[0])
+    }, [value, unitsPaths, setValue])
+
+    useEffect(() => {
+        if (!setValid) return
+        if ((unitsPaths === undefined) || (unitsPaths.length === 0)) {
+            setValid(false)
+            return
+        }
+        setValid(!!value)
+    }, [setValid, value, unitsPaths])
+
+    if (!unitsPaths) return <div>Loading...</div>
+    if (unitsPaths.length === 0) return <div>No units object found.</div>
+    return (
+        <select value={value || ''} onChange={evt => {setValue(evt.target.value)}}>
+            {
+                [...unitsPaths].map(path => (
                     <option key={path} value={path}>{path}</option>
                 ))
             }

@@ -74,16 +74,15 @@ const Nh5FileView: FunctionComponent<Props> = ({fileName, width, height}) => {
             <div>&nbsp;</div>
             <div>
                 {
-                    fileType === 'tuning_curves_2d' && (
+                    ['tuning_curves_2d', 'spike_sorting_summary', 'ecephys_summary'].includes(fileType) && (
                         <Hyperlink onClick={() => {
                             const viewData = encodeURI(JSON.stringify({
-                                type: 'tuning_curves_2d_nh5',
-                                nh5_file: nh5Url
+                                nh5: nh5Url
                             }))
                             const label = encodeURI(projectId + ':' + fileName)
-                            const url = `https://figurl.org/f?v=https://figurl-tuning-curves-1.surge.sh&d=${viewData}&label=${label}`
+                            const url = `https://figurl.org/f?v=npm://@fi-sci/figurl-dandi-vis@0.1/dist&d=${viewData}&label=${label}`
                             window.open(url, '_blank')
-                        }}>View 2D tuning curves</Hyperlink>
+                        }}>View {fileType}</Hyperlink>
                     )
                 }
             </div>
