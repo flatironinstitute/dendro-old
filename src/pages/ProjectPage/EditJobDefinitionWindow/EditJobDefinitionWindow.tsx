@@ -50,7 +50,7 @@ type RowNode = {
     fieldType: 'input' | 'output' | 'parameter'
     isFolder?: boolean
     name: string
-    description: string
+    description?: string | null
 } | {
     type: 'group'
     name: string
@@ -203,7 +203,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                     ret.push(<InputRow
                         key={node.name}
                         name={node.name}
-                        description={node.description}
+                        description={node.description || ''}
                         value={value}
                         setValid={valid => {
                             validParametersDispatch({
@@ -222,7 +222,7 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                     ret.push(<OutputRow
                         key={node.name}
                         name={node.name}
-                        description={node.description}
+                        description={node.description || ''}
                         value={value}
                         setValid={valid => {
                             validParametersDispatch({
@@ -322,7 +322,7 @@ const GroupRow: FunctionComponent<GroupRowProps> = ({name, expanded, toggleExpan
 
 type InputRowProps = {
     name: string
-    description: string
+    description?: string | null
     value?: string
     setValid?: (valid: boolean) => void
     fileLinks?: boolean
@@ -364,7 +364,7 @@ const InputRow: FunctionComponent<InputRowProps> = ({name, description, value, s
 
 type OutputRowProps = {
     name: string
-    description: string
+    description?: string | null
     value?: string
     setValid?: (valid: boolean) => void
     fileLinks?: boolean
