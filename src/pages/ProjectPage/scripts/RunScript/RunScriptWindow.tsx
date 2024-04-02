@@ -4,7 +4,7 @@ import { useProject } from "../../ProjectPageContext"
 import { RunScriptAddJob, RunScriptResult } from "./RunScriptWorkerTypes"
 import { Hyperlink } from "@fi-sci/misc"
 import { useGithubAuth } from "../../../../GithubAuth/useGithubAuth"
-import { DendroProcessingJobDefinition, createJob } from "../../../../dbInterface/dbInterface"
+import { DendroProcessingJobDefinition, createJob, setUrlFile } from "../../../../dbInterface/dbInterface"
 
 type RunScriptWindowProps = {
     width: number
@@ -60,6 +60,18 @@ const RunScriptWindow: FunctionComponent<RunScriptWindowProps> = ({width, height
         return {newJobs, existingJobs}
     }, [jobs, result, projectJobHashes, computeResourceProcessorsByName])
 
+    const {newFiles} = useMemo(() => {
+        if (!files) return {newFiles: undefined, existingFiles: undefined}
+        if (!result) return {newFiles: undefined, existingFiles: undefined}
+        const newFiles: {fileName: string, url: string}[] = []
+        for (const f of result.addedFiles) {
+            if (!files.find(f1 => f1.fileName === f.fileName)) {
+                newFiles.push(f)
+            }
+        }
+        return {newFiles}
+    }, [files, result])
+
     const jobProblems = useMemo(() => {
         if (!result) return undefined
         if (!computeResourceProcessorsByName) return undefined
@@ -81,9 +93,17 @@ const RunScriptWindow: FunctionComponent<RunScriptWindowProps> = ({width, height
 
     const auth = useGithubAuth()
 
-    const handleSubmitJobs = useCallback(async (jobsToSubmit: RunScriptAddJob[]) => {
+    const handleSubmit = useCallback(async () => {
+        const jobsToSubmit = newJobs
+        const filesToAdd = newFiles
+        if (!jobsToSubmit) return
+        if (!filesToAdd) return
         if (!auth.signedIn) return
         if (!files) return
+        for (const f of filesToAdd) {
+            const metaData = {}
+            await setUrlFile(projectId, f.fileName, f.url, metaData, auth)
+        }
         const batchId = createRandomId(8)
         for (const j of jobsToSubmit) {
             console.info(`Submitting job: ${j.processorName}`)
@@ -115,8 +135,16 @@ const RunScriptWindow: FunctionComponent<RunScriptWindowProps> = ({width, height
         }
         refreshFiles()
         refreshJobs()
-        alert('Jobs submitted')
-    }, [auth, projectId, files, computeResourceProcessorsByName, refreshFiles, refreshJobs])
+        if ((newFiles.length > 0) && (newJobs.length > 0)) {
+            alert('New files and jobs have been submitted')
+        }
+        else if (newFiles.length > 0) {
+            alert('New files have been submitted')
+        }
+        else if (newJobs.length > 0) {
+            alert('New jobs have been submitted')
+        }
+    }, [auth, projectId, files, computeResourceProcessorsByName, refreshFiles, refreshJobs, newJobs, newFiles])
     
     return (
         <div style={{position: 'absolute', width, height}}>
@@ -137,18 +165,18 @@ const RunScriptWindow: FunctionComponent<RunScriptWindowProps> = ({width, height
                                 {jobProblems.map((p, i) => <div key={i}>{p}</div>)}
                             </div>
                         ) : (
-                            newJobs && existingJobs && (
+                            newJobs && existingJobs && newFiles && (
                                 <div>
-                                    <div>{newJobs.length} new jobs ({newJobs.length + existingJobs.length} total)</div>
-                                    {newJobs.length > 0 && (
+                                    <div>{newJobs.length} new jobs ({newJobs.length + existingJobs.length} total); {newFiles.length} new files</div>
+                                    {newJobs.length + newFiles.length > 0 && (
                                         saved ? (
                                             <div>
                                                 <Hyperlink
                                                     onClick={() => {
-                                                        handleSubmitJobs(newJobs)
+                                                        handleSubmit()
                                                     }}
                                                 >
-                                                    {newJobs.length > 1 ? `Submit these ${newJobs.length} new jobs` : `Submit this one new job?`}
+                                                    SUBMIT
                                                 </Hyperlink>
                                             </div>
                                         ) : (

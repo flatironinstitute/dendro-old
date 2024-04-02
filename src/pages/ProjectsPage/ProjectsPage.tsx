@@ -30,8 +30,8 @@ const ProjectsPage: FunctionComponent<Props> = ({width, height}) => {
 
     return (
         <div className="projects-page" style={{position: 'absolute', width, height, overflowY: 'auto'}}>
-            <h3>Your projects</h3>
-            <div>
+            <h3 style={{paddingLeft: 10}}>Your projects</h3>
+            <div style={{paddingLeft: 10}}>
                 <SmallIconButton icon={<Add />} onClick={handleAdd} label="Create a new project" />
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <SmallIconButton icon={<ImportExport />} onClick={() => setRoute({page: 'dandisets'})} label="Import data from DANDI" />

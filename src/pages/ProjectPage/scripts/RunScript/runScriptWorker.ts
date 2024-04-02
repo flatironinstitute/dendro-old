@@ -7,7 +7,7 @@ import {
 } from "./RunScriptWorkerTypes";
 
 const runScript = (_script: string, _files: any[]) => {
-  const result: RunScriptResult = { jobs: [] };
+  const result: RunScriptResult = { jobs: [], addedFiles: []};
   const _addJob = (a: {
     processorName: string;
     inputs: RunScriptAddJobInputFile[];
@@ -95,13 +95,22 @@ const runScript = (_script: string, _files: any[]) => {
     });
   };
 
+  const _addFile = (fileName: string, a: {url: string}) => {
+    result.addedFiles.push({fileName, url: a.url});
+  }
+
   const log: string[] = [];
   const context = {
     print: function (message: string) {
+      // make sure it is a string
+      if (typeof message !== "string") {
+        message = JSON.stringify(message);
+      }
       log.push(message);
     },
     files: _files,
     addJob: _addJob,
+    addFile: _addFile
   };
   const scriptFunction = new Function("context", _script);
   try {

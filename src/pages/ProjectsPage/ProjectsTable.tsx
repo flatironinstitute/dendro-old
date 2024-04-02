@@ -14,6 +14,10 @@ const ProjectsTable: FunctionComponent<Props> = ({admin}) => {
 
     const { setRoute } = useRoute()
 
+    const sortedProjects = useMemo(() => {
+        return projects ? projects.sort((a, b) => b.timestampCreated - a.timestampCreated) : []
+    }, [projects])
+
     if (!projects) return <div>Retrieving projects...</div>
 
     return (
@@ -30,7 +34,7 @@ const ProjectsTable: FunctionComponent<Props> = ({admin}) => {
             </thead>
             <tbody>
                 {
-                    projects.map((pr) => (
+                    sortedProjects.map((pr) => (
                         <tr key={pr.projectId}>
                             <td>
                                 <Hyperlink onClick={() => setRoute({page: 'project', projectId: pr.projectId})}>

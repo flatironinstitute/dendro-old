@@ -43,9 +43,9 @@ const FileViewTable: FunctionComponent<FileViewTableProps> = ({fileName, additio
                     <td>URL:</td>
                     <td>
                         {theUrl}
-                        {theFile && theFile.size && theFile.size < 50e6 && (
+                        {theFile && theFile.size && theFile.size < 50e6 ? (
                             <>&nbsp;&nbsp;<DownloadLink url={theUrl} baseFileName={getBaseFileName(theFile.fileName)} /></>
-                        )}
+                        ) : ""}
                     </td>
                 </tr>
                 <tr>

@@ -173,20 +173,13 @@ export const fetchFile = async (projectId: string, fileName: string, auth: Auth)
 }
 
 const headRequest = async (url: string, headers?: any) => {
-    // Cannot use HEAD, because it is not allowed by CORS on DANDI AWS bucket
-    // let headResponse
-    // try {
-    //     headResponse = await fetch(url, {method: 'HEAD'})
-    //     if (headResponse.status !== 200) {
-    //         return undefined
-    //     }
-    // }
-    // catch(err: any) {
-    //     console.warn(`Unable to HEAD ${url}: ${err.message}`)
-    //     return undefined
-    // }
-    // return headResponse
+    // It's annoying that we need to hard-code this...
+    // but if we are fetching from a cloudflare bucket, then we can do the normal HEAD request
+    if ((url.startsWith('https://lindi.neurosift.org')) || (url.startsWith('https://neurosift.org'))) {
+        return normalHeadRequest(url, headers)
+    }
 
+    // Otherwise we cannot use HEAD, because it is not allowed by CORS on DANDI AWS bucket
     // Instead, use aborted GET.
     const controller = new AbortController();
     const signal = controller.signal;
@@ -198,9 +191,32 @@ const headRequest = async (url: string, headers?: any) => {
     return response
 }
 
+const normalHeadRequest = async (url: string, headers?: any) => {
+    try {
+        const response = await fetch(url, {method: 'HEAD', headers})
+        if (response.status !== 200) {
+            return undefined
+        }
+        // display response headers
+        for (const [key, value] of response.headers) {
+            console.log(`${key}: ${value}`);
+        }
+        return response
+    }
+    catch(err: any) {
+        console.warn(`Unable to HEAD ${url}: ${err.message}`)
+        return undefined
+    }
+}
+
 const getSizeForRemoteFile = async (url: string): Promise<number> => {
     const authorizationHeader = getAuthorizationHeaderForUrl(url)
-    const headers = authorizationHeader ? {Authorization: authorizationHeader} : undefined
+    const headers: {[key: string]: string} = authorizationHeader ? {Authorization: authorizationHeader} : {}
+
+    // we are going to need the content-length
+    headers['User-Agent'] = 'Mozilla/5.0'
+
+    // add user agent to avoid 403
     const response = await headRequest(url, headers)
     if (!response) {
         throw Error(`Unable to HEAD ${url}`)
@@ -222,10 +238,12 @@ const getSizeForRemoteFile = async (url: string): Promise<number> => {
 
 export const setUrlFile = async (projectId: string, fileName: string, url: string, metadata: any, auth: Auth): Promise<void> => {
     const reqUrl = `${apiBase}/api/gui/projects/${projectId}/files/${fileName}`
-    const size = await getSizeForRemoteFile(url)
+
+    // the size is now computed on the server side
+    // const size = await getSizeForRemoteFile(url)
     const body = {
         content: `url:${url}`,
-        size,
+        // size,
         metadata
     }
     const response = await putRequest(reqUrl, body, auth)

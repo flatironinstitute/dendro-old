@@ -198,9 +198,12 @@ const NwbFileView: FunctionComponent<Props> = ({fileName, width, height}) => {
             const dandiAssetPathEncoded = encodeURIComponent(metadata.dandiAssetPath)
             additionalQueryParams += `&dandiAssetPath=${dandiAssetPathEncoded}`
         }
-        const u = `https://flatironinstitute.github.io/neurosift/?p=/nwb&url=${nwbUrl}${additionalQueryParams}`
+        let u = `https://flatironinstitute.github.io/neurosift/?p=/nwb&url=${nwbUrl}${additionalQueryParams}`
+        if (fileName.endsWith('.json')) {
+            u += '&st=lindi'
+        }
         window.open(u, '_blank')
-    }, [nwbUrl, metadata])
+    }, [nwbUrl, metadata, fileName])
 
     useEffect(() => {
         if (!dandisetId) return

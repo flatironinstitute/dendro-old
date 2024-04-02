@@ -62,7 +62,18 @@ async def set_file(project_id, file_name, data: SetFileRequest, github_access_to
     metadata = data.metadata
     is_folder = data.isFolder
 
-    assert size is not None, "size must be specified"
+    if size is None:
+        if content.startswith("url:"):
+            # if the content is a URL, we can get the size from the URL
+            headers = {
+                'Accept-Encoding': 'identity' # don't accept encoding in order to get the actual size
+            }
+            from aiohttp import ClientSession
+            async with ClientSession() as session:
+                async with session.head(content[len("url:"):], headers=headers) as response:
+                    size = int(response.headers['Content-Length'])
+        else:
+            raise Exception("size must be specified")
 
     project = await fetch_project(project_id)
     assert project is not None, f"No project with ID {project_id}"

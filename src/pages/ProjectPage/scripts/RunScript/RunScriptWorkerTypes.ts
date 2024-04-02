@@ -32,8 +32,14 @@ export type RunScriptAddJob = {
     runMethod: 'local' | 'aws_batch' | 'slurm'
 }
 
+export type RunScriptAddedFile = {
+    fileName: string
+    url: string
+}
+
 export type RunScriptResult = {
     jobs: RunScriptAddJob[]
+    addedFiles: RunScriptAddedFile[]
 }
 
 export {}
