@@ -275,18 +275,3 @@ def _job_matches(*,
         if x.value != input_parameter.value:
             return False
     return True
-
-
-def add_file(
-    project: Project,
-    file_name: str,
-    url: str,
-):
-    """Add a file to the project.
-
-    Args:
-        project (Project): The project to add the file to.
-        file_name (str): The name of the file.
-        url (str): The URL of the file.
-    """
-    raise NotImplementedError('Not yet implemented')

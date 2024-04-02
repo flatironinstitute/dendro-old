@@ -173,7 +173,8 @@ def _client_get_api_request(*,
 def _client_post_api_request(*,
     url_path: str,
     data: dict,
-    dendro_api_key: str
+    dendro_api_key: str,
+    put: bool = False
 ):
     headers = {
         'dendro-api-key': dendro_api_key
@@ -187,12 +188,27 @@ def _client_post_api_request(*,
         url = url_path
         client = test_client
     try:
-        resp = client.post(url, headers=headers, json=data, timeout=60)
+        if not put:
+            resp = client.post(url, headers=headers, json=data, timeout=60)
+        else:
+            resp = client.put(url, headers=headers, json=data, timeout=60)
         resp.raise_for_status()
     except Exception as e:
         print(f'Error in client post api request for {url}; {e}')
         raise
     return resp.json()
+
+def _client_put_api_request(*,
+    url_path: str,
+    data: dict,
+    dendro_api_key: str
+):
+    return _client_post_api_request(
+        url_path=url_path,
+        data=data,
+        dendro_api_key=dendro_api_key,
+        put=True
+    )
 
 ####################################################################################################
 # The GUI API requests below are only here for use with pytest since the real GUI requests come from the browser using typescript

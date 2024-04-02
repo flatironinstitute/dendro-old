@@ -48,7 +48,7 @@ const FileViewChild: FunctionComponent<FileViewChildProps> = ({fileName, width, 
         if (!files) return undefined
         return files.find(f => (f.fileName === fileName))
     }, [files, fileName])
-    if ((fileName.endsWith('.nwb')) || (fileName.endsWith('.nwb.zarr.json'))) {
+    if ((fileName.endsWith('.nwb')) || (fileName.endsWith('.nwb.zarr.json')) || (fileName.endsWith('.nwb.json'))) {
         return (
             <NwbFileView
                 fileName={fileName}
