@@ -1,8 +1,21 @@
+from typing import Union
 import os
 import json
 from .Project import Project
 from ..common._api_request import _client_put_api_request
-from ..api_helpers.routers.client.router import SetProjectFileRequest, SetProjectFileMetadataRequest
+from pydantic import BaseModel
+
+############################################
+# These could be imported from ..api_helpers.routers.client.router
+# however, we don't want this part of the code to be dependent on fastapi
+class SetProjectFileRequest(BaseModel):
+    content: str
+    metadata: dict = {}
+    size: Union[int, None] = None
+
+class SetProjectFileMetadataRequest(BaseModel):
+    metadata: dict
+############################################
 
 
 def set_file(*,
