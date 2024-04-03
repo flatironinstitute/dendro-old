@@ -23,6 +23,12 @@ const useJob = (jobId: string) => {
     const [refreshCode, setRefreshCode] = useState(0)
     const refreshJob = useCallback(() => {
         setRefreshCode(rc => rc + 1)
+        setRefreshConsoleOutputCode(rc => rc + 1)
+    }, [])
+
+    const [refreshConsoleOutputCode, setRefreshConsoleOutputCode] = useState(0)
+    const refreshConsoleOutput = useCallback(() => {
+        setRefreshConsoleOutputCode(rc => rc + 1)
     }, [])
 
     const [jobConsoleOutput, setJobConsoleOutput] = useState<string | undefined>()
@@ -36,27 +42,28 @@ const useJob = (jobId: string) => {
             if (!jobId) return
             const job = await fetchJob(jobId, auth)
             if (canceled) return
-
             setJob(job)
-
-            if (job?.consoleOutputUrl) {
-                // fetch console output
-                const resp = await fetch(job.consoleOutputUrl)
-                if (resp.ok) {
-                    const text = await resp.text()
-                    setJobConsoleOutput(text)
-                }
-            }
         })()
         return () => {
             canceled = true
         }
     }, [jobId, auth, refreshCode])
-    return {job, refreshJob, jobConsoleOutput}
+    useEffect(() => {
+        if (!job) return
+        if (!job.consoleOutputUrl) return
+        ;(async () => {
+            const resp = await fetch(job.consoleOutputUrl || '')
+            if (resp.ok) {
+                const text = await resp.text()
+                setJobConsoleOutput(text)
+            }
+        })()
+    }, [job, refreshConsoleOutputCode])
+    return {job, refreshJob, jobConsoleOutput, refreshConsoleOutput}
 }
 
 const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
-    const {job, refreshJob, jobConsoleOutput} = useJob(jobId)
+    const {job, refreshJob, jobConsoleOutput, refreshConsoleOutput} = useJob(jobId)
     const secretParameterNames = useMemo(() => {
         if (!job) return []
         return job.processorSpec.parameters.filter(p => p.secret).map(p => p.name)
@@ -179,10 +186,13 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
             </ExpandableSection>
             <hr />
             <ExpandableSection title="Console output" defaultExpanded={true}>
-                <div style={{position: 'relative', maxHeight: determineMaxHeightForConsoleOutputBasedOnHeight(height), overflowY: 'auto'}}>
-                    <pre style={{fontSize: 10}}>
-                        {jobConsoleOutput}
-                    </pre>
+                <div>
+                    <button onClick={refreshConsoleOutput}>Refresh</button>
+                    <div style={{position: 'relative', maxHeight: determineMaxHeightForConsoleOutputBasedOnHeight(height), overflowY: 'auto'}}>
+                        <pre style={{fontSize: 10}}>
+                            {jobConsoleOutput}
+                        </pre>
+                    </div>
                 </div>
             </ExpandableSection>
             <hr />
