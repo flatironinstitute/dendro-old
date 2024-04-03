@@ -11,6 +11,11 @@ from ...core.settings import get_settings
 from ....common.dendro_types import CreateJobRequestInputFile, CreateJobRequestOutputFile, CreateJobRequestInputParameter
 from .._create_output_file import _create_output_file
 
+
+# The number of pending jobs that can be created without approval
+MAX_PENDING_OR_RUNNING_JOBS_WITHOUT_APPROVAL = 10
+
+
 class CreateJobException(Exception):
     pass
 
@@ -26,7 +31,7 @@ async def create_job(*,
     dandi_api_key: Union[str, None] = None,
     required_resources: DendroJobRequiredResources,
     run_method: Literal['local', 'aws_batch', 'slurm'],
-    pending_approval: bool = False
+    pending_approval: Union[bool, None] = None  # None means auto-determine
 ):
     _check_job_is_consistent_with_processor_spec(
         processor_spec=processor_spec,
@@ -130,6 +135,15 @@ async def create_job(*,
                 secret=pp.secret
             )
         )
+    
+    if pending_approval is None:
+        # Let's determine whether we need approval based on the number of
+        # jobs in the project that are pending or running
+        pending_jobs = [x for x in all_jobs if x.status == 'pending' or x.status == 'running']
+        if len(pending_jobs) >= MAX_PENDING_OR_RUNNING_JOBS_WITHOUT_APPROVAL:
+            pending_approval = True
+        else:
+            pending_approval = False
 
     output_bucket_base_url = get_settings().OUTPUT_BUCKET_BASE_URL
     job = DendroJob(

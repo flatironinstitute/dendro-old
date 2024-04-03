@@ -17,7 +17,8 @@ router = APIRouter()
 async def create_job_handler(
     data: CreateJobRequest,
     github_access_token: Union[str, None] = Header(None),
-    dendro_api_key: Union[str, None] = Header(None)
+    dendro_api_key: Union[str, None] = Header(None),
+    force_require_approval: bool = False
 ) -> CreateJobResponse:
     # authenticate the request
     user_id = await _authenticate_gui_request(
@@ -51,7 +52,7 @@ async def create_job_handler(
         dandi_api_key=dandi_api_key,
         required_resources=required_resources,
         run_method=run_method,
-        pending_approval=True
+        pending_approval=True if force_require_approval else None  # None means determine automatically
     )
 
     return CreateJobResponse(

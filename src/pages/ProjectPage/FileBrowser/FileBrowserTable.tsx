@@ -3,10 +3,11 @@ import { faPython } from "@fortawesome/free-brands-svg-icons"
 import { faCaretDown, faCaretRight, faFile, faFolder, faNoteSticky } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { FunctionComponent, useCallback, useEffect, useMemo, useReducer } from "react"
+import { applicationBarColorDarkened } from "../../../ApplicationBar"
 import { timeAgoString } from "../../../timeStrings"
+import { DendroJob } from "../../../types/dendro-types"
 import { SelectedStrings, SelectedStringsAction, expandedFoldersReducer } from "./FileBrowser2"
 import formatByteCount from "./formatByteCount"
-import { DendroJob } from "../../../types/dendro-types"
 
 export type FileItem = {
     type: 'file'
@@ -106,6 +107,14 @@ const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeCol
                     }
                 }
                 const subFoldersListSorted = Array.from(subFoldersSet).sort()
+                // if we are at root node, then "imported" subfolder needs to be first
+                if (!node.name) {
+                    const index = subFoldersListSorted.indexOf('imported')
+                    if (index >= 0) {
+                        subFoldersListSorted.splice(index, 1)
+                        subFoldersListSorted.unshift('imported')
+                    }
+                }
                 for (const subFolderName of subFoldersListSorted) {
                     const subNode: TreeNode = {
                         type: 'folder',
@@ -213,7 +222,7 @@ const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeCol
             <tbody>
                 {
                     fileItems.filter(fi => (itemIsVisible(fi.name))).map(x => (
-                        <tr key={x.id}>
+                        <tr key={x.id} style={isTopLevelFolder(x) ? {background: applicationBarColorDarkened, color: 'white'} : {}}>
                             {multiSelect && <td style={{width: colWidth}}>
                                 {
                                     x.type === 'file' ? (
@@ -281,6 +290,10 @@ const FileBrowserTable: FunctionComponent<FileBrowserTableProps> = ({hideSizeCol
             </tbody>
         </table>
     )
+}
+
+const isTopLevelFolder = (fi: FileItem) => {
+    return fi.type === 'folder' && !fi.name.includes('/')
 }
 
 export const Checkbox: FunctionComponent<{checked: boolean | null, onClick: () => void}> = ({checked, onClick}) => {

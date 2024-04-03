@@ -175,9 +175,11 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
             </ExpandableSection>
             <hr />
             <ExpandableSection title="Console output" defaultExpanded={true}>
-                <pre style={{fontSize: 10}}>
-                    {jobConsoleOutput}
-                </pre>
+                <div style={{position: 'relative', maxHeight: determineMaxHeightForConsoleOutputBasedOnHeight(height), overflowY: 'auto'}}>
+                    <pre style={{fontSize: 10}}>
+                        {jobConsoleOutput}
+                    </pre>
+                </div>
             </ExpandableSection>
             <hr />
             <ModalWindow
@@ -214,6 +216,18 @@ export const ExpandableSection: FunctionComponent<PropsWithChildren<ExpandableSe
             }
         </div>
     )
+}
+
+const determineMaxHeightForConsoleOutputBasedOnHeight = (height: number) => {
+    if (height < 500) {
+        return Math.max(200, height - 200)
+    }
+    else if (height < 1000) {
+        return Math.max(400, height - 400)
+    }
+    else {
+        return Math.max(600, height - 600)
+    }
 }
 
 const downloadJson = (json: string, fileName: string) => {

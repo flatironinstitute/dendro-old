@@ -153,7 +153,8 @@ async def create_job(
     return await create_job_handler(
         data=data,
         dendro_api_key=dendro_api_key,
-        github_access_token=None
+        github_access_token=None,
+        force_require_approval=True  # force require approval for all jobs created via client API
     )
 
 # get compute resource
