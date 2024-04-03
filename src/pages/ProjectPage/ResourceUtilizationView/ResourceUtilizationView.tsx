@@ -5,6 +5,7 @@ import { Hyperlink } from "@fi-sci/misc";
 
 type ResourceUtilizationViewProps = {
     job: DendroJob
+    displayJobId: boolean
 }
 
 type ResourceUtilizationLog = ResourceUtilizationLogLine[]
@@ -93,7 +94,7 @@ const useResourceUtilizationLog = (job: DendroJob) => {
     return {resourceUtilizationLog, refreshResourceUtilizationLog}
 }
 
-const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> = ({job}) => {
+const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> = ({job, displayJobId}) => {
     const {resourceUtilizationLog, refreshResourceUtilizationLog} = useResourceUtilizationLog(job)
     const referenceTime = resourceUtilizationLog && resourceUtilizationLog.length > 0 ? resourceUtilizationLog[0].timestamp : 0
 
@@ -135,7 +136,11 @@ const ResourceUtilizationView: FunctionComponent<ResourceUtilizationViewProps> =
     return (
         <div>
             <div>
-                <Hyperlink onClick={refreshResourceUtilizationLog}>Refresh resource utilization for job {job.jobId} ({job.processorName})</Hyperlink>
+                <Hyperlink onClick={refreshResourceUtilizationLog}>
+                    {
+                        displayJobId ? `Refresh resource utilization for job ${job.jobId} (${job.processorName})` : `Refresh resource utilization`
+                    }
+                </Hyperlink>
                 &nbsp;
                 <CumulativeToggle value={cumulative} setValue={setCumulative} />
             </div>

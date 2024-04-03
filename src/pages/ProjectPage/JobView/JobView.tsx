@@ -168,8 +168,12 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
                 <>
                     <div>
                         <div>&nbsp;</div>
-                        <Hyperlink onClick={openResourceUtilization}>View resource utilization</Hyperlink>
+                        <Hyperlink onClick={openResourceUtilization}>Open enlarged view</Hyperlink>
                         <div>&nbsp;</div>
+                        <ResourceUtilizationView
+                            job={job}
+                            displayJobId={false}
+                        />
                     </div>
                 </>
             </ExpandableSection>
@@ -188,6 +192,7 @@ const JobView: FunctionComponent<Props> = ({ width, height, jobId }) => {
             >
                 <ResourceUtilizationView
                     job={job}
+                    displayJobId={true}
                 />
             </ModalWindow>
         </div>
