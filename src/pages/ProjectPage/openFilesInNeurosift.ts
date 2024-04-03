@@ -8,8 +8,10 @@ const openFilesInNeurosift = async (files: DendroFile[], dendroProjectId: string
     // const neurosiftUrl = `https://flatironinstitute.github.io/neurosift/?p=/nwb&${urlQuery}&dendroProjectId=${dendroProjectId}&${fileNameQuery}`;
     const dandisetId = files[0]?.metadata.dandisetId;
     const dandisetVersion = files[0]?.metadata.dandisetVersion;
+    const dandiAssetId = files[0]?.metadata.dandiAssetId;
     if (dandisetId) urlQuery += `&dandisetId=${dandisetId}`;
     if (dandisetVersion) urlQuery += `&dandisetVersion=${dandisetVersion}`;
+    if (dandiAssetId) urlQuery += `&dandiAssetId=${dandiAssetId}`;
     const neurosiftUrl = `https://flatironinstitute.github.io/neurosift/?p=/nwb&${urlQuery}`;
     window.open(neurosiftUrl, '_blank');
 }

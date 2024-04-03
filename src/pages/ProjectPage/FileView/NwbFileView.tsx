@@ -128,6 +128,10 @@ const FileViewTable: FunctionComponent<FileViewTableProps> = ({fileName, additio
                     <td>URI:</td>
                     <td>{theUri}</td>
                 </tr>
+                <tr>
+                    <td>Metadata:</td>
+                    <td>{theFile ? JSON.stringify(theFile.metadata || {}) : ''}</td>
+                </tr>
                 {
                     jobProducingThisFile && (
                         <>
@@ -193,6 +197,9 @@ const NwbFileView: FunctionComponent<Props> = ({fileName, width, height}) => {
         }
         if (metadata.dandisetVersion) {
             additionalQueryParams += `&dandisetVersion=${metadata.dandisetVersion}`
+        }
+        if (metadata.dandiAssetId) {
+            additionalQueryParams += `&dandiAssetId=${metadata.dandiAssetId}`
         }
         if (metadata.dandiAssetPath) {
             const dandiAssetPathEncoded = encodeURIComponent(metadata.dandiAssetPath)

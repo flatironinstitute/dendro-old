@@ -363,6 +363,18 @@ async def insert_file(file: DendroFile):
     files_collection = client['dendro']['files']
     await files_collection.insert_one(_model_dump(file, exclude_none=True))
 
+async def update_file_metadata(*, project_id, file_id: str, metadata: dict):
+    client = _get_mongo_client()
+    files_collection = client['dendro']['files']
+    await files_collection.update_one({
+        'projectId': project_id,
+        'fileId': file_id
+    }, {
+        '$set': {
+            'metadata': metadata
+        }
+    })
+
 class UserNotFoundError(Exception):
     pass
 
@@ -410,6 +422,21 @@ async def fetch_files_with_content_string(content_string: str) -> List[DendroFil
     files = await files_collection.find({
         'content': content_string
     }).to_list(length=None)
+    for file in files:
+        _remove_id_field(file)
+    files = [DendroFile(**file) for file in files] # validate files
+    return files
+
+async def fetch_files_with_metadata(metadata_query: dict) -> List[DendroFile]:
+    # if it's an empty query, raise an error
+    if not metadata_query:
+        raise ValueError("metadata_query cannot be empty")
+    client = _get_mongo_client()
+    files_collection = client['dendro']['files']
+    # find files where file['metadata'] matches metadata_query
+    files = await files_collection.find({
+        'metadata': metadata_query
+    }).to_list(length=100)
     for file in files:
         _remove_id_field(file)
     files = [DendroFile(**file) for file in files] # validate files

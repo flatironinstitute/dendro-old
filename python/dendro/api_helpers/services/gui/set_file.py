@@ -1,6 +1,6 @@
 import time
 from typing import Union
-from ...clients.db import fetch_file, delete_file, insert_file, update_project
+from ...clients.db import fetch_file, delete_file, insert_file, update_project, update_file_metadata
 from ....common.dendro_types import DendroFile
 from ...core._create_random_id import _create_random_id
 from .._remove_detached_files_and_jobs import _remove_detached_files_and_jobs
@@ -48,3 +48,17 @@ async def set_file(
     )
 
     return new_file.fileId
+
+async def set_file_metadata(
+    project_id: str,
+    file_name: str,
+    metadata: dict
+):
+    existing_file = await fetch_file(project_id, file_name)
+    if existing_file is None:
+        raise Exception(f"Cannot set metadata. File {file_name} not found in project {project_id}")
+    await update_file_metadata(
+        project_id=project_id,
+        file_id=existing_file.fileId,
+        metadata=metadata
+    )

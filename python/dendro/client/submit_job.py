@@ -98,15 +98,16 @@ def submit_job(*,
     ]
     matching_job = None
     for job in project._jobs:
-        if _job_matches(
-            job=job,
-            processor_name=processor_name,
-            input_files=input_files,
-            output_files=output_files,
-            parameters=parameters
-        ):
-            matching_job = job
-            break
+        if not job.deleted:
+            if _job_matches(
+                job=job,
+                processor_name=processor_name,
+                input_files=input_files,
+                output_files=output_files,
+                parameters=parameters
+            ):
+                matching_job = job
+                break
     if matching_job:
         rerun = True
         if rerun_policy == 'never':

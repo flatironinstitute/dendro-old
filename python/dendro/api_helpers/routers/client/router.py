@@ -9,7 +9,7 @@ from ..gui.create_job_route import create_job_handler
 from ...core.settings import get_settings
 from ..gui._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project
-from ...services.gui.set_file import set_file as service_set_file
+from ...services.gui.set_file import set_file as service_set_file, set_file_metadata as service_set_file_metadata
 
 router = APIRouter()
 
@@ -97,6 +97,40 @@ async def set_project_file(project_id, file_name, data: SetProjectFileRequest, d
     )
 
     return SetProjectFileResponse(success=True)
+
+
+# set project file metadata
+class SetProjectFileMetadataRequest(BaseModel):
+    metadata: dict
+
+class SetProjectFileMetadataResponse(BaseModel):
+    success: bool
+
+@router.put("/projects/{project_id}/files-metadata/{file_name:path}")
+@api_route_wrapper
+async def set_project_file_metadata(project_id, file_name, data: SetProjectFileMetadataRequest, dendro_api_key: Union[str, None] = Header(None)) -> SetProjectFileMetadataResponse:
+    metadata = data.metadata
+
+    user_id = await _authenticate_gui_request(
+        github_access_token=None,
+        dendro_api_key=dendro_api_key,
+        raise_on_not_authenticated=True
+    )
+    if user_id is None:
+        raise Exception("User not authenticated")
+
+    project = await fetch_project(project_id)
+    assert project is not None, f"No project with ID {project_id}"
+
+    _check_user_can_edit_project(project, user_id)
+
+    await service_set_file_metadata(
+        project_id=project_id,
+        file_name=file_name,
+        metadata=metadata
+    )
+
+    return SetProjectFileMetadataResponse(success=True)
 
 
 # get project jobs
