@@ -44,11 +44,14 @@ async def _create_output_file(*,
     })
     existing_file = DendroFile(**existing_file) if existing_file is not None else None
     deleted_old_file = False
+    metadata = {}
     if existing_file is not None:
         if replace_pending:
             if existing_file.content != 'pending':
                 raise Exception('Error replacing pending file: existing file is not pending')
             file_id = existing_file.fileId # we will replace this file and it's important to use the same file ID
+            # we want to retain the metadata from the existing file
+            metadata = existing_file.metadata
             await files_collection.delete_one({
                 'projectId': project_id,
                 'fileId': file_id
@@ -80,7 +83,7 @@ async def _create_output_file(*,
         size=size,
         timestampCreated=time.time(),
         content=content,
-        metadata={},
+        metadata=metadata,
         isFolder=is_folder,
         jobId=job_id
     )
