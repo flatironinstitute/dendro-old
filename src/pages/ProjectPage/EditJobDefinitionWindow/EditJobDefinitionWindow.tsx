@@ -171,6 +171,16 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
         const showOutputs = show === 'all' || show === 'outputs' || show === 'inputs+outputs'
         const showParameters = show === 'all' || show === 'parameters'
 
+        const getGroupHasInputs = (name: string) => {
+            return nodes.find(n => (n.type === 'leaf') && (n.fieldType === 'input') && (n.name.startsWith(name + '.')))
+        }
+        const getGroupHasOutputs = (name: string) => {
+            return nodes.find(n => (n.type === 'leaf') && (n.fieldType === 'output') && (n.name.startsWith(name + '.')))
+        }
+        const getGroupHasParameters = (name: string) => {
+            return nodes.find(n => (n.type === 'leaf') && (n.fieldType === 'parameter') && (n.name.startsWith(name + '.')))
+        }
+
         nodes.forEach(node => {
             const aa = node.name.split('.')
             let visible = true
@@ -181,6 +191,14 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                 }
             }
             if (node.type === 'group') {
+                const groupHasInputs = getGroupHasInputs(node.name)
+                const groupHasOutputs = getGroupHasOutputs(node.name)
+                const groupHasParameters = getGroupHasParameters(node.name)
+                let okayToShow = false
+                if (showInputs && groupHasInputs) okayToShow = true
+                if (showOutputs && groupHasOutputs) okayToShow = true
+                if (showParameters && groupHasParameters) okayToShow = true
+                if (!okayToShow) return
                 ret.push(
                     <GroupRow
                         key={node.name}
@@ -266,9 +284,6 @@ const EditJobDefinitionWindow: FunctionComponent<EditJobDefinitionWindowProps> =
                 else {
                     throw Error('Unexpected field type')
                 }
-                ret.push(
-                    
-                )
             }
             else {
                 throw Error('Unexpected node type')
@@ -1007,7 +1022,7 @@ const DisplayParameterValue: FunctionComponent<DisplayParameterValueProps> = ({p
         return <span>{value ? 'true' : 'false'}</span>
     }
     else if (type === 'List[float]') {
-        return <span>{value.join(', ')}</span>
+        return <span>{value !== undefined ? value.join(', ') : 'undefined'}</span>
     }
     else {
         return <div>Unsupported type: {type}</div>
