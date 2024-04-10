@@ -34,7 +34,7 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
 
     return (
         <div style={{fontSize: 11}}>
-            <h3>
+            <h2>
                 {
                     appBeingEdited ? (
                         <span>Edit app</span>
@@ -42,9 +42,15 @@ const NewAppWindow: FunctionComponent<Props> = ({computeResource, onNewApp, appB
                         <span>Add new app</span>
                     )
                 }
-            </h3>
+            </h2>
             <hr />
-            {/* Input field for the app name */}
+            {!appBeingEdited && (
+                <div>
+                    <div>&nbsp;</div>
+                    <SelectFromPredefinedAppsComponent newAppName={newAppName} setNewAppName={setNewAppName} newSpecUri={newSpecUri} setNewSpecUri={setNewSpecUri} />
+                    <div>&nbsp;</div>
+                </div>
+            )}
             <div>
                 <table>
                     <tbody>
@@ -124,6 +130,55 @@ const isValidSpecUri = (specUri: string) => {
     if (specUri.startsWith('file://')) return true
     if (specUri.startsWith('http')) return true
     return false
+}
+
+const predefinedApps = [
+    {
+        name: 'si_mountainsort5',
+        specUri: 'https://github.com/catalystneuro/si-dendro-apps/blob/main/si_mountainsort5/spec.json'
+    },
+    {
+        name: 'si_kilosort25',
+        specUri: 'https://github.com/catalystneuro/si-dendro-apps/blob/main/si_kilosort25/spec.json'
+    },
+    {
+        name: 'si_kilosort3',
+        specUri: 'https://github.com/catalystneuro/si-dendro-apps/blob/main/si_kilosort3/spec.json'
+    },
+    {
+        name: 'neurosift-1',
+        specUri: 'https://github.com/magland/neurosift-dendro-apps/blob/main/dendro_apps/neurosift-1/spec.json'
+    }
+]
+
+type SelectFromPredefinedAppsComponentProps = {
+    newAppName: string
+    setNewAppName: (name: string) => void
+    newSpecUri: string
+    setNewSpecUri: (uri: string) => void
+}
+
+const SelectFromPredefinedAppsComponent: FunctionComponent<SelectFromPredefinedAppsComponentProps> = ({newAppName, setNewAppName, newSpecUri, setNewSpecUri}) => {
+    const selectedIndex = useMemo(() => {
+        return predefinedApps.findIndex(app => app.name === newAppName && app.specUri === newSpecUri)
+    }, [newAppName, newSpecUri])
+    return (
+        <div>
+            <select value={selectedIndex} onChange={e => {
+                const index = parseInt(e.target.value)
+                if (index < 0) return
+                setNewAppName(predefinedApps[index].name)
+                setNewSpecUri(predefinedApps[index].specUri)
+            }}>
+                <option value={-1}>Select from predefined apps</option>
+                {
+                    predefinedApps.map((app, index) => (
+                        <option key={index} value={index}>{app.name}</option>
+                    ))
+                }
+            </select>
+        </div>
+    )
 }
 
 export default NewAppWindow
