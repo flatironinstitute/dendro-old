@@ -135,7 +135,7 @@ async def create_job(*,
                 secret=pp.secret
             )
         )
-    
+
     if pending_approval is None:
         # Let's determine whether we need approval based on the number of
         # jobs in the project that are pending or running
