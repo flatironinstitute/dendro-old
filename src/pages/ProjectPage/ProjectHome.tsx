@@ -5,7 +5,7 @@ import { Hyperlink } from "@fi-sci/misc";
 import ModalWindow from "@fi-sci/modal-window";
 import { SmallIconButton } from "@fi-sci/misc";
 import { timeAgoString } from "../../timeStrings";
-import useRoute from "../../useRoute";
+import useRoute, { Route } from "../../useRoute";
 import { useProject } from "./ProjectPageContext";
 import ProjectSettingsWindow from "./ProjectSettingsWindow";
 import ComputeResourceNameDisplay from "../../ComputeResourceNameDisplay";
@@ -26,7 +26,7 @@ const headingStyle: React.CSSProperties = {
 }
 
 const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
-    const {setRoute} = useRoute()
+    const {setRoute, route} = useRoute()
     const {project, files, jobs, projectId, projectRole, refreshProject} = useProject()
 
     const {visible: settingsWindowVisible, handleOpen: openSettingsWindow, handleClose: closeSettingsWindow} = useModalWindow()
@@ -87,11 +87,17 @@ const ProjectHome: FunctionComponent<Props> = ({width, height}) => {
                     </tr>
                     <tr key="associated-dandisets">
                         <td>Associated dandisets</td>
-                        <td>{
-                            associatedDandisetElements?.length
-                                ? associatedDandisetElements
-                                : 'None'
-                        }</td>
+                        <td>
+                            <span>{
+                                associatedDandisetElements?.length
+                                    ? associatedDandisetElements
+                                    : 'None'
+                            }</span>
+                            &nbsp;
+                            <SmallIconButton icon={<Edit />} onClick={() => {
+                                setRoute({...route, tab: 'dandi-import'} as Route)
+                            }} />
+                        </td>
                     </tr>
                     <tr key="compute-resource">
                         <td>Compute resource:</td>

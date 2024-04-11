@@ -3,7 +3,7 @@ import { useModalWindow } from "@fi-sci/modal-window"
 import { useGithubAuth } from "../../GithubAuth/useGithubAuth";
 import ModalWindow from "@fi-sci/modal-window";
 import { setProjectTags, setUrlFile } from "../../dbInterface/dbInterface";
-import useRoute from "../../useRoute";
+import useRoute, { Route } from "../../useRoute";
 // import ManualNwbSelector from "./ManualNwbSelector/ManualNwbSelector";
 import { PluginAction } from "../../plugins/DendroFrontendPlugin";
 import { SetupComputeResources } from "../ComputeResourcesPage/ComputeResourcesContext";
@@ -37,6 +37,7 @@ const ProjectPage: FunctionComponent<Props> = ({width, height, onCurrentProjectC
     const {route} = useRoute()
     if (route.page !== 'project') throw Error('route.page != project')
     const projectId = route.projectId
+
     return (
         <SetupProjectPage
             projectId={projectId}
@@ -95,6 +96,23 @@ const projectPageViews: ProjectPageView[] = [
 const ProjectPageChild: FunctionComponent<{width: number, height: number}> = ({width, height}) => {
     const leftMenuPanelWidth = 150
     const statusBarHeight = 16
+    const {project} = useProject()
+    const {staging, toggleStaging} = useRoute()
+    
+    useEffect(() => {
+        // switch staging on or off depending on the tags
+        if (!project) return
+        if (project.tags.find(tag => tag.startsWith('dandiset-staging.'))) {
+            if (!staging) {
+                toggleStaging()
+            }
+        }
+        else if (project.tags.find(tag => tag.startsWith('dandiset.'))) {
+            if (staging) {
+                toggleStaging()
+            }
+        }
+    }, [project, staging, toggleStaging])
     return (
         <SetupComputeResources>
             <div style={{position: 'absolute', width, height: height - statusBarHeight, overflow: 'hidden'}}>
@@ -317,12 +335,36 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
         })
     }, [project, staging, auth, refreshProject])
 
+    const handleRemoveDandisetId = useCallback((dandisetId: string) => {
+        if (!auth) return
+        if (!project) return
+        const newTags = project.tags.filter(tag => {
+            if (staging) {
+                return tag !== `dandiset-staging.${dandisetId}`
+            }
+            else {
+                return tag !== `dandiset.${dandisetId}`
+            }
+        })
+        if (!project) return
+        setProjectTags(project.projectId, newTags, auth).then(() => {
+            refreshProject()
+        })
+    }, [project, staging, auth, refreshProject])
+
     const [selectedDandisetId, setSelectedDandisetId] = useState<string>('')
     useEffect(() => {
         if (selectedDandisetId) return
         if (taggedDandisetIds.length === 0) return
         setSelectedDandisetId(taggedDandisetIds[0])
     }, [selectedDandisetId, taggedDandisetIds])
+
+    useEffect(() => {
+        if (!taggedDandisetIds.includes(selectedDandisetId)) {
+            // deselect if that tag has been removed
+            setSelectedDandisetId('')
+        }
+    }, [taggedDandisetIds, selectedDandisetId])
 
     return (
         <div style={{position: 'absolute', width, height, overflow: 'hidden', background: 'white'}}>
@@ -387,7 +429,7 @@ const MainPanel: FunctionComponent<MainPanelProps> = ({width, height}) => {
                     viewsThatHaveBeenVisible.includes('dandi-import') && (
                         <div>
                             <div style={{position: 'absolute', width, height: 40, overflowY: 'auto'}}>
-                                <DandisetIdSelector dandisetId={selectedDandisetId} setDandisetId={setSelectedDandisetId} taggedDandisetIds={taggedDandisetIds} onAddDandisetId={handleAddDandisetId} />
+                                <DandisetIdSelector dandisetId={selectedDandisetId} setDandisetId={setSelectedDandisetId} taggedDandisetIds={taggedDandisetIds} onAddDandisetId={handleAddDandisetId} onRemoveDandiSetId={handleRemoveDandisetId} />
                             </div>
                             <div style={{position: 'absolute', width, top: 40, height: height - 40, overflow: 'hidden'}}>
                                 {selectedDandisetId && <DandisetView
@@ -480,14 +522,21 @@ type DandisetIdSelectorProps = {
     setDandisetId: (dandisetId: string) => void
     taggedDandisetIds: string[]
     onAddDandisetId: (dandisetId: string) => void
+    onRemoveDandiSetId: (dandisetId: string) => void
 }
 
-const DandisetIdSelector: FunctionComponent<DandisetIdSelectorProps> = ({dandisetId, setDandisetId, taggedDandisetIds, onAddDandisetId}) => {
+const DandisetIdSelector: FunctionComponent<DandisetIdSelectorProps> = ({dandisetId, setDandisetId, taggedDandisetIds, onAddDandisetId, onRemoveDandiSetId}) => {
     const handleAdd = useCallback(() => {
-        const newDandisetId = prompt('Enter dandiset ID')
-        if (!newDandisetId) return
-        onAddDandisetId(newDandisetId)
+        const dandisetIdToAdd = prompt('Enter Dandiset ID to add')
+        if (!dandisetIdToAdd) return
+        onAddDandisetId(dandisetIdToAdd)
     }, [onAddDandisetId])
+    const handleRemove = useCallback(() => {
+        const dandisetIdToRemove = prompt('Enter Dandiset ID to remove')
+        if (!dandisetIdToRemove) return
+        onRemoveDandiSetId(dandisetIdToRemove)
+    }, [onRemoveDandiSetId])
+    const {staging, toggleStaging} = useRoute()
     // radio buttons
     return (
         <div>
@@ -502,7 +551,28 @@ const DandisetIdSelector: FunctionComponent<DandisetIdSelectorProps> = ({dandise
                 ))
             }
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <Hyperlink onClick={handleAdd}>Add new dandiset to project</Hyperlink>
+            <Hyperlink onClick={handleAdd}>Add Dandiset to project</Hyperlink>
+            {taggedDandisetIds.length > 0 && (
+                <span>
+                    &nbsp;|&nbsp;
+                    <Hyperlink onClick={handleRemove}>Remove Dandiset from project</Hyperlink>
+                </span>
+            )}
+            {
+                <span>
+                    &nbsp;|&nbsp;
+                    {/* Staging checkbox */}
+                    <input
+                        type="checkbox"
+                        id="staging"
+                        name="staging"
+                        checked={staging}
+                        disabled={taggedDandisetIds.length > 0}
+                        onClick={taggedDandisetIds.length > 0 ? undefined : toggleStaging}
+                    />
+                    &nbsp;<span>staging</span>
+                </span>
+            }
         </div>
     )
 }
