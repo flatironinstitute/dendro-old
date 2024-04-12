@@ -161,13 +161,14 @@ def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable
     if not using_mock():
         _debug_log('Uploading final console output')
         # this is needed because the console output monitor may get terminated before it has a chance to upload the final console output
-        ok = _upload_final_console_output(
+        ok, errmsg = _upload_final_console_output(
             job_id=job_id,
             job_private_key=job_private_key,
             console_out_file=console_out_fname
         )
         if not ok:
             _debug_log('WARNING: problem uploading final console output')
+            _debug_log(errmsg)
 
     # get the output file sizes
     # this is important for the case of skipCloudUpload=True
