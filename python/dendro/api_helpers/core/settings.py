@@ -18,9 +18,10 @@ class Settings:
 
         self.DEFAULT_COMPUTE_RESOURCE_ID: Optional[str] = os.environ.get("VITE_DEFAULT_COMPUTE_RESOURCE_ID")
 
-        self.OUTPUT_BUCKET_URI: Optional[str] = os.environ.get("OUTPUT_BUCKET_URI")
-        self.OUTPUT_BUCKET_CREDENTIALS: Optional[str] = os.environ.get("OUTPUT_BUCKET_CREDENTIALS")
         self.OUTPUT_BUCKET_BASE_URL: Optional[str] = os.environ.get("OUTPUT_BUCKET_BASE_URL")
+        self.OUTPUT_BUCKET_URI: Optional[str] = os.environ.get("OUTPUT_BUCKET_URI", None)
+        self.OUTPUT_BUCKET_CREDENTIALS: Optional[str] = os.environ.get("OUTPUT_BUCKET_CREDENTIALS", None)
+        self.FSBUCKET_SECRET_KEY: Optional[str] = os.environ.get("FSBUCKET_SECRET_KEY", None)
 
 def get_settings():
     return Settings()

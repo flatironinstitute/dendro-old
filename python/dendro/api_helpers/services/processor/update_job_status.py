@@ -50,7 +50,7 @@ async def update_job_status(
         output_file_ids = []
         for output_file in job.outputFiles:
             if not output_file.skipCloudUpload:
-                output_file_url = f"{output_bucket_base_url}/dendro-outputs/{job.jobId}/{output_file.name}"
+                output_file_url = f"{output_bucket_base_url}/dendro-outputs/{job.projectId}/{job.jobId}/{output_file.name}"
             else:
                 # file_id will be filled in
                 output_file_url = f'dendro:?project={job.projectId}&file_id=$file_id$&label={output_file.fileName}&compute_resource={job.computeResourceId}'

@@ -2,6 +2,7 @@ from typing import Optional
 from dendro.mock import using_mock
 from ...core.settings import get_settings
 from ._get_signed_upload_url import _get_signed_upload_url
+from ._get_fsbucket_signed_upload_url import _get_fsbucket_signed_upload_url
 
 
 # note that output_name of "_console_output" and "_resource_utilization_log" are special cases
@@ -17,13 +18,16 @@ async def get_upload_url(job_id: str, output_name: str):
         # if len(aa) == 0:
         #     raise Exception(f"No output with name {output_name} **")
 
-    object_key = f"dendro-outputs/{job_id}/{output_name}"
+    project_id = job_id.split('.')[0]
+
+    object_key = f"dendro-outputs/{project_id}/{job_id}/{output_name}"
 
     upload_url, download_url = await _get_upload_url_for_object_key(object_key)
     return upload_url
 
 async def get_upload_url_for_folder_file(job_id: str, output_folder_name: str, output_folder_file_name: str):
-    object_key = f"dendro-outputs/{job_id}/{output_folder_name}/{output_folder_file_name}"
+    project_id = job_id.split('.')[0]
+    object_key = f"dendro-outputs/{project_id}/{job_id}/{output_folder_name}/{output_folder_file_name}"
 
     upload_url, download_url = await _get_upload_url_for_object_key(object_key)
     return upload_url
@@ -32,7 +36,8 @@ async def get_additional_upload_url(*, job_id: str, sha1: str):
     if not _is_valid_sha1(sha1):
         raise Exception('Invalid sha1 string')
 
-    object_key = f"dendro-outputs/{job_id}/sha1/{sha1}"
+    project_id = job_id.split('.')[0]
+    object_key = f"dendro-outputs/{project_id}/{job_id}/sha1/{sha1}"
 
     upload_url, download_url = await _get_upload_url_for_object_key(object_key)
     return upload_url, download_url
@@ -43,12 +48,6 @@ async def _get_upload_url_for_object_key(object_key: str, size: Optional[int] = 
     if using_mock():
         return f"https://mock-bucket.s3.amazonaws.com/{object_key}?mock-signature", f"https://mock-bucket/{object_key}"
 
-    OUTPUT_BUCKET_URI = settings.OUTPUT_BUCKET_URI
-    if OUTPUT_BUCKET_URI is None:
-        raise Exception('Environment variable not set: OUTPUT_BUCKET_URI')
-    OUTPUT_BUCKET_CREDENTIALS = settings.OUTPUT_BUCKET_CREDENTIALS
-    if OUTPUT_BUCKET_CREDENTIALS is None:
-        raise Exception('Environment variable not set: OUTPUT_BUCKET_CREDENTIALS')
     OUTPUT_BUCKET_BASE_URL = settings.OUTPUT_BUCKET_BASE_URL
     if OUTPUT_BUCKET_BASE_URL is None:
         raise Exception('Environment variable not set: OUTPUT_BUCKET_BASE_URL')
@@ -57,16 +56,33 @@ async def _get_upload_url_for_object_key(object_key: str, size: Optional[int] = 
     else:
         output_bucket_base_url = OUTPUT_BUCKET_BASE_URL
 
-    signed_upload_url = await _get_signed_upload_url(
-        bucket_uri=OUTPUT_BUCKET_URI,
-        bucket_credentials=OUTPUT_BUCKET_CREDENTIALS,
-        object_key=object_key,
-        size=size
-    )
+    FSBUCKET_SECRET_KEY = settings.FSBUCKET_SECRET_KEY
+    if FSBUCKET_SECRET_KEY is not None:
+        signed_upload_url = _get_fsbucket_signed_upload_url(
+            fsbucket_api_url=OUTPUT_BUCKET_BASE_URL,
+            secret_key=FSBUCKET_SECRET_KEY,
+            object_key=object_key,
+            size=size
+        )
+    else:
+        OUTPUT_BUCKET_URI = settings.OUTPUT_BUCKET_URI
+        if OUTPUT_BUCKET_URI is None:
+            raise Exception('Environment variable not set: OUTPUT_BUCKET_URI')
+        OUTPUT_BUCKET_CREDENTIALS = settings.OUTPUT_BUCKET_CREDENTIALS
+        if OUTPUT_BUCKET_CREDENTIALS is None:
+            raise Exception('Environment variable not set: OUTPUT_BUCKET_CREDENTIALS')
+
+        signed_upload_url = await _get_signed_upload_url(
+            bucket_uri=OUTPUT_BUCKET_URI,
+            bucket_credentials=OUTPUT_BUCKET_CREDENTIALS,
+            object_key=object_key,
+            size=size
+        )
 
     download_url = f'{output_bucket_base_url}/{object_key}'
 
     return signed_upload_url, download_url
+
 
 def _is_valid_sha1(sha1: str):
     if len(sha1) != 40:
