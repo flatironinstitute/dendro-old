@@ -10,6 +10,7 @@ from ...core.settings import get_settings
 from ..gui._authenticate_gui_request import _authenticate_gui_request
 from ...core._get_project_role import _check_user_can_edit_project
 from ...services.gui.set_file import set_file as service_set_file, set_file_metadata as service_set_file_metadata
+from ...services.processor.get_upload_url import _get_upload_url_for_object_key
 
 router = APIRouter()
 
@@ -171,3 +172,42 @@ async def get_compute_resource(compute_resource_id) -> GetComputeResourceRespons
     compute_resource = await fetch_compute_resource(compute_resource_id, raise_on_not_found=True)
     assert compute_resource
     return GetComputeResourceResponse(computeResource=compute_resource, success=True)
+
+# Initiate blob upload
+class InitiateBlobUploadRequest(BaseModel):
+    size: int
+    sha1: str
+
+class InitiateBlobUploadResponse(BaseModel):
+    downloadUrl: str
+    uploadUrl: str
+    success: bool
+
+@router.post("/projects/{project_id}/initiate_blob_upload")
+@api_route_wrapper
+async def initiate_blob_upload(project_id, data: InitiateBlobUploadRequest, dendro_api_key: Union[str, None] = Header(None)):
+    # authenticate the request
+    user_id = await _authenticate_gui_request(dendro_api_key=dendro_api_key, raise_on_not_authenticated=True)
+    assert user_id
+
+    # parse the request
+    size = data.size
+    sha1 = data.sha1
+
+    assert size is not None, "size must be specified"
+    assert sha1 is not None, "sha1 must be specified"
+
+    if size > 2 * 1024 * 1024 * 1024:
+        raise Exception("File size limit exceeded")
+
+    project = await fetch_project(project_id)
+    assert project is not None, f"No project with ID {project_id}"
+
+    _check_user_can_edit_project(project, user_id)
+
+    s = sha1
+    object_key = f'dendro-uploads/{project_id}/sha1/{s[:2]}/{s[2:4]}/{s[4:6]}/{s}'
+    a = await _get_upload_url_for_object_key(object_key, size=size)
+    upload_url, download_url = a
+
+    return InitiateBlobUploadResponse(downloadUrl=download_url, uploadUrl=upload_url, success=True)
