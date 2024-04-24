@@ -30,7 +30,8 @@ origins = [
     "http://localhost:4200",
     "https://dendro.vercel.app",
     "https://flatironinstitute.github.io",
-    "https://neurosift.app"
+    "https://neurosift.app",
+    "https://dendro-arc.vercel.app"
 ]
 
 app.add_middleware(

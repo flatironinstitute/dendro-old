@@ -30,7 +30,7 @@ const useProjectsForUser = (o: {admin?: boolean} = {}): DendroProject[] | undefi
         return () => {
             canceled = true
         }
-    }, [auth])
+    }, [auth, o.admin])
     return projects
 }
 
