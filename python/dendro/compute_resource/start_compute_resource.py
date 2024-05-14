@@ -108,7 +108,7 @@ class Daemon:
                 self._job_manager.do_work()
 
                 if not reported_that_compute_resource_is_running:
-                    print('Compute resource is running')
+                    print(f'Compute resource is running: {self._compute_resource_id}')
                     reported_that_compute_resource_is_running = True
 
                 overall_elapsed = time.time() - overall_timer

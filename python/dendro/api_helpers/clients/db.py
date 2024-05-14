@@ -141,13 +141,17 @@ async def delete_all_jobs_in_project(project_id: str):
         'deleted': {'$ne': True}
     }).to_list(length=None) # type: ignore
     for job in jobs:
-        jobs_collection.update_one({
+        # Let's actually delete them rather than just marking them as deleted
+        await jobs_collection.delete_one({
             'jobId': job['jobId']
-        }, {
-            '$set': {
-                'deleted': True
-            }
         })
+        # jobs_collection.update_one({
+        #     'jobId': job['jobId']
+        # }, {
+        #     '$set': {
+        #         'deleted': True
+        #     }
+        # })
 
 async def insert_project(project: DendroProject):
     client = _get_mongo_client()
@@ -312,13 +316,17 @@ async def delete_job(job_id: str):
     client = _get_mongo_client()
     jobs_collection = client['dendro']['jobs']
 
-    await jobs_collection.update_one({
+    # Let's actually delete them rather than just marking them as deleted
+    await jobs_collection.delete_one({
         'jobId': job_id
-    }, {
-        '$set': {
-            'deleted': True
-        }
     })
+    # await jobs_collection.update_one({
+    #     'jobId': job_id
+    # }, {
+    #     '$set': {
+    #         'deleted': True
+    #     }
+    # })
 
 async def approve_job(job_id: str):
     client = _get_mongo_client()

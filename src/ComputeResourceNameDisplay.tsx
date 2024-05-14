@@ -13,11 +13,10 @@ const ComputeResourceNameDisplay: FunctionComponent<Props> = ({ computeResourceI
     const displayString = useMemo(() => {
         if (!computeResourceId) return 'DEFAULT'
         const cr = computeResources.find(cr => cr.computeResourceId === computeResourceId)
-        return (cr ? cr.name : undefined) || computeResourceId
+        return (cr ? cr.name + ` (${abbreviate(computeResourceId, 9)})` : undefined) || abbreviate(computeResourceId, 16)
     }, [computeResources, computeResourceId])
-    const x = abbreviate(displayString || '', 16)
     const {setRoute} = useRoute()
-    const a = <span style={{color: '#345', fontStyle: 'italic'}}>{x}</span>
+    const a = <span style={{color: '#345', fontStyle: 'italic'}}>{displayString || ''}</span>
     const crId = computeResourceId || import.meta.env.VITE_DEFAULT_COMPUTE_RESOURCE_ID
     if (link) {
         return <Hyperlink onClick={() => setRoute({page: 'compute-resource', computeResourceId: crId})}>{a}</Hyperlink>
