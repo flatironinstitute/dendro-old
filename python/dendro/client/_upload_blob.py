@@ -1,6 +1,5 @@
 import os
 import tempfile
-from .Project import Project
 from ..common._api_request import _client_post_api_request
 from pydantic import BaseModel
 
@@ -19,29 +18,29 @@ class InitiateBlobUploadResponse(BaseModel):
 
 
 def upload_text_blob(*,
-    project: Project,
+    project_id: str,
     text: str
 ):
     with tempfile.TemporaryDirectory() as tmpdirname:
         file_name = os.path.join(tmpdirname, 'blob.txt')
         with open(file_name, 'w') as f:
             f.write(text)
-        return upload_file_blob(project=project, file_name=file_name)
+        return upload_file_blob(project_id=project_id, file_name=file_name)
 
 
 def upload_bytes_blob(*,
-    project: Project,
+    project_id: str,
     bytes: bytes
 ):
     with tempfile.TemporaryDirectory() as tmpdirname:
         file_name = os.path.join(tmpdirname, 'blob.bin')
         with open(file_name, 'wb') as f:
             f.write(bytes)
-        return upload_file_blob(project=project, file_name=file_name)
+        return upload_file_blob(project_id=project_id, file_name=file_name)
 
 
 def upload_json_blob(*,
-    project: Project,
+    project_id: str,
     json: dict
 ):
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -49,7 +48,7 @@ def upload_json_blob(*,
         import json as json_lib
         with open(file_name, 'w') as f:
             json_lib.dump(json, f)
-        return upload_file_blob(project=project, file_name=file_name)
+        return upload_file_blob(project_id=project_id, file_name=file_name)
 
 
 def upload_file_blob(*,
