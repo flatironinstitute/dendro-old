@@ -138,8 +138,12 @@ def load_project(project_id: str) -> Project:
 
     if project.computeResourceId:
         url_path = f'/api/client/compute_resources/{project.computeResourceId}'
-        compute_resource_resp = _client_get_api_request(url_path=url_path)
-        compute_resource = DendroComputeResource(**compute_resource_resp['computeResource'])
+        try:
+            compute_resource_resp = _client_get_api_request(url_path=url_path)
+            compute_resource = DendroComputeResource(**compute_resource_resp['computeResource'])
+        except Exception:
+            print(f'Problem loading compute resource {project.computeResourceId} for project {project_id}')
+            compute_resource = None
     else:
         compute_resource = None
 
