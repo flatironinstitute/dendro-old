@@ -16,7 +16,10 @@ import shutil
 # * Launches detached processes to monitor the console output, resource utilization, and job status
 # * Finally, sets the job status to completed or failed in the database via the API
 
-dendro_internal_folder = '_dendro'
+if os.environ.get('DENDRO_JOB_WORKING_DIR', None) is None:
+    dendro_internal_folder = '_dendro'
+else:
+    dendro_internal_folder = os.environ['DENDRO_JOB_WORKING_DIR'] + '/_dendro'
 
 def _run_job_parent_process(*, job_id: str, job_private_key: str, app_executable: str, job_timeout_sec: Union[int, None]):
     timescale = 1 if not using_mock() else 1000 # if using mock, run 1000x faster so that we can test timeouts

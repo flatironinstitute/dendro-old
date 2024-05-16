@@ -238,6 +238,7 @@ def _run_container_job(*,
         cmd2.extend(['-v', f'{project_file_cache_dir}:/file_cache'])
         env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp'
         env_vars['DENDRO_FILE_CACHE_DIR'] = '/file_cache'
+        env_vars['DENDRO_JOB_WORKING_DIR'] = '/tmp/working'
         cmd2.extend(['--workdir', '/tmp/working']) # the working directory will be /tmp/working
         for k, v in env_vars.items():
             cmd2.extend(['-e', f'{k}={v}'])
@@ -285,6 +286,7 @@ def _run_container_job(*,
         # The working directory should be /tmp/working so that if the container wants to write to the working directory, it will not run out of space
         env_vars['DENDRO_JOB_CLEANUP_DIR'] = '/tmp'
         env_vars['DENDRO_FILE_CACHE_DIR'] = '/file_cache'
+        env_vars['DENDRO_JOB_WORKING_DIR'] = '/tmp/working'
         cmd2.extend(['--pwd', '/tmp/working'])
         cmd2.extend(['--cleanenv']) # this is important to prevent singularity or apptainer from passing environment variables to the container
         cmd2.extend(['--contain']) # we don't want singularity or apptainer to mount the home or tmp directories of the host
