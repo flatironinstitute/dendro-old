@@ -1,8 +1,9 @@
-import { FunctionComponent, useCallback, useEffect, useState } from "react"
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from "react"
 import useRoute from "../useRoute"
 import { useDendro } from "../DendroContext/DendroContext"
 import { DendroProject, isDendroProject } from "../types/dendro-types"
 import { Hyperlink } from "@fi-sci/misc";
+import useProjectsForUser from "../pages/ProjectsPage/useProjectsForUser";
 
 type RecentProjectsPanelProps = {
     width: number
@@ -62,6 +63,10 @@ const useRecentProjects = () => {
 }
 
 const RecentProjectsPanel: FunctionComponent<RecentProjectsPanelProps> = ({width, height, expanded}) => {
+    const projectsForUser = useProjectsForUser()
+    const projectIdsForUser = useMemo(() => (
+        projectsForUser ? projectsForUser.map(p => p.projectId) : []
+    ), [projectsForUser])
     const {recentProjects, addRecentProject} = useRecentProjects()
     const {route, setRoute} = useRoute()
 
@@ -109,7 +114,7 @@ const RecentProjectsPanel: FunctionComponent<RecentProjectsPanelProps> = ({width
                         </tr>
                     </thead>
                     <tbody>
-                        {recentProjects.map(rp => (
+                        {recentProjects.filter(p => projectIdsForUser.includes(p.projectId)).map(rp => (
                             <tr
                                 key={rp.projectId}
                                 style={{
