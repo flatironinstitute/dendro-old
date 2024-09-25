@@ -14,6 +14,7 @@ from .stack_config import (
     stack_id,
     batch_service_role_id,
     ecs_instance_role_id,
+    ecs_volumes_policy_id,
     batch_jobs_access_role_id,
     vpc_id,
     security_group_id,
@@ -82,6 +83,21 @@ class AwsBatchStack(Stack):
             ]
         )
         Tags.of(ecs_instance_role).add("DendroName", f"{stack_id}-EcsInstanceRole")
+        ecs_volumes_policy = iam.Policy(
+            scope=self,
+            id=ecs_volumes_policy_id,
+            statements=[
+                iam.PolicyStatement(
+                    actions=[
+                        "ec2:DescribeVolumes",
+                        "ec2:AttachVolume"
+                    ],
+                    resources=["*"],
+                    effect=iam.Effect.ALLOW
+                )
+            ]
+        )
+        ecs_instance_role.attach_inline_policy(ecs_volumes_policy)
 
         # Batch jobs access role
         batch_jobs_access_role = iam.Role(
@@ -139,10 +155,58 @@ class AwsBatchStack(Stack):
         # Launch templates
         multipart_user_data = ec2.MultipartUserData()
         commands_user_data = ec2.UserData.for_linux()
+        script = """#!/bin/bash
+
+# Define the tag for searching the EBS volume
+VOLUME_TAG_KEY="dendrotag"
+VOLUME_TAG_VALUE="pipeline001"
+DEVICE="/dev/sdf"
+MOUNT_POINT="/dendro-tmp"
+
+# Fetch the volume ID of the first available EBS volume with the specified tag
+VOLUME_ID=$(aws ec2 describe-volumes --filters "Name=tag-key,Values=$VOLUME_TAG_KEY" --query "Volumes[0].VolumeId" --output text)
+
+# Check if a volume ID was found
+if [ "$VOLUME_ID" != "None" ]; then
+    echo "Found EBS volume with ID: $VOLUME_ID"
+
+    # Get instance ID
+    TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+    INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+
+    # Attach the EBS volume to this instance
+    aws ec2 attach-volume --volume-id $VOLUME_ID --instance-id $INSTANCE_ID --device $DEVICE
+
+    # Wait for the EBS volume to be attached
+    while [ ! -e $DEVICE ]; do
+        echo "Waiting for EBS volume to attach..."
+        sleep 10
+    done
+
+    # Create a mount point
+    mkdir -p $MOUNT_POINT
+
+    # Check if the EBS volume already has a filesystem
+    FS_TYPE=$(file -s $DEVICE | cut -d , -f 1 | awk '{print $2}')
+    if [ "$FS_TYPE" == "data" ]; then
+        # Format the EBS volume
+        echo "No filesystem detected on $DEVICE. Formatting..."
+        mkfs -t ext4 $DEVICE
+    else
+        echo "Filesystem already exists on $DEVICE"
+    fi
+
+    # Mount the EBS volume
+    mount $DEVICE $MOUNT_POINT
+
+    # Uncomment the following line if you want to ensure it mounts on reboot
+    # echo "$DEVICE $MOUNT_POINT ext4 defaults,nofail 0 2" >> /etc/fstab
+else
+    echo "No available EBS volume found with the specified tag"
+fi
+        """
+        commands_user_data.add_commands(script)
         multipart_user_data.add_user_data_part(commands_user_data, ec2.MultipartBody.SHELL_SCRIPT, True)
-        multipart_user_data.add_commands("mkfs -t ext4 /dev/xvda")
-        multipart_user_data.add_commands("mkdir -p /tmp")
-        multipart_user_data.add_commands("mount /dev/xvda /tmp")
 
         launch_template_gpu = ec2.LaunchTemplate(
             scope=self,

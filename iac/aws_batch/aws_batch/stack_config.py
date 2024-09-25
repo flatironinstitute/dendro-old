@@ -2,6 +2,7 @@ stack_id = "DendroBatchStack"
 
 batch_service_role_id = f"{stack_id}-BatchServiceRole"
 ecs_instance_role_id = f"{stack_id}-EcsInstanceRole"
+ecs_volumes_policy_id = f"{stack_id}-EcsVolumesPolicy"
 batch_jobs_access_role_id = f"{stack_id}-BatchJobsAccessRole"
 # efs_file_system_id = f"{stack_id}-EfsFileSystem"
 vpc_id = f"{stack_id}-Vpc"
